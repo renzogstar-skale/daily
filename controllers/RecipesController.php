@@ -44,7 +44,14 @@ class RecipesController extends BaseController
 			$productDetails = null;
 			if ($mealPlanEntry['product_id'] !== null)
 			{
-				$productDetails = StockService::GetInstance()->GetProductDetails($mealPlanEntry['product_id']);
+				try
+				{
+					$productDetails = StockService::GetInstance()->GetProductDetails($mealPlanEntry['product_id']);
+				}
+				catch (\Throwable $e)
+				{
+					$productDetails = null;
+				}
 			}
 
 			$events[] = [

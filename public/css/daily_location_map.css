@@ -1,0 +1,1008 @@
+/* ==========================================================================
+   DAILY — Mapa de Ubicaciones Scoped Design System
+   Matches reference mockup with pixel-precision
+   ========================================================================== */
+
+:root {
+	--daily-primary: #059669;
+	--daily-primary-hover: #047857;
+	--daily-primary-light: #ecfdf5;
+	--daily-primary-border: #a7f3d0;
+	--daily-amber: #d97706;
+	--daily-amber-light: #fffbeb;
+	--daily-amber-border: #fde68a;
+	--daily-amber-dark: #92400e;
+	--daily-red: #dc2626;
+	--daily-red-light: #fef2f2;
+	--daily-red-border: #fecaca;
+	--daily-blue: #0284c7;
+	--daily-blue-light: #f0f9ff;
+	--daily-blue-border: #bae6fd;
+	--daily-gray-50: #f8fafc;
+	--daily-gray-100: #f1f5f9;
+	--daily-gray-200: #e2e8f0;
+	--daily-gray-300: #cbd5e1;
+	--daily-gray-400: #94a3b8;
+	--daily-gray-500: #64748b;
+	--daily-gray-600: #475569;
+	--daily-gray-700: #334155;
+	--daily-gray-800: #1e293b;
+	--daily-gray-900: #0f172a;
+	--daily-radius: 12px;
+	--daily-radius-sm: 8px;
+	--daily-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+	--daily-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+}
+
+.daily-locmap-container {
+	font-family: inherit;
+	color: var(--daily-gray-800);
+	padding-bottom: 40px;
+}
+
+/* --------------------------------------------------------------------------
+   Header & Action Bar
+   -------------------------------------------------------------------------- */
+.daily-locmap-header {
+	background: #ffffff;
+	border: 1px solid var(--daily-gray-200);
+	border-radius: var(--daily-radius);
+	padding: 20px 24px;
+	margin-bottom: 20px;
+	position: relative;
+	overflow: hidden;
+	box-shadow: var(--daily-shadow);
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	min-height: 100px;
+}
+
+.daily-locmap-header-left {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	position: relative;
+	z-index: 2;
+	max-width: 55%;
+}
+
+.daily-locmap-header-icon {
+	width: 48px;
+	height: 48px;
+	border-radius: 10px;
+	background: var(--daily-primary-light);
+	border: 1px solid var(--daily-primary-border);
+	color: var(--daily-primary);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 22px;
+	flex-shrink: 0;
+}
+
+.daily-locmap-header-title {
+	font-size: 1.35rem;
+	font-weight: 700;
+	color: var(--daily-gray-900);
+	margin: 0 0 4px 0;
+	line-height: 1.25;
+}
+
+.daily-locmap-header-subtitle {
+	font-size: 0.88rem;
+	color: var(--daily-gray-500);
+	margin: 0;
+	line-height: 1.4;
+}
+
+.daily-locmap-header-actions {
+	position: relative;
+	z-index: 2;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+}
+
+.daily-locmap-header-bg {
+	position: absolute;
+	right: 0;
+	top: 0;
+	bottom: 0;
+	width: 45%;
+	background-size: cover;
+	background-position: center right;
+	background-repeat: no-repeat;
+	z-index: 1;
+	mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,0.5) 35%, black 100%);
+	-webkit-mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,0.5) 35%, black 100%);
+	pointer-events: none;
+}
+
+/* --------------------------------------------------------------------------
+   KPI Indicators (6 Cards in a Row)
+   -------------------------------------------------------------------------- */
+.daily-locmap-kpi-grid {
+	display: grid;
+	grid-template-columns: repeat(6, 1fr);
+	gap: 12px;
+	margin-bottom: 20px;
+}
+
+.daily-locmap-kpi-card {
+	background: #ffffff;
+	border: 1px solid var(--daily-gray-200);
+	border-radius: 10px;
+	padding: 14px 16px;
+	box-shadow: var(--daily-shadow);
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.daily-locmap-kpi-top {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 8px;
+}
+
+.daily-locmap-kpi-icon {
+	width: 24px;
+	height: 24px;
+	border-radius: 6px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 11px;
+	flex-shrink: 0;
+}
+
+.daily-locmap-kpi-icon.is-green {
+	background: var(--daily-primary-light);
+	color: var(--daily-primary);
+}
+
+.daily-locmap-kpi-icon.is-amber {
+	background: var(--daily-amber-light);
+	color: var(--daily-amber);
+}
+
+.daily-locmap-kpi-icon.is-red {
+	background: var(--daily-red-light);
+	color: var(--daily-red);
+}
+
+.daily-locmap-kpi-label {
+	font-size: 0.76rem;
+	font-weight: 600;
+	color: var(--daily-gray-500);
+	text-transform: capitalize;
+}
+
+.daily-locmap-kpi-val {
+	font-size: 1.35rem;
+	font-weight: 700;
+	color: var(--daily-gray-900);
+	line-height: 1.2;
+	margin-bottom: 4px;
+}
+
+.daily-locmap-kpi-sub {
+	font-size: 0.72rem;
+	color: var(--daily-gray-400);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* --------------------------------------------------------------------------
+   Config Banner
+   -------------------------------------------------------------------------- */
+.daily-locmap-config-banner {
+	background: var(--daily-amber-light);
+	border: 1px solid var(--daily-amber-border);
+	border-radius: 10px;
+	padding: 12px 20px;
+	margin-bottom: 20px;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 16px;
+}
+
+.daily-locmap-config-left {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.daily-locmap-config-icon {
+	color: var(--daily-amber);
+	font-size: 18px;
+	flex-shrink: 0;
+}
+
+.daily-locmap-config-title {
+	font-size: 0.88rem;
+	font-weight: 700;
+	color: var(--daily-amber-dark);
+	margin-bottom: 2px;
+}
+
+.daily-locmap-config-sub {
+	font-size: 0.78rem;
+	color: #78350f;
+	margin: 0;
+}
+
+.daily-locmap-config-actions {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+/* --------------------------------------------------------------------------
+   Filter & View Toolbar
+   -------------------------------------------------------------------------- */
+.daily-locmap-toolbar {
+	background: #ffffff;
+	border: 1px solid var(--daily-gray-200);
+	border-radius: 10px;
+	padding: 12px 18px;
+	margin-bottom: 16px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 14px;
+	flex-wrap: wrap;
+}
+
+.daily-locmap-view-pills {
+	display: inline-flex;
+	background: var(--daily-gray-100);
+	border-radius: 8px;
+	padding: 3px;
+	gap: 2px;
+}
+
+.daily-locmap-view-btn {
+	border: none;
+	background: transparent;
+	padding: 6px 14px;
+	font-size: 0.82rem;
+	font-weight: 600;
+	color: var(--daily-gray-600);
+	border-radius: 6px;
+	cursor: pointer;
+	transition: all 0.2s;
+}
+
+.daily-locmap-view-btn.is-active {
+	background: var(--daily-primary);
+	color: #ffffff;
+	box-shadow: 0 1px 3px rgba(5, 150, 105, 0.2);
+}
+
+.daily-locmap-search-box {
+	position: relative;
+	flex: 1;
+	min-width: 240px;
+}
+
+.daily-locmap-search-box i {
+	position: absolute;
+	left: 14px;
+	top: 50%;
+	transform: translateY(-50%);
+	color: var(--daily-gray-400);
+	font-size: 13px;
+	pointer-events: none;
+}
+
+.daily-locmap-search-input {
+	width: 100%;
+	height: 38px;
+	border-radius: var(--daily-radius-sm);
+	border: 1px solid var(--daily-gray-300);
+	padding: 0 14px 0 38px;
+	font-size: 0.86rem;
+	color: var(--daily-gray-800);
+	background: #ffffff;
+	transition: all 0.2s;
+}
+
+.daily-locmap-search-input:focus {
+	outline: none;
+	border-color: var(--daily-primary);
+	box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.12);
+}
+
+.daily-locmap-filters-right {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+.daily-filter-pill-btn {
+	height: 38px;
+	padding: 0 12px;
+	border-radius: var(--daily-radius-sm);
+	border: 1px solid var(--daily-gray-300);
+	background: #ffffff;
+	font-size: 0.82rem;
+	font-weight: 600;
+	color: var(--daily-gray-700);
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	cursor: pointer;
+	transition: all 0.2s;
+}
+
+.daily-filter-pill-btn:hover {
+	border-color: var(--daily-gray-400);
+	background: var(--daily-gray-50);
+}
+
+.daily-filter-pill-btn.is-active {
+	background: var(--daily-primary-light);
+	border-color: var(--daily-primary);
+	color: var(--daily-primary);
+}
+
+/* --------------------------------------------------------------------------
+   Branch Tabs & Storage Class Legend
+   -------------------------------------------------------------------------- */
+.daily-locmap-branch-bar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 14px;
+	flex-wrap: wrap;
+	gap: 12px;
+}
+
+.daily-locmap-branch-tabs {
+	display: flex;
+	gap: 8px;
+}
+
+.daily-branch-tab-btn {
+	padding: 6px 14px;
+	border-radius: 20px;
+	border: 1px solid var(--daily-gray-200);
+	background: #ffffff;
+	font-size: 0.82rem;
+	font-weight: 600;
+	color: var(--daily-gray-600);
+	cursor: pointer;
+	transition: all 0.2s;
+}
+
+.daily-branch-tab-btn:hover {
+	border-color: var(--daily-gray-300);
+	background: var(--daily-gray-50);
+}
+
+.daily-branch-tab-btn.is-active {
+	background: var(--daily-primary-light);
+	border-color: var(--daily-primary);
+	color: var(--daily-primary);
+	font-weight: 700;
+}
+
+.daily-storage-legend {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	font-size: 0.78rem;
+	color: var(--daily-gray-600);
+}
+
+.daily-legend-item {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	font-weight: 500;
+}
+
+/* --------------------------------------------------------------------------
+   Breadcrumb & Status Badge
+   -------------------------------------------------------------------------- */
+.daily-locmap-path-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 16px;
+	padding: 0 4px;
+}
+
+.daily-locmap-path-text {
+	font-size: 0.84rem;
+	color: var(--daily-gray-500);
+	font-weight: 500;
+}
+
+.daily-locmap-status-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 3px 10px;
+	border-radius: 14px;
+	font-size: 0.74rem;
+	font-weight: 600;
+	background: var(--daily-amber-light);
+	color: var(--daily-amber);
+	border: 1px solid var(--daily-amber-border);
+}
+
+/* --------------------------------------------------------------------------
+   Location Cards Grid (Left Column)
+   -------------------------------------------------------------------------- */
+.daily-location-cards-grid {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 14px;
+	margin-bottom: 24px;
+}
+
+.daily-location-card {
+	background: #ffffff;
+	border: 1px solid var(--daily-gray-200);
+	border-radius: 10px;
+	overflow: hidden;
+	box-shadow: var(--daily-shadow);
+	cursor: pointer;
+	transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+	display: flex;
+	flex-direction: column;
+	position: relative;
+}
+
+.daily-location-card:hover {
+	transform: translateY(-2px);
+	box-shadow: var(--daily-shadow-md);
+	border-color: var(--daily-primary-border);
+}
+
+.daily-location-card.is-selected {
+	border: 2px solid #ef4444;
+	box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
+}
+
+.daily-loc-card-media {
+	height: 100px;
+	background-size: cover;
+	background-position: center;
+	position: relative;
+	background-color: var(--daily-gray-100);
+}
+
+.daily-loc-card-badge {
+	position: absolute;
+	top: 8px;
+	right: 8px;
+	background: rgba(255, 255, 255, 0.95);
+	padding: 3px 8px;
+	border-radius: 12px;
+	font-size: 0.7rem;
+	font-weight: 700;
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.daily-loc-card-badge.is-chilled {
+	color: #0284c7;
+}
+
+.daily-loc-card-badge.is-frozen {
+	color: #2563eb;
+}
+
+.daily-loc-card-badge.is-ambient {
+	color: var(--daily-primary);
+}
+
+.daily-loc-card-body {
+	padding: 12px 14px;
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.daily-loc-card-header {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin-bottom: 6px;
+}
+
+.daily-loc-card-name {
+	font-size: 0.95rem;
+	font-weight: 700;
+	color: var(--daily-gray-900);
+	line-height: 1.25;
+}
+
+.daily-loc-card-stock {
+	font-size: 0.78rem;
+	color: var(--daily-gray-500);
+	margin-bottom: 4px;
+}
+
+.daily-loc-card-stock.is-empty {
+	color: var(--daily-gray-400);
+	font-style: italic;
+}
+
+.daily-loc-card-value {
+	font-size: 1.05rem;
+	font-weight: 700;
+	color: var(--daily-gray-900);
+	margin-bottom: 8px;
+}
+
+.daily-loc-card-chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin-bottom: 8px;
+}
+
+.daily-loc-chip {
+	font-size: 0.7rem;
+	font-weight: 700;
+	padding: 2px 7px;
+	border-radius: 10px;
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.daily-loc-chip.is-expired {
+	background: var(--daily-red-light);
+	color: var(--daily-red);
+	border: 1px solid var(--daily-red-border);
+}
+
+.daily-loc-chip.is-expiring {
+	background: var(--daily-amber-light);
+	color: var(--daily-amber);
+	border: 1px solid var(--daily-amber-border);
+}
+
+.daily-loc-card-cap {
+	font-size: 0.72rem;
+	color: var(--daily-gray-400);
+	margin-bottom: 10px;
+}
+
+.daily-loc-card-footer {
+	border-top: 1px solid var(--daily-gray-100);
+	padding-top: 8px;
+	display: flex;
+	justify-content: flex-end;
+}
+
+.daily-loc-card-link {
+	font-size: 0.76rem;
+	font-weight: 600;
+	color: var(--daily-gray-500);
+	text-decoration: none !important;
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.daily-location-card:hover .daily-loc-card-link,
+.daily-location-card.is-selected .daily-loc-card-link {
+	color: var(--daily-primary);
+}
+
+/* --------------------------------------------------------------------------
+   Detail Panel (Right Column)
+   -------------------------------------------------------------------------- */
+.daily-locmap-detail-card {
+	background: #ffffff;
+	border: 1px solid var(--daily-gray-200);
+	border-radius: var(--daily-radius);
+	padding: 20px;
+	box-shadow: var(--daily-shadow);
+	position: sticky;
+	top: 20px;
+}
+
+.daily-detail-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	margin-bottom: 12px;
+}
+
+.daily-detail-title-box {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.daily-detail-title {
+	font-size: 1.15rem;
+	font-weight: 700;
+	color: var(--daily-gray-900);
+	margin: 0;
+}
+
+.daily-detail-close-btn {
+	background: transparent;
+	border: none;
+	color: var(--daily-gray-400);
+	font-size: 16px;
+	cursor: pointer;
+	padding: 4px;
+}
+
+.daily-detail-close-btn:hover {
+	color: var(--daily-gray-700);
+}
+
+.daily-detail-hero-media {
+	width: 100%;
+	height: 140px;
+	border-radius: 8px;
+	background-size: cover;
+	background-position: center;
+	margin-bottom: 14px;
+	border: 1px solid var(--daily-gray-200);
+}
+
+.daily-detail-meta-table {
+	width: 100%;
+	font-size: 0.8rem;
+	margin-bottom: 12px;
+}
+
+.daily-detail-meta-table td {
+	padding: 3px 0;
+}
+
+.daily-detail-meta-table td.is-label {
+	color: var(--daily-gray-400);
+	width: 32%;
+}
+
+.daily-detail-meta-table td.is-val {
+	color: var(--daily-gray-800);
+	font-weight: 600;
+}
+
+.daily-detail-tiles-grid {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: 8px;
+	margin-bottom: 14px;
+}
+
+.daily-detail-tile {
+	background: var(--daily-gray-50);
+	border: 1px solid var(--daily-gray-200);
+	border-radius: var(--daily-radius-sm);
+	padding: 8px 12px;
+}
+
+.daily-detail-tile-label {
+	font-size: 0.72rem;
+	color: var(--daily-gray-500);
+	margin-bottom: 2px;
+}
+
+.daily-detail-tile-val {
+	font-size: 1.1rem;
+	font-weight: 700;
+	color: var(--daily-gray-900);
+}
+
+.daily-detail-tile.is-danger .daily-detail-tile-val {
+	color: var(--daily-red);
+}
+
+.daily-detail-tile.is-warning .daily-detail-tile-val {
+	color: var(--daily-amber);
+}
+
+.daily-detail-occupancy-box {
+	background: var(--daily-gray-50);
+	border: 1px solid var(--daily-gray-200);
+	border-radius: var(--daily-radius-sm);
+	padding: 10px 14px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 16px;
+}
+
+.daily-detail-occupancy-left {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.daily-detail-occupancy-val {
+	font-size: 0.95rem;
+	font-weight: 700;
+	color: var(--daily-gray-800);
+}
+
+.daily-detail-main-btn {
+	width: 100%;
+	height: 44px;
+	background: var(--daily-primary);
+	color: #ffffff;
+	border: none;
+	border-radius: var(--daily-radius-sm);
+	font-size: 0.92rem;
+	font-weight: 700;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	cursor: pointer;
+	margin-bottom: 10px;
+	transition: background 0.2s;
+	text-decoration: none !important;
+}
+
+.daily-detail-main-btn:hover {
+	background: var(--daily-primary-hover);
+	color: #ffffff;
+}
+
+.daily-detail-sub-actions {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 6px;
+	margin-bottom: 14px;
+}
+
+.daily-detail-sub-btn {
+	height: 34px;
+	background: #ffffff;
+	border: 1px solid var(--daily-gray-300);
+	border-radius: var(--daily-radius-sm);
+	font-size: 0.74rem;
+	font-weight: 600;
+	color: var(--daily-gray-700);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 4px;
+	cursor: pointer;
+	text-decoration: none !important;
+	transition: all 0.2s;
+}
+
+.daily-detail-sub-btn:hover {
+	background: var(--daily-gray-50);
+	border-color: var(--daily-gray-400);
+	color: var(--daily-gray-900);
+}
+
+.daily-detail-info-strip {
+	background: #f0f9ff;
+	border: 1px solid #bae6fd;
+	color: #0369a1;
+	border-radius: var(--daily-radius-sm);
+	padding: 8px 12px;
+	font-size: 0.75rem;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+/* --------------------------------------------------------------------------
+   Otras Sucursales
+   -------------------------------------------------------------------------- */
+.daily-other-branches-card {
+	background: #ffffff;
+	border: 1px solid var(--daily-gray-200);
+	border-radius: var(--daily-radius);
+	padding: 20px;
+	margin-top: 14px;
+	margin-bottom: 20px;
+	box-shadow: var(--daily-shadow);
+}
+
+.daily-other-branches-title {
+	font-size: 0.95rem;
+	font-weight: 700;
+	color: var(--daily-gray-900);
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 16px;
+}
+
+.daily-other-branches-grid {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: 16px;
+}
+
+.daily-other-branch-item {
+	background: var(--daily-gray-50);
+	border: 1px solid var(--daily-gray-200);
+	border-radius: var(--daily-radius-sm);
+	padding: 14px;
+}
+
+.daily-other-branch-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 12px;
+}
+
+.daily-other-branch-thumbs {
+	display: flex;
+	gap: 10px;
+}
+
+.daily-other-sub-thumb {
+	flex: 1;
+	background: #ffffff;
+	border: 1px solid var(--daily-gray-200);
+	border-radius: 6px;
+	padding: 8px;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.daily-other-sub-img {
+	width: 36px;
+	height: 36px;
+	border-radius: 4px;
+	object-fit: cover;
+	flex-shrink: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Estructura de Ubicación Stepper
+   -------------------------------------------------------------------------- */
+.daily-structure-guide-card {
+	background: #ffffff;
+	border: 1px solid var(--daily-gray-200);
+	border-radius: var(--daily-radius);
+	padding: 16px 20px;
+	margin-bottom: 20px;
+	box-shadow: var(--daily-shadow);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 20px;
+	flex-wrap: wrap;
+}
+
+.daily-structure-guide-left {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.daily-structure-guide-icon {
+	width: 36px;
+	height: 36px;
+	border-radius: 8px;
+	background: var(--daily-primary-light);
+	color: var(--daily-primary);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 16px;
+	flex-shrink: 0;
+}
+
+.daily-structure-pipeline {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+.daily-pipeline-step {
+	background: var(--daily-gray-50);
+	border: 1px solid var(--daily-gray-200);
+	border-radius: 6px;
+	padding: 6px 12px;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 0.76rem;
+}
+
+.daily-pipeline-arrow {
+	color: var(--daily-gray-400);
+	font-size: 10px;
+}
+
+/* --------------------------------------------------------------------------
+   Módulos Conectados Footer
+   -------------------------------------------------------------------------- */
+.daily-connected-footer-card {
+	background: #ffffff;
+	border: 1px solid var(--daily-gray-200);
+	border-radius: var(--daily-radius);
+	padding: 16px 20px;
+	box-shadow: var(--daily-shadow);
+}
+
+.daily-connected-item {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding-top: 10px;
+}
+
+/* --------------------------------------------------------------------------
+   Responsive Breakpoints
+   -------------------------------------------------------------------------- */
+@media (max-width: 1200px) {
+	.daily-locmap-kpi-grid {
+		grid-template-columns: repeat(3, 1fr);
+	}
+	.daily-location-cards-grid {
+		grid-template-columns: repeat(2, 1fr);
+	}
+	.daily-other-branches-grid {
+		grid-template-columns: 1fr;
+	}
+}
+
+@media (max-width: 991px) {
+	.daily-location-cards-grid {
+		grid-template-columns: 1fr;
+	}
+	.daily-locmap-header-bg {
+		display: none;
+	}
+	.daily-locmap-header-left {
+		max-width: 100%;
+	}
+	.daily-locmap-detail-card {
+		position: static;
+		margin-top: 20px;
+	}
+}
+
+@media (max-width: 576px) {
+	.daily-locmap-kpi-grid {
+		grid-template-columns: repeat(2, 1fr);
+	}
+	.daily-locmap-header {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 14px;
+	}
+	.daily-locmap-header-actions {
+		width: 100%;
+		justify-content: flex-start;
+	}
+	.daily-locmap-config-banner {
+		flex-direction: column;
+		align-items: flex-start;
+	}
+	.daily-locmap-toolbar {
+		flex-direction: column;
+		align-items: stretch;
+	}
+	.daily-structure-guide-card {
+		flex-direction: column;
+		align-items: flex-start;
+	}
+}

@@ -88,6 +88,7 @@ class BaseController
 		}
 
 		$this->View->set('viewName', $viewName);
+		$this->View->set('viewJsExists', file_exists(__DIR__ . '/../public/viewjs/' . $viewName . '.js'));
 
 		return $this->View->Render($response, $viewName, $data);
 	}

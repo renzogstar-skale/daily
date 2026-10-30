@@ -29,6 +29,17 @@
 			</select>
 		</div>
 
+		<div class="form-group">
+			<label for="daily_theme">Tema de Identidad Visual</label>
+			<select class="custom-control custom-select user-setting-control"
+				id="daily_theme"
+				data-setting-key="daily_theme">
+				<option value="green">DAILY Verde — predeterminado</option>
+				<option value="red">DAILY Rojo</option>
+				<option value="yellow">DAILY Amarillo</option>
+			</select>
+		</div>
+
 		<a href="{{ $U('/') }}"
 			class="btn btn-success link-return">{{ $__t('OK') }}</a>
 	</div>

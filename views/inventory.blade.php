@@ -9,9 +9,30 @@
 	Grocy.DefaultMinAmount = '{{$DEFAULT_MIN_AMOUNT}}';
 </script>
 
+<div class="row align-items-center mb-3 dairy-page-header">
+	<div class="col-lg-7 d-flex align-items-center">
+		<div class="dairy-page-icon is-primary"><i class="fa-solid fa-list-check"></i></div>
+		<div>
+			<h4 class="dairy-page-title">Conteos Físicos</h4>
+			<p class="dairy-page-subtitle">Inventario físico por producto. Los conteos cíclicos por clase ABC y la aprobación de ajustes están en Control de Mermas.</p>
+		</div>
+	</div>
+	<div class="col-lg-5 dairy-page-actions">
+		<a class="btn btn-outline-primary" href="{{ $U('/waste#tab-conteos') }}"><i class="fa-solid fa-barcode mr-1"></i>Conteos cíclicos</a>
+		<a class="btn btn-outline-secondary" href="{{ $U('/kardex') }}"><i class="fa-solid fa-book-open mr-1"></i>Kardex</a>
+	</div>
+</div>
+
 <div class="row">
 	<div class="col-12 col-md-6 col-xl-4 pb-3">
-		<h2 class="title">@yield('title')</h2>
+
+		<div class="alert alert-info py-2 px-3 mb-3 small d-flex align-items-center shadow-sm">
+			<i class="fa-solid fa-scale-balanced fa-lg mr-2 text-info"></i>
+			<div>
+				<strong>Auditoría & Ajustes (SAP MM / EWM):</strong>
+				Las diferencias de inventario deben registrarse justificadas. Si la pérdida corresponde a rotura, descomposición o vencimiento, regístrela en <a href="{{ $U('/waste/report') }}" class="alert-link font-weight-bold text-primary">Control de Mermas</a> para preservar la trazabilidad contable.
+			</div>
+		</div>
 
 		<hr class="my-2">
 

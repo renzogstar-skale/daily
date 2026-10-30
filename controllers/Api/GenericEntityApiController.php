@@ -193,6 +193,7 @@ class GenericEntityApiController extends BaseApiController
 
 	public function GetObject(Request $request, Response $response, array $args)
 	{
+		$this->CheckReadPermission($request, $args['entity']);
 		if (!$this->IsValidExposedEntity($args['entity']) || $this->IsEntityWithNoListing($args['entity']))
 		{
 			return $this->GenericErrorResponse($response, 'Entity does not exist or is not exposed');
@@ -222,6 +223,7 @@ class GenericEntityApiController extends BaseApiController
 
 	public function GetObjects(Request $request, Response $response, array $args)
 	{
+		$this->CheckReadPermission($request, $args['entity']);
 		if (!$this->IsValidExposedEntity($args['entity']) || $this->IsEntityWithNoListing($args['entity']))
 		{
 			return $this->GenericErrorResponse($response, 'Entity does not exist or is not exposed');
@@ -295,6 +297,15 @@ class GenericEntityApiController extends BaseApiController
 		catch (\Exception $ex)
 		{
 			return $this->GenericErrorResponse($response, $ex->getMessage());
+		}
+	}
+
+	// DAIRY: existencias, kardex y costos solo con permiso de inventario (un cajero o reponedor no los lee por la API genérica)
+	private function CheckReadPermission(Request $request, $entity): void
+	{
+		if (in_array($entity, ['stock', 'stock_log', 'stock_current_locations', 'products_last_purchased', 'products_average_price'], true))
+		{
+			User::CheckPermission($request, User::PERMISSION_STOCK);
 		}
 	}
 

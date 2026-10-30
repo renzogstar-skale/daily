@@ -1,0 +1,362 @@
+/* ==========================================================================
+   DAILY — Global Visual Identity & Theme Tokens
+   Paletas oficiales:
+   - Verde (predeterminado): radial-gradient(ellipse at center, #39F500 0%, #00C83B 48%, #008E48 100%)
+   - Rojo: radial-gradient(ellipse at center, #FF3B30 0%, #DC2626 48%, #7F1D1D 100%)
+   - Amarillo: radial-gradient(ellipse at center, #FFE600 0%, #FFB800 48%, #B66A00 100%)
+   ========================================================================== */
+
+:root {
+	/* 1. TEMA VERDE (PREDETERMINADO) */
+	--daily-primary: #00C83B;
+	--daily-light: #39F500;
+	--daily-dark: #008E48;
+	--daily-primary-light: #effdf4;
+	--daily-primary-subtle: #dcfce7;
+	--daily-primary-border: #86efac;
+	--daily-primary-text: #ffffff;
+	--daily-ring: 0 0 0 3px rgba(0, 200, 59, 0.22);
+	--daily-gradient: radial-gradient(
+		ellipse at center,
+		#39F500 0%,
+		#00C83B 48%,
+		#008E48 100%
+	);
+
+	/* Aliases para componentes existentes */
+	--dairy-primary: var(--daily-primary);
+	--dairy-primary-dark: var(--daily-dark);
+	--dairy-primary-light: var(--daily-primary-light);
+	--dairy-primary-subtle: var(--daily-primary-subtle);
+	--dairy-primary-border: var(--daily-primary-border);
+	--dairy-ring: var(--daily-ring);
+
+	--dnav-accent: var(--daily-primary);
+	--dnav-active-bg: var(--daily-primary-light);
+	--dnav-focus: var(--daily-ring);
+
+	--sch-primary: var(--daily-primary);
+	--sch-primary-hover: var(--daily-dark);
+	--sch-primary-light: var(--daily-primary-light);
+
+	--cc-blue: var(--daily-primary);
+	--cc-blue-bg: var(--daily-primary-light);
+	--cc-blue-ink: var(--daily-dark);
+
+	/* Mobile variables */
+	--primary: var(--daily-primary);
+	--primary-2: var(--daily-dark);
+	--accent: var(--daily-primary);
+}
+
+[data-theme="red"] {
+	/* 2. TEMA ROJO (ALTERNATIVO) */
+	--daily-primary: #DC2626;
+	--daily-light: #FF3B30;
+	--daily-dark: #7F1D1D;
+	--daily-primary-light: #fef2f2;
+	--daily-primary-subtle: #fee2e2;
+	--daily-primary-border: #fca5a5;
+	--daily-primary-text: #ffffff;
+	--daily-ring: 0 0 0 3px rgba(220, 38, 38, 0.22);
+	--daily-gradient: radial-gradient(
+		ellipse at center,
+		#FF3B30 0%,
+		#DC2626 48%,
+		#7F1D1D 100%
+	);
+
+	--dairy-primary: var(--daily-primary);
+	--dairy-primary-dark: var(--daily-dark);
+	--dairy-primary-light: var(--daily-primary-light);
+	--dairy-primary-subtle: var(--daily-primary-subtle);
+	--dairy-primary-border: var(--daily-primary-border);
+	--dairy-ring: var(--daily-ring);
+
+	--dnav-accent: var(--daily-primary);
+	--dnav-active-bg: var(--daily-primary-light);
+	--dnav-focus: var(--daily-ring);
+
+	--sch-primary: var(--daily-primary);
+	--sch-primary-hover: var(--daily-dark);
+	--sch-primary-light: var(--daily-primary-light);
+
+	--cc-blue: var(--daily-primary);
+	--cc-blue-bg: var(--daily-primary-light);
+	--cc-blue-ink: var(--daily-dark);
+
+	--primary: var(--daily-primary);
+	--primary-2: var(--daily-dark);
+	--accent: var(--daily-primary);
+}
+
+[data-theme="yellow"] {
+	/* 3. TEMA AMARILLO (ALTERNATIVO) */
+	--daily-primary: #FFB800;
+	--daily-light: #FFE600;
+	--daily-dark: #B66A00;
+	--daily-primary-light: #fffdf0;
+	--daily-primary-subtle: #fef9c3;
+	--daily-primary-border: #fde047;
+	--daily-primary-text: #1f2937; /* Contraste accesible para texto sobre amarillo */
+	--daily-ring: 0 0 0 3px rgba(255, 184, 0, 0.28);
+	--daily-gradient: radial-gradient(
+		ellipse at center,
+		#FFE600 0%,
+		#FFB800 48%,
+		#B66A00 100%
+	);
+
+	--dairy-primary: var(--daily-primary);
+	--dairy-primary-dark: var(--daily-dark);
+	--dairy-primary-light: var(--daily-primary-light);
+	--dairy-primary-subtle: var(--daily-primary-subtle);
+	--dairy-primary-border: var(--daily-primary-border);
+	--dairy-ring: var(--daily-ring);
+
+	--dnav-accent: var(--daily-primary);
+	--dnav-active-bg: var(--daily-primary-light);
+	--dnav-focus: var(--daily-ring);
+
+	--sch-primary: var(--daily-primary);
+	--sch-primary-hover: var(--daily-dark);
+	--sch-primary-light: var(--daily-primary-light);
+
+	--cc-blue: var(--daily-primary);
+	--cc-blue-bg: var(--daily-primary-light);
+	--cc-blue-ink: var(--daily-dark);
+
+	--primary: var(--daily-primary);
+	--primary-2: var(--daily-dark);
+	--accent: var(--daily-primary);
+}
+
+/* ==========================================================================
+   APLICACIÓN GLOBAL DE TOKENS
+   ========================================================================== */
+
+/* Botones principales */
+.btn-primary {
+	background: var(--daily-primary) !important;
+	border-color: var(--daily-primary) !important;
+	color: var(--daily-primary-text, #ffffff) !important;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08) !important;
+}
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+	background: var(--daily-dark) !important;
+	border-color: var(--daily-dark) !important;
+	color: var(--daily-primary-text, #ffffff) !important;
+	filter: none !important;
+	box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.15) !important;
+}
+
+.btn-outline-primary {
+	color: var(--daily-primary) !important;
+	border-color: var(--daily-primary-border) !important;
+	background: var(--daily-primary-light) !important;
+}
+.btn-outline-primary:hover {
+	background: var(--daily-primary) !important;
+	border-color: var(--daily-primary) !important;
+	color: var(--daily-primary-text, #ffffff) !important;
+}
+
+/* Badges y utilidades */
+.text-primary {
+	color: var(--daily-primary) !important;
+}
+.bg-primary {
+	background-color: var(--daily-primary) !important;
+	color: var(--daily-primary-text, #ffffff) !important;
+}
+.badge-primary {
+	background: var(--daily-primary-light) !important;
+	color: var(--daily-dark) !important;
+	border: 1px solid var(--daily-primary-border) !important;
+}
+
+/* Enfoque en formularios */
+.form-control:focus,
+.custom-select:focus {
+	border-color: var(--daily-primary) !important;
+	box-shadow: var(--daily-ring) !important;
+	outline: none !important;
+}
+
+/* Elementos activos del sidebar */
+.dnav .dnav-cat.is-active > .dnav-cat-btn .dnav-icon,
+.dnav .dnav-item.is-active > .dnav-link .dnav-icon,
+.dnav .dnav-group.is-active > .dnav-group-btn .dnav-icon {
+	color: var(--daily-primary) !important;
+}
+.dnav .dnav-item.is-active > .dnav-link {
+	background: var(--daily-primary-light) !important;
+}
+.dnav .dnav-item.is-active > .dnav-link::before {
+	background: var(--daily-primary) !important;
+}
+.dnav-nested .dnav-item.is-active > .dnav-link::before {
+	background: var(--daily-primary) !important;
+}
+body.sidenav-toggled .dnav-cat.is-active > .dnav-cat-btn,
+body.sidenav-toggled .dnav-cat.is-flyout > .dnav-cat-btn {
+	background: var(--daily-primary-light) !important;
+}
+
+/* Pestañas y navegación seleccionada */
+.dairy-subnav-pills .nav-link.active,
+.dairy-subnav-pills.nav-pills .nav-link.active {
+	background: var(--daily-primary-light) !important;
+	color: var(--daily-dark) !important;
+	box-shadow: inset 0 0 0 1px var(--daily-primary-border) !important;
+}
+.nav-tabs .nav-link.active {
+	color: var(--daily-primary) !important;
+	border-bottom-color: var(--daily-primary) !important;
+}
+
+/* Encabezados e iconos de página */
+.dairy-page-icon.is-primary {
+	background: var(--daily-primary-light) !important;
+	color: var(--daily-primary) !important;
+	border-color: var(--daily-primary-border) !important;
+}
+
+/* Horarios y Cobertura */
+.sch-btn-primary {
+	background: var(--daily-primary) !important;
+	border-color: var(--daily-primary) !important;
+	color: var(--daily-primary-text, #ffffff) !important;
+}
+.sch-btn-primary:hover {
+	background: var(--daily-dark) !important;
+	border-color: var(--daily-dark) !important;
+	color: var(--daily-primary-text, #ffffff) !important;
+}
+.sch-view-pill.active {
+	background: var(--daily-primary) !important;
+	color: var(--daily-primary-text, #ffffff) !important;
+}
+.sch-th-day.is-today {
+	background: var(--daily-primary) !important;
+	color: var(--daily-primary-text, #ffffff) !important;
+	border-color: var(--daily-primary) !important;
+}
+.sch-kpi-icon.tone-primary {
+	background-color: var(--daily-primary-light) !important;
+	color: var(--daily-primary) !important;
+}
+.sch-detail-edit-btn {
+	color: var(--daily-primary) !important;
+}
+
+/* Centro de Alertas */
+.alc-pipeline-step:hover {
+	border-color: var(--daily-primary) !important;
+}
+.alc-pipeline-step.is-active {
+	border-color: var(--daily-primary) !important;
+	background: var(--daily-primary-light) !important;
+	box-shadow: var(--daily-ring) !important;
+}
+.alc-pipeline-step.is-active .alc-step-header i {
+	color: var(--daily-primary) !important;
+}
+.alc-sla-card.is-primary {
+	border-left: 4px solid var(--daily-primary) !important;
+}
+.alc-fin-box.is-primary {
+	border-left: 4px solid var(--daily-primary) !important;
+}
+
+
+/* Botones y pestañas de Centro de Control (Hoy) y Paginación */
+.cc-btn.is-primary {
+	background: var(--daily-primary) !important;
+	border-color: var(--daily-primary) !important;
+	color: var(--daily-primary-text, #ffffff) !important;
+}
+.cc-btn.is-primary:hover {
+	background: var(--daily-dark) !important;
+	border-color: var(--daily-dark) !important;
+	color: var(--daily-primary-text, #ffffff) !important;
+}
+.cc-tab.is-on,
+.cc-pill.is-on {
+	background: var(--daily-primary-light) !important;
+	color: var(--daily-dark) !important;
+	border-color: var(--daily-primary-border) !important;
+}
+.page-item.active .page-link {
+	background-color: var(--daily-primary) !important;
+	border-color: var(--daily-primary) !important;
+	color: var(--daily-primary-text, #ffffff) !important;
+}
+.page-item.active .page-link:hover {
+	background-color: var(--daily-dark) !important;
+	border-color: var(--daily-dark) !important;
+	color: var(--daily-primary-text, #ffffff) !important;
+}
+
+/* Centro de Control de Hoy */
+.dh-kpi.is-blue,
+.dh-kpi[data-tone="blue"] {
+	border-color: var(--daily-primary-border) !important;
+}
+
+/* Mapa del Sistema */
+.sm-svg .sm-node.hit rect {
+	stroke: var(--daily-primary) !important;
+}
+.sm-link {
+	color: var(--daily-primary) !important;
+}
+
+/* Selección de texto */
+::selection {
+	background: var(--daily-primary-subtle);
+	color: var(--daily-dark);
+}
+
+/* Contraste accesible para tema amarillo */
+[data-theme="yellow"] .cc-btn.is-primary,
+[data-theme="yellow"] .cc-btn.is-primary:hover,
+[data-theme="yellow"] .page-item.active .page-link,
+[data-theme="yellow"] .page-item.active .page-link:hover,
+[data-theme="yellow"] .btn-primary,
+[data-theme="yellow"] .btn-primary:hover,
+[data-theme="yellow"] .btn-primary:focus,
+[data-theme="yellow"] .btn-primary:active,
+[data-theme="yellow"] .sch-btn-primary,
+[data-theme="yellow"] .sch-btn-primary:hover,
+[data-theme="yellow"] .sch-view-pill.active,
+[data-theme="yellow"] .sch-th-day.is-today,
+[data-theme="yellow"] .bg-primary {
+	color: #1f2937 !important;
+}
+[data-theme="yellow"] .daily-brand-text {
+	fill: #B66A00 !important;
+}
+
+/* Móvil (/m) */
+.m-tab-scan .ring {
+	background: var(--daily-gradient) !important;
+}
+.m-tabs a.on {
+	color: var(--daily-primary) !important;
+}
+.m-next {
+	background: var(--daily-gradient) !important;
+}
+[data-theme="yellow"] .m-next,
+[data-theme="yellow"] .m-next b,
+[data-theme="yellow"] .m-tabs a.on,
+[data-theme="yellow"] .m-btn.primary {
+	color: #1f2937 !important;
+}
+[data-theme="yellow"] .m-next .nx .ic,
+[data-theme="yellow"] .m-tab-scan .ring {
+	color: #1f2937 !important;
+}

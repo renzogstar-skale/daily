@@ -39,22 +39,58 @@ class SystemController extends BaseController
 		return $response->withRedirect($this->AppContainer->get('UrlManager')->ConstructUrl($this->GetEntryPageRelative()));
 	}
 
+	public function SetSimulatedRole(Request $request, Response $response, array $args)
+	{
+		$role = $request->getQueryParams()['role'] ?? 'manager';
+		if (!in_array($role, ['manager', 'supervisor', 'empleado', 'demo'], true))
+		{
+			$role = 'manager';
+		}
+		setcookie('daily_simulated_role', $role, time() + 86400 * 30, '/');
+
+		$redirectUrl = $request->getServerParams()['HTTP_REFERER'] ?? $this->AppContainer->get('UrlManager')->ConstructUrl('/today');
+		if ($role === 'demo')
+		{
+			$redirectUrl = $this->AppContainer->get('UrlManager')->ConstructUrl('/sales');
+		}
+		elseif ($role === 'empleado' && !str_contains($redirectUrl, 'attendance') && !str_contains($redirectUrl, 'schedule') && !str_contains($redirectUrl, 'pos'))
+		{
+			$redirectUrl = $this->AppContainer->get('UrlManager')->ConstructUrl('/operations/attendance?role_view=employee');
+		}
+
+		return $response->withHeader('Set-Cookie', "daily_simulated_role=$role; Path=/; SameSite=Lax")->withRedirect($redirectUrl);
+	}
+
 	public function Manifest(Request $request, Response $response, array $args)
 	{
 		$data = explode('#', base64_decode($request->getQueryParams()['data']));
 
+		$urlManager = $this->AppContainer->get('UrlManager');
+		$shortcuts = [];
+		foreach ([['Hoy', '/today'], ['Registrar merma', '/waste/report'], ['Inventario', '/stockoverview'], ['Planificación MRP', '/mrp']] as $sc)
+		{
+			if (\Grocy\Helpers\DairyAccess::CanOpen($sc[1]))
+			{
+				$shortcuts[] = ['name' => $sc[0], 'short_name' => $sc[0], 'url' => $urlManager->ConstructUrl($sc[1]), 'icons' => [['src' => './img/icon-1024.png', 'sizes' => '1024x1024', 'type' => 'image/png']]];
+			}
+		}
+
 		$manifest = [
-			'name' => 'Grocy ' . $data[0],
-			'short_name' => 'Grocy ' . $data[0],
-			'icons' => [[
-				'src' => './img/icon-1024.png',
-				'sizes'=> '1024x1024',
-				'type' => 'image/png'
-			]],
+			'name' => 'Dairy ' . $data[0],
+			'short_name' => 'Dairy',
+			'description' => 'Control de mermas, inventario y rentabilidad',
+			'lang' => 'es',
+			'icons' => [
+				['src' => './img/icon-1024.png', 'sizes' => '1024x1024', 'type' => 'image/png', 'purpose' => 'any'],
+				['src' => './img/icon.svg', 'sizes' => 'any', 'type' => 'image/svg+xml', 'purpose' => 'any']
+			],
 			'start_url' => $data[1],
-			'background_color' => '#333131',
-			'theme_color' => '#333131',
-			'display' => 'standalone'
+			'scope' => $urlManager->ConstructUrl('/', true),
+			'background_color' => '#f8fafc',
+			'theme_color' => '#0284c7',
+			'display' => 'standalone',
+			'orientation' => 'any',
+			'shortcuts' => $shortcuts
 		];
 
 		$response->getBody()->write(json_encode($manifest));

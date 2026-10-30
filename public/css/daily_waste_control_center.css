@@ -1,0 +1,1016 @@
+/**
+ * DAILY — CENTRO EJECUTIVO DE CONTROL DE MERMAS
+ * Réplica exacta de la referencia visual empresarial
+ */
+
+:root {
+	--dw-bg: #F8FAFC;
+	--dw-card-bg: #FFFFFF;
+	--dw-border: #E2E8F0;
+	--dw-border-subtle: #F1F5F9;
+	--dw-text-primary: #0F172A;
+	--dw-text-secondary: #475569;
+	--dw-text-muted: #94A3B8;
+	
+	--dw-red: #EF4444;
+	--dw-red-bg: #FEE2E2;
+	--dw-red-border: #FCA5A5;
+	
+	--dw-amber: #F59E0B;
+	--dw-amber-bg: #FEF3C7;
+	--dw-amber-border: #FCD34D;
+	
+	--dw-orange: #F97316;
+	--dw-orange-bg: #FFEDD5;
+	--dw-orange-border: #FDBA74;
+
+	--dw-green: #10B981;
+	--dw-green-bg: #DCFCE7;
+	--dw-green-border: #86EFAC;
+
+	--dw-teal: #0D9488;
+	--dw-teal-bg: #CCFBF1;
+	
+	--dw-gray: #64748B;
+	--dw-gray-bg: #F1F5F9;
+
+	--dw-radius: 10px;
+	--dw-radius-sm: 6px;
+	--dw-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+/* Ocultar barra superior antigua al estar en el Centro Ejecutivo */
+#dailyTopKpisBar {
+	display: none !important;
+}
+
+/* Contenedor Principal del Centro Ejecutivo */
+.dw-executive-wrapper {
+	font-family: inherit;
+	color: var(--dw-text-primary);
+	margin-bottom: 2rem;
+}
+
+/* Header Ejecutivo Superior con Filtros */
+.dw-exec-header {
+	background: var(--dw-card-bg);
+	border: 1px solid var(--dw-border);
+	border-radius: var(--dw-radius);
+	padding: 12px 18px;
+	margin-bottom: 14px;
+	box-shadow: var(--dw-shadow);
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+}
+
+.dw-exec-title-box h2 {
+	font-size: 1.35rem;
+	font-weight: 800;
+	color: var(--dw-text-primary);
+	margin: 0;
+	letter-spacing: -0.02em;
+	line-height: 1.2;
+}
+
+.dw-exec-title-box p {
+	font-size: 0.82rem;
+	color: var(--dw-text-muted);
+	margin: 2px 0 0 0;
+	font-weight: 500;
+}
+
+.dw-exec-controls {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.dw-filter-select-group {
+	display: flex;
+	align-items: center;
+	background: #FFFFFF;
+	border: 1px solid var(--dw-border);
+	border-radius: var(--dw-radius-sm);
+	padding: 2px 8px;
+	height: 32px;
+	font-size: 0.8rem;
+}
+
+.dw-filter-select-group label {
+	margin: 0 5px 0 0;
+	color: var(--dw-text-muted);
+	font-weight: 600;
+	font-size: 0.76rem;
+	white-space: nowrap;
+}
+
+.dw-filter-select-group select,
+.dw-filter-select-group input[type="date"] {
+	border: none;
+	background: transparent;
+	font-weight: 600;
+	color: var(--dw-text-primary);
+	font-size: 0.8rem;
+	outline: none;
+	cursor: pointer;
+	padding-right: 4px;
+}
+
+.dw-live-badge {
+	display: inline-flex;
+	align-items: center;
+	font-size: 0.75rem;
+	font-weight: 600;
+	color: var(--dw-text-secondary);
+	background: #F8FAFC;
+	border: 1px solid var(--dw-border);
+	border-radius: var(--dw-radius-sm);
+	padding: 5px 10px;
+	height: 32px;
+	white-space: nowrap;
+}
+
+.dw-live-dot {
+	width: 7px;
+	height: 7px;
+	background: var(--dw-green);
+	border-radius: 50%;
+	display: inline-block;
+	margin-right: 6px;
+	box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
+
+.dw-refresh-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	border: 1px solid var(--dw-border);
+	background: #FFFFFF;
+	border-radius: var(--dw-radius-sm);
+	color: var(--dw-text-secondary);
+	cursor: pointer;
+	transition: all 0.15s ease;
+}
+
+.dw-refresh-btn:hover {
+	background: var(--dw-gray-bg);
+	color: var(--dw-text-primary);
+}
+
+/* ==========================================================================
+   ZONA 1: 8 TARJETAS KPI SUPERIORES COMPACTAS
+   ========================================================================== */
+.dw-kpis-grid {
+	display: grid;
+	grid-template-columns: repeat(8, minmax(0, 1fr));
+	gap: 10px;
+	margin-bottom: 14px;
+}
+
+@media (max-width: 1400px) {
+	.dw-kpis-grid {
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+	}
+}
+
+@media (max-width: 768px) {
+	.dw-kpis-grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+.dw-kpi-card {
+	background: var(--dw-card-bg);
+	border: 1px solid var(--dw-border);
+	border-radius: var(--dw-radius);
+	padding: 10px 12px 6px 12px;
+	box-shadow: var(--dw-shadow);
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	position: relative;
+	transition: transform 0.15s ease, box-shadow 0.15s ease;
+	min-height: 108px;
+}
+
+.dw-kpi-card:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+}
+
+.dw-kpi-top {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	margin-bottom: 4px;
+}
+
+.dw-kpi-label {
+	font-size: 0.72rem;
+	font-weight: 700;
+	color: var(--dw-text-secondary);
+	line-height: 1.2;
+	letter-spacing: -0.01em;
+	padding-right: 4px;
+}
+
+.dw-kpi-icon {
+	width: 26px;
+	height: 26px;
+	border-radius: 6px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 0.75rem;
+	flex-shrink: 0;
+}
+
+.dw-kpi-icon.is-red { background: var(--dw-red-bg); color: var(--dw-red); }
+.dw-kpi-icon.is-amber { background: var(--dw-amber-bg); color: var(--dw-amber); }
+.dw-kpi-icon.is-orange { background: var(--dw-orange-bg); color: var(--dw-orange); }
+.dw-kpi-icon.is-green { background: var(--dw-green-bg); color: var(--dw-green); }
+
+.dw-kpi-val {
+	font-size: 1.28rem;
+	font-weight: 800;
+	color: var(--dw-text-primary);
+	line-height: 1.1;
+	letter-spacing: -0.02em;
+	margin-bottom: 4px;
+}
+
+.dw-kpi-delta-row {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 4px;
+	font-size: 0.68rem;
+	line-height: 1.2;
+	margin-bottom: 4px;
+}
+
+.dw-delta-tag {
+	font-weight: 700;
+	white-space: nowrap;
+}
+
+.dw-delta-tag.is-bad { color: var(--dw-red); }
+.dw-delta-tag.is-good { color: var(--dw-green); }
+
+.dw-kpi-subtext {
+	color: var(--dw-text-muted);
+	font-weight: 500;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	font-size: 0.66rem;
+}
+
+.dw-sparkline-box {
+	width: 100%;
+	height: 20px;
+	margin-top: 2px;
+	display: flex;
+	align-items: flex-end;
+}
+
+.dw-sparkline-svg {
+	width: 100%;
+	height: 20px;
+	overflow: visible;
+}
+
+/* ==========================================================================
+   ESTILOS GENERALES DE TARJETAS DE ANÁLISIS
+   ========================================================================== */
+.dw-section-grid {
+	display: grid;
+	gap: 12px;
+	margin-bottom: 14px;
+}
+
+.dw-grid-3-col-a {
+	grid-template-columns: 1.5fr 1fr 1fr;
+}
+
+.dw-grid-3-col-b {
+	grid-template-columns: 1.1fr 1fr;
+}
+
+.dw-grid-3-col-c {
+	grid-template-columns: 1.25fr 0.95fr 1.15fr;
+}
+
+@media (max-width: 1200px) {
+	.dw-grid-3-col-a,
+	.dw-grid-3-col-b,
+	.dw-grid-3-col-c {
+		grid-template-columns: 1fr;
+	}
+}
+
+.dw-card {
+	background: var(--dw-card-bg);
+	border: 1px solid var(--dw-border);
+	border-radius: var(--dw-radius);
+	box-shadow: var(--dw-shadow);
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+.dw-card-header {
+	padding: 10px 14px;
+	border-bottom: 1px solid var(--dw-border-subtle);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	background: #FFFFFF;
+	gap: 8px;
+}
+
+.dw-card-title {
+	font-size: 0.88rem;
+	font-weight: 800;
+	color: var(--dw-text-primary);
+	margin: 0;
+	letter-spacing: -0.01em;
+	white-space: nowrap;
+}
+
+.dw-card-tools {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.dw-select-mini {
+	border: 1px solid var(--dw-border);
+	background: #FFFFFF;
+	font-size: 0.74rem;
+	font-weight: 600;
+	color: var(--dw-text-secondary);
+	border-radius: var(--dw-radius-sm);
+	padding: 3px 6px;
+	outline: none;
+	cursor: pointer;
+}
+
+.dw-pill-tabs {
+	display: inline-flex;
+	background: #F1F5F9;
+	border-radius: 6px;
+	padding: 2px;
+	gap: 2px;
+}
+
+.dw-pill-btn {
+	border: none;
+	background: transparent;
+	font-size: 0.72rem;
+	font-weight: 600;
+	color: var(--dw-text-secondary);
+	padding: 2px 8px;
+	border-radius: 4px;
+	cursor: pointer;
+	transition: all 0.15s ease;
+}
+
+.dw-pill-btn.active {
+	background: #FFFFFF;
+	color: var(--dw-text-primary);
+	box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+	font-weight: 700;
+}
+
+.dw-card-body {
+	padding: 12px 14px;
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+}
+
+/* ==========================================================================
+   ZONA 2: EVOLUCIÓN, DONUT Y DEPARTAMENTOS
+   ========================================================================== */
+/* Evolución vs Ventas */
+.dw-evolution-subcontrols {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 10px;
+	font-size: 0.72rem;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.dw-chart-legend-inline {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	font-size: 0.72rem;
+	font-weight: 600;
+	color: var(--dw-text-secondary);
+}
+
+.dw-leg-item {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.dw-leg-dot {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	display: inline-block;
+}
+
+.dw-leg-dash {
+	width: 12px;
+	height: 2px;
+	background: var(--dw-green);
+	display: inline-block;
+}
+
+.dw-evolution-content {
+	display: flex;
+	gap: 14px;
+	align-items: center;
+	flex: 1;
+}
+
+.dw-evolution-chart-box {
+	flex: 1;
+	min-width: 0;
+	height: 190px;
+	position: relative;
+}
+
+.dw-evolution-side-panel {
+	width: 140px;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	flex-shrink: 0;
+	border-left: 1px solid var(--dw-border-subtle);
+	padding-left: 12px;
+}
+
+.dw-side-kpi-block {
+	background: #F8FAFC;
+	border: 1px solid var(--dw-border);
+	border-radius: 8px;
+	padding: 8px 10px;
+}
+
+.dw-side-kpi-title {
+	font-size: 0.68rem;
+	font-weight: 700;
+	color: var(--dw-text-secondary);
+	margin-bottom: 2px;
+}
+
+.dw-side-kpi-val {
+	font-size: 1.25rem;
+	font-weight: 800;
+	color: var(--dw-text-primary);
+	line-height: 1.1;
+}
+
+.dw-side-kpi-delta {
+	font-size: 0.68rem;
+	font-weight: 700;
+	margin-top: 2px;
+}
+
+.dw-side-kpi-sub {
+	font-size: 0.65rem;
+	color: var(--dw-text-muted);
+}
+
+/* Donut Distribución por Tipo */
+.dw-donut-container {
+	display: flex;
+	align-items: center;
+	justify-content: space-around;
+	height: 100%;
+	gap: 10px;
+}
+
+.dw-donut-chart-box {
+	width: 160px;
+	height: 160px;
+	position: relative;
+	flex-shrink: 0;
+}
+
+.dw-donut-center-text {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	text-align: center;
+	pointer-events: none;
+}
+
+.dw-donut-center-val {
+	font-size: 1.15rem;
+	font-weight: 800;
+	color: var(--dw-text-primary);
+	line-height: 1.1;
+}
+
+.dw-donut-center-sub {
+	font-size: 0.7rem;
+	font-weight: 600;
+	color: var(--dw-text-muted);
+}
+
+.dw-donut-legend {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	font-size: 0.74rem;
+	flex: 1;
+}
+
+.dw-donut-legend-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.dw-donut-legend-name {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	font-weight: 600;
+	color: var(--dw-text-primary);
+}
+
+.dw-donut-legend-vals {
+	font-weight: 700;
+	color: var(--dw-text-secondary);
+	display: flex;
+	gap: 8px;
+}
+
+/* Barras Horizontales Departamentos */
+.dw-dept-bars-box {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	flex: 1;
+	justify-content: space-around;
+	position: relative;
+}
+
+.dw-dept-bar-row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 0.72rem;
+}
+
+.dw-dept-bar-label {
+	width: 105px;
+	font-weight: 600;
+	color: var(--dw-text-secondary);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	text-align: right;
+}
+
+.dw-dept-bar-track {
+	flex: 1;
+	height: 14px;
+	background: #F1F5F9;
+	border-radius: 3px;
+	position: relative;
+	overflow: visible;
+}
+
+.dw-dept-bar-fill {
+	height: 100%;
+	border-radius: 3px;
+	transition: width 0.3s ease;
+}
+
+.dw-dept-target-line {
+	position: absolute;
+	top: -6px;
+	bottom: -6px;
+	left: 45%; /* Representing 1.50% target */
+	width: 1.5px;
+	background: var(--dw-green);
+	border-left: 1.5px dashed var(--dw-green);
+	z-index: 2;
+}
+
+.dw-dept-bar-val {
+	width: 38px;
+	font-weight: 700;
+	color: var(--dw-text-primary);
+	font-size: 0.72rem;
+	text-align: right;
+}
+
+/* ==========================================================================
+   ZONA 3: HEATMAP, TOP 10 PRODUCTOS Y CAUSAS
+   ========================================================================== */
+/* Heatmap de Mermas */
+.dw-heatmap-matrix {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+	margin-bottom: 8px;
+}
+
+.dw-heatmap-header-row {
+	display: flex;
+	align-items: center;
+	gap: 2px;
+	padding-left: 30px;
+	margin-bottom: 2px;
+}
+
+.dw-hm-header-cell {
+	flex: 1;
+	font-size: 0.62rem;
+	font-weight: 700;
+	color: var(--dw-text-muted);
+	text-align: center;
+}
+
+.dw-heatmap-day-row {
+	display: flex;
+	align-items: center;
+	gap: 2px;
+}
+
+.dw-hm-day-label {
+	width: 28px;
+	font-size: 0.68rem;
+	font-weight: 700;
+	color: var(--dw-text-secondary);
+}
+
+.dw-hm-cells-row {
+	display: flex;
+	flex: 1;
+	gap: 2px;
+}
+
+.dw-hm-cell {
+	flex: 1;
+	height: 19px;
+	border-radius: 2px;
+	cursor: pointer;
+	transition: transform 0.1s ease, outline 0.1s ease;
+}
+
+.dw-hm-cell:hover {
+	transform: scale(1.15);
+	outline: 1.5px solid var(--dw-text-primary);
+	z-index: 5;
+}
+
+.dw-heatmap-scale-bar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	font-size: 0.65rem;
+	color: var(--dw-text-muted);
+	font-weight: 600;
+	margin-top: 4px;
+	padding: 0 10px;
+}
+
+.dw-hm-gradient-strip {
+	width: 140px;
+	height: 6px;
+	border-radius: 3px;
+	background: linear-gradient(to right, #bbf7d0, #fef08a, #fed7aa, #fb923c, #ef4444);
+}
+
+/* Top 10 Productos con Mayor Merma */
+.dw-products-table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 0.72rem;
+}
+
+.dw-products-table th {
+	font-size: 0.64rem;
+	font-weight: 700;
+	color: var(--dw-text-muted);
+	text-transform: uppercase;
+	padding: 4px 6px;
+	border-bottom: 1px solid var(--dw-border);
+	letter-spacing: 0.03em;
+}
+
+.dw-products-table td {
+	padding: 4px 6px;
+	border-bottom: 1px solid var(--dw-border-subtle);
+	vertical-align: middle;
+}
+
+.dw-products-table tr:hover td {
+	background: #F8FAFC;
+}
+
+.dw-prod-name-box {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	font-weight: 600;
+	color: var(--dw-text-primary);
+}
+
+.dw-prod-icon {
+	font-size: 0.9rem;
+}
+
+.dw-prod-pct-bad {
+	color: var(--dw-red);
+	font-weight: 700;
+}
+
+/* Causas Principales de Merma (Pareto) */
+.dw-causes-bars-box {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	flex: 1;
+	justify-content: space-around;
+}
+
+.dw-cause-row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 0.72rem;
+}
+
+.dw-cause-name {
+	width: 95px;
+	font-weight: 600;
+	color: var(--dw-text-secondary);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	text-align: right;
+}
+
+.dw-cause-track {
+	flex: 1;
+	height: 14px;
+	background: #F1F5F9;
+	border-radius: 3px;
+	position: relative;
+}
+
+.dw-cause-fill {
+	height: 100%;
+	border-radius: 3px;
+}
+
+.dw-cause-val-box {
+	width: 80px;
+	display: flex;
+	justify-content: space-between;
+	font-weight: 700;
+	color: var(--dw-text-primary);
+	font-size: 0.7rem;
+}
+
+/* ==========================================================================
+   ZONA 4 & 5: SUCURSALES, RECUPERACIÓN FINANCIERA Y DECISIONES PRIORITARIAS
+   ========================================================================== */
+/* Tendencia por Sucursal */
+.dw-branch-table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 0.72rem;
+}
+
+.dw-branch-table th {
+	font-size: 0.64rem;
+	font-weight: 700;
+	color: var(--dw-text-muted);
+	text-transform: uppercase;
+	padding: 5px 6px;
+	border-bottom: 1px solid var(--dw-border);
+}
+
+.dw-branch-table td {
+	padding: 5.5px 6px;
+	border-bottom: 1px solid var(--dw-border-subtle);
+	font-weight: 500;
+}
+
+.dw-branch-table tr:hover td {
+	background: #F8FAFC;
+}
+
+.dw-branch-name {
+	font-weight: 700;
+	color: var(--dw-text-primary);
+}
+
+/* Recuperación Financiera */
+.dw-recovery-layout {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex: 1;
+	gap: 12px;
+}
+
+.dw-rec-stat-box {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.dw-rec-big-val {
+	font-size: 1.45rem;
+	font-weight: 800;
+	color: var(--dw-text-primary);
+	line-height: 1.1;
+}
+
+.dw-rec-label {
+	font-size: 0.72rem;
+	font-weight: 700;
+	color: var(--dw-text-secondary);
+}
+
+.dw-rec-sub {
+	font-size: 0.65rem;
+	color: var(--dw-text-muted);
+}
+
+.dw-rec-gauge-container {
+	width: 130px;
+	height: 95px;
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: flex-end;
+}
+
+.dw-gauge-canvas-box {
+	width: 120px;
+	height: 65px;
+	position: relative;
+}
+
+.dw-gauge-center-text {
+	position: absolute;
+	bottom: 0px;
+	left: 50%;
+	transform: translateX(-50%);
+	text-align: center;
+}
+
+.dw-gauge-val {
+	font-size: 1.15rem;
+	font-weight: 800;
+	color: var(--dw-text-primary);
+	line-height: 1;
+}
+
+.dw-gauge-label {
+	font-size: 0.62rem;
+	color: var(--dw-text-muted);
+	font-weight: 600;
+	white-space: nowrap;
+	margin-top: 4px;
+	text-align: center;
+}
+
+/* Decisiones Prioritarias */
+.dw-priority-alerts {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	flex: 1;
+	justify-content: space-around;
+}
+
+.dw-priority-card {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 8px 12px;
+	border-radius: var(--dw-radius-sm);
+	text-decoration: none !important;
+	transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.dw-priority-card:hover {
+	transform: translateX(2px);
+}
+
+.dw-priority-card.is-danger {
+	background: #FEF2F2;
+	border: 1px solid #FEE2E2;
+}
+
+.dw-priority-card.is-warning {
+	background: #FFFBEB;
+	border: 1px solid #FEF3C7;
+}
+
+.dw-priority-card.is-success {
+	background: #F0FDF4;
+	border: 1px solid #DCFCE7;
+}
+
+.dw-priority-left {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.dw-priority-icon {
+	width: 28px;
+	height: 28px;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 0.8rem;
+	flex-shrink: 0;
+}
+
+.dw-priority-card.is-danger .dw-priority-icon { background: #FEE2E2; color: #DC2626; }
+.dw-priority-card.is-warning .dw-priority-icon { background: #FEF3C7; color: #D97706; }
+.dw-priority-card.is-success .dw-priority-icon { background: #DCFCE7; color: #16A34A; }
+
+.dw-priority-texts {
+	display: flex;
+	flex-direction: column;
+}
+
+.dw-priority-title {
+	font-size: 0.76rem;
+	font-weight: 800;
+	color: var(--dw-text-primary);
+	line-height: 1.2;
+}
+
+.dw-priority-desc {
+	font-size: 0.68rem;
+	color: var(--dw-text-secondary);
+	margin-top: 1px;
+}
+
+.dw-priority-badge {
+	font-size: 0.68rem;
+	font-weight: 700;
+	padding: 3px 8px;
+	border-radius: 12px;
+	white-space: nowrap;
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.dw-priority-card.is-danger .dw-priority-badge { background: #FEE2E2; color: #DC2626; }
+.dw-priority-card.is-warning .dw-priority-badge { background: #FEF3C7; color: #D97706; }
+.dw-priority-card.is-success .dw-priority-badge { background: #DCFCE7; color: #16A34A; }
+
+/* Collapsible Legacy Audit Drawer */
+.dw-audit-drawer-toggle {
+	background: #FFFFFF;
+	border: 1px dashed var(--dw-border);
+	border-radius: var(--dw-radius);
+	padding: 10px 16px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	cursor: pointer;
+	color: var(--dw-text-secondary);
+	font-weight: 700;
+	font-size: 0.82rem;
+	margin-top: 14px;
+	transition: all 0.15s ease;
+}
+
+.dw-audit-drawer-toggle:hover {
+	background: #F8FAFC;
+	border-color: var(--dw-gray);
+	color: var(--dw-text-primary);
+}

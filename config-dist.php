@@ -27,6 +27,10 @@ Setting('MODE', 'production');
 // 3. The one defined here below
 Setting('DEFAULT_LOCALE', 'en');
 
+// PHP timezone (e.g. America/New_York); must match the OS timezone used by SQLite "localtime"
+// Empty = php.ini date.timezone (UTC when not set)
+Setting('TIMEZONE', '');
+
 // This is used to define the first day of a week for calendar views,
 // leave empty to use the locale default
 // Needs to be a number where Sunday = 0, Monday = 1 and so forth
@@ -133,6 +137,78 @@ Setting('TPRINTER_CONNECTOR', '/dev/usb/lp0'); // Printer device (does only matt
 // Make sure that the user that runs the webserver has permissions to write to the printer - on Linux add your webserver user to the LP group with usermod -a -G lp www-data
 
 
+// DAIRY: allow the user who reported a waste record to approve/reject it (segregation of duties is enforced when false)
+Setting('WASTE_ALLOW_SELF_APPROVAL', false);
+
+// DAIRY MRP: cycle service level used for safety stock (0.80 - 0.99) and review period in days added to the order coverage
+Setting('MRP_SERVICE_LEVEL', 0.95);
+Setting('MRP_REVIEW_PERIOD_DAYS', 7);
+// Weekly seasonality (day-of-week index) is applied only when the last 28 days have at least this many units sold
+Setting('MRP_SEASONALITY_MIN_UNITS', 28);
+
+// DAIRY receiving: minimum remaining shelf life required at goods receipt, as a fraction of the product's default best before days
+// (used when the product has no explicit receiving rule; 0 disables the default check)
+Setting('RECEIVING_MIN_SHELF_LIFE_PCT', 0.5);
+
+// DAIRY targets used when no monthly budget is loaded in /cost-centers (budget per branch/month has priority)
+Setting('WASTE_TARGET_PCT', 2.5); // maximum waste as % of the base below
+Setting('MARGIN_TARGET_PCT', 38); // minimum gross margin %
+Setting('DSI_TARGET_DAYS', 20); // maximum days of inventory
+// Base for "waste %": 'net_sales' (sales without tax, default), 'gross_sales' (sales incl. tax) or 'cogs' (cost of goods sold)
+Setting('WASTE_PCT_BASE', 'net_sales');
+// An approved waste record with a loss >= this amount creates a corrective task for the branch supervisor (0 = always, -1 = never)
+Setting('WASTE_CORRECTIVE_TASK_MIN_COST', 20);
+// Supplier invoice 3-way match: tolerated unit price increase over the purchase order price, in %
+Setting('INVOICE_PRICE_TOLERANCE_PCT', 2);
+// DAIRY sales: list price for products without a sale price = last purchase cost + this markup % (products without either cannot be sold)
+Setting('SALE_PRICE_DEFAULT_MARKUP_PCT', 35);
+
+// Cycle counting by ABC class (sales of the last 90 days, Pareto 80/95): days between counts per class
+Setting('CYCLE_COUNT_DAYS_A', 7);
+Setting('CYCLE_COUNT_DAYS_B', 30);
+Setting('CYCLE_COUNT_DAYS_C', 90);
+// Blind counts: the counter does not see the system stock of a pending count (it is captured when the count is recorded)
+Setting('CYCLE_COUNT_BLIND', true);
+
+// DAIRY store floor: minutes after its due time before a pending task is escalated to the manager board (Today)
+Setting('STORE_TASK_ESCALATION_MINUTES', 30);
+Setting('TODAY_SHIFTS', 'Mañana=06:00-14:00,Tarde=14:00-22:00,Noche=22:00-06:00'); // turnos de la tienda para Hoy (nombre=inicio-fin, 24 h); segmenta el cumplimiento por turno
+
+// DAIRY inventory control: store hours (movements outside are flagged), minimum value of an inventory correction to flag
+// (raised to mean + 3 sigma of the last 90 days when there is history) and undone movements per user that trigger a review
+Setting('STORE_OPEN_HOUR', 6);
+Setting('STORE_CLOSE_HOUR', 22);
+Setting('INVENTORY_ANOMALY_MIN_VALUE', 50);
+Setting('INVENTORY_ANOMALY_UNDO_COUNT', 5);
+
+// DAIRY workforce: default contracted weekly hours (adjust to local labour law) and minimum rest between shifts
+Setting('WORKFORCE_DEFAULT_WEEKLY_HOURS', 44);
+Setting('WORKFORCE_MIN_REST_HOURS', 10);
+// DAIRY workforce: maximum scheduled hours per day (warning, 0 = off) and whether the requester of a punch correction may approve it
+Setting('WORKFORCE_MAX_DAILY_HOURS', 10);
+Setting('WORKFORCE_ADJUSTMENT_SELF_APPROVAL', false);
+// DAIRY demand-based coverage: sales tickets one person can attend per hour (suggested staffing = tickets/hour ÷ this)
+Setting('WORKFORCE_TICKETS_PER_STAFF_HOUR', 20);
+// DAIRY labor forecast (Module 17): sales per labor hour when there is no attendance/schedule history (0 = derive from history, else tickets),
+// share of a paid hour that is productive (breaks, transit), store hours used when there are no sales yet, receiving window,
+// shift lengths used by the recommender, minimum staff while open, forecast bands and FEFO horizon (days)
+Setting('WORKFORCE_SALES_PER_LABOR_HOUR', 0);
+Setting('WORKFORCE_EFFECTIVE_RATIO', 0.9);
+Setting('WORKFORCE_STORE_HOURS', '06:00-22:00');
+Setting('WORKFORCE_RECEIVING_WINDOW', '07:00-11:00');
+Setting('WORKFORCE_MIN_SHIFT_HOURS', 4);
+Setting('WORKFORCE_STANDARD_SHIFT_HOURS', 8);
+Setting('WORKFORCE_MIN_STAFF_OPEN', 1);
+Setting('WORKFORCE_FORECAST_BANDS', '06-09,09-12,12-15,15-18,18-22');
+Setting('WORKFORCE_FEFO_DAYS', 3);
+// DAIRY payroll connector (e.g. 'paycom'): stays inactive unless an authorized API URL and key are configured and validated
+Setting('WORKFORCE_PAYROLL_CONNECTOR', '');
+Setting('WORKFORCE_PAYROLL_API_URL', '');
+Setting('WORKFORCE_PAYROLL_API_KEY', '');
+
+// DAIRY alert center: minutes between automatic scans when the page is opened (large chains: call POST /api/alerts/scan from a scheduler)
+Setting('ALERT_SCAN_MINUTES', 15);
+
 // Feature flags
 // Here you can disable the parts which you don't need to have a less cluttered UI
 // (set the setting to "false" to disable the corresponding part, which should be self explanatory)
@@ -234,3 +310,10 @@ DefaultUserSetting('calendar_color_tasks', '#28a745'); // The event color (hex c
 DefaultUserSetting('calendar_color_chores', '#ffc107'); // The event color (hex code) for due chores
 DefaultUserSetting('calendar_color_batteries', '#17a2b8'); // The event color (hex code) for due battery charge cycles
 DefaultUserSetting('calendar_color_meal_plan', '#6c757d'); // The event color (hex code) for meal plan items
+
+// DAIRY Etapa 21: política de aprobación de mermas e importaciones
+Setting('WASTE_APPROVAL_MIN_COST', 50); // merma con impacto estimado >= este valor requiere aprobación aunque la causal no lo exija (0 = desactivado)
+Setting('WASTE_HIGH_VALUE_COST', 500); // merma >= este valor solo la aprueba quien tenga WASTE_APPROVE_HIGH (0 = desactivado)
+Setting('WASTE_DUPLICATE_WINDOW_MINUTES', 10); // mismo producto/cantidad/causal/usuario en esta ventana exige confirmación explícita
+Setting('SCAN_DUPLICATE_WINDOW_MS', 400); // lecturas idénticas del mismo dispositivo dentro de esta ventana (ms) se ignoran: rebote del gatillo, no escaneo por unidad
+Setting('STAGNANT_LOT_DAYS', 30); // lote sin salidas en estos días = inmovilizado

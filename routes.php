@@ -1,5 +1,6 @@
 <?php
 
+use Grocy\Controllers\Api\AlertCenterApiController;
 use Grocy\Controllers\Api\BatteriesApiController;
 use Grocy\Controllers\Api\CalendarApiController;
 use Grocy\Controllers\Api\ChoresApiController;
@@ -24,6 +25,51 @@ use Grocy\Controllers\StockReportsController;
 use Grocy\Controllers\SystemController;
 use Grocy\Controllers\TasksController;
 use Grocy\Controllers\UsersController;
+use Grocy\Controllers\WasteController;
+use Grocy\Controllers\SalesController;
+use Grocy\Controllers\KpiController;
+use Grocy\Controllers\BranchController;
+use Grocy\Controllers\AiController;
+use Grocy\Controllers\SupplierProcurementController;
+use Grocy\Controllers\QualityExpiryController;
+use Grocy\Controllers\Api\WasteApiController;
+use Grocy\Controllers\Api\SalesApiController;
+use Grocy\Controllers\Api\KpiApiController;
+use Grocy\Controllers\Api\SupplierProcurementApiController;
+use Grocy\Controllers\Api\QualityExpiryApiController;
+use Grocy\Controllers\WorkforceController;
+use Grocy\Controllers\ScheduleController;
+use Grocy\Controllers\MrpController;
+use Grocy\Controllers\StockTransferController;
+use Grocy\Controllers\DocumentController;
+use Grocy\Controllers\KardexController;
+use Grocy\Controllers\Api\MrpApiController;
+use Grocy\Controllers\Api\StockTransferApiController;
+use Grocy\Controllers\Api\MovementControlApiController;
+use Grocy\Controllers\Api\WorkforceApiController;
+use Grocy\Controllers\Api\ScheduleApiController;
+use Grocy\Controllers\AttendanceController;
+use Grocy\Controllers\Api\AttendanceApiController;
+use Grocy\Controllers\Api\BranchApiController;
+use Grocy\Controllers\Api\SimulatorApiController;
+use Grocy\Controllers\Api\MarkdownApiController;
+use Grocy\Controllers\Api\LossPreventionApiController;
+use Grocy\Controllers\Api\LossIntelligenceApiController;
+use Grocy\Controllers\Api\LossCensusApiController;
+use Grocy\Controllers\LossPreventionController;
+use Grocy\Controllers\OperationsController;
+use Grocy\Controllers\Api\OperationsApiController;
+use Grocy\Controllers\Api\MobileApiController;
+use Grocy\Controllers\Api\MobileWorkApiController;
+use Grocy\Controllers\MobileController;
+use Grocy\Controllers\SystemMapController;
+use Grocy\Controllers\RetailPreventionController;
+use Grocy\Controllers\Api\RetailPreventionApiController;
+use Grocy\Controllers\Api\WorkforcePeakApiController;
+use Grocy\Controllers\Api\SystemMapApiController;
+use Grocy\Controllers\Api\GlobalSearchApiController;
+use Grocy\Controllers\ReconciliationController;
+use Grocy\Controllers\Api\ReconciliationApiController;
 use Grocy\Middleware\CorsMiddleware;
 use Grocy\Middleware\JsonMiddleware;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -147,6 +193,78 @@ $app->group('', function (RouteCollectorProxy $group)
 	$group->get('/api', [OpenApiController::class, 'DocumentationUi']);
 	$group->get('/manageapikeys', [OpenApiController::class, 'ApiKeysList']);
 	$group->get('/manageapikeys/new', [OpenApiController::class, 'CreateNewApiKey']);
+
+	// Enterprise Platform Routes
+	// Waste Management
+	$group->get('/waste', [WasteController::class, 'Overview']);
+	$group->get('/waste/report', [WasteController::class, 'ReportForm']);
+	$group->get('/waste/approvals', [WasteController::class, 'ApprovalsQueue']);
+	$group->get('/waste/reasons', [WasteController::class, 'ReasonsList']);
+	$group->get('/waste/tab/{tab}', [WasteController::class, 'Tab']);
+
+	// Sales & POS
+	$group->get('/pos', [SalesController::class, 'Pos']);
+	$group->get('/sales', [SalesController::class, 'SalesHistory']);
+	$group->get('/customers', [SalesController::class, 'CustomersList']);
+
+	// Executive KPIs & Analytics
+	$group->get('/today', [KpiController::class, 'Today']);
+	// DAIRY Mobile (manager)
+	$group->get('/m', [MobileController::class, 'App']);
+	$group->get('/kpis', [KpiController::class, 'ExecutiveDashboard']);
+	$group->get('/reports', [KpiController::class, 'ReportsHub']);
+	$group->get('/reports/loss-executive', [\Grocy\Controllers\LossExecutiveReportController::class, 'Overview']);
+	$group->get('/cost-centers', [KpiController::class, 'CostCenters']);
+
+	// Multi-Branch Management
+	$group->get('/branches', [BranchController::class, 'BranchesList']);
+	$group->get('/branch/{branchId}/stock', [BranchController::class, 'BranchStock']);
+
+	// AI Operational Advisor
+	$group->get('/ai-advisor', [AiController::class, 'AdvisorView']);
+
+	// Suppliers & Procurement
+	$group->get('/suppliers', [SupplierProcurementController::class, 'Overview']);
+	$group->get('/procurement', function (Request $request, Response $response) {
+		return $response->withRedirect($this->get('UrlManager')->ConstructUrl('/suppliers' . ($request->getUri()->getQuery() !== '' ? '?' . $request->getUri()->getQuery() : '')), 301);
+	});
+
+	// Quality & Expiry (Cold Chain)
+	$group->get('/quality', [QualityExpiryController::class, 'Overview']);
+	$group->get('/quality-expiry', function (Request $request, Response $response) {
+		return $response->withRedirect($this->get('UrlManager')->ConstructUrl('/quality' . ($request->getUri()->getQuery() !== '' ? '?' . $request->getUri()->getQuery() : '')), 301);
+	});
+
+	// Workforce Floor Operations (Mobile)
+	$group->get('/workforce', [WorkforceController::class, 'StoreFloorView']);
+	$group->get('/schedule', [ScheduleController::class, 'Overview']);
+	$group->get('/operations/scheduling', [ScheduleController::class, 'Overview']);
+	$group->get('/attendance', [AttendanceController::class, 'Overview']);
+	$group->get('/operations/attendance', [AttendanceController::class, 'Overview']);
+
+	// MRP / Planificación de materiales
+	$group->get('/mrp', [MrpController::class, 'Overview']);
+	$group->get('/transfers', [StockTransferController::class, 'Overview']);
+	$group->get('/inventory-control', [LossPreventionController::class, 'InventoryControl']);
+	$group->get('/scan', [OperationsController::class, 'Scan']);
+	$group->get('/data-import', [OperationsController::class, 'DataImport']);
+	$group->get('/locations/labels', [OperationsController::class, 'LocationLabels']);
+	$group->get('/locations/map', [OperationsController::class, 'LocationMap']);
+	$group->get('/traceability', [OperationsController::class, 'Traceability']);
+	$group->get('/orders', [OperationsController::class, 'Orders']);
+	$group->get('/dispatch', [RetailPreventionController::class, 'Dispatch']);
+	$group->get('/returns', [RetailPreventionController::class, 'Returns']);
+	$group->get('/recalls', [LossPreventionController::class, 'Recalls']);
+	$group->get('/audits', [LossPreventionController::class, 'Audits']);
+	$group->get('/alerts', [LossPreventionController::class, 'Alerts']);
+	$group->get('/document/{type}/{id}', [DocumentController::class, 'Show']);
+	$group->get('/kardex', [KardexController::class, 'Overview']);
+	$group->get('/reconciliation', [ReconciliationController::class, 'Overview']);
+	$group->get('/traceability-reconciliation', function (Request $request, Response $response) {
+		return $response->withRedirect($this->get('UrlManager')->ConstructUrl('/reconciliation' . ($request->getUri()->getQuery() !== '' ? '?' . $request->getUri()->getQuery() : '')), 301);
+	});
+	$group->get('/system-map', [SystemMapController::class, 'Overview']);
+	$group->get('/daily/set-role', [SystemController::class, 'SetSimulatedRole']);
 });
 
 $app->group('/api', function (RouteCollectorProxy $group)
@@ -267,6 +385,449 @@ $app->group('/api', function (RouteCollectorProxy $group)
 	// Calendar
 	$group->get('/calendar/ical', [CalendarApiController::class, 'Ical'])->setName('calendar-ical');
 	$group->get('/calendar/ical/sharing-link', [CalendarApiController::class, 'IcalSharingLink']);
+
+	// Enterprise Platform API Routes
+	// Waste API
+	$group->get('/waste/reasons', [WasteApiController::class, 'GetWasteReasons']);
+	$group->get('/waste/reasons/{reasonId}', [WasteApiController::class, 'GetWasteReason']);
+	$group->post('/waste/reasons', [WasteApiController::class, 'SaveWasteReason']);
+	$group->post('/waste/reasons/{reasonId}/toggle-active', [WasteApiController::class, 'ToggleWasteReasonActive']);
+	$group->get('/waste/records', [WasteApiController::class, 'GetWasteRecords']);
+	$group->get('/waste/cases/{caseId}', [WasteApiController::class, 'GetCaseDetails']);
+	$group->post('/waste/cases/{caseId}/investigation', [WasteApiController::class, 'UpdateCaseInvestigation']);
+	$group->get('/waste/analytics', [WasteApiController::class, 'GetWasteAnalytics']);
+	$group->post('/waste/report', [WasteApiController::class, 'ReportWaste']);
+	$group->post('/waste/{wasteId}/approve', [WasteApiController::class, 'ApproveWaste']);
+	$group->post('/waste/{wasteId}/reject', [WasteApiController::class, 'RejectWaste']);
+	$group->post('/waste/{wasteId}/request-info', [WasteApiController::class, 'RequestWasteInfo']);
+	$group->post('/waste/upload-photo', [WasteApiController::class, 'UploadWastePhoto']);
+	$group->get('/waste/photo/{fileName}', [WasteApiController::class, 'ServeWastePhoto']);
+	$group->post('/waste/action-plans', [WasteApiController::class, 'SaveActionPlan']);
+	$group->post('/waste/action-plans/{planId}/update', [WasteApiController::class, 'UpdateActionPlanStatus']);
+	$group->post('/stock/cycle-counts', [WasteApiController::class, 'ScheduleCycleCount']);
+	$group->post('/stock/cycle-counts/auto-abc', [WasteApiController::class, 'AutoScheduleCycleCounts']);
+	$group->post('/waste/supplier-returns', [WasteApiController::class, 'SaveSupplierReturn']);
+	$group->post('/waste/supplier-returns/{returnId}/credit', [WasteApiController::class, 'RecordSupplierCredit']);
+	$group->post('/stock/cycle-counts/{countId}/execute', [WasteApiController::class, 'ExecuteCycleCount']);
+	$group->post('/stock/cycle-counts/{countId}/approve-adjustment', [WasteApiController::class, 'ApproveCycleCountAdjustment']);
+
+	// Sales API
+	$group->get('/sales', [SalesApiController::class, 'GetSales']);
+	$group->get('/sales/{saleId}', [SalesApiController::class, 'GetSale']);
+	$group->post('/sales', [SalesApiController::class, 'CreateSale']);
+	$group->post('/sales/{saleId}/cancel', [SalesApiController::class, 'CancelSale']);
+	$group->post('/pos/ingest', [\Grocy\Controllers\Api\PosIntegrationApiController::class, 'Ingest']);
+	$group->post('/pos/import-csv', [\Grocy\Controllers\Api\PosIntegrationApiController::class, 'ImportCsv']);
+	$group->get('/pos/status', [\Grocy\Controllers\Api\PosIntegrationApiController::class, 'Status']);
+	$group->post('/pos/external/{id}/retry', [\Grocy\Controllers\Api\PosIntegrationApiController::class, 'Retry']);
+
+	// Executive KPI & AI Advisor API
+	$group->get('/kpi/executive', [KpiApiController::class, 'GetExecutiveDashboard']);
+	$group->get('/today/sales-executive', [KpiApiController::class, 'GetTodayExecutiveSales']);
+	$group->get('/ai/alerts', [KpiApiController::class, 'GetSmartAlerts']);
+	$group->get('/budgets', [KpiApiController::class, 'GetBudgets']);
+	$group->post('/ai/ask', [KpiApiController::class, 'Ask']);
+
+	// Reportes personalizables y programados (Etapa 34)
+	$group->get('/reports/catalog', [\Grocy\Controllers\Api\ReportBuilderApiController::class, 'Catalog']);
+	$group->post('/reports/preview', [\Grocy\Controllers\Api\ReportBuilderApiController::class, 'Preview']);
+	$group->get('/reports/definitions', [\Grocy\Controllers\Api\ReportBuilderApiController::class, 'List']);
+	$group->post('/reports/definitions', [\Grocy\Controllers\Api\ReportBuilderApiController::class, 'Save']);
+	$group->post('/reports/definitions/{id}', [\Grocy\Controllers\Api\ReportBuilderApiController::class, 'Save']);
+	$group->post('/reports/definitions/{id}/delete', [\Grocy\Controllers\Api\ReportBuilderApiController::class, 'Delete']);
+	$group->post('/reports/definitions/{id}/run', [\Grocy\Controllers\Api\ReportBuilderApiController::class, 'Execute']);
+	$group->get('/reports/runs/{id}/csv', [\Grocy\Controllers\Api\ReportBuilderApiController::class, 'DownloadRun']);
+	// Informe Ejecutivo de Pérdidas y Novedades — Control 360
+	$group->post('/reports/loss-executive/generate', [\Grocy\Controllers\Api\LossExecutiveReportApiController::class, 'Generate']);
+	$group->get('/reports/loss-executive/history', [\Grocy\Controllers\Api\LossExecutiveReportApiController::class, 'History']);
+	$group->get('/reports/loss-executive/{id}', [\Grocy\Controllers\Api\LossExecutiveReportApiController::class, 'Get']);
+	$group->get('/reports/loss-executive/{id}/xlsx', [\Grocy\Controllers\Api\LossExecutiveReportApiController::class, 'ExportXlsx']);
+	$group->post('/reports/loss-executive/schedule/{type}', [\Grocy\Controllers\Api\LossExecutiveReportApiController::class, 'SaveSchedule']);
+	$group->post('/ai/actions/preview', [KpiApiController::class, 'AiActionPreview']);
+	$group->post('/ai/actions/execute', [KpiApiController::class, 'AiActionExecute']);
+	$group->get('/ai/actions', [KpiApiController::class, 'AiActionHistory']);
+	$group->get('/branches/user-access', [BranchApiController::class, 'GetUserAccess']);
+	$group->post('/branches/user-access/{userId}', [BranchApiController::class, 'SetUserAccess']);
+	$group->post('/budgets', [KpiApiController::class, 'SaveBudget']);
+
+	// Suppliers & Procurement API
+	$group->get('/suppliers', [SupplierProcurementApiController::class, 'GetSuppliers']);
+	$group->get('/suppliers/{supplierId}', [SupplierProcurementApiController::class, 'GetSupplier']);
+	$group->post('/suppliers', [SupplierProcurementApiController::class, 'SaveSupplier']);
+	$group->post('/suppliers/{supplierId}/toggle-active', [SupplierProcurementApiController::class, 'ToggleActive']);
+	$group->get('/procurement/comparison/{productId}', [SupplierProcurementApiController::class, 'GetCostComparison']);
+	$group->post('/procurement/prices', [SupplierProcurementApiController::class, 'AddPrice']);
+	$group->post('/procurement/deliveries', [SupplierProcurementApiController::class, 'RecordDelivery']);
+	$group->post('/procurement/incidents', [SupplierProcurementApiController::class, 'SaveIncident']);
+	$group->get('/procurement/recommendations', [SupplierProcurementApiController::class, 'GetRecommendations']);
+
+	// Quality & Expiry API
+	$group->get('/quality/batches', [QualityExpiryApiController::class, 'GetBatchExpiry']);
+	$group->get('/quality/cold-chain', [QualityExpiryApiController::class, 'GetColdChain']);
+	$group->get('/quality/temperatures', [QualityExpiryApiController::class, 'GetTemperatures']);
+	$group->post('/quality/temperatures', [QualityExpiryApiController::class, 'RecordTemperature']);
+	$group->post('/quality/inspections', [QualityExpiryApiController::class, 'RecordInspection']);
+	$group->get('/quality/quarantine', [QualityExpiryApiController::class, 'GetQuarantine']);
+	$group->post('/quality/quarantine', [QualityExpiryApiController::class, 'MoveToQuarantine']);
+	$group->post('/quality/quarantine/{quarantineId}/resolve', [QualityExpiryApiController::class, 'ResolveQuarantine']);
+	$group->get('/quality/traceability/{identifier}', [QualityExpiryApiController::class, 'GetTraceability']);
+
+	// MRP & Materials Planning API
+	$group->get('/mrp/calculate', [MrpApiController::class, 'GetMrpCalculations']);
+	$group->get('/mrp/orders', [MrpApiController::class, 'GetOrders']);
+	$group->post('/mrp/order/create', [MrpApiController::class, 'CreateOrder']);
+	$group->post('/mrp/orders/generate', [MrpApiController::class, 'GenerateOrders']);
+	$group->post('/mrp/order/{orderId}/approve', [MrpApiController::class, 'ApproveOrder']);
+	$group->get('/mrp/order/{orderId}', [MrpApiController::class, 'GetOrder']);
+	$group->post('/mrp/order/{orderId}/send', [MrpApiController::class, 'SendOrder']);
+	$group->post('/mrp/order/{orderId}/close', [MrpApiController::class, 'CloseOrder']);
+	$group->post('/mrp/order/{orderId}/receive', [MrpApiController::class, 'ReceiveOrder']);
+	$group->post('/mrp/order/{orderId}/invoice', [MrpApiController::class, 'RegisterInvoice']);
+	$group->get('/mrp/invoices/{invoiceId}/items', [MrpApiController::class, 'GetInvoiceItems']);
+	$group->post('/mrp/invoices/{invoiceId}/decide', [MrpApiController::class, 'DecideInvoice']);
+	$group->get('/mrp/receiving-rules', [MrpApiController::class, 'GetReceivingRules']);
+	$group->post('/mrp/receiving-rules/{productId}', [MrpApiController::class, 'SaveReceivingRule']);
+	$group->get('/stock/ledger/verify', [MovementControlApiController::class, 'VerifyLedger']);
+	$group->get('/stock/anomalies', [MovementControlApiController::class, 'GetAnomalies']);
+	$group->post('/stock/movement/{id}/link-waste', [MovementControlApiController::class, 'LinkWasteCase']);
+	$group->post('/stock/movement/{id}/justify', [MovementControlApiController::class, 'JustifyMovement']);
+	$group->get('/transfers/{transferId}', [StockTransferApiController::class, 'GetTransfer']);
+	$group->post('/transfers', [StockTransferApiController::class, 'CreateTransfer']);
+	$group->post('/transfers/{transferId}/receive', [StockTransferApiController::class, 'ReceiveTransfer']);
+	$group->post('/transfers/{transferId}/cancel', [StockTransferApiController::class, 'CancelTransfer']);
+
+	// Workforce Store Tasks API
+	$group->get('/workforce/tasks', [WorkforceApiController::class, 'GetTasks']);
+	$group->post('/workforce/tasks/{taskId}/complete', [WorkforceApiController::class, 'CompleteTask']);
+	$group->post('/workforce/tasks/{taskId}/status', [WorkforceApiController::class, 'UpdateTaskStatus']);
+	$group->post('/workforce/tasks/convert-agreement', [WorkforceApiController::class, 'CreateAgreementTask']);
+	$group->post('/workforce/quick-waste', [WorkforceApiController::class, 'QuickWasteReport']);
+	$group->get('/schedule/week', [ScheduleApiController::class, 'GetWeek']);
+	$group->get('/schedule/my', [ScheduleApiController::class, 'GetMySchedule']);
+	$group->post('/schedule/employees', [ScheduleApiController::class, 'SaveEmployee']);
+	$group->post('/schedule/employees/{id}/availability', [ScheduleApiController::class, 'SetAvailability']);
+	$group->post('/schedule/shifts/check', [ScheduleApiController::class, 'CheckShift']);
+	$group->post('/schedule/shifts', [ScheduleApiController::class, 'SaveShift']);
+	$group->post('/schedule/shifts/{id}/move', [ScheduleApiController::class, 'MoveShift']);
+	$group->post('/schedule/shifts/{id}/cancel', [ScheduleApiController::class, 'CancelShift']);
+	$group->post('/schedule/week/publish', [ScheduleApiController::class, 'PublishWeek']);
+	$group->post('/schedule/week/copy', [ScheduleApiController::class, 'CopyWeek']);
+	$group->post('/schedule/coverage', [ScheduleApiController::class, 'SaveCoverage']);
+	$group->get('/schedule/coverage/suggest', [ScheduleApiController::class, 'SuggestCoverage']);
+	$group->post('/schedule/certifications', [ScheduleApiController::class, 'SaveCertification']);
+	$group->post('/schedule/certifications/{id}/delete', [ScheduleApiController::class, 'DeleteCertification']);
+	$group->post('/schedule/role-requirements', [ScheduleApiController::class, 'SaveRoleRequirements']);
+	$group->post('/schedule/shifts/bulk', [ScheduleApiController::class, 'BulkShifts']);
+	$group->post('/schedule/shifts/{id}/duplicate', [ScheduleApiController::class, 'DuplicateShift']);
+	$group->post('/schedule/shifts/{id}/split', [ScheduleApiController::class, 'SplitShift']);
+	$group->get('/schedule/shifts/{id}/history', [ScheduleApiController::class, 'ShiftHistory']);
+	$group->get('/schedule/changes', [ScheduleApiController::class, 'ChangeLog']);
+	$group->post('/schedule/undo', [ScheduleApiController::class, 'Undo']);
+	$group->get('/schedule/templates', [ScheduleApiController::class, 'GetTemplates']);
+	$group->post('/schedule/templates', [ScheduleApiController::class, 'SaveTemplate']);
+	$group->post('/schedule/templates/{id}/delete', [ScheduleApiController::class, 'DeleteTemplate']);
+	$group->post('/schedule/templates/{id}/apply', [ScheduleApiController::class, 'ApplyTemplate']);
+	$group->get('/schedule/timesheet', [ScheduleApiController::class, 'GetTimesheet']);
+	$group->get('/schedule/attendance', [ScheduleApiController::class, 'GetAttendance']);
+	$group->get('/schedule/adjustments',[ScheduleApiController::class, 'GetAdjustments']);
+	$group->post('/schedule/adjustments/{id}/decide', [ScheduleApiController::class, 'DecideAdjustment']);
+	$group->get('/schedule/forecast', [ScheduleApiController::class, 'Forecast']);
+	$group->get('/schedule/forecast/band', [ScheduleApiController::class, 'ForecastBand']);
+	$group->post('/schedule/forecast/recommend', [ScheduleApiController::class, 'ForecastRecommend']);
+	$group->post('/schedule/forecast/apply', [ScheduleApiController::class, 'ForecastApply']);
+	$group->get('/schedule/forecast/accuracy', [ScheduleApiController::class, 'ForecastAccuracy']);
+	$group->get('/schedule/forecast/events', [ScheduleApiController::class, 'ForecastEvents']);
+	$group->post('/schedule/forecast/events', [ScheduleApiController::class, 'SaveForecastEvent']);
+	$group->post('/schedule/forecast/events/{id}/delete', [ScheduleApiController::class, 'DeleteForecastEvent']);
+	$group->post('/schedule/forecast/standards', [ScheduleApiController::class, 'SaveForecastStandards']);
+	$group->post('/schedule/scenarios/simulate', [ScheduleApiController::class, 'SimulateScenario']);
+	$group->get('/schedule/scenarios', [ScheduleApiController::class, 'Scenarios']);
+	$group->post('/schedule/scenarios', [ScheduleApiController::class, 'SaveScenario']);
+	$group->post('/schedule/scenarios/{id}/delete', [ScheduleApiController::class, 'DeleteScenario']);
+	$group->post('/schedule/coverage-requests', [ScheduleApiController::class, 'CreateCoverageRequest']);
+	$group->post('/schedule/coverage-requests/{id}/close', [ScheduleApiController::class, 'CloseCoverageRequest']);
+
+	// DAIRY: Motor Inteligente de Horarios y Cobertura según Ventas (Módulo 35)
+	$group->get('/schedule/dynamic-plan', [ScheduleApiController::class, 'DynamicPlan']);
+	$group->post('/schedule/dynamic-plan/optimize', [ScheduleApiController::class, 'DynamicPlanOptimize']);
+	$group->post('/schedule/recommendations/{id}/decide', [ScheduleApiController::class, 'DecideRecommendation']);
+	$group->post('/schedule/daily-automation', [ScheduleApiController::class, 'RunDailyAutomation']);
+	$group->get('/schedule/department-configs', [ScheduleApiController::class, 'GetDepartmentConfigs']);
+	$group->post('/schedule/department-configs', [ScheduleApiController::class, 'SaveDepartmentConfigs']);
+	$group->post('/schedule/simulate-scenario', [ScheduleApiController::class, 'SimulateSalesScenario']);
+
+	// DAILY: Motor Inteligente de Horarios, Equivalencia de Turnos y Programación 2026-2030+
+	$group->get('/schedule/equity', [ScheduleApiController::class, 'GetEquity']);
+	$group->post('/schedule/equity/generate', [ScheduleApiController::class, 'GenerateEquitySchedule']);
+	$group->post('/schedule/equity/publish', [ScheduleApiController::class, 'PublishEquitySchedule']);
+	$group->post('/schedule/equity/swap-preview', [ScheduleApiController::class, 'PreviewShiftSwap']);
+	$group->post('/schedule/equity/swap-apply', [ScheduleApiController::class, 'ApplyShiftSwap']);
+	$group->post('/schedule/equity/update-shift', [ScheduleApiController::class, 'UpdateShift']);
+	$group->get('/schedule/monthly', [ScheduleApiController::class, 'GetMonthlySchedule']);
+	$group->post('/schedule/monthly/generate', [ScheduleApiController::class, 'GenerateMonthlySchedule']);
+	$group->post('/schedule/monthly/publish', [ScheduleApiController::class, 'PublishMonthlySchedule']);
+	$group->post('/schedule/monthly/update-shift', [ScheduleApiController::class, 'UpdateMonthlyShift']);
+	$group->post('/schedule/monthly/shift', [ScheduleApiController::class, 'UpdateMonthlyShift']);
+	$group->get('/schedule/monthly/export', [ScheduleApiController::class, 'ExportMonthlySchedule']);
+	$group->get('/schedule/skills-matrix', [ScheduleApiController::class, 'GetSkillsMatrix']);
+	$group->post('/schedule/skills-matrix', [ScheduleApiController::class, 'UpdateSkillsMatrix']);
+	$group->get('/schedule/vacations', [ScheduleApiController::class, 'GetVacations']);
+	$group->post('/schedule/vacations', [ScheduleApiController::class, 'SaveVacation']);
+	$group->get('/schedule/holidays', [ScheduleApiController::class, 'GetHolidays']);
+	$group->get('/schedule/policies', [ScheduleApiController::class, 'GetCompanyPolicies']);
+	$group->post('/schedule/collaborators', [ScheduleApiController::class, 'RegisterCollaborator']);
+
+	// DEMO · Tienda Integral (Escenario aislado de 25 personas y 7 áreas)
+	$group->post('/schedule/demo/restore', [ScheduleApiController::class, 'RestoreDemoScenario']);
+	$group->get('/schedule/demo/coverage-matrix', [ScheduleApiController::class, 'GetDemoCoverageMatrix']);
+	$group->get('/schedule/demo/validation-scenarios', [ScheduleApiController::class, 'GetDemoValidationScenarios']);
+	$group->post('/schedule/demo/test-case', [ScheduleApiController::class, 'ApplyDemoValidationTestCase']);
+
+	// DAILY: Motor de Prevención de Mermas, Vencimientos, Despachos, Devoluciones y Bakery
+	$group->get('/retail/expiry/alerts', [RetailPreventionApiController::class, 'GetExpiryAlerts']);
+	$group->post('/retail/expiry/alerts/{id}/resolve', [RetailPreventionApiController::class, 'ResolveExpiryAlert']);
+	$group->get('/retail/expiry/rules', [RetailPreventionApiController::class, 'GetExpiryRules']);
+	$group->post('/retail/expiry/rules', [RetailPreventionApiController::class, 'SaveExpiryRule']);
+	$group->get('/retail/dispatch/orders/{id}', [RetailPreventionApiController::class, 'GetDispatchOrderDetail']);
+	$group->post('/retail/dispatch/verify-pickup', [RetailPreventionApiController::class, 'VerifyPickup']);
+	$group->post('/retail/dispatch/record-delivery', [RetailPreventionApiController::class, 'RecordDelivery']);
+	$group->post('/retail/dispatch/scan-upc', [RetailPreventionApiController::class, 'FastScanUPC']);
+	$group->post('/retail/dispatch/resolve-variance', [RetailPreventionApiController::class, 'ResolveVariance']);
+	$group->get('/retail/dispatch/analytics', [RetailPreventionApiController::class, 'GetDispatchAnalytics']);
+	$group->get('/retail/returns', [RetailPreventionApiController::class, 'GetReturns']);
+	$group->post('/retail/returns', [RetailPreventionApiController::class, 'CreateReturn']);
+	$group->post('/retail/returns/{id}/advance', [RetailPreventionApiController::class, 'AdvanceReturn']);
+	$group->get('/retail/bakery/dashboard', [RetailPreventionApiController::class, 'GetBakeryDashboard']);
+
+	// DAILY — Motor Inteligente de Horas Peak y Dotación de Personal
+	$group->get('/workforce/peaks/dashboard', [WorkforcePeakApiController::class, 'Dashboard']);
+	$group->post('/workforce/peaks/simulate', [WorkforcePeakApiController::class, 'Simulate']);
+	$group->post('/workforce/peaks/recommendations/{id}/apply', [WorkforcePeakApiController::class, 'ApplyRecommendation']);
+
+	// Etapa 19: control de inventario, pérdida total, retiros, auditorías y alertas
+	$group->get('/inventory-control/phantom', [LossPreventionApiController::class, 'Phantom']);
+	$group->get('/scan/resolve', [OperationsApiController::class, 'Resolve']);
+	$group->get('/scan/form-data', [OperationsApiController::class, 'FormData']);
+	$group->get('/scan/sessions', [OperationsApiController::class, 'Sessions']);
+	$group->post('/scan/sessions', [OperationsApiController::class, 'OpenSession']);
+	$group->get('/scan/sessions/{id}', [OperationsApiController::class, 'GetSession']);
+	$group->post('/scan/sessions/{id}/lines', [OperationsApiController::class, 'AddLine']);
+	$group->post('/scan/lines/{lineId}/void', [OperationsApiController::class, 'VoidLine']);
+	$group->post('/scan/sessions/{id}/close', [OperationsApiController::class, 'CloseSession']);
+	$group->post('/scan/sessions/{id}/cancel', [OperationsApiController::class, 'CancelSession']);
+	$group->get('/inventory-control/stagnant', [OperationsApiController::class, 'StagnantLots']);
+	$group->post('/data-import/{entity}', [OperationsApiController::class, 'ImportRun']);
+	$group->get('/data-import/jobs', [OperationsApiController::class, 'ImportJobs']);
+	$group->get('/data-import/{entity}/template', [OperationsApiController::class, 'Template']);
+	$group->get('/change-history/{table}/{id}', [OperationsApiController::class, 'History']);
+	$group->get('/waste/export', [OperationsApiController::class, 'WasteExport']);
+	$group->get('/orders', [OperationsApiController::class, 'Orders']);
+	$group->get('/traceability', [OperationsApiController::class, 'Trace']);
+	$group->post('/orders', [OperationsApiController::class, 'CreateOrder']);
+	$group->get('/orders/{id}', [OperationsApiController::class, 'GetOrder']);
+	$group->post('/orders/{id}/{action}', [OperationsApiController::class, 'OrderAction']);
+	$group->get('/inventory-control/abc-xyz', [LossPreventionApiController::class, 'AbcXyz']);
+	$group->post('/inventory-control/counts', [LossPreventionApiController::class, 'ScheduleCounts']);
+	$group->get('/loss/total', [LossPreventionApiController::class, 'TotalLoss']);
+	$group->get('/recalls/preview', [LossPreventionApiController::class, 'RecallPreview']);
+	$group->get('/recalls/{id}', [LossPreventionApiController::class, 'GetRecall']);
+	$group->post('/recalls', [LossPreventionApiController::class, 'CreateRecall']);
+	$group->post('/recalls/items/{itemId}/confirm', [LossPreventionApiController::class, 'ConfirmRecallItem']);
+	$group->post('/recalls/{id}/close', [LossPreventionApiController::class, 'CloseRecall']);
+	$group->post('/recalls/{id}/cancel', [LossPreventionApiController::class, 'CancelRecall']);
+	$group->get('/audits/{id}', [LossPreventionApiController::class, 'GetAudit']);
+	$group->post('/audits/start', [LossPreventionApiController::class, 'StartAudit']);
+	$group->post('/audits/templates', [LossPreventionApiController::class, 'SaveAuditTemplate']);
+	$group->post('/audits/{id}/answers', [LossPreventionApiController::class, 'SaveAuditAnswers']);
+	$group->get('/alerts', [LossPreventionApiController::class, 'GetAlerts']);
+	$group->post('/alerts/scan', [LossPreventionApiController::class, 'ScanAlerts']);
+	$group->post('/alerts/rules/{code}', [LossPreventionApiController::class, 'SaveAlertRule']);
+	$group->get('/alerts/{id}/events', [LossPreventionApiController::class, 'GetAlertEvents']);
+	// Centro de Alertas v2 (registro único ALR-<id>; web y DAIRY Mobile)
+	$group->get('/alerts/dashboard', [AlertCenterApiController::class, 'Dashboard']);
+	$group->get('/alerts/list', [AlertCenterApiController::class, 'List']);
+	$group->get('/alerts/report', [AlertCenterApiController::class, 'Report']);
+	$group->get('/alerts/series', [AlertCenterApiController::class, 'Series']);
+	$group->post('/alerts/prevention/{pid:[0-9]+}/verify', [AlertCenterApiController::class, 'VerifyPrevention']);
+	$group->get('/alerts/export', [AlertCenterApiController::class, 'Export']);
+	$group->post('/alerts', [AlertCenterApiController::class, 'Create']);
+	$group->post('/alerts/bulk', [AlertCenterApiController::class, 'Bulk']);
+	$group->post('/alerts/escalations/run', [AlertCenterApiController::class, 'Escalations']);
+	$group->get('/alerts/automation', [AlertCenterApiController::class, 'AutomationConfig']);
+	$group->post('/alerts/automation', [AlertCenterApiController::class, 'AutomationSave']);
+	$group->post('/alerts/automation/{ruleId:[0-9]+}', [AlertCenterApiController::class, 'AutomationSave']);
+	$group->get('/alerts/automation/{ruleId:[0-9]+}/executions', [AlertCenterApiController::class, 'AutomationExecutions']);
+	$group->post('/alerts/automation/executions/{execId:[0-9]+}/retry', [AlertCenterApiController::class, 'AutomationRetry']);
+	$group->get('/alerts/notifications', [AlertCenterApiController::class, 'Notifications']);
+	$group->post('/alerts/notifications/read', [AlertCenterApiController::class, 'NotificationsRead']);
+	$group->get('/alerts/views', [AlertCenterApiController::class, 'Views']);
+	$group->post('/alerts/views', [AlertCenterApiController::class, 'SaveView']);
+	$group->delete('/alerts/views/{viewId:[0-9]+}', [AlertCenterApiController::class, 'DeleteView']);
+	$group->get('/alerts/evidence/{evidenceId:[0-9]+}', [AlertCenterApiController::class, 'ServeEvidence']);
+	$group->post('/alerts/actions/{actionId:[0-9]+}/complete', [AlertCenterApiController::class, 'CompleteAction']);
+	$group->get('/alerts/{id:[0-9]+}', [AlertCenterApiController::class, 'Detail']);
+	$group->post('/alerts/{id:[0-9]+}/evidence', [AlertCenterApiController::class, 'UploadEvidence']);
+	$group->post('/alerts/{id:[0-9]+}/{action}', [AlertCenterApiController::class, 'Action']);
+	// DAIRY Etapa 35: Centro de Control de pérdidas (misma lógica para web y /m)
+	$group->get('/loss/summary', [LossIntelligenceApiController::class, 'Summary']);
+	$group->get('/loss/year-comparison', [LossIntelligenceApiController::class, 'YearComparison']);
+	$group->get('/loss/causes', [LossIntelligenceApiController::class, 'Causes']);
+	$group->get('/loss/classification', [LossIntelligenceApiController::class, 'Classification']);
+	$group->get('/loss/theft', [LossIntelligenceApiController::class, 'Theft']);
+	$group->get('/loss/formats', [LossIntelligenceApiController::class, 'Formats']);
+	$group->get('/loss/financial', [LossIntelligenceApiController::class, 'Financial']);
+	$group->get('/loss/ranking', [LossIntelligenceApiController::class, 'Ranking']);
+	$group->post('/loss/ranking/schedule', [LossIntelligenceApiController::class, 'ScheduleCounts']);
+	$group->get('/loss/cold-chain', [LossIntelligenceApiController::class, 'ColdChain']);
+	$group->get('/loss/perishables', [LossIntelligenceApiController::class, 'Perishables']);
+	$group->get('/loss/price-issues', [LossIntelligenceApiController::class, 'PriceIssues']);
+	$group->post('/loss/price-issues', [LossIntelligenceApiController::class, 'CreatePriceIssue']);
+	$group->post('/loss/price-issues/detect', [LossIntelligenceApiController::class, 'DetectPriceIssues']);
+	$group->post('/loss/price-issues/{id}/advance', [LossIntelligenceApiController::class, 'AdvancePriceIssue']);
+	$group->post('/loss/yield-lots', [LossIntelligenceApiController::class, 'SaveYieldLot']);
+	$group->post('/loss/yield-lots/{id}/close', [LossIntelligenceApiController::class, 'CloseYieldLot']);
+	$group->post('/loss/settings', [LossIntelligenceApiController::class, 'SaveSettings']);
+	$group->post('/loss/reasons/{id}/cause', [LossIntelligenceApiController::class, 'SetReasonCause']);
+	$group->post('/loss/branches/{id}/format', [LossIntelligenceApiController::class, 'SaveBranchFormat']);
+	$group->get('/loss/control-center-executive', [LossIntelligenceApiController::class, 'ControlCenterExecutive']);
+	// Etapa 36: metodología del Censo Nacional de Mermas
+	$group->get('/loss/census/hierarchy', [LossCensusApiController::class, 'Hierarchy']);
+	$group->get('/loss/census/departments', [LossCensusApiController::class, 'Departments']);
+	$group->get('/loss/census/benchmarks', [LossCensusApiController::class, 'Benchmarks']);
+	$group->get('/loss/census/targets', [LossCensusApiController::class, 'Targets']);
+	$group->post('/loss/census/targets', [LossCensusApiController::class, 'SaveTarget']);
+	$group->get('/loss/census/admin-errors', [LossCensusApiController::class, 'AdminErrors']);
+	$group->post('/loss/census/admin-errors', [LossCensusApiController::class, 'CreateAdminError']);
+	$group->post('/loss/census/admin-errors/detect', [LossCensusApiController::class, 'DetectAdminErrors']);
+	$group->get('/loss/census/admin-errors/{id}/history', [LossCensusApiController::class, 'AdminErrorHistory']);
+	$group->post('/loss/census/admin-errors/{id}/advance', [LossCensusApiController::class, 'AdvanceAdminError']);
+	$group->get('/loss/census/theft', [LossCensusApiController::class, 'Theft']);
+	$group->post('/loss/census/waste/{id}/details', [LossCensusApiController::class, 'WasteDetails']);
+	$group->get('/loss/census/perishables', [LossCensusApiController::class, 'Perishables']);
+	$group->get('/loss/census/economic', [LossCensusApiController::class, 'Economic']);
+	$group->get('/loss/census/controls', [LossCensusApiController::class, 'Controls']);
+	$group->post('/loss/census/controls', [LossCensusApiController::class, 'SaveControl']);
+	$group->post('/loss/census/social', [LossCensusApiController::class, 'SaveSocial']);
+	// DAIRY Mobile (manager): lecturas agregadas; las acciones usan las APIs de cada módulo
+	$group->get('/m/me', [MobileApiController::class, 'Me']);
+	$group->get('/m/home', [MobileApiController::class, 'Home']);
+	$group->get('/m/sales', [MobileApiController::class, 'Sales']);
+	$group->get('/m/sales/{id}', [MobileApiController::class, 'Sale']);
+	$group->get('/m/waste', [MobileApiController::class, 'Waste']);
+	$group->get('/m/inventory', [MobileApiController::class, 'Inventory']);
+	$group->get('/m/sku/{id}', [MobileApiController::class, 'Sku']);
+	$group->get('/m/inbox', [MobileApiController::class, 'Inbox']);
+	$group->get('/m/case/{type}/{id}', [MobileApiController::class, 'CaseDetail']);
+	$group->get('/m/search', [MobileApiController::class, 'Search']);
+	$group->get('/m/lookups', [MobileApiController::class, 'Lookups']);
+	// Etapa 24: DAIRY Mobile por rol
+	$group->get('/m/scan', [MobileWorkApiController::class, 'Scan']);
+	$group->post('/m/ops/receive', [MobileWorkApiController::class, 'OpReceive']);
+	$group->post('/m/ops/count', [MobileWorkApiController::class, 'OpCount']);
+	$group->get('/m/ops/waste-reasons', [MobileWorkApiController::class, 'OpWasteReasons']);
+	$group->post('/m/ops/waste', [MobileWorkApiController::class, 'OpWaste']);
+	$group->get('/m/approvals', [MobileWorkApiController::class, 'Approvals']);
+	$group->post('/m/approvals/{kind}/{id}', [MobileWorkApiController::class, 'DecideApproval']);
+	$group->get('/m/today', [MobileWorkApiController::class, 'Today']);
+	$group->get('/m/tasks', [MobileWorkApiController::class, 'Tasks']);
+	$group->post('/m/tasks', [MobileWorkApiController::class, 'CreateTask']);
+	$group->get('/m/tasks/{id}', [MobileWorkApiController::class, 'Task']);
+	$group->post('/m/tasks/{id}/complete', [MobileWorkApiController::class, 'CompleteTask']);
+	$group->post('/m/alerts/{id}/task', [MobileWorkApiController::class, 'TaskFromAlert']);
+	$group->get('/m/team', [MobileWorkApiController::class, 'Team']);
+	$group->get('/m/schedule', [MobileWorkApiController::class, 'Schedule']);
+	$group->get('/m/notifications', [MobileWorkApiController::class, 'Notifications']);
+	$group->post('/m/notifications/seen', [MobileWorkApiController::class, 'NotificationsSeen']);
+	// Autoservicio y comunicación (web móvil y app nativa)
+	$group->get('/m/messages', [\Grocy\Controllers\Api\WorkforceSelfServiceApiController::class, 'Threads']);
+	$group->get('/m/messages/contacts', [\Grocy\Controllers\Api\WorkforceSelfServiceApiController::class, 'Contacts']);
+	$group->post('/m/messages/direct', [\Grocy\Controllers\Api\WorkforceSelfServiceApiController::class, 'OpenDirect']);
+	$group->post('/m/messages/group', [\Grocy\Controllers\Api\WorkforceSelfServiceApiController::class, 'CreateGroup']);
+	$group->post('/m/messages/announcement', [\Grocy\Controllers\Api\WorkforceSelfServiceApiController::class, 'Announce']);
+	$group->get('/m/messages/{id}', [\Grocy\Controllers\Api\WorkforceSelfServiceApiController::class, 'Messages']);
+	$group->post('/m/messages/{id}', [\Grocy\Controllers\Api\WorkforceSelfServiceApiController::class, 'Send']);
+	$group->post('/m/push/register', [\Grocy\Controllers\Api\WorkforceSelfServiceApiController::class, 'RegisterPush']);
+	$group->post('/m/push/unregister', [\Grocy\Controllers\Api\WorkforceSelfServiceApiController::class, 'UnregisterPush']);
+	$group->get('/m/push/devices', [\Grocy\Controllers\Api\WorkforceSelfServiceApiController::class, 'PushDevices']);
+	$group->get('/m/open-shifts', [\Grocy\Controllers\Api\WorkforceSelfServiceApiController::class, 'OpenShifts']);
+	$group->post('/m/open-shifts', [\Grocy\Controllers\Api\WorkforceSelfServiceApiController::class, 'CreateOpenShift']);
+	$group->post('/m/open-shifts/{id}/claim', [\Grocy\Controllers\Api\WorkforceSelfServiceApiController::class, 'Claim']);
+	$group->post('/m/open-shift-claims/{id}/withdraw', [\Grocy\Controllers\Api\WorkforceSelfServiceApiController::class, 'Withdraw']);
+	$group->post('/m/open-shift-claims/{id}/decide', [\Grocy\Controllers\Api\WorkforceSelfServiceApiController::class, 'DecideClaim']);
+	$group->post('/m/shifts/{id}/confirm', [\Grocy\Controllers\Api\WorkforceSelfServiceApiController::class, 'ConfirmShift']);
+	$group->get('/m/geofence', [\Grocy\Controllers\Api\WorkforceSelfServiceApiController::class, 'MyGeofence']);
+	$group->post('/branches/geofence', [\Grocy\Controllers\Api\WorkforceSelfServiceApiController::class, 'SaveGeofence']);
+	$group->post('/m/prefs', [MobileWorkApiController::class, 'SavePrefs']);
+	// Asistencia API (Módulo Control de Entradas, Salidas y Novedades)
+	$group->get('/attendance/overview', [AttendanceApiController::class, 'GetOverview']);
+	$group->post('/attendance/record', [AttendanceApiController::class, 'RecordAttendance']);
+	$group->post('/attendance/adjustment', [AttendanceApiController::class, 'RequestAdjustment']);
+	$group->post('/attendance/adjustments/{id}/decide', [AttendanceApiController::class, 'DecideAdjustment']);
+	$group->post('/attendance/quick-checkout-all', [AttendanceApiController::class, 'QuickCheckoutAll']);
+	$group->post('/attendance/demo/reset', [AttendanceApiController::class, 'ResetDemo']);
+	$group->post('/attendance/clock-in', [AttendanceApiController::class, 'ClockIn']);
+	$group->post('/attendance/clock-out', [AttendanceApiController::class, 'ClockOut']);
+	$group->post('/attendance/break-start', [AttendanceApiController::class, 'StartBreak']);
+	$group->post('/attendance/break-end', [AttendanceApiController::class, 'EndBreak']);
+
+	$group->post('/schedule/clock-in', [AttendanceApiController::class, 'ClockIn']);
+	$group->post('/schedule/clock-out', [AttendanceApiController::class, 'ClockOut']);
+	$group->post('/schedule/attendance', [AttendanceApiController::class, 'RecordAttendance']);
+	$group->post('/schedule/absences', [ScheduleApiController::class, 'RequestAbsence']);
+	$group->post('/schedule/absences/{id}/decide', [ScheduleApiController::class, 'DecideAbsence']);
+	$group->post('/schedule/swaps', [ScheduleApiController::class, 'RequestSwap']);
+	$group->post('/schedule/swaps/{id}/decide', [ScheduleApiController::class, 'DecideSwap']);
+
+	// Mapa del Sistema (solo ADMIN)
+	$group->get('/system-map', [SystemMapApiController::class, 'Get']);
+	$group->post('/system-map/refresh', [SystemMapApiController::class, 'Refresh']);
+	$group->get('/system-map/export/{format}', [SystemMapApiController::class, 'Export']);
+
+	// Buscador global del header
+	$group->get('/dairy/search', [GlobalSearchApiController::class, 'Search']);
+
+	// What-If Simulator API
+	$group->post('/simulator/evaluate', [SimulatorApiController::class, 'EvaluateSimulation']);
+
+	// Rebaja automática FEFO (markdown)
+	$group->get('/markdown/active', [MarkdownApiController::class, 'GetActiveMarkdowns']);
+	$group->get('/markdown/rules', [MarkdownApiController::class, 'GetRules']);
+	$group->post('/markdown/rules', [MarkdownApiController::class, 'SaveRules']);
+
+	// Trazabilidad, Conciliación e Inventario Sensible API
+	$group->get('/reconciliation/overview', [ReconciliationApiController::class, 'GetOverview']);
+	$group->get('/reconciliation/products', [ReconciliationApiController::class, 'GetProducts']);
+	$group->get('/reconciliation/product/{productId}', [ReconciliationApiController::class, 'GetProduct']);
+	$group->get('/reconciliation/timeline/{productId}', [ReconciliationApiController::class, 'GetTimeline']);
+	$group->post('/reconciliation/count', [ReconciliationApiController::class, 'ExecuteCount']);
+	$group->get('/reconciliation/case/{caseId}', [ReconciliationApiController::class, 'GetCase']);
+	$group->post('/reconciliation/case/{caseId}/recount', [ReconciliationApiController::class, 'RecountCase']);
+	$group->post('/reconciliation/case/{caseId}/adjust', [ReconciliationApiController::class, 'AuthorizeAdjustment']);
+	$group->post('/reconciliation/case/{caseId}/close', [ReconciliationApiController::class, 'CloseCase']);
+	$group->post('/reconciliation/goods-in', [ReconciliationApiController::class, 'RegisterGoodsIn']);
+	$group->post('/reconciliation/return', [ReconciliationApiController::class, 'RegisterReturn']);
+	$group->post('/reconciliation/dispatch', [ReconciliationApiController::class, 'RegisterMovement']);
+
+	// DAILY: Stock & Movimientos — Panel Ejecutivo de Inventario API
+	$group->get('/stockoverview/executive', [\Grocy\Controllers\Api\StockExecutiveApiController::class, 'GetOverview']);
+	$group->get('/stockoverview/product/{productId}', [\Grocy\Controllers\Api\StockExecutiveApiController::class, 'GetProduct360']);
+	$group->post('/stockoverview/fefo-action', [\Grocy\Controllers\Api\StockExecutiveApiController::class, 'ExecuteFefoAction']);
+	$group->post('/stockoverview/workflow', [\Grocy\Controllers\Api\StockExecutiveApiController::class, 'ExecuteWorkflowStep']);
+	$group->post('/stockoverview/reset', [\Grocy\Controllers\Api\StockExecutiveApiController::class, 'ResetDemo']);
+
+	// DAILY: Punto de Venta Rápido (POS) — Turnos de Caja y Ventas en Espera API
+	$group->get('/pos/state', [SalesApiController::class, 'GetPosState']);
+	$group->post('/pos/shift/open', [SalesApiController::class, 'OpenShift']);
+	$group->post('/pos/shift/close', [SalesApiController::class, 'CloseShift']);
+	$group->post('/pos/hold', [SalesApiController::class, 'HoldSale']);
+	$group->delete('/pos/hold/{holdId}', [SalesApiController::class, 'DeleteHeldSale']);
+	$group->post('/pos/hold/{holdId}/delete', [SalesApiController::class, 'DeleteHeldSale']);
+
+	// DAILY: Directorio de Clientes API
+	$group->get('/customers', [SalesApiController::class, 'GetCustomers']);
+	$group->post('/customers', [SalesApiController::class, 'SaveCustomer']);
+	$group->post('/customers/{customerId}/toggle-active', [SalesApiController::class, 'ToggleCustomerActive']);
+	$group->post('/customers/{customerId}/notes', [SalesApiController::class, 'SaveCustomerNotes']);
 })->add(new CorsMiddleware($container, $app->getResponseFactory()))->add(new JsonMiddleware($container, $app->getResponseFactory()));
 
 

@@ -1,0 +1,1758 @@
+/* ==========================================================================
+   DAILY · Centro de Alertas — Rediseño Ejecutivo y Mando Operativo
+   Identidad visual oficial: Verde (#008E48 / #00C83B), Rojo (#EF4444 / #DC2626),
+   Amarillo/Ámbar (#F59E0B / #EAB308), Slate/Gris corporativo (#64748B / #0F172A).
+   ========================================================================== */
+
+:root {
+	--daily-green: #008E48;
+	--daily-green-hover: #00773C;
+	--daily-green-light: #E8F8F0;
+	--daily-green-accent: #00C83B;
+	--daily-red: #EF4444;
+	--daily-red-dark: #DC2626;
+	--daily-red-light: #FEE2E2;
+	--daily-red-border: #FECACA;
+	--daily-amber: #F59E0B;
+	--daily-amber-light: #FEF3C7;
+	--daily-orange: #F97316;
+	--daily-orange-light: #FFEDD5;
+	--daily-blue: #3B82F6;
+	--daily-blue-light: #EFF6FF;
+	--daily-purple: #8B5CF6;
+	--daily-purple-light: #F5F3FF;
+	--daily-cyan: #06B6D4;
+	--daily-cyan-light: #ECFEFF;
+	--daily-border: #E2E8F0;
+	--daily-card-bg: #FFFFFF;
+	--daily-text: #111827;
+	--daily-text-muted: #6B7280;
+	--daily-text-sub: #9CA3AF;
+	--daily-bg: #F8FAFC;
+	--daily-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+	--daily-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+	--daily-radius: 12px;
+	--daily-radius-sm: 8px;
+}
+
+/* Contenedor principal de la página */
+.daily-alerts-container {
+	padding: 14px 18px 40px;
+	background-color: var(--daily-bg);
+	min-height: calc(100vh - 60px);
+	font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+	color: var(--daily-text);
+}
+
+/* --------------------------------------------------------------------------
+   1. ENCABEZADO SUPERIOR
+   -------------------------------------------------------------------------- */
+.daily-alerts-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 16px;
+	gap: 16px;
+	flex-wrap: wrap;
+}
+
+.daily-alerts-header-left {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.daily-header-icon-box {
+	width: 42px;
+	height: 42px;
+	border-radius: 10px;
+	background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+	color: #FFFFFF;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 19px;
+	box-shadow: 0 4px 10px rgba(239, 68, 68, 0.25);
+	flex-shrink: 0;
+}
+
+.daily-page-title {
+	font-size: 1.5rem;
+	font-weight: 800;
+	color: #0F172A;
+	margin: 0;
+	line-height: 1.2;
+	letter-spacing: -0.02em;
+}
+
+.daily-page-subtitle {
+	font-size: 0.82rem;
+	color: var(--daily-text-muted);
+	margin: 2px 0 0;
+	font-weight: 400;
+}
+
+.daily-alerts-header-right {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.daily-date-card {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	background: #FFFFFF;
+	border: 1px solid var(--daily-border);
+	border-radius: 10px;
+	padding: 6px 14px;
+	box-shadow: var(--daily-shadow-sm);
+	cursor: pointer;
+	text-align: left;
+	transition: all 0.15s ease;
+}
+
+.daily-date-card:hover {
+	border-color: #CBD5E1;
+	background: #F8FAFC;
+}
+
+.daily-date-card .date-period {
+	font-size: 0.8rem;
+	font-weight: 700;
+	color: #1E293B;
+	line-height: 1.2;
+}
+
+.daily-date-card .date-sub {
+	font-size: 0.7rem;
+	color: #64748B;
+	line-height: 1.2;
+}
+
+.daily-btn-primary-green {
+	background: linear-gradient(135deg, #00A854 0%, #008E48 100%);
+	color: #FFFFFF !important;
+	font-weight: 600;
+	font-size: 0.82rem;
+	border-radius: 9px;
+	padding: 8px 16px;
+	border: none;
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	box-shadow: 0 2px 6px rgba(0, 142, 72, 0.25);
+	transition: all 0.15s ease;
+	cursor: pointer;
+}
+
+.daily-btn-primary-green:hover {
+	background: linear-gradient(135deg, #008E48 0%, #00773C 100%);
+	box-shadow: 0 4px 10px rgba(0, 142, 72, 0.35);
+	transform: translateY(-1px);
+}
+
+/* --------------------------------------------------------------------------
+   2. FILA DE KPIS SUPERIORES (6 TARJETAS)
+   -------------------------------------------------------------------------- */
+.daily-kpi-grid-6 {
+	display: grid;
+	grid-template-columns: repeat(6, 1fr);
+	gap: 12px;
+	margin-bottom: 16px;
+}
+
+.daily-kpi-stat-card {
+	background: #FFFFFF;
+	border: 1px solid var(--daily-border);
+	border-radius: var(--daily-radius);
+	padding: 12px 14px;
+	box-shadow: var(--daily-shadow-sm);
+	display: flex;
+	flex-direction: column;
+	position: relative;
+	transition: all 0.2s ease;
+	text-decoration: none !important;
+	color: inherit;
+}
+
+.daily-kpi-stat-card:hover {
+	transform: translateY(-2px);
+	box-shadow: var(--daily-shadow-md);
+	border-color: #CBD5E1;
+}
+
+.daily-kpi-top-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 6px;
+}
+
+.daily-kpi-icon-pill {
+	width: 30px;
+	height: 30px;
+	border-radius: 8px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 12px;
+}
+
+.daily-kpi-icon-pill.is-red-soft { background: #FEE2E2; color: #EF4444; }
+.daily-kpi-icon-pill.is-red-solid { background: #EF4444; color: #FFFFFF; }
+.daily-kpi-icon-pill.is-orange { background: #FFEDD5; color: #F97316; }
+.daily-kpi-icon-pill.is-yellow { background: #FEF3C7; color: #F59E0B; }
+.daily-kpi-icon-pill.is-green-solid { background: #008E48; color: #FFFFFF; }
+.daily-kpi-icon-pill.is-green-soft { background: #E8F8F0; color: #008E48; }
+
+.daily-kpi-sparkline {
+	width: 56px;
+	height: 22px;
+}
+
+.daily-kpi-sparkline svg {
+	width: 100%;
+	height: 100%;
+	display: block;
+}
+
+.daily-kpi-value-row {
+	display: flex;
+	align-items: baseline;
+	gap: 6px;
+	margin-bottom: 3px;
+}
+
+.daily-kpi-big-number {
+	font-size: 1.55rem;
+	font-weight: 800;
+	color: #0F172A;
+	line-height: 1.1;
+	font-variant-numeric: tabular-nums;
+	letter-spacing: -0.02em;
+}
+
+.daily-kpi-badge {
+	font-size: 0.7rem;
+	font-weight: 700;
+	padding: 2px 5px;
+	border-radius: 5px;
+	display: inline-flex;
+	align-items: center;
+	gap: 3px;
+	line-height: 1.2;
+}
+
+.daily-kpi-badge.is-danger {
+	background: #FEE2E2;
+	color: #DC2626;
+}
+
+.daily-kpi-badge.is-success {
+	background: #E8F8F0;
+	color: #008E48;
+}
+
+.daily-kpi-badge.is-warning {
+	background: #FFEDD5;
+	color: #C2410C;
+}
+
+.daily-kpi-label {
+	font-size: 0.8rem;
+	font-weight: 700;
+	color: #1E293B;
+	margin: 0;
+	line-height: 1.25;
+}
+
+.daily-kpi-subtext {
+	font-size: 0.7rem;
+	color: var(--daily-text-muted);
+	margin: 2px 0 0;
+	line-height: 1.2;
+}
+
+/* --------------------------------------------------------------------------
+   3. FILA DE ANALÍTICA (4 TARJETAS)
+   -------------------------------------------------------------------------- */
+.daily-analytics-grid-4 {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 12px;
+	margin-bottom: 16px;
+}
+
+.daily-analytics-card {
+	background: #FFFFFF;
+	border: 1px solid var(--daily-border);
+	border-radius: var(--daily-radius);
+	padding: 12px 14px;
+	box-shadow: var(--daily-shadow-sm);
+	display: flex;
+	flex-direction: column;
+	min-height: 175px;
+}
+
+.daily-analytics-card-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 10px;
+}
+
+.daily-analytics-title {
+	font-size: 0.82rem;
+	font-weight: 700;
+	color: #1E293B;
+	display: flex;
+	align-items: center;
+	gap: 7px;
+	margin: 0;
+}
+
+.daily-analytics-title i {
+	color: #008E48;
+	font-size: 12px;
+}
+
+.daily-analytics-legend-top {
+	font-size: 0.7rem;
+	color: var(--daily-text-muted);
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.daily-dot-legend {
+	display: inline-block;
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	margin-right: 4px;
+}
+
+/* Contenido de Donut 1 (Estado de resolución) */
+.daily-donut-with-legend {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	flex: 1;
+}
+
+.daily-donut-chart-box {
+	position: relative;
+	width: 95px;
+	height: 95px;
+	flex-shrink: 0;
+}
+
+.daily-donut-chart-box canvas {
+	width: 100% !important;
+	height: 100% !important;
+}
+
+.daily-donut-center-text {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	text-align: center;
+	pointer-events: none;
+}
+
+.daily-donut-center-pct {
+	font-size: 1.2rem;
+	font-weight: 800;
+	color: #0F172A;
+	line-height: 1;
+}
+
+.daily-donut-center-label {
+	font-size: 0.65rem;
+	color: #64748B;
+	font-weight: 600;
+	text-transform: uppercase;
+}
+
+.daily-donut-legend-list {
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+	flex: 1;
+	font-size: 0.74rem;
+}
+
+.daily-legend-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	color: #475569;
+}
+
+.daily-legend-row b {
+	color: #0F172A;
+	font-variant-numeric: tabular-nums;
+	font-weight: 700;
+}
+
+/* Contenido de Impacto Estimado */
+.daily-impact-stats-box {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+}
+
+.daily-impact-val-row {
+	display: flex;
+	align-items: baseline;
+	gap: 6px;
+	margin-bottom: 2px;
+}
+
+.daily-impact-main-amount {
+	font-size: 1.45rem;
+	font-weight: 800;
+	color: #0F172A;
+	font-variant-numeric: tabular-nums;
+	letter-spacing: -0.02em;
+}
+
+.daily-impact-sub {
+	font-size: 0.7rem;
+	color: var(--daily-text-muted);
+	margin-bottom: 6px;
+	line-height: 1.2;
+}
+
+.daily-bars-spark-container {
+	height: 55px;
+	width: 100%;
+	margin-top: auto;
+}
+
+.daily-bars-spark-container canvas {
+	width: 100% !important;
+	height: 100% !important;
+}
+
+/* Contenido de Tendencia de alertas */
+.daily-trend-chart-box {
+	height: 98px;
+	width: 100%;
+	margin-top: auto;
+}
+
+.daily-trend-chart-box canvas {
+	width: 100% !important;
+	height: 100% !important;
+}
+
+/* --------------------------------------------------------------------------
+   4. BARRA DE PESTAÑAS (PILLS) Y MODOS DE VISTA
+   -------------------------------------------------------------------------- */
+.daily-pills-and-views-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 12px;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+
+.daily-filter-pills-group {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	flex-wrap: wrap;
+}
+
+.daily-filter-pill-btn {
+	padding: 5px 12px;
+	border-radius: 999px;
+	font-size: 0.76rem;
+	font-weight: 600;
+	background: #FFFFFF;
+	border: 1px solid var(--daily-border);
+	color: #475569;
+	cursor: pointer;
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	transition: all 0.15s ease;
+	text-decoration: none !important;
+}
+
+.daily-filter-pill-btn:hover {
+	background: #F1F5F9;
+	border-color: #CBD5E1;
+	color: #1E293B;
+}
+
+.daily-filter-pill-btn.is-active {
+	background: #008E48;
+	color: #FFFFFF !important;
+	border-color: #008E48;
+	box-shadow: 0 2px 4px rgba(0, 142, 72, 0.2);
+}
+
+.daily-filter-pill-btn.is-active i {
+	color: #FFFFFF !important;
+}
+
+.daily-filter-pill-btn i {
+	font-size: 10px;
+}
+
+.daily-filter-pill-btn .dot-blue {
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: #3B82F6;
+}
+
+.daily-filter-pill-btn.is-active .dot-blue {
+	background: #FFFFFF;
+}
+
+.daily-views-toggle-group {
+	display: flex;
+	align-items: center;
+	background: #FFFFFF;
+	border: 1px solid var(--daily-border);
+	border-radius: 8px;
+	padding: 2px;
+	gap: 2px;
+}
+
+.daily-view-mode-btn {
+	padding: 4px 10px;
+	border-radius: 6px;
+	font-size: 0.76rem;
+	font-weight: 600;
+	background: transparent;
+	border: none;
+	color: #64748B;
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	cursor: pointer;
+	transition: all 0.15s ease;
+}
+
+.daily-view-mode-btn:hover {
+	color: #1E293B;
+	background: #F8FAFC;
+}
+
+.daily-view-mode-btn.is-active {
+	background: #008E48;
+	color: #FFFFFF;
+	box-shadow: 0 1px 3px rgba(0, 142, 72, 0.25);
+}
+
+/* --------------------------------------------------------------------------
+   5. BARRA DE BÚSQUEDA Y FILTROS DESPLEGABLES
+   -------------------------------------------------------------------------- */
+.daily-search-and-filters-bar {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 14px;
+	flex-wrap: wrap;
+}
+
+.daily-search-input-wrap {
+	position: relative;
+	flex: 1;
+	min-width: 220px;
+}
+
+.daily-search-input-wrap i {
+	position: absolute;
+	left: 11px;
+	top: 50%;
+	transform: translateY(-50%);
+	color: #94A3B8;
+	font-size: 12px;
+	pointer-events: none;
+}
+
+.daily-search-input {
+	width: 100%;
+	height: 36px;
+	background: #FFFFFF;
+	border: 1px solid var(--daily-border);
+	border-radius: 8px;
+	padding: 0 10px 0 32px;
+	font-size: 0.8rem;
+	color: var(--daily-text);
+	box-shadow: var(--daily-shadow-sm);
+	transition: all 0.15s ease;
+}
+
+.daily-search-input:focus {
+	outline: none;
+	border-color: #008E48;
+	box-shadow: 0 0 0 3px rgba(0, 142, 72, 0.12);
+}
+
+.daily-filter-select-drop {
+	height: 36px;
+	background: #FFFFFF;
+	border: 1px solid var(--daily-border);
+	border-radius: 8px;
+	padding: 0 24px 0 10px;
+	font-size: 0.78rem;
+	font-weight: 500;
+	color: #334155;
+	box-shadow: var(--daily-shadow-sm);
+	cursor: pointer;
+	appearance: none;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%2364748B'%3E%3Cpath fill-rule='evenodd' d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z' clip-rule='evenodd'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: right 6px center;
+	background-size: 14px 14px;
+	min-width: 140px;
+}
+
+.daily-filter-select-drop:focus {
+	outline: none;
+	border-color: #008E48;
+}
+
+.daily-btn-filter-icon {
+	height: 36px;
+	padding: 0 12px;
+	background: #FFFFFF;
+	border: 1px solid var(--daily-border);
+	border-radius: 8px;
+	font-size: 0.78rem;
+	font-weight: 600;
+	color: #334155;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	cursor: pointer;
+	box-shadow: var(--daily-shadow-sm);
+	transition: all 0.15s ease;
+}
+
+.daily-btn-filter-icon:hover {
+	background: #F8FAFC;
+	border-color: #CBD5E1;
+}
+
+.daily-btn-icon-square {
+	width: 36px;
+	height: 36px;
+	background: #FFFFFF;
+	border: 1px solid var(--daily-border);
+	border-radius: 8px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: #64748B;
+	font-size: 13px;
+	cursor: pointer;
+	box-shadow: var(--daily-shadow-sm);
+	transition: all 0.15s ease;
+}
+
+.daily-btn-icon-square:hover {
+	background: #F8FAFC;
+	border-color: #CBD5E1;
+	color: #1E293B;
+}
+
+/* --------------------------------------------------------------------------
+   6. GRID SPLIT PRINCIPAL (TABLA 67.5% / PANEL DERECHO 32.5%)
+   -------------------------------------------------------------------------- */
+.daily-workspace-split-view {
+	display: grid;
+	grid-template-columns: minmax(0, 67.5fr) minmax(0, 32.5fr);
+	gap: 12px;
+	align-items: start;
+}
+
+/* ==========================================================================
+   COLUMNA IZQUIERDA: TABLA DE INCIDENCIAS
+   ========================================================================== */
+.daily-table-container-card {
+	background: #FFFFFF;
+	border: 1px solid var(--daily-border);
+	border-radius: var(--daily-radius);
+	box-shadow: var(--daily-shadow-sm);
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+}
+
+.daily-table-wrap {
+	overflow-x: auto;
+	width: 100%;
+}
+
+.daily-incidents-table {
+	width: 100%;
+	border-collapse: separate;
+	border-spacing: 0;
+	font-size: 0.73rem;
+	text-align: left;
+}
+
+.daily-incidents-table thead th {
+	background: #F8FAFC;
+	color: #64748B;
+	font-size: 0.64rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.02em;
+	padding: 8px 4px;
+	border-bottom: 1px solid var(--daily-border);
+	white-space: nowrap;
+}
+
+.daily-incidents-table tbody tr {
+	transition: background 0.15s ease;
+	cursor: pointer;
+	border-bottom: 1px solid #F1F5F9;
+}
+
+.daily-incidents-table tbody tr:hover {
+	background: #F8FAFC;
+}
+
+.daily-incidents-table tbody tr.is-selected {
+	background: #F0FDF4;
+	box-shadow: inset 3px 0 0 #008E48;
+}
+
+.daily-incidents-table td {
+	padding: 7px 4px;
+	border-bottom: 1px solid #F1F5F9;
+	vertical-align: middle;
+}
+
+/* Celdas específicas */
+.daily-prio-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 2px;
+	font-size: 0.67rem;
+	font-weight: 700;
+	padding: 2px 5px;
+	border-radius: 4px;
+	white-space: nowrap;
+}
+
+.daily-prio-badge.is-critical {
+	background: #FEE2E2;
+	color: #DC2626;
+}
+
+.daily-prio-badge.is-high {
+	background: #FFEDD5;
+	color: #C2410C;
+}
+
+.daily-prio-badge.is-medium {
+	background: #FEF3C7;
+	color: #B45309;
+}
+
+.daily-prio-badge.is-low {
+	background: #E8F8F0;
+	color: #008E48;
+}
+
+.daily-inc-id {
+	font-weight: 700;
+	color: #334155;
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+	font-size: 0.71rem;
+}
+
+.daily-inc-content {
+	display: flex;
+	flex-direction: column;
+	max-width: 155px;
+}
+
+.daily-inc-title {
+	font-weight: 700;
+	color: #0F172A;
+	font-size: 0.74rem;
+	line-height: 1.2;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.daily-inc-subtitle {
+	font-size: 0.66rem;
+	color: #64748B;
+	margin-top: 1px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.daily-resp-cell {
+	display: flex;
+	align-items: center;
+	gap: 5px;
+	white-space: nowrap;
+}
+
+.daily-avatar-circle {
+	width: 22px;
+	height: 22px;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 0.64rem;
+	font-weight: 700;
+	color: #FFFFFF;
+	flex-shrink: 0;
+}
+
+.daily-resp-info {
+	display: flex;
+	flex-direction: column;
+	line-height: 1.1;
+}
+
+.daily-resp-name {
+	font-weight: 600;
+	color: #0F172A;
+	font-size: 0.72rem;
+}
+
+.daily-resp-role {
+	font-size: 0.63rem;
+	color: #64748B;
+}
+
+.daily-time-cell {
+	display: flex;
+	flex-direction: column;
+	line-height: 1.15;
+	white-space: nowrap;
+}
+
+.daily-time-main {
+	color: #334155;
+	font-weight: 500;
+	font-size: 0.71rem;
+}
+
+.daily-time-sub {
+	font-size: 0.65rem;
+	font-weight: 700;
+}
+
+.daily-time-sub.is-red {
+	color: #DC2626;
+}
+
+/* Estados (Pills) */
+.daily-state-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 3px;
+	font-size: 0.66rem;
+	font-weight: 600;
+	padding: 2px 6px;
+	border-radius: 999px;
+	white-space: nowrap;
+}
+
+.daily-state-pill.is-investigating {
+	background: #EFF6FF;
+	color: #2563EB;
+}
+
+.daily-state-pill.is-pending {
+	background: #FEF3C7;
+	color: #B45309;
+}
+
+.daily-state-pill.is-in-progress {
+	background: #EFF6FF;
+	color: #2563EB;
+}
+
+.daily-state-pill.is-validation {
+	background: #E8F8F0;
+	color: #008E48;
+}
+
+.daily-state-pill.is-resolved {
+	background: #E8F8F0;
+	color: #008E48;
+}
+
+.daily-state-pill.is-unassigned {
+	background: #FFEDD5;
+	color: #C2410C;
+}
+
+.daily-impact-cell {
+	font-weight: 700;
+	color: #0F172A;
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+	font-size: 0.73rem;
+}
+
+.daily-action-dots-btn {
+	background: transparent;
+	border: none;
+	color: #94A3B8;
+	font-size: 13px;
+	cursor: pointer;
+	padding: 2px;
+	border-radius: 4px;
+	line-height: 1;
+}
+
+.daily-action-dots-btn:hover {
+	color: #0F172A;
+	background: #F1F5F9;
+}
+
+/* Pie de la tabla (Paginación) */
+.daily-table-footer-bar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 10px 14px;
+	background: #FFFFFF;
+	border-top: 1px solid var(--daily-border);
+	font-size: 0.74rem;
+	color: #64748B;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.daily-pagination-controls {
+	display: flex;
+	align-items: center;
+	gap: 3px;
+}
+
+.daily-page-btn {
+	min-width: 26px;
+	height: 26px;
+	border-radius: 6px;
+	background: #FFFFFF;
+	border: 1px solid #E2E8F0;
+	font-size: 0.72rem;
+	font-weight: 600;
+	color: #475569;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	transition: all 0.15s ease;
+}
+
+.daily-page-btn:hover:not(:disabled) {
+	background: #F8FAFC;
+	border-color: #CBD5E1;
+}
+
+.daily-page-btn.is-active {
+	background: #008E48;
+	color: #FFFFFF;
+	border-color: #008E48;
+}
+
+.daily-page-size-select {
+	height: 26px;
+	border-radius: 6px;
+	border: 1px solid #E2E8F0;
+	font-size: 0.72rem;
+	color: #475569;
+	padding: 0 4px;
+	margin-left: 10px;
+	background: #FFFFFF;
+}
+
+/* ==========================================================================
+   COLUMNA DERECHA: PANEL DE SEGUIMIENTO (EXPEDIENTE)
+   ========================================================================== */
+.daily-right-detail-card {
+	background: #FFFFFF;
+	border: 1px solid var(--daily-border);
+	border-radius: var(--daily-radius);
+	box-shadow: var(--daily-shadow-sm);
+	padding: 14px 14px;
+	display: flex;
+	flex-direction: column;
+	position: sticky;
+	top: 14px;
+}
+
+.daily-detail-top-meta {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 6px;
+}
+
+.daily-detail-id-badge-wrap {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.daily-detail-circle-icon {
+	width: 22px;
+	height: 22px;
+	border-radius: 50%;
+	background: #FEE2E2;
+	color: #EF4444;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 10px;
+}
+
+.daily-detail-id-text {
+	font-size: 0.8rem;
+	font-weight: 800;
+	color: #0F172A;
+}
+
+.daily-detail-status-drop {
+	background: #EFF6FF;
+	color: #2563EB;
+	font-size: 0.72rem;
+	font-weight: 700;
+	border: none;
+	border-radius: 999px;
+	padding: 3px 10px;
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	cursor: pointer;
+}
+
+.daily-detail-title {
+	font-size: 1.02rem;
+	font-weight: 800;
+	color: #0F172A;
+	margin: 0 0 2px;
+	line-height: 1.25;
+}
+
+.daily-detail-subtitle {
+	font-size: 0.76rem;
+	color: #64748B;
+	margin: 0 0 12px;
+	line-height: 1.3;
+}
+
+/* Tabs del Panel Derecho */
+.daily-detail-tabs-bar {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	border-bottom: 1px solid #F1F5F9;
+	padding-bottom: 10px;
+	margin-bottom: 12px;
+	overflow-x: auto;
+}
+
+.daily-detail-tab-btn {
+	padding: 4px 10px;
+	border-radius: 999px;
+	font-size: 0.74rem;
+	font-weight: 600;
+	color: #64748B;
+	background: transparent;
+	border: none;
+	cursor: pointer;
+	transition: all 0.15s ease;
+	white-space: nowrap;
+}
+
+.daily-detail-tab-btn:hover {
+	color: #0F172A;
+	background: #F8FAFC;
+}
+
+.daily-detail-tab-btn.is-active {
+	background: #008E48;
+	color: #FFFFFF;
+}
+
+/* Cuerpo de Tab Resumen (2 Columnas internas) */
+.daily-detail-2cols-body {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 12px;
+	margin-bottom: 12px;
+}
+
+.daily-detail-facts-list {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	font-size: 0.74rem;
+}
+
+.daily-fact-item {
+	display: flex;
+	align-items: flex-start;
+	gap: 7px;
+}
+
+.daily-fact-item i {
+	color: #94A3B8;
+	width: 13px;
+	font-size: 11px;
+	margin-top: 2px;
+	flex-shrink: 0;
+}
+
+.daily-fact-content {
+	display: flex;
+	flex-direction: column;
+	line-height: 1.2;
+}
+
+.daily-fact-label {
+	color: #64748B;
+	font-size: 0.68rem;
+}
+
+.daily-fact-val {
+	font-weight: 700;
+	color: #0F172A;
+	font-size: 0.74rem;
+}
+
+.daily-fact-val.is-red {
+	color: #DC2626;
+}
+
+/* Stepper de Progreso de resolución */
+.daily-stepper-box {
+	background: #F8FAFC;
+	border: 1px solid #E2E8F0;
+	border-radius: 10px;
+	padding: 10px 12px;
+}
+
+.daily-stepper-title {
+	font-size: 0.74rem;
+	font-weight: 800;
+	color: #0F172A;
+	margin: 0 0 10px;
+	display: flex;
+	align-items: center;
+	gap: 5px;
+}
+
+.daily-stepper-list {
+	display: flex;
+	flex-direction: column;
+	position: relative;
+	gap: 8px;
+}
+
+.daily-step-item {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+	position: relative;
+}
+
+.daily-step-item:not(:last-child)::before {
+	content: '';
+	position: absolute;
+	left: 9px;
+	top: 19px;
+	bottom: -6px;
+	width: 2px;
+	background: #E2E8F0;
+}
+
+.daily-step-item.is-completed:not(:last-child)::before {
+	background: #008E48;
+}
+
+.daily-step-circle {
+	width: 20px;
+	height: 20px;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 0.65rem;
+	font-weight: 700;
+	flex-shrink: 0;
+	z-index: 1;
+}
+
+.daily-step-item.is-completed .daily-step-circle {
+	background: #008E48;
+	color: #FFFFFF;
+}
+
+.daily-step-item.is-current .daily-step-circle {
+	background: #008E48;
+	color: #FFFFFF;
+	box-shadow: 0 0 0 3px rgba(0, 142, 72, 0.2);
+}
+
+.daily-step-item.is-pending .daily-step-circle {
+	background: #FFFFFF;
+	border: 1.5px solid #CBD5E1;
+	color: #94A3B8;
+}
+
+.daily-step-texts {
+	display: flex;
+	flex-direction: column;
+	line-height: 1.2;
+}
+
+.daily-step-name {
+	font-size: 0.72rem;
+	font-weight: 700;
+	color: #0F172A;
+}
+
+.daily-step-time {
+	font-size: 0.66rem;
+	color: #64748B;
+}
+
+.daily-step-item.is-current .daily-step-time {
+	color: #008E48;
+	font-weight: 600;
+}
+
+/* Callout Box SLA en Riesgo */
+.daily-sla-callout-card {
+	background: #FEF2F2;
+	border: 1px solid #FECACA;
+	border-radius: 10px;
+	padding: 10px 12px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 12px;
+}
+
+.daily-sla-callout-left {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+}
+
+.daily-sla-callout-left i {
+	color: #EF4444;
+	font-size: 15px;
+	margin-top: 1px;
+}
+
+.daily-sla-title {
+	font-size: 0.78rem;
+	font-weight: 800;
+	color: #DC2626;
+	margin: 0;
+}
+
+.daily-sla-desc {
+	font-size: 0.68rem;
+	color: #7F1D1D;
+	margin: 2px 0 0;
+}
+
+.daily-sla-callout-right {
+	text-align: right;
+	flex-shrink: 0;
+}
+
+.daily-sla-rem-lbl {
+	font-size: 0.65rem;
+	color: #991B1B;
+	font-weight: 500;
+	line-height: 1;
+}
+
+.daily-sla-rem-val {
+	font-size: 1.25rem;
+	font-weight: 800;
+	color: #DC2626;
+	line-height: 1.1;
+	letter-spacing: -0.02em;
+}
+
+/* Botones de acción inferiores en el Panel Derecho */
+.daily-detail-actions-bar {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding-top: 10px;
+	border-top: 1px solid #F1F5F9;
+}
+
+.daily-btn-register-action {
+	background: #008E48;
+	color: #FFFFFF !important;
+	font-size: 0.74rem;
+	font-weight: 700;
+	border-radius: 7px;
+	padding: 7px 11px;
+	border: none;
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	cursor: pointer;
+	transition: all 0.15s ease;
+	white-space: nowrap;
+}
+
+.daily-btn-register-action:hover {
+	background: #00773C;
+}
+
+.daily-btn-outline-white {
+	background: #FFFFFF;
+	color: #334155 !important;
+	border: 1px solid var(--daily-border);
+	font-size: 0.74rem;
+	font-weight: 600;
+	border-radius: 7px;
+	padding: 7px 9px;
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	cursor: pointer;
+	transition: all 0.15s ease;
+	white-space: nowrap;
+}
+
+.daily-btn-outline-white:hover {
+	background: #F8FAFC;
+	border-color: #CBD5E1;
+}
+
+/* --------------------------------------------------------------------------
+   7. VISTA KANBAN (TABLERO)
+   -------------------------------------------------------------------------- */
+.daily-kanban-board-wrap {
+	display: grid;
+	grid-template-columns: repeat(5, 1fr);
+	gap: 12px;
+	padding: 14px;
+	background: #F8FAFC;
+	border-radius: var(--daily-radius);
+	overflow-x: auto;
+}
+
+.daily-kanban-col {
+	background: #FFFFFF;
+	border: 1px solid var(--daily-border);
+	border-radius: 10px;
+	padding: 10px;
+	display: flex;
+	flex-direction: column;
+	min-height: 480px;
+}
+
+.daily-kanban-col-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding-bottom: 8px;
+	border-bottom: 1px solid #F1F5F9;
+	margin-bottom: 8px;
+}
+
+.daily-kanban-col-name {
+	font-size: 0.76rem;
+	font-weight: 700;
+	color: #1E293B;
+}
+
+.daily-kanban-card {
+	background: #F8FAFC;
+	border: 1px solid var(--daily-border);
+	border-radius: 8px;
+	padding: 9px;
+	margin-bottom: 8px;
+	cursor: pointer;
+	transition: all 0.15s ease;
+}
+
+.daily-kanban-card:hover {
+	background: #FFFFFF;
+	border-color: #008E48;
+	box-shadow: var(--daily-shadow-sm);
+	transform: translateY(-1px);
+}
+
+/* --------------------------------------------------------------------------
+   8. VISTA CRONOLOGÍA (SLA TIMELINE)
+   -------------------------------------------------------------------------- */
+.daily-timeline-board-wrap {
+	background: #FFFFFF;
+	border: 1px solid var(--daily-border);
+	border-radius: var(--daily-radius);
+	padding: 16px;
+}
+
+/* --------------------------------------------------------------------------
+   9. RESPONSIVIDAD (MOBILE & TABLET)
+   -------------------------------------------------------------------------- */
+@media (max-width: 1280px) {
+	.daily-kpi-grid-6 {
+		grid-template-columns: repeat(3, 1fr);
+	}
+	.daily-analytics-grid-4 {
+		grid-template-columns: repeat(2, 1fr);
+	}
+	.daily-workspace-split-view {
+		grid-template-columns: 1fr;
+	}
+}
+
+@media (max-width: 768px) {
+	.daily-alerts-container {
+		padding: 12px 10px 40px;
+	}
+	.daily-kpi-grid-6 {
+		grid-template-columns: repeat(2, 1fr);
+	}
+	.daily-analytics-grid-4 {
+		grid-template-columns: 1fr;
+	}
+	.daily-detail-2cols-body {
+		grid-template-columns: 1fr;
+	}
+	.daily-kanban-board-wrap {
+		grid-template-columns: repeat(5, 260px);
+	}
+}
+
+@media (max-width: 480px) {
+	.daily-kpi-grid-6 {
+		grid-template-columns: 1fr;
+	}
+	.daily-alerts-header {
+		flex-direction: column;
+		align-items: stretch;
+	}
+	.daily-alerts-header-right {
+		flex-direction: column;
+		align-items: stretch;
+	}
+}
+
+/* ==========================================================================
+   BANDEJA DE ALERTAS: ESTADOS, SELECCIÓN, SLA Y VERSIÓN MÓVIL
+   ========================================================================== */
+.daily-incidents-table tbody tr[data-id]:focus-visible {
+	outline: 2px solid #008E48;
+	outline-offset: -2px;
+}
+
+.daily-incidents-table tbody tr.daily-table-msg-row,
+.daily-incidents-table tbody tr.daily-table-msg-row:hover {
+	cursor: default;
+	background: #FFFFFF;
+}
+
+.daily-table-msg {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+	padding: 32px 12px;
+	text-align: center;
+	color: #475569;
+	font-size: 0.8rem;
+}
+
+.daily-table-msg > i {
+	font-size: 1.6rem;
+	margin-bottom: 4px;
+}
+
+.daily-table-msg span {
+	color: #64748B;
+	font-size: 0.74rem;
+}
+
+.daily-time-sub {
+	color: #64748B;
+}
+
+.daily-time-sub.is-warn {
+	color: #B45309;
+}
+
+.daily-impact-sub {
+	display: block;
+	font-size: 0.62rem;
+	color: #64748B;
+	font-weight: 600;
+}
+
+.daily-demo-tag {
+	display: inline-block;
+	margin-left: 4px;
+	padding: 0 6px;
+	border-radius: 99px;
+	background: #FEF3C7;
+	border: 1px solid #FCD34D;
+	color: #92400E;
+	font-size: 0.6rem;
+	font-weight: 700;
+	vertical-align: middle;
+}
+
+.daily-demo-notice {
+	margin: 6px 0 4px;
+	padding: 6px 8px;
+	border-radius: 8px;
+	background: #FFFBEB;
+	border: 1px solid #FDE68A;
+	color: #92400E;
+	font-size: 0.68rem;
+	font-weight: 600;
+}
+
+.daily-bulk-bar {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-wrap: wrap;
+	padding: 8px 14px;
+	background: #F0FDF4;
+	border-top: 1px solid #BBF7D0;
+	font-size: 0.74rem;
+	color: #166534;
+}
+
+/* Panel derecho sin alerta seleccionada */
+.daily-panel-empty {
+	display: none;
+	flex-direction: column;
+	align-items: center;
+	gap: 6px;
+	padding: 48px 16px;
+	text-align: center;
+	color: #64748B;
+	font-size: 0.78rem;
+}
+
+.daily-panel-empty i {
+	font-size: 1.8rem;
+	color: #94A3B8;
+}
+
+.daily-panel-empty b {
+	color: #0F172A;
+	font-size: 0.86rem;
+}
+
+.daily-right-detail-card.is-empty > * {
+	display: none !important;
+}
+
+.daily-right-detail-card.is-empty > .daily-panel-empty {
+	display: flex !important;
+}
+
+.daily-panel-mobile-close {
+	display: none;
+}
+
+/* Tarjeta SLA según el estado calculado */
+.daily-sla-callout-card.is-ok {
+	background: #F0FDF4;
+	border-color: #BBF7D0;
+}
+
+.daily-sla-callout-card.is-ok .daily-sla-title,
+.daily-sla-callout-card.is-ok .daily-sla-rem-val,
+.daily-sla-callout-card.is-ok .daily-sla-callout-left i,
+.daily-sla-callout-card.is-closed .daily-sla-title,
+.daily-sla-callout-card.is-closed .daily-sla-rem-val,
+.daily-sla-callout-card.is-closed .daily-sla-callout-left i {
+	color: #15803D;
+}
+
+.daily-sla-callout-card.is-overdue {
+	border-color: #F87171;
+}
+
+.daily-sla-callout-card.is-closed {
+	background: #F0FDF4;
+	border-color: #86EFAC;
+}
+
+.daily-sla-callout-card.is-none {
+	background: #F8FAFC;
+	border-color: #E2E8F0;
+}
+
+.daily-sla-callout-card.is-none .daily-sla-title,
+.daily-sla-callout-card.is-none .daily-sla-rem-val,
+.daily-sla-callout-card.is-none .daily-sla-callout-left i {
+	color: #475569;
+}
+
+.daily-kanban-card.is-selected {
+	box-shadow: inset 3px 0 0 #008E48;
+}
+
+/* Móvil: cada alerta como tarjeta y el detalle como hoja a pantalla completa */
+@media (max-width: 768px) {
+	.daily-incidents-table thead {
+		display: none;
+	}
+
+	.daily-incidents-table,
+	.daily-incidents-table tbody {
+		display: block;
+	}
+
+	.daily-incidents-table tbody tr[data-id] {
+		display: grid;
+		grid-template-columns: auto 1fr auto;
+		grid-template-areas:
+			"check prio id"
+			"inc inc inc"
+			"cat cat branch"
+			"resp resp resp"
+			"time state impact";
+		gap: 6px 8px;
+		padding: 12px;
+		border-bottom: 1px solid #E2E8F0;
+	}
+
+	.daily-incidents-table tbody tr[data-id] td {
+		border: 0;
+		padding: 0;
+		min-width: 0;
+	}
+
+	.daily-incidents-table tbody tr[data-id] td:nth-child(1) { grid-area: check; }
+	.daily-incidents-table tbody tr[data-id] td:nth-child(2) { grid-area: prio; }
+	.daily-incidents-table tbody tr[data-id] td:nth-child(3) { grid-area: id; text-align: right; }
+	.daily-incidents-table tbody tr[data-id] td:nth-child(4) { grid-area: inc; }
+	.daily-incidents-table tbody tr[data-id] td:nth-child(5) { grid-area: cat; }
+	.daily-incidents-table tbody tr[data-id] td:nth-child(6) { grid-area: branch; text-align: right; }
+	.daily-incidents-table tbody tr[data-id] td:nth-child(7) { grid-area: resp; }
+	.daily-incidents-table tbody tr[data-id] td:nth-child(8) { grid-area: time; }
+	.daily-incidents-table tbody tr[data-id] td:nth-child(9) { grid-area: state; align-self: center; }
+	.daily-incidents-table tbody tr[data-id] td:nth-child(10) { grid-area: impact; text-align: right; }
+	.daily-incidents-table tbody tr[data-id] td.daily-dots-cell { display: none; }
+
+	.daily-incidents-table .daily-inc-title,
+	.daily-incidents-table .daily-inc-subtitle {
+		white-space: normal;
+	}
+
+	.daily-incidents-table tbody tr.daily-table-msg-row,
+	.daily-incidents-table tbody tr.daily-table-msg-row td {
+		display: block;
+	}
+
+	.daily-table-footer-bar {
+		flex-direction: column;
+		align-items: stretch;
+		gap: 8px;
+	}
+
+	.daily-right-detail-card {
+		display: none;
+	}
+
+	.daily-right-detail-card.is-mobile-open {
+		display: block;
+		position: fixed;
+		inset: 0;
+		z-index: 1060;
+		margin: 0;
+		border-radius: 0;
+		overflow-y: auto;
+		padding-bottom: 80px;
+	}
+
+	.daily-right-detail-card.is-mobile-open .daily-panel-mobile-close {
+		display: inline-flex;
+		align-items: center;
+		margin-bottom: 10px;
+		padding: 6px 10px;
+		border: 1px solid #E2E8F0;
+		border-radius: 8px;
+		background: #FFFFFF;
+		font-size: 0.8rem;
+		font-weight: 600;
+		color: #0F172A;
+	}
+
+	.daily-right-detail-card.is-mobile-open .daily-detail-actions-bar {
+		flex-wrap: wrap;
+	}
+
+	body.alc-detail-open {
+		overflow: hidden;
+	}
+}
+
+/* Escritorio: que las 10 columnas quepan sin cortar Estado ni Impacto */
+@media (min-width: 769px) {
+	.daily-incidents-table .daily-time-cell,
+	.daily-incidents-table .daily-time-sub,
+	.daily-incidents-table .daily-time-main {
+		white-space: normal;
+	}
+
+	.daily-incidents-table .daily-time-cell {
+		max-width: 84px;
+	}
+
+	.daily-incidents-table .daily-resp-cell {
+		white-space: normal;
+		max-width: 112px;
+	}
+
+	.daily-incidents-table .daily-inc-content {
+		max-width: 150px;
+	}
+}
+
+@media (min-width: 769px) {
+	.daily-incidents-table td,
+	.daily-incidents-table thead th {
+		padding-left: 3px;
+		padding-right: 3px;
+	}
+
+	.daily-incidents-table .daily-time-cell {
+		min-width: 76px;
+	}
+
+	.daily-incidents-table .daily-inc-content {
+		max-width: 120px;
+	}
+}
+
+/* Los botones del detalle (Registrar, Adjuntar, Asignar, Más) siempre visibles */
+.daily-detail-actions-bar {
+	flex-wrap: wrap;
+}

@@ -1,0 +1,1146 @@
+/* ==========================================================================
+   DAILY — Stock & Movimientos (/stockoverview)
+   Panel Ejecutivo de Inventario · Réplica Visual Exacta + Interactividad Total
+   ========================================================================== */
+
+:root {
+	--dsm-bg: #f4f6f9;
+	--dsm-card-bg: #ffffff;
+	--dsm-border: #e2e8f0;
+	--dsm-border-light: #f1f5f9;
+	--dsm-text-dark: #0f172a;
+	--dsm-text-main: #1e293b;
+	--dsm-text-muted: #64748b;
+	--dsm-text-light: #94a3b8;
+
+	--dsm-green: #00c83b;
+	--dsm-green-dark: #059669;
+	--dsm-green-bg: #dcfce7;
+	--dsm-green-soft: #ecfdf5;
+	--dsm-green-border: #86efac;
+
+	--dsm-yellow: #eab308;
+	--dsm-amber: #d97706;
+	--dsm-yellow-bg: #fef3c7;
+	--dsm-yellow-soft: #fffbeb;
+	--dsm-yellow-border: #fde68a;
+
+	--dsm-red: #ef4444;
+	--dsm-red-dark: #dc2626;
+	--dsm-red-bg: #fee2e2;
+	--dsm-red-soft: #fef2f2;
+	--dsm-red-border: #fecaca;
+
+	--dsm-purple: #9333ea;
+	--dsm-blue: #2563eb;
+	--dsm-radius: 12px;
+	--dsm-radius-sm: 8px;
+	--dsm-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.02);
+	--dsm-shadow-hover: 0 6px 16px rgba(15, 23, 42, 0.07);
+}
+
+/* Hide legacy footer blocks if injected by layout */
+#page-content > .dairy-related {
+	display: none !important;
+}
+
+.dsm-exec-container {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+	color: var(--dsm-text-dark);
+	background: var(--dsm-bg);
+	padding: 10px 14px 36px 14px;
+	width: 100%;
+	box-sizing: border-box;
+}
+
+/* --------------------------------------------------------------------------
+   1. ENCABEZADO Y FILTROS GLOBALES
+   -------------------------------------------------------------------------- */
+.dsm-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 12px;
+	margin-bottom: 14px;
+}
+
+.dsm-title-block {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.dsm-title-row {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.dsm-title {
+	font-size: 25px;
+	font-weight: 800;
+	color: var(--dsm-text-dark);
+	letter-spacing: -0.025em;
+	margin: 0;
+	line-height: 1.15;
+}
+
+.dsm-subtitle {
+	font-size: 12.5px;
+	color: var(--dsm-text-muted);
+	margin: 0;
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.dsm-quick-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--dsm-green-dark);
+	background: var(--dsm-green-soft);
+	border: 1px solid var(--dsm-green-border);
+	border-radius: 999px;
+	padding: 1px 8px;
+	text-decoration: none !important;
+	cursor: pointer;
+	transition: all 0.15s ease;
+}
+
+.dsm-quick-pill:hover {
+	background: var(--dsm-green-bg);
+	color: #065f46;
+}
+
+.dsm-filters-bar {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.dsm-filter-box {
+	background: #ffffff;
+	border: 1px solid var(--dsm-border);
+	border-radius: var(--dsm-radius-sm);
+	padding: 4px 10px;
+	height: 40px;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	box-shadow: var(--dsm-shadow);
+	position: relative;
+	transition: border-color 0.15s ease;
+}
+
+.dsm-filter-box:hover {
+	border-color: #cbd5e1;
+}
+
+.dsm-filter-icon {
+	color: var(--dsm-text-muted);
+	font-size: 14px;
+}
+
+.dsm-filter-stack {
+	display: flex;
+	flex-direction: column;
+	line-height: 1.15;
+	min-width: 82px;
+}
+
+.dsm-filter-label {
+	font-size: 10px;
+	font-weight: 600;
+	color: var(--dsm-text-muted);
+}
+
+.dsm-filter-select {
+	border: none;
+	background: transparent;
+	font-size: 12px;
+	font-weight: 700;
+	color: var(--dsm-text-dark);
+	padding: 0;
+	margin: 0;
+	outline: none;
+	cursor: pointer;
+	width: 100%;
+}
+
+.dsm-adv-toggle-btn {
+	height: 40px;
+	padding: 0 10px;
+	border-radius: var(--dsm-radius-sm);
+	border: 1px solid var(--dsm-border);
+	background: #ffffff;
+	color: var(--dsm-text-main);
+	font-size: 12px;
+	font-weight: 600;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	cursor: pointer;
+	box-shadow: var(--dsm-shadow);
+	transition: all 0.15s ease;
+}
+
+.dsm-adv-toggle-btn:hover,
+.dsm-adv-toggle-btn.active {
+	border-color: var(--dsm-green);
+	background: var(--dsm-green-soft);
+	color: var(--dsm-green-dark);
+}
+
+.dsm-sync-box {
+	background: #ffffff;
+	border: 1px solid var(--dsm-border);
+	border-radius: var(--dsm-radius-sm);
+	padding: 4px 12px;
+	height: 40px;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	box-shadow: var(--dsm-shadow);
+}
+
+.dsm-sync-dot {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: var(--dsm-green);
+	box-shadow: 0 0 0 3px rgba(0, 200, 59, 0.18);
+	flex-shrink: 0;
+}
+
+.dsm-sync-stack {
+	display: flex;
+	flex-direction: column;
+	line-height: 1.15;
+}
+
+.dsm-sync-label {
+	font-size: 10px;
+	color: var(--dsm-text-muted);
+	font-weight: 500;
+}
+
+.dsm-sync-time {
+	font-size: 11.5px;
+	font-weight: 700;
+	color: var(--dsm-text-dark);
+}
+
+.dsm-refresh-btn {
+	width: 40px;
+	height: 40px;
+	border-radius: var(--dsm-radius-sm);
+	border: 1px solid var(--dsm-border);
+	background: #ffffff;
+	color: var(--dsm-text-main);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 15px;
+	cursor: pointer;
+	box-shadow: var(--dsm-shadow);
+	transition: all 0.15s ease;
+}
+
+.dsm-refresh-btn:hover {
+	border-color: #cbd5e1;
+	background: #f8fafc;
+	color: var(--dsm-green-dark);
+}
+
+.dsm-refresh-btn.spinning i {
+	animation: dsmSpin 0.7s linear infinite;
+}
+
+@keyframes dsmSpin {
+	100% { transform: rotate(360deg); }
+}
+
+/* Barra Desplegable de Filtros Avanzados */
+.dsm-advanced-filters {
+	background: #ffffff;
+	border: 1px solid var(--dsm-border);
+	border-radius: var(--dsm-radius);
+	padding: 12px 16px;
+	margin-bottom: 14px;
+	box-shadow: var(--dsm-shadow);
+	display: none;
+}
+
+.dsm-advanced-filters.show {
+	display: block;
+}
+
+.dsm-adv-grid {
+	display: grid;
+	grid-template-columns: repeat(6, 1fr);
+	gap: 10px;
+	align-items: end;
+}
+
+.dsm-adv-field label {
+	display: block;
+	font-size: 11px;
+	font-weight: 700;
+	color: var(--dsm-text-muted);
+	margin-bottom: 4px;
+}
+
+.dsm-adv-field select,
+.dsm-adv-field input {
+	width: 100%;
+	height: 34px;
+	border: 1px solid var(--dsm-border);
+	border-radius: 6px;
+	padding: 0 8px;
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--dsm-text-dark);
+	background: #f8fafc;
+}
+
+/* --------------------------------------------------------------------------
+   2. OCHO TARJETAS KPI EJECUTIVAS (2 FILAS DE 4)
+   -------------------------------------------------------------------------- */
+.dsm-kpi-grid {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 14px;
+	margin-bottom: 14px;
+}
+
+.dsm-kpi-card {
+	background: var(--dsm-card-bg);
+	border: 1px solid var(--dsm-border);
+	border-radius: var(--dsm-radius);
+	padding: 14px 16px 0 16px;
+	box-shadow: var(--dsm-shadow);
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	min-height: 140px;
+	position: relative;
+	overflow: hidden;
+	cursor: pointer;
+	transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.dsm-kpi-card:hover {
+	transform: translateY(-2px);
+	box-shadow: var(--dsm-shadow-hover);
+	border-color: #cbd5e1;
+}
+
+.dsm-kpi-top {
+	display: flex;
+	align-items: flex-start;
+	gap: 14px;
+}
+
+.dsm-kpi-icon {
+	width: 44px;
+	height: 44px;
+	border-radius: 10px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 19px;
+	flex-shrink: 0;
+	margin-top: 2px;
+}
+
+.dsm-kpi-icon.is-green {
+	background: var(--dsm-green-bg);
+	color: var(--dsm-green-dark);
+}
+
+.dsm-kpi-icon.is-red {
+	background: var(--dsm-red-bg);
+	color: var(--dsm-red);
+}
+
+.dsm-kpi-icon.is-amber {
+	background: var(--dsm-yellow-bg);
+	color: #d97706;
+}
+
+.dsm-kpi-info {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	flex: 1;
+}
+
+.dsm-kpi-label {
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--dsm-text-main);
+	margin-bottom: 2px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.dsm-kpi-value {
+	font-size: 26px;
+	font-weight: 800;
+	color: var(--dsm-text-dark);
+	letter-spacing: -0.03em;
+	line-height: 1.12;
+	margin-bottom: 3px;
+}
+
+.dsm-kpi-delta-line {
+	display: flex;
+	align-items: center;
+	gap: 5px;
+	font-size: 12px;
+	white-space: nowrap;
+}
+
+.dsm-kpi-delta {
+	font-weight: 700;
+	font-size: 12.5px;
+}
+
+.dsm-kpi-delta.is-good {
+	color: var(--dsm-green-dark);
+}
+
+.dsm-kpi-delta.is-bad {
+	color: var(--dsm-red-dark);
+}
+
+.dsm-kpi-sub {
+	color: var(--dsm-text-muted);
+	font-size: 11.5px;
+}
+
+.dsm-kpi-spark {
+	width: calc(100% + 32px);
+	margin-left: -16px;
+	height: 34px;
+	margin-top: 6px;
+	display: block;
+}
+
+/* --------------------------------------------------------------------------
+   3. TARJETAS GENERALES Y FILA CENTRAL (EVOLUCIÓN + DONUT)
+   -------------------------------------------------------------------------- */
+.dsm-card {
+	background: var(--dsm-card-bg);
+	border: 1px solid var(--dsm-border);
+	border-radius: var(--dsm-radius);
+	padding: 16px 18px;
+	box-shadow: var(--dsm-shadow);
+	display: flex;
+	flex-direction: column;
+}
+
+.dsm-card-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	margin-bottom: 10px;
+	flex-wrap: wrap;
+}
+
+.dsm-card-title {
+	font-size: 15.5px;
+	font-weight: 800;
+	color: var(--dsm-text-dark);
+	margin: 0;
+	letter-spacing: -0.015em;
+}
+
+.dsm-card-controls {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.dsm-select-sm {
+	border: 1px solid var(--dsm-border);
+	background: #ffffff;
+	border-radius: 6px;
+	font-size: 11.5px;
+	font-weight: 600;
+	color: var(--dsm-text-main);
+	padding: 4px 8px;
+	height: 28px;
+	outline: none;
+	cursor: pointer;
+}
+
+.dsm-row-middle {
+	display: grid;
+	grid-template-columns: 1.22fr 1fr;
+	gap: 14px;
+	margin-bottom: 14px;
+}
+
+/* Leyenda Evolución */
+.dsm-evo-legend-bar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-bottom: 8px;
+}
+
+.dsm-evo-legend {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	font-size: 12px;
+	color: var(--dsm-text-main);
+	font-weight: 500;
+}
+
+.dsm-legend-item {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	cursor: pointer;
+}
+
+.dsm-legend-dot {
+	width: 9px;
+	height: 9px;
+	border-radius: 50%;
+	display: inline-block;
+}
+
+.dsm-period-pills {
+	display: inline-flex;
+	background: #f1f5f9;
+	border-radius: 6px;
+	padding: 2px;
+	gap: 2px;
+}
+
+.dsm-period-pill {
+	border: none;
+	background: transparent;
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--dsm-text-muted);
+	padding: 2px 7px;
+	border-radius: 4px;
+	cursor: pointer;
+}
+
+.dsm-period-pill.active {
+	background: #ffffff;
+	color: var(--dsm-text-dark);
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.dsm-evo-canvas-wrap {
+	position: relative;
+	height: 230px;
+	width: 100%;
+}
+
+/* Donut por Departamento */
+.dsm-donut-body {
+	display: flex;
+	align-items: center;
+	gap: 18px;
+	flex: 1;
+	min-height: 230px;
+}
+
+.dsm-donut-canvas-box {
+	width: 188px;
+	height: 188px;
+	position: relative;
+	flex-shrink: 0;
+}
+
+.dsm-donut-center {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	pointer-events: none;
+	text-align: center;
+}
+
+.dsm-donut-center-val {
+	font-size: 19px;
+	font-weight: 800;
+	color: var(--dsm-text-dark);
+	line-height: 1.1;
+}
+
+.dsm-donut-center-sub {
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--dsm-text-muted);
+	margin-top: 2px;
+}
+
+.dsm-dept-list {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 7px;
+	min-width: 0;
+}
+
+.dsm-dept-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 3px 6px;
+	border-radius: 6px;
+	cursor: pointer;
+	transition: background 0.15s ease;
+	font-size: 12.5px;
+}
+
+.dsm-dept-row:hover,
+.dsm-dept-row.active {
+	background: #f1f5f9;
+}
+
+.dsm-dept-left {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	min-width: 0;
+	font-weight: 500;
+	color: var(--dsm-text-main);
+}
+
+.dsm-dept-dot {
+	width: 9px;
+	height: 9px;
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+
+.dsm-dept-right {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	flex-shrink: 0;
+}
+
+.dsm-dept-pct {
+	color: var(--dsm-text-muted);
+	font-size: 12px;
+	width: 38px;
+	text-align: right;
+}
+
+.dsm-dept-val {
+	font-weight: 700;
+	color: var(--dsm-text-dark);
+	min-width: 68px;
+	text-align: right;
+}
+
+/* Drilldown de Departamento (Categoría -> Subcategoría -> SKU -> Lote -> Ubicación) */
+.dsm-dept-drilldown {
+	margin-top: 8px;
+	padding-top: 8px;
+	border-top: 1px dashed var(--dsm-border);
+	font-size: 11.5px;
+	display: none;
+}
+
+.dsm-dept-drilldown.show {
+	display: block;
+}
+
+/* --------------------------------------------------------------------------
+   4. FILA 3: MAPA DE CALOR + TOP 10 PRODUCTOS + RIESGO DE VENCIMIENTO
+   -------------------------------------------------------------------------- */
+.dsm-row-three {
+	display: grid;
+	grid-template-columns: 1.05fr 1.15fr 0.98fr;
+	gap: 14px;
+	margin-bottom: 14px;
+	/* Cada tarjeta mide lo que su contenido: la lista larga de vencimientos no estira las vecinas */
+	align-items: start;
+}
+
+/* La lista de riesgo de vencimiento se desplaza dentro de su tarjeta (misma altura visual que el Top 10) */
+#dsm-section-fefo .table-responsive {
+	max-height: 360px;
+	overflow-y: auto;
+}
+
+#dsm-section-fefo .table-responsive thead th {
+	position: sticky;
+	top: 0;
+	background: #fff;
+	z-index: 1;
+}
+
+/* Mapa de calor */
+.dsm-heatmap-wrap {
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	flex: 1;
+}
+
+.dsm-heatmap-grid {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+	margin-top: 4px;
+}
+
+.dsm-hm-row {
+	display: grid;
+	grid-template-columns: 30px repeat(14, 1fr);
+	gap: 3px;
+	align-items: center;
+}
+
+.dsm-hm-day {
+	font-size: 11.5px;
+	font-weight: 500;
+	color: var(--dsm-text-muted);
+}
+
+.dsm-hm-cell {
+	height: 24px;
+	border-radius: 3px;
+	cursor: pointer;
+	transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.dsm-hm-cell:hover {
+	transform: scale(1.12);
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+	z-index: 2;
+}
+
+.dsm-hm-hours {
+	display: grid;
+	grid-template-columns: 30px repeat(14, 1fr);
+	gap: 3px;
+	margin-top: 4px;
+}
+
+.dsm-hm-hour {
+	font-size: 10.5px;
+	color: var(--dsm-text-muted);
+	text-align: center;
+}
+
+.dsm-hm-legend {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+	margin-top: 12px;
+	font-size: 11.5px;
+	color: var(--dsm-text-main);
+	font-weight: 500;
+}
+
+.dsm-hm-gradient-bar {
+	width: 150px;
+	height: 10px;
+	border-radius: 999px;
+	background: linear-gradient(90deg, #4ade80 0%, #fde047 50%, #ef4444 100%);
+}
+
+/* Tablas Compactas Ejecutivas (Top 10 & Riesgo de Vencimiento) */
+.dsm-exec-table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 12px;
+}
+
+.dsm-exec-table th {
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--dsm-text-muted);
+	padding: 5px 6px;
+	border-bottom: 1px solid var(--dsm-border-light);
+	text-align: left;
+	white-space: nowrap;
+}
+
+.dsm-exec-table td {
+	padding: 5.5px 6px;
+	border-bottom: 1px solid #f8fafc;
+	color: var(--dsm-text-main);
+	vertical-align: middle;
+	white-space: nowrap;
+}
+
+.dsm-exec-table tbody tr {
+	cursor: pointer;
+	transition: background 0.12s ease;
+}
+
+.dsm-exec-table tbody tr:hover {
+	background: #f8fafc;
+}
+
+.dsm-prod-cell {
+	display: flex;
+	align-items: center;
+	gap: 7px;
+}
+
+.dsm-prod-thumb {
+	width: 22px;
+	height: 22px;
+	border-radius: 4px;
+	object-fit: cover;
+	border: 1px solid var(--dsm-border);
+	background: #ffffff;
+	flex-shrink: 0;
+}
+
+.dsm-prod-name {
+	font-weight: 600;
+	color: var(--dsm-text-dark);
+	font-size: 12px;
+}
+
+.dsm-days-badge {
+	font-weight: 700;
+	color: var(--dsm-red-dark);
+}
+
+/* --------------------------------------------------------------------------
+   5. FILA 4: TENDENCIA POR SUCURSAL + MOVIMIENTOS HOY + DECISIONES PRIORITARIAS
+   -------------------------------------------------------------------------- */
+.dsm-row-four {
+	display: grid;
+	grid-template-columns: 1.15fr 0.92fr 1.03fr;
+	gap: 14px;
+	margin-bottom: 16px;
+}
+
+.dsm-branch-Write-pills {
+	display: inline-flex;
+	gap: 4px;
+}
+
+.dsm-branch-pill {
+	border: 1px solid var(--dsm-border);
+	background: #f8fafc;
+	color: var(--dsm-text-main);
+	font-size: 11.5px;
+	font-weight: 600;
+	padding: 3px 10px;
+	border-radius: 6px;
+	cursor: pointer;
+	transition: all 0.15s ease;
+}
+
+.dsm-branch-pill.active {
+	background: var(--dsm-green);
+	border-color: var(--dsm-green);
+	color: #ffffff;
+}
+
+.dsm-branch-table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 12.5px;
+}
+
+.dsm-branch-table th {
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--dsm-text-muted);
+	padding: 7px 6px;
+	border-bottom: 1px solid var(--dsm-border-light);
+	cursor: pointer;
+	user-select: none;
+}
+
+.dsm-branch-table td {
+	padding: 9px 6px;
+	border-bottom: 1px solid var(--dsm-border-light);
+	vertical-align: middle;
+}
+
+.dsm-branch-table tbody tr {
+	cursor: pointer;
+	transition: background 0.12s ease;
+}
+
+.dsm-branch-table tbody tr:hover,
+.dsm-branch-table tbody tr.selected {
+	background: #f0fdf4;
+}
+
+.dsm-state-icon {
+	width: 18px;
+	height: 18px;
+	border-radius: 50%;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 11px;
+	color: #ffffff;
+}
+
+.dsm-state-icon.is-optimal { background: var(--dsm-green); }
+.dsm-state-icon.is-warning { background: var(--dsm-yellow); }
+.dsm-state-icon.is-critical { background: var(--dsm-red); }
+
+/* Gráfico de Barras de Movimientos de Inventario (Hoy) */
+.dsm-moves-chart-area {
+	display: flex;
+	align-items: flex-end;
+	justify-content: space-around;
+	height: 210px;
+	padding: 24px 8px 6px 8px;
+	border-bottom: 1px solid var(--dsm-border-light);
+	gap: 10px;
+}
+
+.dsm-move-bar-col {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: flex-end;
+	height: 100%;
+	cursor: pointer;
+	transition: transform 0.15s ease;
+}
+
+.dsm-move-bar-col:hover {
+	transform: translateY(-3px);
+}
+
+.dsm-move-bar-val {
+	font-size: 12px;
+	font-weight: 800;
+	color: var(--dsm-text-dark);
+	margin-bottom: 5px;
+}
+
+.dsm-move-bar-fill {
+	width: 100%;
+	max-width: 44px;
+	border-radius: 6px 6px 2px 2px;
+	transition: height 0.35s ease;
+	min-height: 14px;
+}
+
+.dsm-move-bar-label {
+	font-size: 11px;
+	font-weight: 500;
+	color: var(--dsm-text-muted);
+	margin-top: 7px;
+	text-align: center;
+	white-space: nowrap;
+}
+
+/* Panel Decisiones Prioritarias */
+.dsm-decisions-list {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	flex: 1;
+}
+
+.dsm-decision-item {
+	border-radius: 10px;
+	padding: 11px 13px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+	cursor: pointer;
+	text-decoration: none !important;
+	transition: transform 0.15s ease, box-shadow 0.15s ease;
+	border: 1px solid transparent;
+}
+
+.dsm-decision-item:hover {
+	transform: translateX(2px);
+	box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
+}
+
+.dsm-decision-item.is-red {
+	background: #fef2f2;
+	border-color: #fecaca;
+}
+
+.dsm-decision-item.is-yellow {
+	background: #fffbeb;
+	border-color: #fde68a;
+}
+
+.dsm-decision-item.is-green {
+	background: #ecfdf5;
+	border-color: #a7f3d0;
+}
+
+.dsm-dec-left {
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+	min-width: 0;
+}
+
+.dsm-dec-icon {
+	width: 32px;
+	height: 32px;
+	border-radius: 8px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 15px;
+	flex-shrink: 0;
+	margin-top: 2px;
+}
+
+.dsm-decision-item.is-red .dsm-dec-icon {
+	background: #fee2e2;
+	color: #dc2626;
+}
+
+.dsm-decision-item.is-yellow .dsm-dec-icon {
+	background: #fef3c7;
+	color: #d97706;
+}
+
+.dsm-decision-item.is-green .dsm-dec-icon {
+	background: #d1fae5;
+	color: #059669;
+}
+
+.dsm-dec-text {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.dsm-dec-title {
+	font-size: 12.5px;
+	font-weight: 800;
+	line-height: 1.25;
+	margin-bottom: 2px;
+}
+
+.dsm-decision-item.is-red .dsm-dec-title { color: #dc2626; }
+.dsm-decision-item.is-yellow .dsm-dec-title { color: #b45309; }
+.dsm-decision-item.is-green .dsm-dec-title { color: #047857; }
+
+.dsm-dec-sub {
+	font-size: 11.5px;
+	color: var(--dsm-text-main);
+	line-height: 1.3;
+}
+
+.dsm-dec-arrow {
+	color: var(--dsm-text-muted);
+	font-size: 12px;
+	flex-shrink: 0;
+}
+
+/* --------------------------------------------------------------------------
+   6. BARRA DE INTEGRACIÓN TRANSVERSAL (14 MÓDULOS + FLUJO 10 PASOS)
+   -------------------------------------------------------------------------- */
+.dsm-integration-strip {
+	background: #ffffff;
+	border: 1px solid var(--dsm-border);
+	border-radius: var(--dsm-radius);
+	padding: 14px 18px;
+	box-shadow: var(--dsm-shadow);
+	margin-top: 4px;
+}
+
+.dsm-modules-pills {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 7px;
+	margin-top: 10px;
+}
+
+.dsm-mod-link {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 5px 11px;
+	border-radius: 8px;
+	background: #f8fafc;
+	border: 1px solid var(--dsm-border);
+	color: var(--dsm-text-main);
+	font-size: 12px;
+	font-weight: 600;
+	text-decoration: none !important;
+	transition: all 0.15s ease;
+}
+
+.dsm-mod-link:hover {
+	background: var(--dsm-green-soft);
+	border-color: var(--dsm-green);
+	color: var(--dsm-green-dark);
+}
+
+/* --------------------------------------------------------------------------
+   7. RESPONSIVE (TABLET & MOBILE)
+   -------------------------------------------------------------------------- */
+@media (max-width: 1360px) {
+	.dsm-row-three,
+	.dsm-row-four {
+		grid-template-columns: 1fr 1fr;
+	}
+	.dsm-row-three > .dsm-card:last-child,
+	.dsm-row-four > .dsm-card:last-child {
+		grid-column: span 2;
+	}
+}
+
+@media (max-width: 1100px) {
+	.dsm-kpi-grid {
+		grid-template-columns: repeat(2, 1fr);
+	}
+	.dsm-row-middle,
+	.dsm-row-three,
+	.dsm-row-four {
+		grid-template-columns: 1fr;
+	}
+	.dsm-row-three > .dsm-card:last-child,
+	.dsm-row-four > .dsm-card:last-child {
+		grid-column: span 1;
+	}
+	.dsm-adv-grid {
+		grid-template-columns: repeat(2, 1fr);
+	}
+}
+
+@media (max-width: 640px) {
+	.dsm-kpi-grid {
+		grid-template-columns: 1fr;
+	}
+	.dsm-donut-body {
+		flex-direction: column;
+	}
+	.dsm-adv-grid {
+		grid-template-columns: 1fr;
+	}
+}

@@ -91,17 +91,21 @@
 				<div class="invalid-feedback">{{ $__t('A location is required') }}</div>
 			</div>
 
-			<div class="form-group">
-				<div class="custom-control custom-checkbox">
-					<input class="form-check-input custom-control-input"
-						type="checkbox"
-						id="spoiled"
-						name="spoiled"
-						value="1">
-					<label class="form-check-label custom-control-label"
-						for="spoiled">{{ $__t('Spoiled') }}
-					</label>
+			<!-- Banner de Redirección Auditada por Merma (Protocolo SAP/AKCAL) -->
+			<div class="alert alert-warning py-2 mb-3 small">
+				<div class="d-flex align-items-center justify-content-between">
+					<div>
+						<i class="fa-solid fa-shield-halved mr-1 text-danger"></i>
+						<strong>¿Producto vencido, roto o deteriorado?</strong>
+						<div class="text-muted mt-1">
+							Por protocolo empresarial SAP/AKCAL, todo descarte debe registrarse en Control de Mermas con su causal auditada.
+						</div>
+					</div>
+					<a href="{{ $U('/waste/report') }}" class="btn btn-sm btn-danger font-weight-bold ml-2 text-nowrap">
+						<i class="fa-solid fa-trash-can mr-1"></i>Reportar Merma
+					</a>
 				</div>
+				<input type="hidden" id="spoiled" name="spoiled" value="0">
 			</div>
 
 			<div class="form-group">

@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DAILY — Presentación empresarial</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --g:#00A63A; --g-dark:#0B6B2E; --g-deep:#073F1D; --g-soft:#E7F8EC; --g-mid:#B9EBC8;
+  --y:#E0A100; --y-soft:#FFF5D6; --r:#D92D20; --r-soft:#FDECEA;
+  --ink:#0F1A14; --body:#33413A; --muted:#5E6B64; --line:#DDE7E0; --bg:#F6F9F7; --card:#FFFFFF;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#E9EFEB;font-family:Inter,system-ui,Segoe UI,Arial,sans-serif;color:var(--body);padding:24px 16px}
+.slide{position:relative;width:100%;max-width:1200px;aspect-ratio:16/9;margin:0 auto 24px;background:linear-gradient(160deg,#FFFFFF 0%,var(--bg) 60%,var(--g-soft) 100%);border-radius:14px;box-shadow:0 6px 24px rgba(7,63,29,.10);overflow:hidden;container-type:inline-size;padding:4.2cqw 5cqw 4cqw}
+.slide.dark{background:linear-gradient(135deg,var(--g-deep) 0%,var(--g-dark) 55%,#0E8A3C 100%);color:#E9F7EE}
+.slide.dark h1,.slide.dark h2{color:#fff}
+.tag{display:inline-block;font-size:1.05cqw;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--g-dark);margin-bottom:1.2cqw}
+.dark .tag{color:var(--g-mid)}
+h1{font-size:6.2cqw;font-weight:800;letter-spacing:-.02em;color:var(--ink);line-height:1}
+h2{font-size:3.1cqw;font-weight:800;letter-spacing:-.015em;color:var(--ink);line-height:1.12;margin-bottom:1.6cqw;max-width:80%}
+p,li{font-size:1.55cqw;line-height:1.5}
+.lead{font-size:1.9cqw;color:var(--muted);max-width:72%}
+.dark .lead{color:#CFEBD8}
+.grid{display:grid;gap:1.6cqw}
+.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}.g5{grid-template-columns:repeat(5,1fr)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:1.1cqw;padding:1.7cqw 1.8cqw}
+.card h3{font-size:1.65cqw;color:var(--ink);font-weight:700;margin-bottom:.6cqw}
+.card p{font-size:1.3cqw;color:var(--muted);line-height:1.45}
+.card.g{border-top:.4cqw solid var(--g)}.card.y{border-top:.4cqw solid var(--y)}.card.r{border-top:.4cqw solid var(--r)}
+.ico{width:3.4cqw;height:3.4cqw;border-radius:.9cqw;display:grid;place-items:center;font-weight:800;font-size:1.6cqw;margin-bottom:1cqw;background:var(--g-soft);color:var(--g-dark)}
+.ico.y{background:var(--y-soft);color:#8A6200}.ico.r{background:var(--r-soft);color:var(--r)}
+ul.clean{list-style:none}
+ul.clean li{padding-left:2.1cqw;position:relative;margin-bottom:.7cqw;font-size:1.4cqw}
+ul.clean li:before{content:"";position:absolute;left:0;top:.65cqw;width:.9cqw;height:.9cqw;border-radius:50%;background:var(--g)}
+.soon{display:inline-block;font-size:1cqw;font-weight:700;color:#8A6200;background:var(--y-soft);border:1px solid #F2D27A;border-radius:99px;padding:.15cqw .8cqw;margin-left:.5cqw;vertical-align:middle}
+.demo{position:absolute;right:2.2cqw;bottom:1.6cqw;font-size:.95cqw;font-weight:700;color:#8A6200;background:var(--y-soft);border:1px solid #F2D27A;border-radius:99px;padding:.3cqw 1cqw}
+.foot{position:absolute;left:5cqw;bottom:1.6cqw;font-size:.95cqw;color:var(--muted);letter-spacing:.04em}
+.dark .foot{color:#9FD3B1}
+.num{font-size:1cqw;position:absolute;right:5cqw;top:2cqw;color:var(--muted);font-weight:600}
+.dark .num{color:#9FD3B1}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:1cqw;padding:1.3cqw 1.5cqw}
+.kpi .l{font-size:1.05cqw;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.kpi .v{font-size:2.6cqw;font-weight:800;color:var(--ink);margin-top:.3cqw}
+.kpi .d{font-size:1.1cqw;font-weight:700;margin-top:.2cqw}
+.up{color:var(--g-dark)}.down{color:var(--r)}.warn{color:#8A6200}
+table{width:100%;border-collapse:collapse;font-size:1.25cqw}
+th{background:var(--g-deep);color:#fff;text-align:left;padding:.8cqw 1cqw;font-weight:700}
+td{padding:.7cqw 1cqw;border-bottom:1px solid var(--line);background:#fff}
+td.c,th.c{text-align:center}
+.ok{color:var(--g-dark);font-weight:800}
+.flow{display:flex;align-items:stretch;gap:1cqw;margin-top:1.5cqw}
+.flow .st{flex:1;background:#fff;border:1px solid var(--line);border-radius:1cqw;padding:1.5cqw;position:relative}
+.flow .st b{display:block;font-size:2.4cqw;color:var(--g);font-weight:800}
+.flow .st h3{font-size:1.6cqw;color:var(--ink);margin:.4cqw 0}
+.flow .st p{font-size:1.25cqw;color:var(--muted)}
+.big{font-size:9cqw;font-weight:800;color:#fff;letter-spacing:-.04em;line-height:.95}
+.logo{display:flex;align-items:center;gap:1.4cqw}
+.logo .mk{width:7cqw;height:7cqw;border-radius:1.8cqw;background:linear-gradient(135deg,#25D366,#00A63A);display:grid;place-items:center;box-shadow:0 1cqw 3cqw rgba(0,0,0,.25)}
+.formula{background:var(--g-deep);color:#fff;border-radius:1cqw;padding:1.6cqw 2cqw;font-size:1.8cqw;font-weight:700;text-align:center}
+.formula small{display:block;font-size:1.15cqw;font-weight:500;color:#BDE6CB;margin-top:.5cqw}
+.note{font-size:1.1cqw;color:var(--muted);margin-top:1cqw}
+.split{display:grid;grid-template-columns:1.05fr 1fr;gap:2.5cqw;align-items:center}
+svg text{font-family:Inter,system-ui,sans-serif}
+@media (max-width:700px){body{padding:12px 0}.slide{border-radius:8px}}
+@media print{
+  @page{size:1280px 720px;margin:0}
+  body{background:none;padding:0}
+  .slide{width:1280px;max-width:none;height:720px;aspect-ratio:auto;margin:0;border-radius:0;box-shadow:none;page-break-after:always;break-after:page;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+</head>
+<body>
+
+<!-- 1 PORTADA -->
+<section class="slide dark">
+  <div class="logo" style="margin-top:5cqw">
+    <div class="mk"><svg viewBox="0 0 48 48" width="62%" height="62%"><path d="M10 26l9 9 19-21" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <div class="big">DAILY</div>
+  </div>
+  <p class="lead" style="margin-top:3cqw;font-size:2.3cqw;max-width:70%">Inteligencia operativa para supermercados: menos pérdidas, menos vencimientos y decisiones medibles, cada día.</p>
+  <p style="margin-top:5cqw;font-size:1.3cqw;color:#9FD3B1">Propuesta confidencial para directivos · 2026</p>
+  <div class="foot">Documento confidencial — no distribuir sin autorización</div>
+</section>
+
+<!-- 2 PROBLEMA -->
+<section class="slide">
+  <span class="num">02</span>
+  <span class="tag">El problema</span>
+  <h2>Las pérdidas operativas no ocurren en un solo lugar: se acumulan en silencio</h2>
+  <div class="grid g4" style="margin-top:2cqw">
+    <div class="card r"><div class="ico r">1</div><h3>Recepción</h3><p>Producto con poca vida útil o fuera de temperatura entra sin reclamo al proveedor.</p></div>
+    <div class="card r"><div class="ico r">2</div><h3>Góndola y bodega</h3><p>Lotes que nadie rota hasta que vencen; sin aviso a tiempo.</p></div>
+    <div class="card y"><div class="ico y">3</div><h3>Inventario</h3><p>El sistema dice una cosa y el estante otra; los ajustes se hacen sin control.</p></div>
+    <div class="card y"><div class="ico y">4</div><h3>Personal</h3><p>Exceso de horas en valle, faltantes en pico; tareas sin responsable.</p></div>
+  </div>
+  <p class="lead" style="margin-top:2.4cqw">Cada área tiene su planilla. Nadie ve la cadena completa — por eso la merma se acepta como "costo del negocio".</p>
+  <div class="foot">DAILY · Confidencial</div>
+</section>
+
+<!-- 3 COSTO -->
+<section class="slide">
+  <span class="num">03</span>
+  <span class="tag">El costo de la falta de visibilidad</span>
+  <h2>Lo que no se mide a tiempo, se paga a fin de mes</h2>
+  <div class="split">
+    <div>
+      <ul class="clean">
+        <li>La merma se conoce <b>semanas después</b>, cuando ya no hay acción posible.</li>
+        <li>Sin causa ni responsable, <b>el mismo error se repite</b> cada mes.</li>
+        <li>Devoluciones y notas de crédito a proveedor <b>se dejan de cobrar</b>.</li>
+        <li>Compras "a ojo": <b>sobrestock de perecederos</b> y quiebres al mismo tiempo.</li>
+        <li>Reportes contradictorios entre tiendas: <b>decisiones tardías</b>.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Cuándo se entera hoy vs. con DAILY</h3>
+      <svg viewBox="0 0 420 200" width="100%">
+        <line x1="20" y1="150" x2="400" y2="150" stroke="#DDE7E0" stroke-width="3"/>
+        <circle cx="40" cy="150" r="9" fill="#00A63A"/><text x="40" y="180" font-size="13" text-anchor="middle" fill="#33413A">Ocurre</text>
+        <circle cx="110" cy="150" r="9" fill="#00A63A"/><text x="110" y="180" font-size="13" text-anchor="middle" fill="#0B6B2E" font-weight="700">DAILY: mismo día</text>
+        <circle cx="380" cy="150" r="9" fill="#D92D20"/><text x="380" y="180" font-size="13" text-anchor="middle" fill="#D92D20" font-weight="700">Hoy: cierre de mes</text>
+        <rect x="40" y="95" width="70" height="26" rx="6" fill="#E7F8EC"/><text x="75" y="113" font-size="12" text-anchor="middle" fill="#0B6B2E" font-weight="700">acción</text>
+        <rect x="110" y="95" width="270" height="26" rx="6" fill="#FDECEA"/><text x="245" y="113" font-size="12" text-anchor="middle" fill="#D92D20" font-weight="700">días sin poder actuar</text>
+      </svg>
+      <p class="note">Esquema ilustrativo.</p>
+    </div>
+  </div>
+  <div class="foot">DAILY · Confidencial</div>
+</section>
+
+<!-- 4 SOLUCIÓN -->
+<section class="slide">
+  <span class="num">04</span>
+  <span class="tag">Nuestra solución</span>
+  <h2>Una sola plataforma para controlar la pérdida de punta a punta</h2>
+  <div class="grid g5" style="margin-top:1.6cqw">
+    <div class="card g"><div class="ico">M</div><h3>Mermas</h3><p>Registro, aprobación, causas, investigación y recuperación.</p></div>
+    <div class="card g"><div class="ico">I</div><h3>Inventario</h3><p>Kardex, conteos, traslados, ubicaciones y escáner.</p></div>
+    <div class="card g"><div class="ico">C</div><h3>Calidad</h3><p>Vencimientos, FEFO, cuarentena, retiros y trazabilidad.</p></div>
+    <div class="card g"><div class="ico">P</div><h3>Compras</h3><p>Planificación, órdenes, recepción y conciliación de facturas.</p></div>
+    <div class="card g"><div class="ico">H</div><h3>Personal</h3><p>Horarios, fichaje y dotación según ventas.</p></div>
+  </div>
+  <div class="card" style="margin-top:1.8cqw;display:flex;gap:2cqw;align-items:center">
+    <div class="ico" style="margin:0">★</div>
+    <p style="font-size:1.45cqw"><b style="color:var(--ink)">Todo conectado:</b> una pérdida se relaciona con la recepción, el lote, la ubicación y el turno donde se originó — y llega al panel ejecutivo con el mismo número para todos.</p>
+  </div>
+  <div class="foot">DAILY · Confidencial</div>
+</section>
+
+<!-- 5 CÓMO FUNCIONA -->
+<section class="slide">
+  <span class="num">05</span>
+  <span class="tag">Cómo funciona</span>
+  <h2>Un ciclo diario simple: detectar, asignar, resolver, medir</h2>
+  <div class="flow">
+    <div class="st"><b>01</b><h3>Detectar</h3><p>Alertas de vencimientos, diferencias de inventario, recepciones rechazadas y mermas inusuales.</p></div>
+    <div class="st"><b>02</b><h3>Asignar</h3><p>Cada alerta tiene responsable, prioridad y plazo; escala si se vence.</p></div>
+    <div class="st"><b>03</b><h3>Resolver</h3><p>Desde el celular: escanear, contar, registrar con foto, aprobar.</p></div>
+    <div class="st"><b>04</b><h3>Medir</h3><p>El panel muestra el efecto en dinero y porcentaje, por tienda.</p></div>
+  </div>
+  <div class="grid g3" style="margin-top:1.8cqw">
+    <div class="kpi"><div class="l">Web</div><div class="v" style="font-size:1.8cqw">Gerencia y oficina</div></div>
+    <div class="kpi"><div class="l">Móvil instalable</div><div class="v" style="font-size:1.8cqw">Piso de tienda</div><div class="d up">Funciona con conexión intermitente</div></div>
+    <div class="kpi"><div class="l">Por rol</div><div class="v" style="font-size:1.8cqw">Cada quien ve lo suyo</div></div>
+  </div>
+  <div class="foot">DAILY · Confidencial</div>
+</section>
+
+<!-- 6 MERMAS -->
+<section class="slide">
+  <span class="num">06</span>
+  <span class="tag">Control y prevención de mermas</span>
+  <h2>Cada pérdida con causa, evidencia, responsable y recuperación</h2>
+  <div class="split">
+    <div>
+      <ul class="clean">
+        <li>Registro en segundos con foto y causa estandarizada.</li>
+        <li><b>Aprobación por otra persona</b> y por nivel de monto.</li>
+        <li>Merma operativa, comercial, averías y ajustes, sin doble conteo.</li>
+        <li>Investigación de causa raíz y planes de acción con seguimiento.</li>
+        <li>Reclamos y notas de crédito a proveedor: <b>recuperación financiera</b>.</li>
+        <li>Comparativo histórico e interanual en $ y %.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Merma por causa — Tienda Demo</h3>
+      <svg viewBox="0 0 420 210" width="100%">
+        <g font-size="12" fill="#33413A">
+          <text x="0" y="28">Vencimiento</text><rect x="110" y="16" width="250" height="18" rx="4" fill="#D92D20"/><text x="366" y="30" font-weight="700">$4.120</text>
+          <text x="0" y="62">Avería</text><rect x="110" y="50" width="170" height="18" rx="4" fill="#E0A100"/><text x="286" y="64" font-weight="700">$2.790</text>
+          <text x="0" y="96">Recepción</text><rect x="110" y="84" width="120" height="18" rx="4" fill="#E0A100"/><text x="236" y="98" font-weight="700">$1.960</text>
+          <text x="0" y="130">Manipulación</text><rect x="110" y="118" width="82" height="18" rx="4" fill="#00A63A"/><text x="198" y="132" font-weight="700">$1.340</text>
+          <text x="0" y="164">Ajuste</text><rect x="110" y="152" width="55" height="18" rx="4" fill="#00A63A"/><text x="171" y="166" font-weight="700">$890</text>
+        </g>
+      </svg>
+    </div>
+  </div>
+  <div class="demo">DATOS FICTICIOS DE DEMOSTRACIÓN</div>
+  <div class="foot">DAILY · Confidencial</div>
+</section>
+
+<!-- 7 INVENTARIO Y CALIDAD -->
+<section class="slide">
+  <span class="num">07</span>
+  <span class="tag">Inventario y calidad</span>
+  <h2>Inventario confiable y producto seguro, lote por lote</h2>
+  <div class="grid g2">
+    <div class="card g">
+      <h3>Inventario</h3>
+      <ul class="clean">
+        <li>Historial de movimientos inalterable y valorizado.</li>
+        <li>Conteos ciegos cortos, programados por importancia del producto.</li>
+        <li>Ajustes aprobados por una segunda persona.</li>
+        <li>Traslados entre tiendas con control de diferencias.</li>
+        <li>Ubicaciones con etiquetas y escáner desde el celular.</li>
+        <li>Detección de stock fantasma y lotes inmovilizados.</li>
+      </ul>
+    </div>
+    <div class="card g">
+      <h3>Calidad</h3>
+      <ul class="clean">
+        <li>Alertas de vencimiento y venta en orden FEFO.</li>
+        <li>Recepción con vida útil mínima y temperatura.</li>
+        <li>Cuarentena que bloquea la venta del lote.</li>
+        <li>Retiros de producto en todas las tiendas.</li>
+        <li>Trazabilidad del proveedor al cliente.</li>
+        <li>Auditorías de tienda con acciones correctivas. Sensores de temperatura<span class="soon">Próximamente</span></li>
+      </ul>
+    </div>
+  </div>
+  <div class="foot">DAILY · Confidencial</div>
+</section>
+
+<!-- 8 ANALÍTICA -->
+<section class="slide">
+  <span class="num">08</span>
+  <span class="tag">Inteligencia operativa y analítica</span>
+  <h2>El dueño y los gerentes ven los mismos números, el mismo día</h2>
+  <div class="grid g4">
+    <div class="kpi"><div class="l">Venta neta</div><div class="v">$412.600</div><div class="d up">+4,1 % vs. mes anterior</div></div>
+    <div class="kpi"><div class="l">Merma % venta</div><div class="v">2,7 %</div><div class="d down">Meta 2,5 %</div></div>
+    <div class="kpi"><div class="l">Margen tras merma</div><div class="v">22,4 %</div><div class="d up">+0,6 pp</div></div>
+    <div class="kpi"><div class="l">Días de inventario</div><div class="v">18</div><div class="d warn">Revisar lácteos</div></div>
+  </div>
+  <div class="card" style="margin-top:1.6cqw">
+    <h3>Merma % por tienda</h3>
+    <svg viewBox="0 0 900 150" width="100%">
+      <line x1="0" y1="40" x2="900" y2="40" stroke="#E0A100" stroke-dasharray="6 6" stroke-width="2"/><text x="895" y="34" font-size="13" fill="#8A6200" text-anchor="end" font-weight="700">Meta 2,5 %</text>
+      <g font-size="14" font-weight="700">
+        <rect x="40" y="56" width="120" height="70" rx="6" fill="#00A63A"/><text x="100" y="146" text-anchor="middle" fill="#33413A">Tienda A · 2,1 %</text>
+        <rect x="260" y="30" width="120" height="96" rx="6" fill="#E0A100"/><text x="320" y="146" text-anchor="middle" fill="#33413A">Tienda B · 2,9 %</text>
+        <rect x="480" y="10" width="120" height="116" rx="6" fill="#D92D20"/><text x="540" y="146" text-anchor="middle" fill="#33413A">Tienda C · 3,4 %</text>
+        <rect x="700" y="60" width="120" height="66" rx="6" fill="#00A63A"/><text x="760" y="146" text-anchor="middle" fill="#33413A">Tienda D · 2,0 %</text>
+      </g>
+    </svg>
+  </div>
+  <p class="note">También: rentabilidad por SKU y categoría, centros de costo, presupuesto vs. real, reportes programados y exportables.</p>
+  <div class="demo">DATOS FICTICIOS DE DEMOSTRACIÓN</div>
+  <div class="foot">DAILY · Confidencial</div>
+</section>
+
+<!-- 9 PERSONAL -->
+<section class="slide">
+  <span class="num">09</span>
+  <span class="tag">Gestión de personal y productividad</span>
+  <h2>Las personas correctas en la hora correcta, según las ventas</h2>
+  <div class="split">
+    <div>
+      <ul class="clean">
+        <li>Horarios por semana con plantillas, intercambios y ausencias.</li>
+        <li>Fichaje desde el celular y correcciones con aprobación.</li>
+        <li>Dotación recomendada por franja según ventas esperadas <b>y tareas reales</b> (recepciones, rotación, conteos).</li>
+        <li>Simulador: ¿qué pasa si faltan dos personas o llegan más pallets?</li>
+        <li>Productividad y costo laboral % de venta.</li>
+        <li>Integración con nómina<span class="soon">Próximamente</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Personal necesario vs. programado — Sábado</h3>
+      <svg viewBox="0 0 420 200" width="100%">
+        <g font-size="11" fill="#5E6B64" text-anchor="middle">
+          <text x="45" y="192">8–10</text><text x="115" y="192">10–12</text><text x="185" y="192">12–14</text><text x="255" y="192">14–16</text><text x="325" y="192">16–18</text><text x="395" y="192">18–20</text>
+        </g>
+        <g>
+          <rect x="25" y="120" width="18" height="55" fill="#B9EBC8"/><rect x="47" y="130" width="18" height="45" fill="#00A63A"/>
+          <rect x="95" y="80" width="18" height="95" fill="#B9EBC8"/><rect x="117" y="90" width="18" height="85" fill="#00A63A"/>
+          <rect x="165" y="40" width="18" height="135" fill="#B9EBC8"/><rect x="187" y="80" width="18" height="95" fill="#D92D20"/>
+          <rect x="235" y="70" width="18" height="105" fill="#B9EBC8"/><rect x="257" y="70" width="18" height="105" fill="#00A63A"/>
+          <rect x="305" y="50" width="18" height="125" fill="#B9EBC8"/><rect x="327" y="60" width="18" height="115" fill="#00A63A"/>
+          <rect x="375" y="100" width="18" height="75" fill="#B9EBC8"/><rect x="397" y="70" width="18" height="105" fill="#E0A100"/>
+        </g>
+        <g font-size="11" font-weight="700"><rect x="20" y="6" width="12" height="12" fill="#B9EBC8"/><text x="38" y="16" fill="#33413A">Necesario</text><rect x="120" y="6" width="12" height="12" fill="#00A63A"/><text x="138" y="16" fill="#33413A">Programado</text><rect x="230" y="6" width="12" height="12" fill="#D92D20"/><text x="248" y="16" fill="#33413A">Faltante</text><rect x="320" y="6" width="12" height="12" fill="#E0A100"/><text x="338" y="16" fill="#33413A">Exceso</text></g>
+      </svg>
+    </div>
+  </div>
+  <div class="demo">DATOS FICTICIOS DE DEMOSTRACIÓN</div>
+  <div class="foot">DAILY · Confidencial</div>
+</section>
+
+<!-- 10 BENEFICIOS -->
+<section class="slide">
+  <span class="num">10</span>
+  <span class="tag">Beneficios económicos potenciales</span>
+  <h2>El beneficio se calcula con sus datos, no con promesas</h2>
+  <div class="formula">Ahorro potencial anual = Venta anual × (Merma % actual − Merma % objetivo)
+    <small>Se mide contra una línea base acordada, con el mismo método, al día 90.</small></div>
+  <div class="grid g3" style="margin-top:1.8cqw">
+    <div class="kpi"><div class="l">Ejemplo · venta anual</div><div class="v">$3.000.000</div></div>
+    <div class="kpi"><div class="l">Ejemplo · merma 3,0 % → 2,5 %</div><div class="v">−0,5 pp</div></div>
+    <div class="kpi" style="border-color:var(--g)"><div class="l">Ejemplo · potencial</div><div class="v up">$15.000 / año</div></div>
+  </div>
+  <div class="grid g4" style="margin-top:1.6cqw">
+    <div class="card g"><h3>Vencidos</h3><p>Valor recuperado antes del vencimiento.</p></div>
+    <div class="card g"><h3>Proveedores</h3><p>Notas de crédito efectivamente cobradas.</p></div>
+    <div class="card g"><h3>Inventario</h3><p>Exactitud y capital inmovilizado.</p></div>
+    <div class="card g"><h3>Horas</h3><p>Costo laboral % de venta con igual cobertura.</p></div>
+  </div>
+  <div class="demo">EJEMPLO ILUSTRATIVO — NO ES UNA GARANTÍA</div>
+  <div class="foot">DAILY · Confidencial</div>
+</section>
+
+<!-- 11 DIFERENCIACIÓN -->
+<section class="slide">
+  <span class="num">11</span>
+  <span class="tag">Diferenciación competitiva</span>
+  <h2>Lo que hoy requiere varias herramientas, en una sola</h2>
+  <table>
+    <tr><th>Capacidad</th><th class="c">Software de horarios</th><th class="c">Apps de checklists</th><th class="c">ERP tradicional</th><th class="c">DAILY</th></tr>
+    <tr><td>Mermas con aprobación, causa y recuperación</td><td class="c">—</td><td class="c">Parcial</td><td class="c">Parcial</td><td class="c ok">✔</td></tr>
+    <tr><td>Vencimientos, FEFO, cuarentena y retiros</td><td class="c">—</td><td class="c">—</td><td class="c">Parcial</td><td class="c ok">✔</td></tr>
+    <tr><td>Conteos ciegos y ajustes con segunda aprobación</td><td class="c">—</td><td class="c">—</td><td class="c">✔</td><td class="c ok">✔</td></tr>
+    <tr><td>Dotación según ventas y tareas de tienda</td><td class="c">✔</td><td class="c">—</td><td class="c">—</td><td class="c ok">✔</td></tr>
+    <tr><td>Auditorías de tienda con acciones</td><td class="c">—</td><td class="c">✔</td><td class="c">—</td><td class="c ok">✔</td></tr>
+    <tr><td>Implementación en semanas, en español, desde el celular</td><td class="c">✔</td><td class="c">✔</td><td class="c">—</td><td class="c ok">✔</td></tr>
+  </table>
+  <p class="note">Comparación por categoría de producto, no por marca. Recomendaciones explicables: cada cifra muestra su origen.</p>
+  <div class="foot">DAILY · Confidencial</div>
+</section>
+
+<!-- 12 PLANES -->
+<section class="slide">
+  <span class="num">12</span>
+  <span class="tag">Planes y modalidades</span>
+  <h2>Un plan para cada etapa de su operación</h2>
+  <div class="grid g4">
+    <div class="card"><h3>Starter</h3><div class="v" style="font-size:2.4cqw;font-weight:800;color:var(--ink)">US$99</div><p>por tienda / mes</p><p style="margin-top:.8cqw">Inventario y kardex, mermas con foto y aprobación, vencimientos, escáner, móvil.</p></div>
+    <div class="card g"><h3>Professional</h3><div class="v" style="font-size:2.4cqw;font-weight:800;color:var(--ink)">US$249</div><p>por tienda / mes</p><p style="margin-top:.8cqw">+ análisis de mermas, investigación y recuperación, conteos, calidad, auditorías, alertas, panel ejecutivo.</p></div>
+    <div class="card g" style="box-shadow:0 0 0 .25cqw var(--g)"><h3>Business</h3><div class="v" style="font-size:2.4cqw;font-weight:800;color:var(--ink)">US$499</div><p>por tienda / mes</p><p style="margin-top:.8cqw">+ compras y planificación, facturas, traslados, horarios y dotación, centros de costo, reportes programados, ventas POS.</p></div>
+    <div class="card"><h3>Enterprise</h3><div class="v" style="font-size:2.4cqw;font-weight:800;color:var(--ink)">A medida</div><p>cadenas 10+ tiendas</p><p style="margin-top:.8cqw">Licencia por sucursal con descuento por volumen, API, SLA, implementación y formación dedicadas.</p></div>
+  </div>
+  <p class="note">Precios de referencia en USD; pago anual con 2 meses sin costo. Implementación según plan. Próximas incorporaciones: doble factor de autenticación, alertas por correo/WhatsApp, conectores POS/ERP preconfigurados, app en tiendas de aplicaciones.</p>
+  <div class="foot">DAILY · Confidencial</div>
+</section>
+
+<!-- 13 IMPLEMENTACIÓN -->
+<section class="slide">
+  <span class="num">13</span>
+  <span class="tag">Implementación y acompañamiento</span>
+  <h2>De la firma a la operación en 6 semanas</h2>
+  <div class="flow">
+    <div class="st"><b>S0</b><h3>Diagnóstico</h3><p>Datos disponibles y línea base de pérdidas.</p></div>
+    <div class="st"><b>S1–2</b><h3>Configuración</h3><p>Tiendas, productos, proveedores, causas, usuarios.</p></div>
+    <div class="st"><b>S2</b><h3>Inventario inicial</h3><p>Conteo con lote y vencimiento.</p></div>
+    <div class="st"><b>S3–6</b><h3>Operación asistida</h3><p>Acompañamiento diario al equipo.</p></div>
+    <div class="st"><b>S8–12</b><h3>Resultados</h3><p>Comparación con la línea base.</p></div>
+  </div>
+  <div class="grid g3" style="margin-top:1.8cqw">
+    <div class="card g"><h3>Capacitación por rol</h3><p>Gerencia, supervisores y piso de tienda.</p></div>
+    <div class="card g"><h3>Soporte</h3><p>Según plan, en español.</p></div>
+    <div class="card g"><h3>Sus datos son suyos</h3><p>Entorno separado por empresa y exportación disponible.</p></div>
+  </div>
+  <div class="foot">DAILY · Confidencial</div>
+</section>
+
+<!-- 14 COLABORACIÓN -->
+<section class="slide">
+  <span class="num">14</span>
+  <span class="tag">Oportunidades de colaboración</span>
+  <h2>Crezcamos juntos</h2>
+  <div class="grid g3">
+    <div class="card g"><div class="ico">1</div><h3>Cliente fundador</h3><p>Piloto de 90 días con condiciones preferentes a cambio de retroalimentación y caso de éxito autorizado.</p></div>
+    <div class="card g"><div class="ico">2</div><h3>Socio estratégico</h3><p>Empresas que aportan experiencia operativa o acceso a clientes, con beneficios económicos acordados.</p></div>
+    <div class="card g"><div class="ico">3</div><h3>Distribuidor</h3><p>Comercialización de DAILY con comisión sobre ingresos recurrentes y formación incluida.</p></div>
+  </div>
+  <p class="lead" style="margin-top:2.2cqw">Cada modalidad se formaliza con un acuerdo específico de confidencialidad y propiedad intelectual.</p>
+  <div class="foot">DAILY · Confidencial</div>
+</section>
+
+<!-- 15 PRÓXIMOS PASOS -->
+<section class="slide dark">
+  <span class="num">15</span>
+  <span class="tag">Próximos pasos</span>
+  <h2 style="font-size:4cqw">Empecemos midiendo</h2>
+  <div class="grid g3" style="margin-top:2.4cqw">
+    <div class="card" style="background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.2)"><h3 style="color:#fff">1 · Demostración</h3><p style="color:#CFEBD8">30 minutos con su equipo de operaciones.</p></div>
+    <div class="card" style="background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.2)"><h3 style="color:#fff">2 · Diagnóstico</h3><p style="color:#CFEBD8">Revisamos sus datos y fijamos la línea base.</p></div>
+    <div class="card" style="background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.2)"><h3 style="color:#fff">3 · Piloto de 90 días</h3><p style="color:#CFEBD8">Una tienda, objetivo medible acordado por escrito.</p></div>
+  </div>
+  <p class="lead" style="margin-top:3cqw">DAILY · contacto@[su-dominio] · [teléfono]</p>
+  <div class="foot">Documento confidencial — no distribuir sin autorización</div>
+</section>
+
+</body>
+</html>

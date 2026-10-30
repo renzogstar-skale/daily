@@ -1,0 +1,224 @@
+/* ==========================================================================
+   DAILY — Normalización visual de Control de Mermas (/waste)
+   Solo tamaños, proporciones, alineación y espaciado. Sin colores ni layout nuevo.
+   Scope por id (#wasteModuleTabContent) para ganar a los <style> de cada pestaña
+   diferida, que además se pisaban entre sí (.daily-kpi-title en fefo/precios/prevencion).
+   ========================================================================== */
+
+#wasteModuleTabContent {
+	--dw-kpi-min-h: 120px;
+	--dw-kpi-pad-y: 16px;
+	--dw-kpi-pad-x: 16px;
+	--dw-kpi-gap: 16px;
+	--dw-kpi-lbl: 0.75rem;   /* 12px, etiquetas en mayúsculas */
+	--dw-kpi-val: 1.625rem;  /* 26px */
+	--dw-kpi-sub: 0.75rem;   /* 12px */
+	--dw-kpi-icon: 28px;
+	--dw-tab-title: 1.25rem; /* 20px */
+	--dw-sec-title: 1rem;    /* 16px */
+	--dw-ctl-h: 36px;
+	--dw-th-fs: 0.7rem;
+	--dw-td-fs: 0.8125rem;   /* 13px */
+	--dw-chart-h: 280px;
+	--dw-chart-h-sm: 220px;
+}
+
+/* --- Rejillas: evitar desbordes por pistas fr con min-content (rebajas, auditoría) --- */
+#wasteModuleTabContent [class*="grid"] > *,
+#wasteModuleTabContent [class*="-layout"] > * {
+	min-width: 0;
+}
+#wasteModuleTabContent :is(.daily-censo-split-row, .daily-censo-dept-row, .daily-censo-bottom-row, .daily-charts-row) > *,
+#wasteModuleTabContent .daily-cdd-grid,
+#wasteModuleTabContent .daily-kpi-chip > *,
+#tab-bakery > .d-flex > div {
+	min-width: 0;
+}
+
+/* Cabecera de tarjeta del resumen: los selectores se recortaban (dw-card tiene overflow:hidden) */
+#wasteModuleTabContent .dw-card-header {
+	flex-wrap: wrap;
+	gap: 6px;
+}
+
+/* --- Rejillas KPI: misma separación y filas de igual altura --- */
+#wasteModuleTabContent :is(.dw-kpis-grid, .daily-aj-kpis-grid, .daily-an-kpis-grid, .daily-av-kpis-grid,
+	.daily-censo-kpis-grid, .daily-eco-kpis-grid, .daily-inv-kpis-grid, .daily-kpis-4grid,
+	.daily-theft-kpis-grid, .daily-fin-kpis-grid, .daily-errores-kpis-grid, .dlx-kpis) {
+	gap: var(--dw-kpi-gap);
+	grid-auto-rows: 1fr;
+}
+
+/* --- Tarjeta KPI --- */
+#wasteModuleTabContent :is(.dw-kpi-card, .daily-aj-kpi-card, .daily-an-kpi-card, .daily-av-kpi-card,
+	.daily-kpi-card, .daily-rebajas-kpi-card, .daily-theft-kpi-card, .daily-intel-kpi-card,
+	.daily-fin-kpi-card, .daily-rec-kpi-card, .daily-inv-kpi-card, .daily-censo-kpi-card,
+	.daily-eco-kpi-card, .daily-kpi-compact, .dlx-kpi, .daily-bk-kpi-card) {
+	min-height: var(--dw-kpi-min-h);
+	padding: var(--dw-kpi-pad-y) var(--dw-kpi-pad-x) !important;
+	height: 100%;
+	container-type: inline-size; /* el valor se reduce solo si la tarjeta es estrecha */
+}
+/* Resumen ejecutivo: la tarjeta lleva además delta y sparkline; padding vertical más contenido */
+#wasteModuleTabContent .dw-kpi-card {
+	padding-top: 12px !important;
+	padding-bottom: 12px !important;
+}
+
+/* --- Etiqueta KPI --- */
+#wasteModuleTabContent :is(.dw-kpi-label, .daily-aj-kpi-lbl, .daily-an-kpi-lbl, .daily-av-kpi-lbl,
+	.daily-kpi-title, .daily-theft-kpi-title, .daily-intel-kpi-label, .daily-fin-kpi-lbl,
+	.daily-rec-kpi-lbl, .daily-inv-kpi-lbl, .daily-censo-kpi-title, .daily-eco-kpi-title,
+	.daily-kpi-compact-title, .dlx-kpi .k-l) {
+	font-size: var(--dw-kpi-lbl);
+	line-height: 1.35;
+}
+/* Rebajas define su propio .daily-kpi-title; Frío y Precios lo redefinen al cargarse en diferido.
+   Se fija el de Rebajas para que no cambie al navegar entre pestañas. */
+#tab-prevencion .daily-kpi-title {
+	display: block;
+	margin: 0;
+	font-weight: 600;
+	letter-spacing: normal;
+	text-transform: none;
+}
+#wasteModuleTabContent .daily-bk-kpi-card > span:first-child {
+	font-size: var(--dw-kpi-lbl) !important;
+}
+
+/* --- Valor KPI --- */
+#wasteModuleTabContent :is(.dw-kpi-val, .daily-aj-kpi-val, .daily-an-kpi-val, .daily-av-kpi-val,
+	.daily-kpi-value, .daily-kpi-val, .daily-theft-kpi-val, .daily-intel-kpi-val, .daily-fin-kpi-val,
+	.daily-rec-kpi-val, .daily-inv-kpi-val, .daily-censo-kpi-val, .daily-kpi-compact-val,
+	.dlx-kpi .k-v, .daily-bk-kpi-card > h4) {
+	font-size: clamp(1.125rem, 14cqi, var(--dw-kpi-val));
+	line-height: 1.15;
+}
+/* KPI económicos de primer nivel (no los anidados en .daily-social-kpi-card) */
+#wasteModuleTabContent .daily-eco-kpi-card .daily-eco-kpi-val {
+	font-size: clamp(1.125rem, 14cqi, var(--dw-kpi-val));
+	line-height: 1.15;
+}
+
+/* --- Texto secundario KPI --- */
+#wasteModuleTabContent :is(.dw-kpi-subtext, .daily-aj-kpi-sub, .daily-an-kpi-sub, .daily-av-kpi-sub,
+	.daily-kpi-subtitle, .daily-kpi-sub, .daily-theft-kpi-sub, .daily-intel-kpi-sub, .daily-fin-kpi-sub,
+	.daily-rec-kpi-sub, .daily-inv-kpi-sub, .daily-censo-kpi-sub, .daily-eco-kpi-sub,
+	.daily-kpi-compact-sub, .dlx-kpi .k-s, .daily-bk-kpi-card > span:last-child) {
+	font-size: var(--dw-kpi-sub);
+}
+
+/* --- Icono KPI --- */
+#wasteModuleTabContent :is(.dw-kpi-icon, .daily-aj-kpi-icon, .daily-an-kpi-icon, .daily-av-kpi-icon,
+	.daily-kpi-icon-box, .daily-theft-kpi-icon, .daily-intel-kpi-icon, .daily-inv-kpi-icon,
+	.daily-censo-kpi-icon, .daily-eco-kpi-icon) {
+	width: var(--dw-kpi-icon);
+	height: var(--dw-kpi-icon);
+	min-width: var(--dw-kpi-icon);
+	font-size: 0.85rem;
+}
+
+/* --- Títulos de pestaña y de sección --- */
+#wasteModuleTabContent :is([class*="-header-title"], .daily-theft-title, .daily-audit-banner-title),
+#wasteModuleTabContent > .tab-pane h5.font-weight-bold.text-dark:not(.modal-title):not(.daily-chart-title):not(.modal *),
+#tab-ajustes h5.mb-0, #tab-averias h5.mb-0, #tab-anual h5.mb-0, #tab-clasificacion h5.mb-0,
+#tab-perecederos h5.font-weight-800,
+#tab-conteos h4.font-weight-bold {
+	font-size: var(--dw-tab-title);
+	letter-spacing: -0.02em;
+}
+#wasteModuleTabContent :is(.daily-oc-card-title, .daily-aj-card-title, .daily-av-card-title, .daily-an-card-title,
+	.daily-photo-title, .daily-cases-title, .daily-intel-title, .daily-col-title, .daily-connected-title,
+	.daily-sec-title, .daily-claims-title, .daily-whys-title, .daily-evidence-title, .daily-monthly-title,
+	.daily-action-title, .daily-ambito-title, .daily-featured-prod-title, .daily-reg-title, .daily-chart-title,
+	.daily-audit-card-title) {
+	font-size: var(--dw-sec-title);
+}
+
+/* --- Botones y filtros (fuera de tablas y modales) --- */
+#wasteModuleTabContent .btn:not(.btn-xs):not(.btn-link):not(table .btn):not(.dw-card-tools .btn) {
+	min-height: var(--dw-ctl-h);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+#wasteModuleTabContent .btn.btn-block:not(.btn-xs) {
+	display: flex;
+}
+#wasteModuleTabContent .btn:not(.btn-sm):not(.btn-xs):not(.btn-lg):not(.btn-link):not(table .btn) {
+	padding-top: 0.3rem;
+	padding-bottom: 0.3rem;
+}
+#wasteModuleTabContent :is(input.form-control, select.form-control, select.custom-select):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([multiple]):not(table *) {
+	height: var(--dw-ctl-h) !important; /* fefo, precios y causales fijan 30–32px en línea */
+}
+
+/* --- Tablas --- */
+#wasteModuleTabContent .tab-pane:not(#tab-centro-control) table thead th {
+	font-size: var(--dw-th-fs);
+	vertical-align: middle;
+}
+#wasteModuleTabContent .tab-pane:not(#tab-centro-control) table.table tbody td {
+	font-size: var(--dw-td-fs);
+	vertical-align: middle;
+}
+
+/* Cabecera de Bakery: el distintivo "Motor Predictivo" se salía en tablet */
+#tab-bakery > .d-flex,
+#tab-bakery > .d-flex > div > .d-flex {
+	flex-wrap: wrap;
+	row-gap: 8px;
+}
+
+/* Contenedores de tabla con overflow-x:hidden recortaban columnas en tablet */
+#wasteModuleTabContent :is(.daily-table-container, .daily-audit-table-wrap) {
+	overflow-x: auto;
+}
+
+/* --- Gráficos de tendencia / barras principales --- */
+#wasteModuleTabContent :is(div:has(> #lcTrendDaily), div:has(> #dailyFruverComboChart),
+	div:has(> #dailyParetoCanvas), .daily-bars-chart-container) {
+	height: var(--dw-chart-h) !important;
+}
+/* Barras secundarias (acompañadas de tabla en la misma tarjeta) */
+#wasteModuleTabContent :is(div:has(> #dailyFamBarChart), div:has(> #liRecBarChart)) {
+	height: var(--dw-chart-h-sm) !important;
+}
+
+/* --- Responsive --- */
+@media (max-width: 991.98px) {
+	/* Filas KPI de Frío y Precios: la última columna no tenía mb-2 y su tarjeta quedaba 8px más alta */
+	#wasteModuleTabContent .row > .col:has(> .daily-kpi-card) {
+		margin-bottom: 0.5rem !important;
+	}
+}
+@media (max-width: 768px) {
+	#wasteModuleTabContent {
+		--dw-kpi-val: 1.375rem;  /* 22px */
+		--dw-kpi-min-h: 104px;
+		--dw-tab-title: 1.125rem;
+		--dw-chart-h: 230px;
+		--dw-chart-h-sm: 200px;
+		--dw-kpi-gap: 12px;
+	}
+}
+@media (max-width: 576px) {
+	#wasteModuleTabContent :is(.dw-donut-container, .daily-lot-toolbar > .d-flex, .daily-cases-head,
+		.daily-cases-filters, .daily-methodology-body) {
+		flex-wrap: wrap;
+		gap: 6px;
+	}
+	#tab-controles .daily-analysis-col > div:has(> .daily-dept-list-table) {
+		overflow-x: auto;
+	}
+	#wasteModuleTabContent .daily-kpi-chip > * {
+		overflow-wrap: anywhere;
+	}
+}
+@media (max-width: 420px) {
+	#wasteModuleTabContent {
+		--dw-kpi-val: 1.25rem;
+		--dw-kpi-pad-y: 14px;
+		--dw-kpi-pad-x: 14px;
+	}
+}

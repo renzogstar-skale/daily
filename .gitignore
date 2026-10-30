@@ -2,3 +2,6 @@ embedded.txt
 /.release
 /packages
 /public/packages
+/tests/dairy/.http_sandbox
+/tests/dairy/.sweep_sandbox
+/tests/dairy/.s34_sandbox

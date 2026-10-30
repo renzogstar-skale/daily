@@ -1,0 +1,1248 @@
+/* ==========================================================================
+   DAILY — Control y Prevención de Mermas (Dashboard de Alta Fidelidad)
+   ========================================================================== */
+
+/* 1. Indicadores Superiores (5 Tarjetas Horizontales) */
+.daily-top-kpis {
+	display: grid;
+	grid-template-columns: repeat(5, 1fr);
+	gap: 12px;
+	margin-bottom: 18px;
+}
+
+@media (max-width: 1200px) {
+	.daily-top-kpis {
+		grid-template-columns: repeat(3, 1fr);
+	}
+}
+
+@media (max-width: 768px) {
+	.daily-top-kpis {
+		grid-template-columns: repeat(2, 1fr);
+	}
+}
+
+@media (max-width: 480px) {
+	.daily-top-kpis {
+		grid-template-columns: 1fr;
+	}
+}
+
+.daily-kpi-card-h {
+	background: #ffffff;
+	border: 1px solid #e2e8f0;
+	border-radius: 12px;
+	padding: 14px 16px;
+	position: relative;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+	transition: transform 0.18s ease, box-shadow 0.18s ease;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	text-decoration: none !important;
+	color: inherit !important;
+	overflow: hidden;
+}
+
+.daily-kpi-card-h:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+	border-color: #cbd5e1;
+}
+
+.daily-kpi-card-h.tone-red {
+	border-left: 4px solid #ef4444;
+}
+.daily-kpi-card-h.tone-green {
+	border-left: 4px solid var(--daily-primary, #00C83B);
+}
+.daily-kpi-card-h.tone-yellow {
+	border-left: 4px solid #f59e0b;
+}
+.daily-kpi-card-h.tone-neutral {
+	border-left: 4px solid #64748b;
+}
+.daily-kpi-card-h.tone-purple {
+	border-left: 4px solid #8b5cf6;
+}
+
+.daily-kpi-h-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 6px;
+}
+
+.daily-kpi-h-title {
+	font-size: 0.8rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+	color: #64748b;
+}
+
+.daily-kpi-h-icon {
+	width: 28px;
+	height: 28px;
+	border-radius: 7px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 0.8rem;
+}
+
+.tone-red .daily-kpi-h-icon { background: #fee2e2; color: #dc2626; }
+.tone-green .daily-kpi-h-icon { background: var(--daily-primary-light, #dcfce7); color: var(--daily-primary, #00C83B); }
+.tone-yellow .daily-kpi-h-icon { background: #fef3c7; color: #d97706; }
+.tone-neutral .daily-kpi-h-icon { background: #f1f5f9; color: #475569; }
+.tone-purple .daily-kpi-h-icon { background: #f3e8ff; color: #7c3aed; }
+
+.daily-kpi-h-body {
+	display: flex;
+	align-items: flex-end;
+	justify-content: space-between;
+	margin-bottom: 6px;
+}
+
+.daily-kpi-h-val {
+	font-size: 1.7rem;
+	font-weight: 800;
+	line-height: 1;
+	color: #0f172a;
+}
+
+.daily-kpi-h-money {
+	font-size: 0.88rem;
+	font-weight: 700;
+	color: #475569;
+	margin-top: 3px;
+}
+
+.daily-kpi-h-sparkline {
+	width: 64px;
+	height: 26px;
+	flex-shrink: 0;
+}
+
+.daily-kpi-h-footer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	font-size: 0.74rem;
+	color: #94a3b8;
+	border-top: 1px dashed #f1f5f9;
+	padding-top: 6px;
+	margin-top: 4px;
+}
+
+.daily-kpi-h-delta {
+	display: inline-flex;
+	align-items: center;
+	gap: 3px;
+	font-weight: 700;
+	padding: 1px 5px;
+	border-radius: 4px;
+	font-size: 0.72rem;
+}
+.daily-kpi-h-delta.up { background: #fef2f2; color: #dc2626; }
+.daily-kpi-h-delta.down { background: #ecfdf5; color: #059669; }
+
+/* 2. Tarjetas con Fotografías Reales (Fruver, Carnes, Pollo) */
+.daily-photo-grid {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 14px;
+	margin-bottom: 20px;
+}
+
+@media (max-width: 992px) {
+	.daily-photo-grid {
+		grid-template-columns: repeat(2, 1fr);
+	}
+}
+
+@media (max-width: 576px) {
+	.daily-photo-grid {
+		grid-template-columns: 1fr;
+	}
+}
+
+.daily-photo-card {
+	position: relative;
+	height: 142px;
+	background: #ffffff;
+	border: 1px solid #e2e8f0;
+	border-radius: 14px;
+	overflow: hidden;
+	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+	transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+	cursor: pointer;
+}
+
+.daily-photo-card:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 8px 20px rgba(0, 0, 0, 0.07);
+	border-color: #cbd5e1;
+}
+
+.daily-photo-card-info {
+	position: relative;
+	z-index: 3;
+	width: 62%;
+	height: 100%;
+	padding: 13px 15px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	pointer-events: none;
+}
+
+.daily-photo-card-tag {
+	display: inline-flex;
+	align-items: center;
+	font-size: 0.74rem;
+	font-weight: 800;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: #334155;
+}
+
+.daily-photo-card-tag .dot {
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	margin-right: 6px;
+}
+.daily-photo-card-tag.is-natural .dot { background: #10b981; }
+.daily-photo-card-tag.is-avoidable .dot { background: #f59e0b; }
+
+.daily-photo-card-metrics {
+	margin: 2px 0;
+}
+
+.daily-photo-card-pct {
+	font-size: 1.62rem;
+	font-weight: 800;
+	line-height: 1.05;
+	color: #0f172a;
+}
+
+.daily-photo-card-money {
+	font-size: 0.95rem;
+	font-weight: 700;
+	color: #475569;
+	margin-top: 2px;
+}
+
+.daily-photo-card-footer {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 0.72rem;
+}
+
+.daily-photo-card-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 3px;
+	font-weight: 700;
+	padding: 1.5px 6px;
+	border-radius: 4px;
+	font-size: 0.72rem;
+}
+.daily-photo-card-badge.up { background: #fef2f2; color: #b91c1c; }
+.daily-photo-card-badge.down { background: #ecfdf5; color: #047857; }
+
+.daily-photo-card-media {
+	position: absolute;
+	top: 0;
+	right: 0;
+	width: 58%;
+	height: 100%;
+	z-index: 1;
+	pointer-events: none;
+	overflow: hidden;
+}
+
+.daily-photo-card-media img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	object-position: center right;
+	-webkit-mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,0.3) 15%, rgba(0,0,0,0.85) 55%, black 100%);
+	mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,0.3) 15%, rgba(0,0,0,0.85) 55%, black 100%);
+	transition: transform 0.3s ease;
+}
+
+.daily-photo-card:hover .daily-photo-card-media img {
+	transform: scale(1.04);
+}
+
+/* 3. Sub-departamentos (Píldoras horizontales) */
+.daily-dept-pills {
+	display: flex;
+	gap: 8px;
+	margin-bottom: 14px;
+	overflow-x: auto;
+	padding-bottom: 4px;
+}
+
+.daily-dept-pill {
+	background: #ffffff;
+	border: 1px solid #e2e8f0;
+	color: #475569;
+	border-radius: 999px;
+	padding: 6px 14px;
+	font-size: 0.82rem;
+	font-weight: 600;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	cursor: pointer;
+	white-space: nowrap;
+	transition: all 0.15s ease;
+	text-decoration: none !important;
+}
+
+.daily-dept-pill:hover {
+	background: #f8fafc;
+	color: #0f172a;
+	border-color: #cbd5e1;
+}
+
+.daily-dept-pill.active {
+	background: var(--daily-primary, #00C83B) !important;
+	border-color: var(--daily-primary, #00C83B) !important;
+	color: var(--daily-primary-text, #ffffff) !important;
+	box-shadow: 0 2px 6px rgba(0, 200, 59, 0.25);
+}
+
+/* 4. Tablas de Lotes */
+.daily-lot-card {
+	background: #ffffff;
+	border: 1px solid #e2e8f0;
+	border-radius: 12px;
+	padding: 16px;
+	margin-bottom: 20px;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.daily-lot-toolbar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 10px;
+	margin-bottom: 12px;
+}
+
+.daily-lot-table {
+	margin-bottom: 0;
+	font-size: 0.82rem;
+}
+
+.daily-lot-table th {
+	background: #f8fafc;
+	color: #475569;
+	font-weight: 700;
+	font-size: 0.74rem;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+	border-top: none;
+	border-bottom: 1px solid #e2e8f0;
+	padding: 9px 10px;
+	white-space: nowrap;
+}
+
+.daily-lot-table td {
+	padding: 9px 10px;
+	vertical-align: middle;
+	border-top: 1px solid #f1f5f9;
+}
+
+.daily-lot-table tr:hover td {
+	background: #f8fafc;
+}
+
+/* 5. Tarjetas de Destino Final (8 Tarjetas) */
+.daily-dest-grid {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 10px;
+	margin-bottom: 18px;
+}
+
+@media (max-width: 992px) {
+	.daily-dest-grid {
+		grid-template-columns: repeat(2, 1fr);
+	}
+}
+
+@media (max-width: 576px) {
+	.daily-dest-grid {
+		grid-template-columns: 1fr;
+	}
+}
+
+.daily-dest-box {
+	background: #ffffff;
+	border: 1px solid #e2e8f0;
+	border-radius: 10px;
+	padding: 12px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	transition: all 0.15s ease;
+}
+
+.daily-dest-box:hover {
+	transform: translateY(-1px);
+	border-color: #cbd5e1;
+	box-shadow: 0 3px 10px rgba(0,0,0,0.04);
+}
+
+.daily-dest-box.is-green { border-left: 3px solid var(--daily-primary, #00C83B); }
+.daily-dest-box.is-amber { border-left: 3px solid #f59e0b; }
+.daily-dest-box.is-red { border-left: 3px solid #ef4444; }
+.daily-dest-box.is-slate { border-left: 3px solid #64748b; }
+
+.daily-dest-title {
+	font-size: 0.75rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	color: #64748b;
+	margin-bottom: 3px;
+}
+
+.daily-dest-val {
+	font-size: 1.25rem;
+	font-weight: 800;
+	color: #0f172a;
+	line-height: 1.1;
+}
+
+.daily-dest-sub {
+	font-size: 0.72rem;
+	color: #94a3b8;
+	margin-top: 3px;
+}
+
+/* 6. Módulos Relacionados (Barra Horizontal) */
+.daily-rel-bar {
+	display: grid;
+	grid-template-columns: repeat(6, 1fr);
+	gap: 10px;
+	margin-top: 24px;
+	margin-bottom: 12px;
+}
+
+@media (max-width: 1200px) {
+	.daily-rel-bar {
+		grid-template-columns: repeat(3, 1fr);
+	}
+}
+
+@media (max-width: 576px) {
+	.daily-rel-bar {
+		grid-template-columns: repeat(2, 1fr);
+	}
+}
+
+.daily-rel-link {
+	background: #ffffff;
+	border: 1px solid #e2e8f0;
+	border-radius: 10px;
+	padding: 12px;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	text-decoration: none !important;
+	color: inherit !important;
+	box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+	transition: all 0.18s ease;
+}
+
+.daily-rel-link:hover {
+	border-color: var(--daily-primary, #00C83B);
+	background: var(--daily-primary-light, #f0fdf4);
+	transform: translateY(-2px);
+	box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.daily-rel-icon {
+	width: 34px;
+	height: 34px;
+	border-radius: 8px;
+	background: #f1f5f9;
+	color: #475569;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 0.95rem;
+	flex-shrink: 0;
+	transition: all 0.15s ease;
+}
+
+.daily-rel-link:hover .daily-rel-icon {
+	background: var(--daily-primary, #00C83B);
+	color: #ffffff;
+}
+
+.daily-rel-title {
+	font-size: 0.8rem;
+	font-weight: 700;
+	color: #0f172a;
+	line-height: 1.2;
+}
+
+.daily-rel-sub {
+	font-size: 0.7rem;
+	color: #64748b;
+	line-height: 1.2;
+}
+
+/* Chips de recomendación */
+.daily-chip-rec {
+	display: inline-flex;
+	align-items: center;
+	padding: 2.5px 8px;
+	border-radius: 999px;
+	font-size: 0.72rem;
+	font-weight: 700;
+	line-height: 1.2;
+}
+.daily-chip-rec.is-red { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+.daily-chip-rec.is-orange { background: #ffedd5; color: #c2410c; border: 1px solid #fdba74; }
+.daily-chip-rec.is-amber { background: #fef3c7; color: #b45309; border: 1px solid #fcd34d; }
+.daily-chip-rec.is-green { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+.daily-chip-rec.is-purple { background: #f3e8ff; color: #7e22ce; border: 1px solid #d8b4fe; }
+.daily-chip-rec.is-slate { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+
+/* ==========================================================================
+   DAILY — Pestaña Operativa y Comercial (Rediseño de Alta Fidelidad)
+   ========================================================================== */
+
+/* 1. Tarjetas generales y contenedores */
+.daily-oc-section {
+	display: flex;
+	flex-direction: column;
+	gap: 18px;
+}
+
+.daily-oc-card {
+	background: #ffffff;
+	border: 1px solid #e2e8f0;
+	border-radius: 14px;
+	padding: 18px 20px;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03), 0 4px 12px rgba(0, 0, 0, 0.02);
+	position: relative;
+	transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.daily-oc-card:hover {
+	border-color: #cbd5e1;
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+}
+
+.daily-oc-card-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 14px;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.daily-oc-card-title {
+	font-size: 0.95rem;
+	font-weight: 700;
+	color: #0f172a;
+	margin: 0;
+	display: flex;
+	align-items: center;
+	letter-spacing: -0.01em;
+}
+
+/* 2. Encabezado de la pestaña y Net Sales Badge */
+.daily-oc-header {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 16px;
+	margin-bottom: 4px;
+}
+
+.daily-oc-title-block h5 {
+	font-size: 1.25rem;
+	font-weight: 800;
+	color: #0f172a;
+	margin-bottom: 4px;
+	letter-spacing: -0.02em;
+}
+
+.daily-oc-title-block p {
+	font-size: 0.82rem;
+	color: #64748b;
+	margin: 0;
+	line-height: 1.4;
+}
+
+.daily-oc-netsales-badge {
+	background: #ffffff;
+	border: 1px solid #e2e8f0;
+	border-radius: 12px;
+	padding: 8px 16px;
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+}
+
+.daily-oc-netsales-icon {
+	width: 36px;
+	height: 36px;
+	border-radius: 9px;
+	background: #dcfce7;
+	color: var(--daily-primary, #00C83B);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 1.1rem;
+	flex-shrink: 0;
+}
+
+.daily-oc-netsales-label {
+	font-size: 0.7rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	color: #64748b;
+	letter-spacing: 0.03em;
+	line-height: 1.1;
+}
+
+.daily-oc-netsales-value {
+	font-size: 1.2rem;
+	font-weight: 800;
+	color: #0f172a;
+	letter-spacing: -0.02em;
+	line-height: 1.15;
+}
+
+.daily-oc-netsales-sub {
+	font-size: 0.68rem;
+	color: #94a3b8;
+}
+
+/* 3. Barra de filtros de la pestaña */
+.daily-oc-filters {
+	background: #ffffff;
+	border: 1px solid #e2e8f0;
+	border-radius: 12px;
+	padding: 12px 16px;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.daily-oc-filters-form {
+	display: flex;
+	align-items: flex-end;
+	flex-wrap: wrap;
+	gap: 10px;
+}
+
+.daily-oc-filter-group {
+	flex: 1 1 150px;
+	min-width: 130px;
+}
+
+.daily-oc-filter-label {
+	display: block;
+	font-size: 0.68rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	color: #64748b;
+	letter-spacing: 0.04em;
+	margin-bottom: 4px;
+}
+
+/* 4. Hero Cards: Operativa y Comercial */
+.daily-oc-hero-card {
+	background: #ffffff;
+	border: 1px solid #e2e8f0;
+	border-radius: 14px;
+	min-height: 180px;
+	position: relative;
+	overflow: hidden;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+	display: flex;
+	transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.daily-oc-hero-card:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+	border-color: #cbd5e1;
+}
+
+.daily-oc-hero-content {
+	flex: 1;
+	z-index: 2;
+	position: relative;
+	padding: 20px 22px;
+	max-width: 66%;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.daily-oc-hero-img-wrap {
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	width: 44%;
+	z-index: 1;
+	pointer-events: none;
+	overflow: hidden;
+}
+
+.daily-oc-hero-img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	object-position: center right;
+}
+
+.daily-oc-hero-mask {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: linear-gradient(to right, #ffffff 0%, rgba(255, 255, 255, 0.95) 15%, rgba(255, 255, 255, 0.4) 60%, rgba(255, 255, 255, 0) 100%);
+}
+
+.daily-oc-pill-tag {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 4px 10px;
+	border-radius: 999px;
+	font-size: 0.78rem;
+	font-weight: 700;
+	width: fit-content;
+}
+
+.daily-oc-pill-tag.is-green {
+	background: #dcfce7;
+	color: #15803d;
+}
+
+.daily-oc-pill-tag.is-amber {
+	background: #fef3c7;
+	color: #b45309;
+}
+
+.daily-oc-hero-amount {
+	font-size: 2.1rem;
+	font-weight: 800;
+	color: #0f172a;
+	letter-spacing: -0.03em;
+	line-height: 1.1;
+	margin: 8px 0 3px 0;
+}
+
+.daily-oc-hero-sub {
+	font-size: 0.8rem;
+	color: #64748b;
+	font-weight: 500;
+}
+
+.daily-oc-hero-counters {
+	display: flex;
+	align-items: center;
+	gap: 24px;
+	margin-top: 14px;
+}
+
+.daily-oc-counter-item {
+	display: flex;
+	flex-direction: column;
+}
+
+.daily-oc-counter-num {
+	font-size: 1.3rem;
+	font-weight: 800;
+	color: #0f172a;
+	line-height: 1.1;
+}
+
+.daily-oc-counter-lbl {
+	font-size: 0.72rem;
+	color: #64748b;
+	font-weight: 500;
+}
+
+/* 5. Gráficos de barras proporcionales por causal */
+.daily-oc-cause-list {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.daily-oc-cause-row {
+	display: grid;
+	grid-template-columns: 140px 1fr 85px 65px;
+	align-items: center;
+	gap: 10px;
+	padding: 8px 10px;
+	border-radius: 8px;
+	transition: background 0.15s ease;
+	cursor: pointer;
+	text-decoration: none !important;
+	color: inherit !important;
+}
+
+.daily-oc-cause-row:hover {
+	background: #f8fafc;
+}
+
+.daily-oc-cause-name-wrap {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	overflow: hidden;
+}
+
+.daily-oc-cause-code {
+	font-size: 0.7rem;
+	font-weight: 700;
+	font-family: monospace;
+	padding: 2px 6px;
+	border-radius: 5px;
+	background: #f1f5f9;
+	color: #475569;
+	flex-shrink: 0;
+}
+
+.daily-oc-cause-name {
+	font-size: 0.8rem;
+	font-weight: 600;
+	color: #1e293b;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.daily-oc-bar-track {
+	height: 10px;
+	background: #f1f5f9;
+	border-radius: 6px;
+	overflow: hidden;
+	position: relative;
+	width: 100%;
+}
+
+.daily-oc-bar-fill {
+	height: 100%;
+	border-radius: 6px;
+	transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.daily-oc-bar-fill.is-green {
+	background: linear-gradient(90deg, #10b981 0%, var(--daily-primary, #00C83B) 100%);
+}
+
+.daily-oc-bar-fill.is-amber {
+	background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%);
+}
+
+.daily-oc-cause-money {
+	font-size: 0.82rem;
+	font-weight: 700;
+	color: #0f172a;
+	text-align: right;
+	font-variant-numeric: tabular-nums;
+}
+
+.daily-oc-cause-pct {
+	font-size: 0.78rem;
+	color: #64748b;
+	text-align: right;
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+}
+
+/* 6. SKU con mayor impacto */
+.daily-oc-sku-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+	gap: 14px;
+}
+
+.daily-oc-sku-card {
+	background: #ffffff;
+	border: 1px solid #e2e8f0;
+	border-radius: 12px;
+	overflow: hidden;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+	transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+	cursor: pointer;
+	display: flex;
+	flex-direction: column;
+	text-decoration: none !important;
+	color: inherit !important;
+	position: relative;
+}
+
+.daily-oc-sku-card:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+	border-color: #cbd5e1;
+}
+
+.daily-oc-sku-img-wrap {
+	height: 110px;
+	width: 100%;
+	position: relative;
+	background: #f8fafc;
+	overflow: hidden;
+}
+
+.daily-oc-sku-img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	transition: transform 0.25s ease;
+}
+
+.daily-oc-sku-card:hover .daily-oc-sku-img {
+	transform: scale(1.04);
+}
+
+.daily-oc-sku-badge {
+	position: absolute;
+	top: 8px;
+	right: 8px;
+	background: rgba(255, 255, 255, 0.94);
+	backdrop-filter: blur(4px);
+	border: 1px solid rgba(0, 0, 0, 0.06);
+	font-size: 0.68rem;
+	font-weight: 800;
+	padding: 2px 7px;
+	border-radius: 6px;
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+	color: #0f172a;
+}
+
+.daily-oc-sku-body {
+	padding: 10px 12px;
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	justify-content: space-between;
+}
+
+.daily-oc-sku-name {
+	font-size: 0.84rem;
+	font-weight: 700;
+	color: #0f172a;
+	line-height: 1.25;
+	margin-bottom: 2px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.daily-oc-sku-code {
+	font-size: 0.7rem;
+	color: #64748b;
+	font-family: monospace;
+	margin-bottom: 6px;
+}
+
+.daily-oc-sku-footer {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	margin-top: 4px;
+	padding-top: 6px;
+	border-top: 1px dashed #f1f5f9;
+}
+
+.daily-oc-sku-cost {
+	font-size: 0.98rem;
+	font-weight: 800;
+	color: #0f172a;
+}
+
+.daily-oc-sku-units {
+	font-size: 0.72rem;
+	color: #64748b;
+	font-weight: 600;
+}
+
+/* 7. Tablas de Detalle SKU y Movimientos */
+.daily-oc-table {
+	width: 100%;
+	border-collapse: separate;
+	border-spacing: 0;
+	font-size: 0.82rem;
+}
+
+.daily-oc-table th {
+	font-size: 0.7rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	color: #64748b;
+	letter-spacing: 0.03em;
+	padding: 8px 10px;
+	border-bottom: 1px solid #e2e8f0;
+	background: #f8fafc;
+}
+
+.daily-oc-table th:first-child { border-top-left-radius: 8px; }
+.daily-oc-table th:last-child { border-top-right-radius: 8px; }
+
+.daily-oc-table td {
+	padding: 9px 10px;
+	border-bottom: 1px solid #f1f5f9;
+	color: #334155;
+	vertical-align: middle;
+}
+
+.daily-oc-table tr:hover td {
+	background: #f8fafc;
+}
+
+.daily-oc-table-footer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding-top: 10px;
+	font-size: 0.78rem;
+	color: #64748b;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.daily-oc-pagination {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.daily-oc-page-btn {
+	width: 28px;
+	height: 28px;
+	border-radius: 6px;
+	border: 1px solid #e2e8f0;
+	background: #ffffff;
+	color: #475569;
+	font-size: 0.76rem;
+	font-weight: 600;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	transition: all 0.15s ease;
+	text-decoration: none !important;
+}
+
+.daily-oc-page-btn:hover {
+	background: #f1f5f9;
+	color: #0f172a;
+}
+
+.daily-oc-page-btn.is-active {
+	background: #0f172a;
+	color: #ffffff;
+	border-color: #0f172a;
+}
+
+/* 8. Mapa de calor por sucursal y departamento */
+.daily-oc-heatmap-table {
+	width: 100%;
+	border-collapse: separate;
+	border-spacing: 3px;
+	font-size: 0.8rem;
+}
+
+.daily-oc-heatmap-table th {
+	font-size: 0.7rem;
+	font-weight: 700;
+	color: #64748b;
+	padding: 6px 8px;
+	background: transparent;
+	border: none;
+	text-align: right;
+}
+
+.daily-oc-heatmap-table th:first-child {
+	text-align: left;
+}
+
+.daily-oc-heatmap-table td {
+	padding: 8px 10px;
+	border-radius: 6px;
+	text-align: right;
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+	font-size: 0.8rem;
+	transition: transform 0.15s ease;
+}
+
+.daily-oc-heatmap-table td:first-child {
+	text-align: left;
+	font-weight: 600;
+	color: #1e293b;
+	background: transparent !important;
+}
+
+.daily-oc-heatmap-table td.cell-data:hover {
+	transform: scale(1.05);
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.daily-oc-heat-green { background: #d1fae5 !important; color: #065f46 !important; }
+.daily-oc-heat-amber { background: #fef3c7 !important; color: #92400e !important; }
+.daily-oc-heat-red   { background: #fee2e2 !important; color: #991b1b !important; }
+
+.daily-oc-heat-legend {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	font-size: 0.72rem;
+	color: #64748b;
+	margin-top: 10px;
+	flex-wrap: wrap;
+}
+
+.daily-oc-legend-item {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.daily-oc-legend-dot {
+	width: 10px;
+	height: 10px;
+	border-radius: 3px;
+}
+
+/* 9. Módulos conectados */
+.daily-oc-modules-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+	gap: 12px;
+}
+
+.daily-oc-module-link {
+	background: #ffffff;
+	border: 1px solid #e2e8f0;
+	border-radius: 10px;
+	padding: 12px 14px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	text-decoration: none !important;
+	color: inherit !important;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+	transition: all 0.18s ease;
+}
+
+.daily-oc-module-link:hover {
+	border-color: var(--daily-primary, #00C83B);
+	background: var(--daily-primary-light, #f0fdf4);
+	transform: translateY(-2px);
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.daily-oc-module-info {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.daily-oc-module-icon {
+	width: 32px;
+	height: 32px;
+	border-radius: 8px;
+	background: #f1f5f9;
+	color: #475569;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 0.9rem;
+	flex-shrink: 0;
+	transition: all 0.15s ease;
+}
+
+.daily-oc-module-link:hover .daily-oc-module-icon {
+	background: var(--daily-primary, #00C83B);
+	color: #ffffff;
+}
+
+.daily-oc-module-name {
+	font-size: 0.82rem;
+	font-weight: 700;
+	color: #0f172a;
+	line-height: 1.2;
+}
+
+.daily-oc-module-sub {
+	font-size: 0.72rem;
+	color: #64748b;
+	line-height: 1.2;
+}
+
+.daily-oc-module-arrow {
+	color: #94a3b8;
+	font-size: 0.8rem;
+	transition: transform 0.15s ease;
+}
+
+.daily-oc-module-link:hover .daily-oc-module-arrow {
+	color: var(--daily-primary, #00C83B);
+	transform: translateX(3px);
+}
+
+/* 10. Adaptación móvil */
+@media (max-width: 991px) {
+	.daily-oc-hero-card {
+		min-height: auto;
+	}
+	.daily-oc-hero-content {
+		max-width: 60%;
+	}
+	.daily-oc-cause-row {
+		grid-template-columns: 120px 1fr 75px 55px;
+	}
+}
+
+@media (max-width: 767px) {
+	.daily-oc-hero-content {
+		max-width: 100%;
+		padding: 16px;
+	}
+	.daily-oc-hero-img-wrap {
+		display: none;
+	}
+	.daily-oc-filters-form {
+		flex-direction: column;
+		align-items: stretch;
+	}
+	.daily-oc-filter-group {
+		width: 100%;
+	}
+	.daily-oc-cause-row {
+		grid-template-columns: 100px 1fr 70px 50px;
+		font-size: 0.75rem;
+	}
+	.daily-oc-cause-name {
+		font-size: 0.75rem;
+	}
+	.daily-oc-heatmap-table {
+		font-size: 0.72rem;
+	}
+}

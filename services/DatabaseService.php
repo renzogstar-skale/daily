@@ -88,6 +88,44 @@ class DatabaseService
 		return self::$DbConnection;
 	}
 
+	/**
+	 * Transacción que toma el bloqueo de escritura al inicio (equivale a BEGIN IMMEDIATE): las escrituras concurrentes
+	 * esperan su turno (busy timeout) en vez de fallar con "database is locked" o decidir sobre datos que otra
+	 * petición está cambiando. Releer el estado DESPUÉS de llamarla.
+	 */
+	public function BeginWriteTransaction(): \PDO
+	{
+		$pdo = $this->GetDbConnectionRaw();
+		$pdo->beginTransaction();
+		$pdo->exec('DELETE FROM sqlite_sequence WHERE 0');
+		return $pdo;
+	}
+
+	/**
+	 * Ejecuta $fn con el bloqueo de escritura tomado ANTES de que lea/valide estado; si $fn no confirma, se revierte.
+	 * $fn debe abrir su propia transacción solo si no hay una activa (inTransaction).
+	 */
+	public function Locked(callable $fn)
+	{
+		$pdo = $this->BeginWriteTransaction();
+		try
+		{
+			$result = $fn();
+			if ($pdo->inTransaction())
+			{
+				$pdo->commit();
+			}
+			return $result;
+		}
+		finally
+		{
+			if ($pdo->inTransaction())
+			{
+				$pdo->rollBack();
+			}
+		}
+	}
+
 	public function GetDbConnectionRaw()
 	{
 		if (self::$DbConnectionRaw == null)
@@ -108,6 +146,12 @@ class DatabaseService
 				return $usersService->GetUserSetting(GROCY_USER_ID, $value);
 			});
 
+
+			// DAIRY: usuario de la sesión para los triggers de historial de cambios (dairy_change_log)
+			$pdo->createFunction('dairy_user_id', function ()
+			{
+				return defined('GROCY_USER_ID') ? GROCY_USER_ID : null;
+			});
 
 			// Unfortunately not included by default
 			// https://www.sqlite.org/lang_mathfunc.html#ceil

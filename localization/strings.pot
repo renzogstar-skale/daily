@@ -348,6 +348,9 @@ msgstr ""
 msgid "About Grocy"
 msgstr ""
 
+msgid "About Dairy"
+msgstr ""
+
 msgid "Close"
 msgstr ""
 
@@ -1331,6 +1334,9 @@ msgstr ""
 msgid "Do you find Grocy useful?"
 msgstr ""
 
+msgid "Do you find Dairy useful?"
+msgstr ""
+
 msgid "Say thanks"
 msgstr ""
 
@@ -1988,6 +1994,9 @@ msgstr ""
 msgid "Grocycode"
 msgstr ""
 
+msgid "Dairycode"
+msgstr ""
+
 msgid "Download"
 msgstr ""
 
@@ -1995,7 +2004,13 @@ msgstr ""
 msgid "Download %s Grocycode"
 msgstr ""
 
+msgid "Download %s Dairycode"
+msgstr ""
+
 msgid "Grocycode is a unique referer to this %s in your Grocy instance - print it onto a label and scan it like any other barcode"
+msgstr ""
+
+msgid "Dairycode is a unique referer to this %s in your Dairy instance - print it onto a label and scan it like any other barcode"
 msgstr ""
 
 # Abbreviation for "due date"
@@ -2025,6 +2040,9 @@ msgstr ""
 
 # Example: Print *Product* Grocycode on label printer
 msgid "Print %s Grocycode on label printer"
+msgstr ""
+
+msgid "Print %s Dairycode on label printer"
 msgstr ""
 
 msgid "Open stock entry label in new window"

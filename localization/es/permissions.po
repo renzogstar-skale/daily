@@ -137,3 +137,88 @@ msgstr "Calendario"
 # Meal plan
 msgid "RECIPES_MEALPLAN"
 msgstr "Plan de comidas"
+
+# DAIRY
+msgid "WASTE"
+msgstr "Mermas"
+
+msgid "WASTE_REPORT"
+msgstr "Reportar merma"
+
+msgid "WASTE_APPROVE"
+msgstr "Aprobar merma"
+
+msgid "WASTE_REASONS_EDIT"
+msgstr "Editar causales de merma"
+
+msgid "SALES"
+msgstr "Ventas"
+
+msgid "SALES_POS"
+msgstr "Punto de venta"
+
+msgid "SALES_CANCEL"
+msgstr "Anular ventas"
+
+msgid "SALES_VIEW"
+msgstr "Ver ventas"
+
+msgid "POS_INTEGRATION"
+msgstr "Integrar e importar ventas de POS externos"
+
+msgid "PROCUREMENT"
+msgstr "Abastecimiento"
+
+msgid "PROCUREMENT_MANAGE"
+msgstr "Gestionar proveedores y órdenes"
+
+msgid "PROCUREMENT_RECEIVE"
+msgstr "Recibir entregas"
+
+msgid "QUALITY"
+msgstr "Calidad"
+
+msgid "QUALITY_INSPECT"
+msgstr "Inspecciones de calidad"
+
+msgid "QUALITY_QUARANTINE"
+msgstr "Gestionar cuarentena"
+
+msgid "KPIS_VIEW"
+msgstr "Ver KPIs ejecutivos"
+
+msgid "BRANCH_MANAGE"
+msgstr "Gestionar sucursales"
+
+msgid "INVENTORY_ADJUST_APPROVE"
+msgstr "Aprobar ajustes de inventario"
+
+msgid "WORKFORCE"
+msgstr "Personal y turnos"
+
+msgid "WORKFORCE_SCHEDULE_MANAGE"
+msgstr "Gestionar turnos, empleados y ausencias"
+
+msgid "WORKFORCE_ATTENDANCE_MANAGE"
+msgstr "Gestionar asistencia del personal"
+
+msgid "WORKFORCE_OVERTIME_APPROVE"
+msgstr "Aprobar horas extra en horarios recomendados"
+
+msgid "BUDGET_MANAGE"
+msgstr "Gestionar presupuestos"
+
+msgid "LOSS_PREVENTION"
+msgstr "Prevención de pérdidas"
+
+msgid "ALERTS_MANAGE"
+msgstr "Gestionar alertas y reglas"
+
+msgid "ALERTS_SUPERVISE"
+msgstr "Supervisar alertas (asignar, escalar y validar en su alcance)"
+
+msgid "RECALL_MANAGE"
+msgstr "Gestionar retiros de producto"
+
+msgid "AUDIT_PERFORM"
+msgstr "Realizar auditorías de tienda"

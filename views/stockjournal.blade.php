@@ -110,9 +110,8 @@
 			</div>
 			<select class="custom-control custom-select"
 				id="daterange-filter">
-				<option value="1">{{ $__n(1, '%s month', '%s months') }}</option>
-				<option value="6"
-					selected>{{ $__n(6, '%s month', '%s months') }}</option>
+				<option value="1" selected>{{ $__n(1, '%s month', '%s months') }}</option>
+				<option value="6">{{ $__n(6, '%s month', '%s months') }}</option>
 				<option value="12">{{ $__n(1, '%s year', '%s years') }}</option>
 				<option value="24">{{ $__n(2, '%s month', '%s years') }}</option>
 				<option value="9999">{{ $__t('All') }}</option>
@@ -133,6 +132,7 @@
 
 <div class="row mt-2">
 	<div class="col">
+		<p class="small text-muted mb-1">Se muestran hasta {{ number_format($journalMaxRows) }} movimientos, del más reciente al más antiguo, del período elegido. El historial completo por producto y sucursal está en Kardex.</p>
 		<table id="stock-journal-table"
 			class="table table-sm table-striped nowrap w-100">
 			<thead>
@@ -244,14 +244,14 @@
 								<a class="dropdown-item"
 									type="button"
 									href="{{ $U('/product/' . $stockLogEntry->product_id . '/grocycode?download=true') }}">
-									{!! str_replace('Grocycode', '<span class="ls-n1">Grocycode</span>', $__t('Download %s Grocycode', $__t('Product'))) !!}
+									{!! str_replace(['Grocycode', 'Dailycode'], '<span class="ls-n1">Dailycode</span>', $__t('Download %s Grocycode', $__t('Product'))) !!}
 								</a>
 								@if(GROCY_FEATURE_FLAG_LABEL_PRINTER)
 								<a class="dropdown-item product-grocycode-label-print"
 									data-product-id="{{ $stockLogEntry->product_id }}"
 									type="button"
 									href="#">
-									{!! str_replace('Grocycode', '<span class="ls-n1">Grocycode</span>', $__t('Print %s Grocycode on label printer', $__t('Product'))) !!}
+									{!! str_replace(['Grocycode', 'Dailycode'], '<span class="ls-n1">Dailycode</span>', $__t('Print %s Grocycode on label printer', $__t('Product'))) !!}
 								</a>
 								@endif
 							</div>

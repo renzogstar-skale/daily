@@ -15,6 +15,43 @@ class BaseApiController extends BaseController
 
 	protected $OpenApiSpec = null;
 
+	/**
+	 * Lectura DAIRY: exige alguno de los permisos y una sucursal visible.
+	 * $branchId explícito (parámetro o sucursal del registro) se valida; null con acceso restringido
+	 * devuelve la única sucursal permitida (o lanza si hay varias y $single).
+	 */
+	protected function DairyRead($request, array $permissions, ?int $branchId = null, bool $single = true): ?int
+	{
+		if (!\Grocy\Helpers\DairyAccess::HasAny(array_merge($permissions, [\Grocy\Controllers\Users\User::PERMISSION_ADMIN])))
+		{
+			throw new \Grocy\Controllers\Users\PermissionMissingException($request, $permissions[0]);
+		}
+		if ($branchId !== null)
+		{
+			if (!\Grocy\Helpers\DairyAccess::CanSeeBranch($branchId))
+			{
+				throw new \Grocy\Controllers\Users\PermissionMissingException($request, 'BRANCH #' . $branchId);
+			}
+			return $branchId;
+		}
+		$allowed = \Grocy\Helpers\DairyAccess::AllowedBranches();
+		if ($allowed !== null && $single)
+		{
+			if (count($allowed) !== 1)
+			{
+				throw new \Grocy\Controllers\Users\PermissionMissingException($request, 'branch_id');
+			}
+			return $allowed[0];
+		}
+		return null;
+	}
+
+	protected static function QueryBranch($request): ?int
+	{
+		$v = $request->getQueryParams()['branch_id'] ?? '';
+		return $v !== '' ? intval($v) : null;
+	}
+
 	protected function ApiResponse(Response $response, $data, $cache = false)
 	{
 		if ($cache)

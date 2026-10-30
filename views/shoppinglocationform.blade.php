@@ -71,6 +71,8 @@
 				class="btn btn-success">{{ $__t('Save') }}</button>
 
 		</form>
+
+		@include('components.dairy_change_history', ['table' => 'shopping_locations', 'rowId' => $mode == 'edit' ? $shoppingLocation->id : null])
 	</div>
 </div>
 @stop

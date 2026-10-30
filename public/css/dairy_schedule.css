@@ -1,0 +1,1692 @@
+/* DAIRY Schedule & Coverage Dashboard Styles */
+:root {
+	--sch-bg: #f8fafc;
+	--sch-card-bg: #ffffff;
+	--sch-border: #e2e8f0;
+	--sch-border-subtle: #edf2f7;
+	--sch-text-main: #0f172a;
+	--sch-text-muted: #64748b;
+	--sch-text-subtle: #94a3b8;
+	--sch-primary: var(--daily-primary, #00C83B);
+	--sch-primary-hover: var(--daily-dark, #008E48);
+	--sch-primary-light: var(--daily-primary-light, #effdf4);
+	--sch-success: #16a34a;
+	--sch-success-light: #dcfce7;
+	--sch-warning: #d97706;
+	--sch-warning-light: #fef3c7;
+	--sch-danger: #dc2626;
+	--sch-danger-light: #fee2e2;
+	--sch-purple: #7c3aed;
+	--sch-purple-light: #f3e8ff;
+	--sch-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+	--sch-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+}
+
+.sch-container {
+	padding: 0;
+	background-color: var(--sch-bg);
+	min-height: calc(100vh - 60px);
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Sidebar active item styling to match mockup pill */
+.dnav-cat[data-cat="operaciones"] .dnav-item[data-item="schedule"] > .dnav-link {
+	background-color: #e0f2fe !important;
+	color: #0369a1 !important;
+	border-radius: 8px !important;
+	font-weight: 600 !important;
+	margin: 0 0.25rem;
+}
+.dnav-cat[data-cat="operaciones"] .dnav-item[data-item="schedule"] > .dnav-link .dnav-icon {
+	color: #0284c7 !important;
+}
+
+/* ================= HEADER & STATUS BADGES ================= */
+.sch-header-top {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 0.5rem;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+}
+
+.sch-badge-group {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	flex-wrap: wrap;
+}
+
+.sch-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.375rem;
+	padding: 0.25rem 0.625rem;
+	font-size: 0.75rem;
+	font-weight: 600;
+	border-radius: 9999px;
+	line-height: 1.25;
+}
+
+.sch-badge-dot {
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	display: inline-block;
+}
+
+.sch-badge-purple {
+	background-color: #ede9fe;
+	color: #6d28d9;
+}
+.sch-badge-purple .sch-badge-dot {
+	background-color: #7c3aed;
+}
+
+.sch-badge-gray {
+	background-color: #f1f5f9;
+	color: #475569;
+}
+
+.sch-badge-green {
+	background-color: #dcfce7;
+	color: #15803d;
+}
+.sch-badge-green .sch-badge-dot {
+	background-color: #22c55e;
+}
+
+.sch-badge-amber {
+	background-color: #fef3c7;
+	color: #b45309;
+}
+.sch-badge-amber .sch-badge-dot {
+	background-color: #f59e0b;
+}
+
+.sch-badge-danger {
+	background-color: #fee2e2;
+	color: #b91c1c;
+}
+.sch-badge-danger .sch-badge-dot {
+	background-color: #ef4444;
+}
+
+.sch-badge-info {
+	background-color: #e0f2fe;
+	color: #0369a1;
+}
+
+/* Main title row */
+.sch-title-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 1.25rem;
+	flex-wrap: wrap;
+	gap: 1rem;
+}
+
+.sch-main-title {
+	font-size: 1.625rem;
+	font-weight: 700;
+	color: var(--sch-text-main);
+	margin: 0 0 0.25rem 0;
+	letter-spacing: -0.02em;
+}
+
+.sch-subtitle {
+	font-size: 0.8125rem;
+	color: var(--sch-text-muted);
+	margin: 0;
+	max-width: 680px;
+}
+
+.sch-header-controls {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	flex-wrap: wrap;
+}
+
+.sch-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.375rem;
+	padding: 0.45rem 0.85rem;
+	font-size: 0.8125rem;
+	font-weight: 600;
+	border-radius: 8px;
+	border: 1px solid var(--sch-border);
+	background: #ffffff;
+	color: #334155;
+	cursor: pointer;
+	transition: all 0.15s ease-in-out;
+	text-decoration: none !important;
+}
+
+.sch-btn:hover {
+	background: #f8fafc;
+	border-color: #cbd5e1;
+	color: #1e293b;
+}
+
+.sch-btn-primary {
+	background: var(--daily-primary, #00C83B);
+	color: var(--daily-primary-text, #ffffff);
+	border-color: var(--daily-primary, #00C83B);
+}
+
+.sch-btn-primary:hover {
+	background: var(--daily-dark, #008E48);
+	border-color: var(--daily-dark, #008E48);
+	color: var(--daily-primary-text, #ffffff);
+}
+
+.sch-btn-purple {
+	color: #7c3aed;
+	border-color: #ddd6fe;
+	background: #ffffff;
+}
+.sch-btn-purple:hover {
+	background: #f5f3ff;
+	border-color: #c4b5fd;
+}
+
+.sch-btn-icon {
+	padding: 0.45rem 0.65rem;
+}
+
+.sch-select {
+	padding: 0.45rem 0.85rem;
+	font-size: 0.8125rem;
+	font-weight: 500;
+	color: #334155;
+	border: 1px solid var(--sch-border);
+	border-radius: 8px;
+	background-color: #ffffff;
+	cursor: pointer;
+	outline: none;
+}
+
+.sch-header-clock-box {
+	text-align: right;
+	line-height: 1.2;
+}
+
+.sch-clock-time {
+	font-size: 1.35rem;
+	font-weight: 700;
+	color: var(--sch-text-main);
+	letter-spacing: -0.02em;
+}
+
+.sch-clock-meta {
+	font-size: 0.7rem;
+	color: var(--sch-text-subtle);
+}
+
+/* ================= 8 KPI CARDS ================= */
+.sch-kpis-grid {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 0.85rem;
+	margin-bottom: 1.25rem;
+}
+
+@media (min-width: 1600px) {
+	.sch-kpis-grid {
+		grid-template-columns: repeat(8, 1fr);
+	}
+}
+
+@media (max-width: 1200px) {
+	.sch-kpis-grid {
+		grid-template-columns: repeat(2, 1fr);
+	}
+}
+
+@media (max-width: 640px) {
+	.sch-kpis-grid {
+		grid-template-columns: 1fr;
+	}
+}
+
+.sch-kpi-card {
+	background: var(--sch-card-bg);
+	border: 1px solid var(--sch-border);
+	border-radius: 12px;
+	padding: 1rem;
+	box-shadow: var(--sch-shadow);
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	position: relative;
+	transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.sch-kpi-card:hover {
+	transform: translateY(-2px);
+	box-shadow: var(--sch-shadow-md);
+}
+
+.sch-kpi-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 0.5rem;
+}
+
+.sch-kpi-title {
+	font-size: 0.75rem;
+	font-weight: 600;
+	color: var(--sch-text-muted);
+	text-transform: none;
+	margin: 0;
+}
+
+.sch-kpi-icon {
+	width: 28px;
+	height: 28px;
+	border-radius: 50%;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 0.75rem;
+}
+
+.sch-kpi-icon.tone-primary {
+	background-color: var(--daily-primary-light, #dcfce7);
+	color: var(--daily-primary, #00C83B);
+}
+.sch-kpi-icon.tone-warning {
+	background-color: #fee2e2;
+	color: #ef4444;
+}
+.sch-kpi-icon.tone-success {
+	background-color: #dcfce7;
+	color: #16a34a;
+}
+.sch-kpi-icon.tone-danger {
+	background-color: #fee2e2;
+	color: #dc2626;
+}
+.sch-kpi-icon.tone-info {
+	background-color: #e0e7ff;
+	color: #4f46e5;
+}
+
+.sch-kpi-body {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	margin-bottom: 0.35rem;
+}
+
+.sch-kpi-value {
+	font-size: 1.625rem;
+	font-weight: 700;
+	color: var(--sch-text-main);
+	letter-spacing: -0.02em;
+	line-height: 1;
+}
+
+.sch-kpi-sparkline {
+	width: 72px;
+	height: 28px;
+	overflow: visible;
+}
+
+.sch-kpi-sub {
+	font-size: 0.75rem;
+	color: var(--sch-text-muted);
+	margin-bottom: 0.65rem;
+}
+
+.sch-kpi-footer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	border-top: 1px solid var(--sch-border-subtle);
+	padding-top: 0.5rem;
+	font-size: 0.72rem;
+}
+
+.sch-kpi-delta {
+	font-weight: 600;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.25rem;
+}
+
+.sch-kpi-delta.good {
+	color: #16a34a;
+}
+.sch-kpi-delta.warning {
+	color: #dc2626;
+}
+.sch-kpi-delta.neutral {
+	color: #16a34a;
+}
+.sch-kpi-delta.danger {
+	color: #dc2626;
+}
+
+.sch-kpi-arrow {
+	color: #94a3b8;
+	font-size: 0.75rem;
+	cursor: pointer;
+}
+
+/* ================= 3 ANALYTICAL CARDS ================= */
+.sch-analytics-row {
+	display: grid;
+	grid-template-columns: 1.25fr 1fr 1fr;
+	gap: 1rem;
+	margin-bottom: 1.25rem;
+}
+
+@media (max-width: 1024px) {
+	.sch-analytics-row {
+		grid-template-columns: 1fr;
+	}
+}
+
+.sch-card {
+	background: var(--sch-card-bg);
+	border: 1px solid var(--sch-border);
+	border-radius: 12px;
+	box-shadow: var(--sch-shadow);
+	padding: 1.15rem;
+	display: flex;
+	flex-direction: column;
+}
+
+.sch-card-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 0.85rem;
+}
+
+.sch-card-title {
+	font-size: 0.875rem;
+	font-weight: 700;
+	color: var(--sch-text-main);
+	margin: 0;
+}
+
+.sch-chart-legend {
+	display: flex;
+	align-items: center;
+	gap: 0.85rem;
+	margin-bottom: 0.75rem;
+	flex-wrap: wrap;
+	font-size: 0.72rem;
+	color: var(--sch-text-muted);
+}
+
+.sch-legend-item {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+}
+
+.sch-legend-dot {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	display: inline-block;
+}
+
+/* Distribution list */
+.sch-dist-list {
+	display: flex;
+	flex-direction: column;
+	gap: 0.45rem;
+	flex: 1;
+	justify-content: space-around;
+}
+
+.sch-dist-row {
+	display: grid;
+	grid-template-columns: 95px 1fr 28px 36px;
+	align-items: center;
+	gap: 0.5rem;
+	font-size: 0.75rem;
+}
+
+.sch-dist-name {
+	font-weight: 500;
+	color: #334155;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.sch-dist-bar-bg {
+	background: #f1f5f9;
+	height: 8px;
+	border-radius: 9999px;
+	overflow: hidden;
+	position: relative;
+}
+
+.sch-dist-bar-fill {
+	height: 100%;
+	border-radius: 9999px;
+	transition: width 0.4s ease;
+}
+
+.sch-dist-count {
+	font-weight: 600;
+	color: #1e293b;
+	text-align: right;
+}
+
+.sch-dist-pct {
+	color: var(--sch-text-subtle);
+	text-align: right;
+}
+
+/* Labor Cost Card */
+.sch-donut-container {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	flex: 1;
+}
+
+.sch-donut-chart-box {
+	position: relative;
+	width: 140px;
+	height: 140px;
+	flex-shrink: 0;
+}
+
+.sch-donut-center-label {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	text-align: center;
+	pointer-events: none;
+}
+
+.sch-donut-amount {
+	font-size: 1.15rem;
+	font-weight: 800;
+	color: var(--sch-text-main);
+	line-height: 1.1;
+}
+
+.sch-donut-sub {
+	font-size: 0.65rem;
+	color: var(--sch-text-muted);
+}
+
+.sch-cost-list {
+	display: flex;
+	flex-direction: column;
+	gap: 0.45rem;
+	flex: 1;
+}
+
+.sch-cost-item {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	font-size: 0.75rem;
+}
+
+.sch-cost-label {
+	display: flex;
+	align-items: center;
+	gap: 0.4rem;
+	color: #334155;
+	font-weight: 500;
+}
+
+.sch-cost-vals {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.sch-cost-amt {
+	font-weight: 700;
+	color: var(--sch-text-main);
+}
+
+.sch-cost-pct {
+	color: var(--sch-text-subtle);
+	width: 24px;
+	text-align: right;
+}
+
+.sch-cost-footer {
+	border-top: 1px solid var(--sch-border-subtle);
+	padding-top: 0.65rem;
+	margin-top: 0.65rem;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	font-size: 0.72rem;
+}
+
+/* ================= MAIN SCHEDULING CALENDAR ================= */
+.sch-main-section {
+	background: var(--sch-card-bg);
+	border: 1px solid var(--sch-border);
+	border-radius: 12px;
+	box-shadow: var(--sch-shadow);
+	margin-bottom: 1.25rem;
+	overflow: hidden;
+}
+
+/* View tabs row */
+.sch-view-bar {
+	padding: 0.75rem 1rem;
+	border-bottom: 1px solid var(--sch-border-subtle);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+}
+
+.sch-pills-nav {
+	display: flex;
+	align-items: center;
+	gap: 0.375rem;
+	flex-wrap: wrap;
+}
+
+.sch-view-pill {
+	padding: 0.35rem 0.75rem;
+	font-size: 0.75rem;
+	font-weight: 600;
+	border-radius: 8px;
+	color: #475569;
+	background: #f1f5f9;
+	border: none;
+	cursor: pointer;
+	transition: all 0.15s ease;
+	text-decoration: none !important;
+}
+
+.sch-view-pill:hover {
+	background: #e2e8f0;
+	color: #1e293b;
+}
+
+.sch-view-pill.active {
+	background: var(--daily-primary, #00C83B);
+	color: var(--daily-primary-text, #ffffff);
+}
+
+.sch-coverage-status-tag {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	font-size: 0.75rem;
+}
+
+/* Secondary Filter Bar */
+.sch-filter-bar {
+	padding: 0.65rem 1rem;
+	background: #ffffff;
+	border-bottom: 1px solid var(--sch-border);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 0.65rem;
+}
+
+.sch-filters-left {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	flex-wrap: wrap;
+}
+
+.sch-filter-group {
+	display: flex;
+	flex-direction: column;
+	gap: 0.15rem;
+}
+
+.sch-filter-label {
+	font-size: 0.65rem;
+	font-weight: 600;
+	color: #94a3b8;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+}
+
+.sch-filter-select {
+	padding: 0.35rem 0.65rem;
+	font-size: 0.75rem;
+	border: 1px solid var(--sch-border);
+	border-radius: 6px;
+	background: #ffffff;
+	color: #334155;
+	outline: none;
+}
+
+.sch-filters-right {
+	display: flex;
+	align-items: center;
+	gap: 0.4rem;
+	flex-wrap: wrap;
+}
+
+/* Grid Layout */
+.sch-grid-layout {
+	display: grid;
+	grid-template-columns: 1fr 270px;
+	background: #ffffff;
+}
+
+@media (max-width: 1200px) {
+	.sch-grid-layout {
+		grid-template-columns: 1fr;
+	}
+}
+
+.sch-table-wrapper {
+	overflow-x: hidden;
+	border-right: 1px solid var(--sch-border);
+}
+
+.sch-table {
+	width: 100%;
+	border-collapse: collapse;
+	table-layout: fixed;
+}
+
+/* Móvil: 7 días + columna de empleado no caben; desplazar en vez de recortar los turnos */
+@media (max-width: 767.98px) {
+	.sch-table-wrapper { overflow-x: auto; }
+	.sch-table { min-width: 760px; }
+}
+
+.sch-table th, .sch-table td {
+	border: 1px solid #f1f5f9;
+	padding: 0.4rem 0.25rem;
+	vertical-align: middle;
+}
+
+.sch-table th {
+	background: #ffffff;
+	font-size: 0.75rem;
+	font-weight: 600;
+	color: #475569;
+	text-align: center;
+	border-top: none;
+}
+
+.sch-th-employee {
+	width: 165px;
+	text-align: left !important;
+	padding: 0.45rem 0.6rem !important;
+}
+
+.sch-emp-search-box {
+	position: relative;
+	margin-top: 0.35rem;
+}
+
+.sch-emp-search-input {
+	width: 100%;
+	padding: 0.3rem 0.45rem 0.3rem 1.5rem;
+	font-size: 0.7rem;
+	border: 1px solid var(--sch-border);
+	border-radius: 6px;
+	outline: none;
+	background: #ffffff;
+}
+
+.sch-emp-search-icon {
+	position: absolute;
+	left: 0.45rem;
+	top: 50%;
+	transform: translateY(-50%);
+	font-size: 0.65rem;
+	color: #94a3b8;
+}
+
+.sch-th-day {
+	width: calc((100% - 165px) / 7);
+	padding: 0.5rem 0.2rem;
+}
+
+.sch-th-day.is-today {
+	background: var(--daily-primary, #00C83B) !important;
+	color: var(--daily-primary-text, #ffffff) !important;
+	border-color: var(--daily-primary, #00C83B) !important;
+	border-radius: 6px 6px 0 0;
+}
+
+.sch-th-day-name {
+	font-weight: 700;
+	font-size: 0.78rem;
+}
+
+.sch-th-day-date {
+	font-size: 0.68rem;
+	opacity: 0.9;
+}
+
+/* Employee Row in Table */
+.sch-employee-row:hover td {
+	background-color: #fafbfc;
+}
+
+.sch-emp-cell {
+	padding: 0.5rem 0.75rem !important;
+}
+
+.sch-emp-card {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.5rem;
+}
+
+.sch-emp-avatar {
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-weight: 700;
+	font-size: 0.75rem;
+	color: #ffffff;
+	flex-shrink: 0;
+}
+
+.sch-emp-details {
+	flex: 1;
+	min-width: 0;
+}
+
+.sch-emp-name {
+	font-weight: 700;
+	font-size: 0.78rem;
+	color: var(--sch-text-main);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	margin-bottom: 0.1rem;
+}
+
+.sch-emp-meta {
+	font-size: 0.68rem;
+	color: var(--sch-text-muted);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.sch-emp-hours {
+	font-weight: 700;
+	font-size: 0.72rem;
+	color: #475569;
+	margin-left: 0.25rem;
+}
+
+.sch-emp-menu-btn {
+	background: none;
+	border: none;
+	color: #94a3b8;
+	font-size: 0.85rem;
+	cursor: pointer;
+	padding: 0.2rem;
+}
+
+/* Shift Badges / Cards inside cells */
+.sch-cell-content {
+	min-height: 48px;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	gap: 0.25rem;
+}
+
+.sch-shift-card {
+	border-radius: 6px;
+	padding: 0.35rem 0.45rem;
+	font-size: 0.7rem;
+	cursor: pointer;
+	transition: all 0.15s ease;
+	position: relative;
+	border-left: 3px solid transparent;
+	display: flex;
+	flex-direction: column;
+	gap: 0.1rem;
+}
+
+.sch-shift-card:hover {
+	transform: translateY(-1px);
+	box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+}
+
+.sch-shift-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.sch-shift-time {
+	font-weight: 700;
+	font-size: 0.72rem;
+	line-height: 1.15;
+}
+
+.sch-shift-dept {
+	font-size: 0.65rem;
+	opacity: 0.85;
+}
+
+.sch-shift-dots {
+	font-size: 0.65rem;
+	opacity: 0.6;
+}
+
+/* Shift color themes */
+.sch-shift-blue {
+	background: #eff6ff;
+	border-left-color: #3b82f6;
+	color: #1d4ed8;
+}
+
+.sch-shift-green {
+	background: #f0fdf4;
+	border-left-color: #22c55e;
+	color: #15803d;
+}
+
+.sch-shift-purple {
+	background: #faf5ff;
+	border-left-color: #a855f7;
+	color: #7e22ce;
+}
+
+.sch-shift-orange {
+	background: #fffbeb;
+	border-left-color: #f59e0b;
+	color: #b45309;
+}
+
+.sch-shift-coral {
+	background: #fff1f2;
+	border-left-color: #f43f5e;
+	color: #be123c;
+}
+
+.sch-shift-tan {
+	background: #fff7ed;
+	border-left-color: #ea580c;
+	color: #9a3412;
+}
+
+.sch-shift-alert {
+	background: #fef2f2;
+	border-left-color: #ef4444;
+	color: #dc2626;
+	display: flex;
+	align-items: center;
+	gap: 0.35rem;
+	font-weight: 600;
+	font-size: 0.68rem;
+	padding: 0.45rem 0.5rem;
+}
+
+.sch-shift-empty {
+	text-align: center;
+	font-size: 0.72rem;
+	color: #94a3b8;
+	font-weight: 500;
+	cursor: pointer;
+	padding: 0.5rem 0;
+	border-radius: 4px;
+	transition: background 0.15s ease;
+}
+
+.sch-shift-empty:hover {
+	background: #f1f5f9;
+	color: #64748b;
+}
+
+/* ================= RIGHT SIDEBAR ================= */
+.sch-sidebar-panel {
+	padding: 1rem;
+	background: #ffffff;
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+.sch-side-card {
+	border: 1px solid var(--sch-border);
+	border-radius: 10px;
+	padding: 0.85rem;
+	background: #ffffff;
+}
+
+.sch-side-card-title {
+	font-size: 0.8rem;
+	font-weight: 700;
+	color: var(--sch-text-main);
+	margin: 0 0 0.65rem 0;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.sch-quick-list {
+	display: flex;
+	flex-direction: column;
+	gap: 0.35rem;
+}
+
+.sch-quick-btn {
+	display: flex;
+	align-items: center;
+	gap: 0.65rem;
+	padding: 0.45rem 0.6rem;
+	font-size: 0.75rem;
+	font-weight: 600;
+	color: #334155;
+	border-radius: 6px;
+	border: none;
+	background: none;
+	cursor: pointer;
+	text-align: left;
+	transition: background 0.15s ease;
+	width: 100%;
+}
+
+.sch-quick-btn:hover {
+	background: #f1f5f9;
+	color: #1e293b;
+}
+
+.sch-quick-btn i {
+	width: 16px;
+	text-align: center;
+	font-size: 0.8rem;
+}
+
+.sch-quick-btn.text-blue i { color: #2563eb; }
+.sch-quick-btn.text-orange i { color: #ea580c; }
+.sch-quick-btn.text-teal i { color: #0d9488; }
+.sch-quick-btn.text-purple i { color: #7c3aed; }
+.sch-quick-btn.text-pink i { color: #e11d48; }
+.sch-quick-btn.text-green i { color: #16a34a; }
+.sch-quick-btn.text-indigo i { color: #4f46e5; }
+
+/* Shift Detail Card */
+.sch-detail-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 0.5rem;
+}
+
+.sch-detail-edit-btn {
+	font-size: 0.72rem;
+	color: var(--daily-primary, #00C83B);
+	cursor: pointer;
+	font-weight: 600;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.25rem;
+	background: none;
+	border: none;
+	padding: 0;
+}
+
+.sch-detail-date {
+	font-size: 0.7rem;
+	color: var(--sch-text-muted);
+}
+
+.sch-detail-time {
+	font-size: 1rem;
+	font-weight: 700;
+	color: var(--sch-text-main);
+	line-height: 1.2;
+}
+
+.sch-detail-dept {
+	font-size: 0.72rem;
+	color: var(--sch-text-muted);
+	margin-bottom: 0.75rem;
+}
+
+.sch-detail-emp-box {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.5rem;
+	background: #f8fafc;
+	border-radius: 8px;
+	margin-bottom: 0.75rem;
+}
+
+.sch-detail-avatar {
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	background: #3b82f6;
+	color: #ffffff;
+	font-weight: 700;
+	font-size: 0.75rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.sch-detail-rows {
+	display: flex;
+	flex-direction: column;
+	gap: 0.35rem;
+	font-size: 0.73rem;
+	margin-bottom: 0.85rem;
+}
+
+.sch-detail-row {
+	display: flex;
+	justify-content: space-between;
+	color: #475569;
+}
+
+.sch-detail-row span:first-child {
+	color: #94a3b8;
+}
+
+.sch-detail-actions {
+	display: flex;
+	gap: 0.35rem;
+	border-top: 1px solid var(--sch-border-subtle);
+	padding-top: 0.65rem;
+}
+
+.sch-detail-actions .sch-btn {
+	flex: 1;
+	justify-content: center;
+	padding: 0.35rem 0.5rem;
+	font-size: 0.72rem;
+}
+
+/* ================= BOTTOM 4 CARDS ================= */
+.sch-bottom-grid {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 1rem;
+}
+
+@media (max-width: 1200px) {
+	.sch-bottom-grid {
+		grid-template-columns: repeat(2, 1fr);
+	}
+}
+
+@media (max-width: 768px) {
+	.sch-bottom-grid {
+		grid-template-columns: 1fr;
+	}
+}
+
+.sch-abs-list {
+	display: flex;
+	flex-direction: column;
+	gap: 0.6rem;
+}
+
+.sch-abs-item {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.5rem;
+	font-size: 0.75rem;
+}
+
+.sch-abs-avatar {
+	width: 28px;
+	height: 28px;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-weight: 700;
+	font-size: 0.7rem;
+	color: #ffffff;
+	flex-shrink: 0;
+}
+
+.sch-abs-info {
+	flex: 1;
+	min-width: 0;
+}
+
+.sch-abs-name {
+	font-weight: 700;
+	color: var(--sch-text-main);
+	line-height: 1.1;
+}
+
+.sch-abs-type {
+	font-size: 0.68rem;
+	color: var(--sch-text-muted);
+}
+
+.sch-abs-meta {
+	text-align: right;
+}
+
+.sch-abs-dates {
+	font-size: 0.68rem;
+	color: var(--sch-text-muted);
+	margin-bottom: 0.15rem;
+}
+
+/* Tools 2-column grid */
+.sch-tools-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 0.5rem;
+	height: 100%;
+}
+
+.sch-tool-btn {
+	background: #ffffff;
+	border: 1px solid var(--sch-border);
+	border-radius: 8px;
+	padding: 0.5rem 0.4rem;
+	display: flex;
+	align-items: center;
+	gap: 0.4rem;
+	font-size: 0.72rem;
+	font-weight: 600;
+	color: #334155;
+	text-align: left;
+	cursor: pointer;
+	transition: all 0.15s ease;
+	line-height: 1.2;
+}
+
+.sch-tool-btn:hover {
+	background: #f8fafc;
+	border-color: #cbd5e1;
+	color: #1e293b;
+}
+
+.sch-tool-btn i {
+	font-size: 0.8rem;
+	flex-shrink: 0;
+}
+
+/* Productivity gauge card */
+.sch-prod-body {
+	display: flex;
+	align-items: center;
+	gap: 0.85rem;
+	flex: 1;
+}
+
+.sch-gauge-box {
+	position: relative;
+	width: 90px;
+	height: 90px;
+	flex-shrink: 0;
+}
+
+.sch-gauge-label {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	text-align: center;
+	pointer-events: none;
+}
+
+.sch-gauge-val {
+	font-size: 1.1rem;
+	font-weight: 800;
+	color: var(--sch-text-main);
+	line-height: 1;
+}
+
+.sch-gauge-sub {
+	font-size: 0.65rem;
+	color: var(--sch-text-muted);
+}
+
+.sch-prod-list {
+	display: flex;
+	flex-direction: column;
+	gap: 0.4rem;
+	flex: 1;
+	font-size: 0.74rem;
+}
+
+.sch-prod-item {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.sch-prod-name {
+	display: flex;
+	align-items: center;
+	gap: 0.35rem;
+	color: #475569;
+}
+
+/* ================= MOTOR INTELIGENTE: RECOMENDACIONES & ALERTAS ================= */
+.sch-budget-alert-banner {
+	background: #fef2f2;
+	border: 1px solid #fecaca;
+	border-left: 4px solid #ef4444;
+	border-radius: 8px;
+	padding: 0.85rem 1.15rem;
+	margin-bottom: 1.25rem;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	flex-wrap: wrap;
+}
+
+.sch-emp-hours-rec {
+	font-size: 0.72rem;
+	font-weight: 700;
+	color: #7c3aed;
+	background: #f3e8ff;
+	padding: 0.15rem 0.4rem;
+	border-radius: 4px;
+	display: inline-block;
+	border: 1px solid #ddd6fe;
+}
+
+.sch-shift-purple-rec {
+	background: #faf5ff;
+	border-left-color: #8b5cf6;
+	color: #6d28d9;
+}
+
+.sch-rec-card-item {
+	padding: 0.65rem 0.75rem;
+	border: 1px solid var(--sch-border);
+	border-radius: 8px;
+	background: #ffffff;
+	margin-bottom: 0.5rem;
+	transition: all 0.15s ease;
+}
+
+.sch-rec-card-item:hover {
+	border-color: #cbd5e1;
+	box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+}
+
+.sch-rec-card-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 0.25rem;
+}
+
+.sch-rec-card-title {
+	font-size: 0.75rem;
+	font-weight: 700;
+	color: var(--sch-text-main);
+}
+
+.sch-rec-card-hours {
+	font-size: 0.72rem;
+	font-weight: 700;
+	color: #7c3aed;
+}
+
+.sch-rec-card-reason {
+	font-size: 0.68rem;
+	color: var(--sch-text-muted);
+	line-height: 1.35;
+	margin-bottom: 0.45rem;
+}
+
+.sch-rec-card-footer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	font-size: 0.68rem;
+	border-top: 1px dashed #f1f5f9;
+	padding-top: 0.35rem;
+}
+
+.btn-xs {
+	padding: 0.15rem 0.4rem;
+	font-size: 0.68rem;
+	line-height: 1.2;
+	border-radius: 4px;
+}
+
+.badge-purple {
+	background-color: #ede9fe;
+	color: #6d28d9;
+}
+
+.bg-purple-light {
+	background-color: #f5f3ff !important;
+}
+
+.text-purple {
+	color: #7c3aed !important;
+}
+
+/* ==========================================================================
+   DAILY: EQUIDAD Y ROTACIONES — MOTOR INTELIGENTE PLANILLA 2026
+   ========================================================================== */
+
+.sch-equity-section {
+	margin-top: 1rem;
+	display: flex;
+	flex-direction: column;
+	gap: 1.25rem;
+}
+
+/* 1. Equity KPIs Grid */
+.sch-equity-kpis-grid {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 1rem;
+}
+@media (max-width: 992px) {
+	.sch-equity-kpis-grid {
+		grid-template-columns: repeat(2, 1fr);
+	}
+}
+@media (max-width: 576px) {
+	.sch-equity-kpis-grid {
+		grid-template-columns: 1fr;
+	}
+}
+
+.sch-eq-card {
+	background: #ffffff;
+	border: 1px solid #e2e8f0;
+	border-radius: 12px;
+	padding: 1.15rem;
+	box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	position: relative;
+	overflow: hidden;
+}
+.sch-eq-card::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 3px;
+	background: #e2e8f0;
+}
+.sch-eq-card.tone-emerald::before { background: #059669; }
+.sch-eq-card.tone-blue::before { background: #2563eb; }
+.sch-eq-card.tone-amber::before { background: #d97706; }
+.sch-eq-card.tone-purple::before { background: #7c3aed; }
+
+.sch-eq-card-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 0.5rem;
+}
+.sch-eq-card-title {
+	font-size: 0.78rem;
+	font-weight: 600;
+	color: #64748b;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+}
+.sch-eq-card-icon {
+	width: 32px;
+	height: 32px;
+	border-radius: 8px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 0.95rem;
+}
+.sch-eq-card-icon.tone-emerald { background: #d1fae5; color: #059669; }
+.sch-eq-card-icon.tone-blue { background: #dbeafe; color: #2563eb; }
+.sch-eq-card-icon.tone-amber { background: #fef3c7; color: #d97706; }
+.sch-eq-card-icon.tone-purple { background: #f3e8ff; color: #7c3aed; }
+
+.sch-eq-card-value {
+	font-size: 1.65rem;
+	font-weight: 700;
+	color: #0f172a;
+	line-height: 1.1;
+	margin-bottom: 0.25rem;
+}
+.sch-eq-card-sub {
+	font-size: 0.74rem;
+	color: #64748b;
+}
+
+/* 2. Equity Controls Toolbar */
+.sch-equity-toolbar {
+	background: #ffffff;
+	border: 1px solid #e2e8f0;
+	border-radius: 12px;
+	padding: 0.75rem 1rem;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+}
+.sch-eq-filters {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	flex-wrap: wrap;
+}
+.sch-eq-filter-item {
+	display: flex;
+	align-items: center;
+	gap: 0.4rem;
+	font-size: 0.78rem;
+}
+.sch-eq-filter-item label {
+	margin: 0;
+	color: #64748b;
+	font-weight: 600;
+}
+.sch-eq-actions {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+/* 3. Equity Badges */
+.sch-eq-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.3rem;
+	padding: 0.25rem 0.6rem;
+	border-radius: 9999px;
+	font-size: 0.75rem;
+	font-weight: 700;
+}
+.sch-eq-good { background: #dcfce7; color: #15803d; }
+.sch-eq-warning { background: #fef3c7; color: #b45309; }
+.sch-eq-danger { background: #fee2e2; color: #b91c1c; }
+
+/* 4. Shift Chips */
+.sch-chip {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0.2rem 0.45rem;
+	border-radius: 6px;
+	font-size: 0.72rem;
+	font-weight: 600;
+	letter-spacing: -0.01em;
+	cursor: pointer;
+	transition: all 0.15s ease;
+	border: 1px solid transparent;
+	white-space: nowrap;
+}
+.sch-chip:hover {
+	transform: translateY(-1px);
+	box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.sch-chip-apertura {
+	background: #ecfdf5;
+	color: #047857;
+	border-color: #6ee7b7;
+}
+.sch-chip-cierre {
+	background: #fefce8;
+	color: #a16207;
+	border-color: #fde047;
+}
+.sch-chip-noche {
+	background: #0f172a;
+	color: #f8fafc;
+	border-color: #334155;
+	box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+}
+.sch-chip-comp {
+	background: #f1f5f9;
+	color: #475569;
+	border-color: #cbd5e1;
+	border-style: dashed;
+}
+.sch-chip-libre {
+	background: #f8fafc;
+	color: #64748b;
+	border-color: #e2e8f0;
+}
+.sch-chip-vac {
+	background: #f3e8ff;
+	color: #7e22ce;
+	border-color: #d8b4fe;
+}
+.sch-chip-conflict {
+	background: #fee2e2;
+	color: #b91c1c;
+	border-color: #fca5a5;
+}
+
+/* 5. Equity Table */
+.sch-equity-table-box {
+	background: #ffffff;
+	border: 1px solid #e2e8f0;
+	border-radius: 12px;
+	overflow: hidden;
+	box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+}
+.sch-eq-table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 0.8rem;
+}
+.sch-eq-table th {
+	background: #f8fafc;
+	padding: 0.75rem 0.85rem;
+	font-weight: 600;
+	color: #475569;
+	border-bottom: 1px solid #e2e8f0;
+	text-align: left;
+}
+.sch-eq-table td {
+	padding: 0.7rem 0.85rem;
+	border-bottom: 1px solid #f1f5f9;
+	vertical-align: middle;
+	color: #1e293b;
+}
+.sch-eq-table tr:hover td {
+	background: #f8fafc;
+}
+
+/* 6. Calendar Horizontal Matrix */
+.sch-matrix-scroll-wrapper {
+	overflow-x: auto;
+	max-width: 100%;
+	border: 1px solid #e2e8f0;
+	border-radius: 12px;
+	background: #ffffff;
+}
+.sch-matrix-table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 0.73rem;
+	min-width: 1300px;
+}
+.sch-matrix-table th, .sch-matrix-table td {
+	padding: 0.45rem 0.35rem;
+	text-align: center;
+	border-right: 1px solid #f1f5f9;
+	border-bottom: 1px solid #f1f5f9;
+}
+.sch-matrix-table th.th-sticky-emp, .sch-matrix-table td.td-sticky-emp {
+	position: sticky;
+	left: 0;
+	background: #ffffff;
+	z-index: 2;
+	text-align: left;
+	padding-left: 0.75rem;
+	min-width: 190px;
+	box-shadow: 2px 0 4px rgba(0,0,0,0.03);
+}
+.sch-matrix-table tr:hover td.td-sticky-emp {
+	background: #f8fafc;
+}
+.sch-matrix-table th.is-sunday, .sch-matrix-table td.is-sunday {
+	background: #faf5ff;
+}
+.sch-matrix-table th.is-holiday, .sch-matrix-table td.is-holiday {
+	background: #fef2f2;
+}
+
+/* 7. Swap Simulation Card */
+.sch-swap-compare-box {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 1rem;
+	background: #f8fafc;
+	padding: 1rem;
+	border-radius: 10px;
+	border: 1px solid #e2e8f0;
+	margin: 1rem 0;
+}
+.sch-swap-col {
+	background: #ffffff;
+	border-radius: 8px;
+	padding: 0.85rem;
+	border: 1px solid #e2e8f0;
+}
+.sch-swap-col-title {
+	font-size: 0.82rem;
+	font-weight: 700;
+	color: #0f172a;
+	margin-bottom: 0.5rem;
+	display: flex;
+	align-items: center;
+	gap: 0.4rem;
+}
+
+

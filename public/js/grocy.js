@@ -599,7 +599,8 @@ function WindowMessageBag(message, payload = null)
 // Add border around anchor link section
 if (window.location.hash)
 {
-	$(window.location.hash).addClass("p-2 border border-info rounded");
+	// DAIRY: los #tab-x abren pestañas (dairy_ui.js); no se resaltan como sección
+	$(window.location.hash).not(".tab-pane").addClass("p-2 border border-info rounded");
 }
 
 function RefreshLocaleNumberDisplay(rootSelector = "#page-content")
@@ -913,7 +914,11 @@ $('[data-toggle="tooltip"][data-html="true"]').on("shown.bs.tooltip", function (
 $(document).on("click", '.btn, a, button', function (e)
 {
 	// Remove focus and hide any tooltips after click
-	document.activeElement.blur();
+	// (except keyboard activation inside the sidebar, which must keep focus for arrow navigation)
+	if (!(e.originalEvent && e.originalEvent.detail === 0 && $(e.target).closest('.dnav').length))
+	{
+		document.activeElement.blur();
+	}
 	$(".tooltip").tooltip("hide");
 });
 

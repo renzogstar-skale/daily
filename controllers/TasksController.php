@@ -23,6 +23,14 @@ class TasksController extends BaseController
 		{
 			$tasks = TasksService::GetInstance()->GetCurrent();
 		}
+		// Contexto de sucursal: tareas de la sucursal elegida (o permitidas) más las generales
+		$branchId = intval($request->getQueryParams()['branch_id'] ?? 0);
+		$allowed = \Grocy\Helpers\DairyAccess::AllowedBranches();
+		$scope = $branchId > 0 && ($allowed === null || in_array($branchId, $allowed, true)) ? [$branchId] : $allowed;
+		if ($scope !== null)
+		{
+			$tasks = $tasks->where('branch_id IS NULL OR branch_id IN (' . implode(',', array_map('intval', $scope ?: [0])) . ')');
+		}
 
 		foreach ($tasks as $task)
 		{

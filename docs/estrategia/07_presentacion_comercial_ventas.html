@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DAILY Ventas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --g:#00A63A; --g-dark:#0B6B2E; --g-deep:#073F1D; --g-soft:#E7F8EC; --g-mid:#B9EBC8;
+  --y:#E0A100; --y-soft:#FFF5D6; --r:#D92D20; --r-soft:#FDECEA;
+  --ink:#0F1A14; --body:#33413A; --muted:#5E6B64; --line:#DDE7E0; --bg:#F6F9F7; --card:#FFFFFF;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#E9EFEB;font-family:Inter,system-ui,Segoe UI,Arial,sans-serif;color:var(--body);padding:24px 16px}
+.slide{position:relative;width:100%;max-width:1200px;aspect-ratio:16/9;margin:0 auto 24px;background:linear-gradient(160deg,#FFFFFF 0%,var(--bg) 60%,var(--g-soft) 100%);border-radius:14px;box-shadow:0 6px 24px rgba(7,63,29,.10);overflow:hidden;container-type:inline-size;padding:4.2cqw 5cqw 4cqw}
+.slide.dark{background:linear-gradient(135deg,var(--g-deep) 0%,var(--g-dark) 55%,#0E8A3C 100%);color:#E9F7EE}
+.slide.dark h1,.slide.dark h2{color:#fff}
+.tag{display:inline-block;font-size:1.05cqw;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--g-dark);margin-bottom:1.2cqw}
+.dark .tag{color:var(--g-mid)}
+h1{font-size:6.2cqw;font-weight:800;letter-spacing:-.02em;color:var(--ink);line-height:1}
+h2{font-size:3.1cqw;font-weight:800;letter-spacing:-.015em;color:var(--ink);line-height:1.12;margin-bottom:1.6cqw;max-width:80%}
+p,li{font-size:1.55cqw;line-height:1.5}
+.lead{font-size:1.9cqw;color:var(--muted);max-width:72%}
+.dark .lead{color:#CFEBD8}
+.grid{display:grid;gap:1.6cqw}
+.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}.g5{grid-template-columns:repeat(5,1fr)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:1.1cqw;padding:1.7cqw 1.8cqw}
+.card h3{font-size:1.65cqw;color:var(--ink);font-weight:700;margin-bottom:.6cqw}
+.card p{font-size:1.3cqw;color:var(--muted);line-height:1.45}
+.card.g{border-top:.4cqw solid var(--g)}.card.y{border-top:.4cqw solid var(--y)}.card.r{border-top:.4cqw solid var(--r)}
+.ico{width:3.4cqw;height:3.4cqw;border-radius:.9cqw;display:grid;place-items:center;font-weight:800;font-size:1.6cqw;margin-bottom:1cqw;background:var(--g-soft);color:var(--g-dark)}
+.ico.y{background:var(--y-soft);color:#8A6200}.ico.r{background:var(--r-soft);color:var(--r)}
+ul.clean{list-style:none}
+ul.clean li{padding-left:2.1cqw;position:relative;margin-bottom:.7cqw;font-size:1.4cqw}
+ul.clean li:before{content:"";position:absolute;left:0;top:.65cqw;width:.9cqw;height:.9cqw;border-radius:50%;background:var(--g)}
+.soon{display:inline-block;font-size:1cqw;font-weight:700;color:#8A6200;background:var(--y-soft);border:1px solid #F2D27A;border-radius:99px;padding:.15cqw .8cqw;margin-left:.5cqw;vertical-align:middle}
+.demo{position:absolute;right:2.2cqw;bottom:1.6cqw;font-size:.95cqw;font-weight:700;color:#8A6200;background:var(--y-soft);border:1px solid #F2D27A;border-radius:99px;padding:.3cqw 1cqw}
+.foot{position:absolute;left:5cqw;bottom:1.6cqw;font-size:.95cqw;color:var(--muted);letter-spacing:.04em}
+.dark .foot{color:#9FD3B1}
+.num{font-size:1cqw;position:absolute;right:5cqw;top:2cqw;color:var(--muted);font-weight:600}
+.dark .num{color:#9FD3B1}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:1cqw;padding:1.3cqw 1.5cqw}
+.kpi .l{font-size:1.05cqw;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.kpi .v{font-size:2.6cqw;font-weight:800;color:var(--ink);margin-top:.3cqw}
+.kpi .d{font-size:1.1cqw;font-weight:700;margin-top:.2cqw}
+.up{color:var(--g-dark)}.down{color:var(--r)}.warn{color:#8A6200}
+table{width:100%;border-collapse:collapse;font-size:1.25cqw}
+th{background:var(--g-deep);color:#fff;text-align:left;padding:.8cqw 1cqw;font-weight:700}
+td{padding:.7cqw 1cqw;border-bottom:1px solid var(--line);background:#fff}
+td.c,th.c{text-align:center}
+.ok{color:var(--g-dark);font-weight:800}
+.flow{display:flex;align-items:stretch;gap:1cqw;margin-top:1.5cqw}
+.flow .st{flex:1;background:#fff;border:1px solid var(--line);border-radius:1cqw;padding:1.5cqw;position:relative}
+.flow .st b{display:block;font-size:2.4cqw;color:var(--g);font-weight:800}
+.flow .st h3{font-size:1.6cqw;color:var(--ink);margin:.4cqw 0}
+.flow .st p{font-size:1.25cqw;color:var(--muted)}
+.big{font-size:9cqw;font-weight:800;color:#fff;letter-spacing:-.04em;line-height:.95}
+.logo{display:flex;align-items:center;gap:1.4cqw}
+.logo .mk{width:7cqw;height:7cqw;border-radius:1.8cqw;background:linear-gradient(135deg,#25D366,#00A63A);display:grid;place-items:center;box-shadow:0 1cqw 3cqw rgba(0,0,0,.25)}
+.formula{background:var(--g-deep);color:#fff;border-radius:1cqw;padding:1.6cqw 2cqw;font-size:1.8cqw;font-weight:700;text-align:center}
+.formula small{display:block;font-size:1.15cqw;font-weight:500;color:#BDE6CB;margin-top:.5cqw}
+.note{font-size:1.1cqw;color:var(--muted);margin-top:1cqw}
+.split{display:grid;grid-template-columns:1.05fr 1fr;gap:2.5cqw;align-items:center}
+svg text{font-family:Inter,system-ui,sans-serif}
+@media (max-width:700px){body{padding:12px 0}.slide{border-radius:8px}}
+@media print{
+  @page{size:1280px 720px;margin:0}
+  body{background:none;padding:0}
+  .slide{width:1280px;max-width:none;height:720px;aspect-ratio:auto;margin:0;border-radius:0;box-shadow:none;page-break-after:always;break-after:page;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+.shot{border-radius:1cqw;border:1px solid var(--line);box-shadow:0 1.2cqw 3cqw rgba(7,63,29,.14);width:100%;display:block}
+.cap{font-size:1.15cqw;color:var(--muted);margin-top:.8cqw}
+.steps{counter-reset:s;list-style:none}
+.steps li{counter-increment:s;position:relative;padding-left:3.2cqw;margin-bottom:.9cqw;font-size:1.35cqw}
+.steps li:before{content:counter(s);position:absolute;left:0;top:-.1cqw;width:2.2cqw;height:2.2cqw;border-radius:50%;background:var(--g);color:#fff;font-weight:800;font-size:1.15cqw;display:grid;place-items:center}
+.steps li b{color:var(--ink)}
+</style>
+</head>
+<body>
+
+<!-- 1 PORTADA -->
+<section class="slide dark">
+  <div class="logo" style="margin-top:5cqw">
+    <div class="mk"><svg viewBox="0 0 48 48" width="62%" height="62%"><path d="M10 26l9 9 19-21" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <div class="big">DAILY</div>
+  </div>
+  <p class="lead" style="margin-top:3cqw;font-size:2.3cqw;max-width:72%">Ventas que se ven el mismo día: meta, margen y la operación que las sostiene, en un solo tablero.</p>
+  <p style="margin-top:5cqw;font-size:1.3cqw;color:#9FD3B1">Presentación comercial · Ventas y Rentabilidad · 2026</p>
+  <div class="foot">Documento confidencial — no distribuir sin autorización</div>
+</section>
+
+<!-- 2 PROBLEMA -->
+<section class="slide">
+  <span class="num">02</span>
+  <span class="tag">El problema</span>
+  <h2>La venta del mes se conoce cuando ya no se puede corregir</h2>
+  <div class="grid g4" style="margin-top:2cqw">
+    <div class="card r"><div class="ico r">1</div><h3>Meta a ciegas</h3><p>Se sabe si se cumplió la meta al cierre, no a mitad de mes, cuando aún hay tiempo de actuar.</p></div>
+    <div class="card r"><div class="ico r">2</div><h3>Venta sin margen</h3><p>Se mide cuánto se vendió, no cuánto quedó después del costo y la merma.</p></div>
+    <div class="card y"><div class="ico y">3</div><h3>Horas pico sin gente</h3><p>Los turnos no se arman con la afluencia real por día y hora.</p></div>
+    <div class="card y"><div class="ico y">4</div><h3>Caja e inventario separados</h3><p>Lo que se vende no descuenta el lote correcto; el vencido aparece después.</p></div>
+  </div>
+  <p class="lead" style="margin-top:2.4cqw">Los datos existen, pero repartidos entre caja, planillas y reportes de fin de mes.</p>
+  <div class="foot">DAILY · Confidencial</div>
+</section>
+
+<!-- 3 SOLUCION -->
+<section class="slide">
+  <span class="num">03</span>
+  <span class="tag">La solución</span>
+  <div class="split">
+    <div>
+      <h2 style="max-width:100%">Cada mañana, el estado del negocio en una pantalla</h2>
+      <ul class="clean">
+        <li>Ventas, cumplimiento de meta y margen del día frente a un día comparable.</li>
+        <li>Cada proceso en verde, amarillo o rojo, con su acción a un clic.</li>
+        <li>Por toda la red o por sucursal, departamento y categoría.</li>
+      </ul>
+    </div>
+    <div><img class="shot" src="demo_img/d-today.jpg" alt="Pantalla Hoy"><p class="cap">Pantalla «Hoy» · operación del día</p></div>
+  </div>
+  <span class="demo">Datos de demostración</span>
+</section>
+
+<!-- 4 RECORRIDO -->
+<section class="slide">
+  <span class="num">04</span>
+  <span class="tag">Recorrido de Ventas</span>
+  <h2>De la cifra general al ticket, en 8 pasos</h2>
+  <div class="grid g2" style="margin-top:1.4cqw;gap:3cqw">
+    <ol class="steps">
+      <li><b>Abrir Ventas:</b> tablero consolidado en tres niveles.</li>
+      <li><b>Elegir sucursal y período:</b> todo lo demás respeta el filtro.</li>
+      <li><b>Leer los 6 KPI:</b> venta, cumplimiento, utilidad, margen, tickets, ticket promedio.</li>
+      <li><b>Termómetro:</b> avance contra la meta y proyección de cierre.</li>
+    </ol>
+    <ol class="steps" style="counter-reset:s 4">
+      <li><b>Mapa de calor:</b> qué días y horas concentran la venta.</li>
+      <li><b>Detalle por producto:</b> participación y margen por artículo.</li>
+      <li><b>Volver al resumen</b> sin perder los filtros.</li>
+      <li><b>Cerrar con una venta:</b> ticket en caja que descuenta el inventario.</li>
+    </ol>
+  </div>
+  <p class="note">El recorrido viene integrado en la pantalla de Ventas (botón «Recorrido Comercial»).</p>
+  <div class="foot">DAILY · Confidencial</div>
+</section>
+
+<!-- 5 RESUMEN -->
+<section class="slide">
+  <span class="num">05</span>
+  <span class="tag">Pasos 1–4 · Resumen</span>
+  <div class="split">
+    <div>
+      <h2 style="max-width:100%">¿Llegamos a la meta? La respuesta, a mitad de mes</h2>
+      <ul class="clean">
+        <li>Seis indicadores comparados con el período anterior.</li>
+        <li>Termómetro: venta acumulada, monto pendiente y ritmo diario.</li>
+        <li>Proyección de cierre con su fórmula visible: nada de cajas negras.</li>
+      </ul>
+    </div>
+    <div><img class="shot" src="demo_img/d-sales-1-resumen.jpg" alt="Resumen de ventas"><p class="cap">Nivel A · Resumen y termómetro</p></div>
+  </div>
+  <span class="demo">Datos de demostración</span>
+</section>
+
+<!-- 6 MAPA DE CALOR -->
+<section class="slide">
+  <span class="num">06</span>
+  <span class="tag">Paso 5 · Análisis</span>
+  <div class="split">
+    <div>
+      <h2 style="max-width:100%">Las horas que venden, a la vista</h2>
+      <ul class="clean">
+        <li>Matriz semanal día × hora con la venta y su participación.</li>
+        <li>Base para decidir cajas abiertas y turnos en horas pico.</li>
+        <li>Comparación con meta, período anterior y año anterior.</li>
+      </ul>
+    </div>
+    <div><img class="shot" src="demo_img/d-sales-2-heatmap.jpg" alt="Mapa de calor de ventas"><p class="cap">Nivel B · Mapa de calor y comparativas</p></div>
+  </div>
+  <span class="demo">Datos de demostración</span>
+</section>
+
+<!-- 7 DETALLE -->
+<section class="slide">
+  <span class="num">07</span>
+  <span class="tag">Pasos 6–7 · Detalle</span>
+  <div class="split">
+    <div>
+      <h2 style="max-width:100%">Qué productos sostienen la venta y cuáles el margen</h2>
+      <ul class="clean">
+        <li>Ranking por producto con participación y margen unitario.</li>
+        <li>Detalle de cada transacción del período.</li>
+        <li>Se vuelve al resumen conservando sucursal, período y filtros.</li>
+      </ul>
+    </div>
+    <div><img class="shot" src="demo_img/d-sales-3-detalle.jpg" alt="Detalle por producto"><p class="cap">Nivel C · Detalle por producto</p></div>
+  </div>
+  <span class="demo">Datos de demostración</span>
+</section>
+
+<!-- 8 POS -->
+<section class="slide">
+  <span class="num">08</span>
+  <span class="tag">Paso 8 · Caja</span>
+  <div class="split">
+    <div>
+      <h2 style="max-width:100%">Cada venta descuenta el lote correcto</h2>
+      <ul class="clean">
+        <li>Punto de venta rápido con búsqueda o código de barras.</li>
+        <li>Se descuenta primero lo que vence primero.</li>
+        <li>Productos próximos a vencer con rebaja visible en caja.</li>
+        <li>La venta aparece en el tablero con su costo y margen.</li>
+      </ul>
+    </div>
+    <div><img class="shot" src="demo_img/d-pos.jpg" alt="Punto de venta"><p class="cap">Punto de venta</p></div>
+  </div>
+  <span class="demo">Datos de demostración</span>
+</section>
+
+<!-- 9 MARGEN REAL -->
+<section class="slide">
+  <span class="num">09</span>
+  <span class="tag">Más allá de la venta</span>
+  <h2>El margen real se ve después de la merma</h2>
+  <div class="grid g2" style="margin-top:1cqw">
+    <div><img class="shot" src="demo_img/d-kpis.jpg" alt="Panel ejecutivo"><p class="cap">Panel ejecutivo: venta, margen, merma y rotación</p></div>
+    <div><img class="shot" src="demo_img/d-waste.jpg" alt="Control de mermas"><p class="cap">Mermas con causa, departamento y recuperación</p></div>
+  </div>
+  <span class="demo">Datos de demostración</span>
+</section>
+
+<!-- 10 COMO EMPEZAMOS -->
+<section class="slide">
+  <span class="num">10</span>
+  <span class="tag">Cómo empezamos</span>
+  <h2>Un piloto de 90 días, medido con sus propios datos</h2>
+  <div class="flow">
+    <div class="st"><b>1</b><h3>Diagnóstico</h3><p>Tomamos su venta, margen y merma actuales como línea base.</p></div>
+    <div class="st"><b>2</b><h3>Puesta en marcha</h3><p>Una tienda con su catálogo y su caja; equipo capacitado.</p></div>
+    <div class="st"><b>3</b><h3>Operación</h3><p>Revisión semanal del tablero con el gerente de tienda.</p></div>
+    <div class="st"><b>4</b><h3>Resultado</h3><p>Comparamos contra la línea base con el mismo método.</p></div>
+  </div>
+  <p class="lead" style="margin-top:2.4cqw">No prometemos una cifra antes de ver sus datos: la medimos juntos.</p>
+  <div class="foot">DAILY · Confidencial</div>
+</section>
+
+<!-- 11 CIERRE -->
+<section class="slide dark">
+  <span class="tag" style="margin-top:6cqw">Próximo paso</span>
+  <h2 style="font-size:4cqw">Veamos su tablero con sus números</h2>
+  <p class="lead" style="margin-top:1.5cqw">Demostración de 30 minutos con su gerente comercial u operativo y revisión de los datos disponibles para la línea base.</p>
+  <div class="foot">Las pantallas mostradas usan datos ficticios de demostración.</div>
+</section>
+
+</body>
+</html>

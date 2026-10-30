@@ -1,0 +1,59 @@
+{
+    "expo": {
+        "name": "DAILY",
+        "slug": "daily-mobile",
+        "version": "1.0.0",
+        "scheme": "daily",
+        "orientation": "portrait",
+        "icon": "./assets/icon.png",
+        "userInterfaceStyle": "light",
+        "ios": {
+            "supportsTablet": true,
+            "bundleIdentifier": "com.daily.mobile"
+        },
+        "android": {
+            "package": "com.daily.mobile",
+            "adaptiveIcon": {
+                "backgroundColor": "#E6F4FE",
+                "foregroundImage": "./assets/android-icon-foreground.png",
+                "backgroundImage": "./assets/android-icon-background.png",
+                "monochromeImage": "./assets/android-icon-monochrome.png"
+            },
+            "predictiveBackGestureEnabled": false
+        },
+        "web": {
+            "favicon": "./assets/favicon.png"
+        },
+        "plugins": [
+            "expo-router",
+            "expo-secure-store",
+            [
+                "expo-location",
+                {
+                    "locationWhenInUsePermission": "DAILY usa su ubicación solo al marcar entrada o salida, si su sucursal lo exige. No se rastrea su ubicación durante el turno."
+                }
+            ],
+            [
+                "expo-notifications",
+                {
+                    "color": "#00C83B"
+                }
+            ],
+            [
+                "expo-camera",
+                {
+                    "cameraPermission": "DAILY usa la cámara solo para leer códigos de barras de productos y ubicaciones.",
+                    "recordAudioAndroid": false
+                }
+            ]
+        ],
+        "experiments": {
+            "typedRoutes": false
+        },
+        "extra": {
+            "eas": {
+                "projectId": ""
+            }
+        }
+    }
+}

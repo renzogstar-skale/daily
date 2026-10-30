@@ -1,6 +1,9 @@
 {
 	"name": "grocy",
 	"private": true,
+	"scripts": {
+		"dev": "php -S localhost:8080 -t public router.php"
+	},
 	"dependencies": {
 		"@danielfarrell/bootstrap-combobox": "https://github.com/berrnd/bootstrap-combobox.git#master-fork",
 		"@fontsource/roboto": "^5.1.1",

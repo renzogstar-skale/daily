@@ -10,11 +10,14 @@
 		content="noindex,nofollow">
 
 	<link rel="icon"
+		type="image/svg+xml"
+		href="{{ $U('/img/icon.svg?v=', true) }}{{ $version }}">
+	<link rel="icon"
 		type="image/png"
 		sizes="32x32"
 		href="{{ $U('/img/icon-32.png?v=', true) }}{{ $version }}">
 
-	<title>{{ $__t('REST API browser') }} | Grocy</title>
+	<title>{{ $__t('REST API browser') }} | DAILY</title>
 
 	<link href="{{ $U('/packages/swagger-ui-dist/swagger-ui.css?v=', true) }}{{ $version }}"
 		rel="stylesheet">

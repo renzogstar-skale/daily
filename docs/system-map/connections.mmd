@@ -1,0 +1,131 @@
+flowchart LR
+  subgraph inicio["Inicio"]
+    today["Hoy"]:::verified
+    alerts["Centro de Alertas"]:::verified
+    kpis["Panel Ejecutivo"]:::partial
+  end
+  subgraph mermas["Mermas"]
+    waste["Centro de Control"]:::partial
+    waste_report["Registrar Merma"]:::verified
+    waste_approvals["Aprobaciones"]:::verified
+    waste_reasons["Causales de merma"]:::partial
+  end
+  subgraph calidad["Calidad"]
+    quality["Calidad & Vencimientos"]:::partial
+    recalls["Retiros de Producto"]:::verified
+  end
+  subgraph inventario["Inventario"]
+    stockoverview["Stock & Movimientos"]:::partial
+    scan["Operaciones con Escáner"]:::partial
+    locations_map["Mapa de Ubicaciones"]:::partial
+    transfers["Traslados"]:::verified
+    kardex["Kardex"]:::verified
+    traceability["Trazabilidad"]:::verified
+    inventory_control["Control de Inventario"]:::partial
+    inventory["Conteos Físicos"]:::partial
+    branches["Sucursales"]:::partial
+    location_labels["Etiquetas de ubicación"]:::partial
+  end
+  subgraph planeacion["Planeación"]
+    mrp["Planificación MRP"]:::partial
+    suppliers["Proveedores & Compras"]:::partial
+    simulator["Simulador What-If"]:::partial
+  end
+  subgraph operaciones["Operaciones"]
+    workforce["Piso de Tienda"]:::partial
+    schedule["Personal & Turnos"]:::partial
+    audits["Auditorías de Tienda"]:::partial
+    pos["Punto de Venta"]:::partial
+    sales["Ventas"]:::partial
+    orders["Pedidos de Clientes"]:::partial
+    customers["Clientes"]:::partial
+  end
+  subgraph analisis["Análisis"]
+    reports["Reportes & Analítica"]:::verified
+    cost_centers["Centros de Costo"]:::verified
+    ai_advisor["Arturito IA"]:::partial
+    documents["Documentos imprimibles"]:::partial
+  end
+  subgraph movil["DAIRY Mobile"]
+    mobile["DAIRY Mobile  PWA "]:::partial
+  end
+  subgraph maestros["Datos maestros"]
+    data_import["Importación de datos"]:::partial
+    products["Productos"]:::verified
+    locations["Ubicaciones"]:::verified
+    shoppinglocations["Proveedores  maestro Grocy "]:::verified
+  end
+  subgraph admin["Administración"]
+    system_map["Mapa del Sistema"]:::partial
+    users["Usuarios y permisos"]:::partial
+    apikeys["Claves API"]:::partial
+    userfields["Campos y entidades personalizadas"]:::verified
+    about["Acerca de / versión"]:::partial
+  end
+  subgraph heredado["Núcleo Grocy heredado"]
+    recipes["Recetas y plan de comidas"]:::verified
+    chores["Quehaceres  Grocy "]:::verified
+    batteries["Baterías  Grocy "]:::partial
+    tasks["Tareas  Grocy "]:::partial
+    equipment["Equipos"]:::partial
+    calendar["Calendario"]:::partial
+    shoppinglist["Lista de compras  Grocy "]:::verified
+  end
+  pos -->|"La venta del POS se guarda en sales / sale_items"| sales
+  sales -->|"Cada venta descuenta stock lote a lote en orden FE"| stockoverview
+  quality -->|"El POS aplica la rebaja FEFO activa del lote"| pos
+  stockoverview -->|"Lotes con fecha de vencimiento alimentan el semáfo"| quality
+  quality -->|"Rebajas por vencimiento  prevención antes de la me"| waste
+  waste_report -->|"La merma queda pendiente de aprobación según polít"| waste_approvals
+  waste_approvals -->|"Aprobar descuenta stock  transacción de consumo "| stockoverview
+  stockoverview -->|"Kardex valoriza cada movimiento de stock_log"| kardex
+  waste_approvals -->|"Merma aprobada dispara reglas de automatización  t"| workforce
+  sales -->|"Venta media diaria  VMD  para sugerir la compra"| mrp
+  mrp -->|"Recomendaciones de compra usan el cálculo MRP"| suppliers
+  mrp -->|"Recepción de OC suma stock  compra con lote y venc"| stockoverview
+  mrp -->|"La recepción registra lote/serie para trazabilidad"| traceability
+  sales -->|"Ventas reales → pronóstico de dotación  Personal &"| schedule
+  mrp -->|"OC por recibir = horas de recepción en el pronósti"| schedule
+  audits -->|"Hallazgo de auditoría crea tarea correctiva"| workforce
+  audits -->|"Auditoría reprobada abre alerta"| alerts
+  inventory_control -->|"Stock fantasma / anomalías generan alertas"| alerts
+  alerts -->|"Alerta → tarea asignada en DAIRY Mobile"| mobile
+  sales -->|"Ventas y margen en el Panel Ejecutivo"| kpis
+  waste -->|"Merma en el Panel Ejecutivo"| kpis
+  sales -->|"Margen por sucursal y categoría"| cost_centers
+  waste -->|"Merma por centro de costo"| cost_centers
+  kpis -->|"Arturito responde con los KPIs reales"| ai_advisor
+  mrp -->|"Arturito consulta el MRP"| ai_advisor
+  cost_centers -->|"Arturito consulta centros de costo"| ai_advisor
+  recalls -->|"Retiro de lote pasa por cuarentena"| quality
+  transfers -->|"Traslados mueven stock entre sucursales"| stockoverview
+  orders -->|"Despacho del pedido se registra como venta"| sales
+  orders -->|"Picking por escáner con FEFO"| scan
+  scan -->|"Recepción por escáner contra OC"| mrp
+  scan -->|"Conteo guiado por escáner"| inventory
+  traceability -->|"Trazabilidad usa el kardex del lote"| kardex
+  workforce -->|"Merma exprés desde Piso de Tienda"| waste
+  today -->|"Hoy reúne decisiones pendientes  agenda del gerent"| alerts
+  data_import -->|"Importación CSV de maestros"| products
+  branches -->|"Toda petición se acota a las sucursales del usuari"| stockoverview
+  mobile -->|"Mi horario, fichaje y ausencias en móvil"| schedule
+  mobile -->|"Merma desde móvil  escáner y foto "| waste_report
+  quality -->|"Lotes por vencer abren alerta con responsable, pla"| alerts
+  inventory -->|"El conteo físico ajusta stock con transacción de i"| kardex
+  sales -->|"Ventas y margen por sucursal en Reportes"| reports
+  waste -->|"Desglose de merma  censo  en Reportes"| reports
+  stockoverview -->|"Ocupación, valor y vencimientos por ubicación"| locations_map
+  schedule -.->|"Usar el pronóstico de ventas  no solo la VMD  en l (propuesta)"| mrp
+  ai_advisor -.->|"Arturito crea tareas u órdenes desde sus recomenda (propuesta)"| workforce
+  alerts -.->|"Notificaciones push con la app cerrada  Web Push + (propuesta)"| mobile
+  users -.->|"Respaldo y restauración desde la aplicación (propuesta)"| stockoverview
+  schedule -.->|"Sincronizar horas con nómina PAYCOM (propuesta)"| cost_centers
+  suppliers -.->|"Cuentas por pagar y pagos a proveedores (propuesta)"| cost_centers
+  pos -.->|"Promociones generales por período/cliente (propuesta)"| sales
+  orders -.->|"Olas de picking multi-pedido y guía de despacho im (propuesta)"| scan
+  schedule -.->|"Avisar en /m las solicitudes de cobertura abiertas (propuesta)"| mobile
+  schedule -.->|"Decidir correcciones de fichaje desde la web /sche (propuesta)"| schedule
+  classDef verified fill:#dcfce7,stroke:#16a34a
+  classDef partial fill:#fef9c3,stroke:#ca8a04
+  classDef error fill:#fee2e2,stroke:#dc2626
+  classDef unverified fill:#f1f5f9,stroke:#94a3b8

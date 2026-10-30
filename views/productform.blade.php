@@ -130,6 +130,16 @@
 				</select>
 				<div class="invalid-feedback">{{ $__t('A location is required') }}</div>
 			</div>
+			{{-- DAIRY: clase de almacenamiento; el sistema impide guardar stock en ubicaciones de otra clase --}}
+			<div class="form-group">
+				<label for="storage_class">Clase de almacenamiento</label>
+				<select class="custom-control custom-select" id="storage_class" name="storage_class">
+					@foreach(['' => 'Sin restricción', 'ambient' => 'Ambiente', 'chilled' => 'Refrigerado', 'frozen' => 'Congelado'] as $v => $l)
+					<option value="{{ $v }}" @if($mode == 'edit' && ($product->storage_class ?? '') == $v) selected @endif>{{ $l }}</option>
+					@endforeach
+				</select>
+				<small class="form-text text-muted">Si se indica, compras, traslados y escáner solo aceptan ubicaciones de la misma clase.</small>
+			</div>
 			<div class="form-group">
 				<label for="default_consume_location_id">
 					{{ $__t('Default consume location') }}
@@ -683,6 +693,8 @@
 					data-location="return">{{ $__t('Save & return to products') }}</button>
 			</div>
 		</form>
+
+		@include('components.dairy_change_history', ['table' => 'products', 'rowId' => $mode == 'edit' ? $product->id : null])
 
 	</div>
 
