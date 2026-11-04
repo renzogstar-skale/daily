@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Jar cap -->
+  <rect x="22" y="8" width="20" height="7" rx="2" fill="#78350f"/>
+  <!-- Jar neck -->
+  <rect x="24" y="15" width="16" height="4" fill="#cbd5e1" opacity="0.5"/>
+  <!-- Jar body -->
+  <rect x="18" y="19" width="28" height="38" rx="4" fill="#ef4444"/>
+  <!-- Red pepper powder texture -->
+  <rect x="18" y="19" width="28" height="38" rx="4" fill="#b91c1c" opacity="0.3"/>
+  <circle cx="26" cy="28" r="1.5" fill="#fca5a5" opacity="0.6"/>
+  <circle cx="36" cy="34" r="1.2" fill="#fca5a5" opacity="0.6"/>
+  <circle cx="24" cy="46" r="1.4" fill="#fca5a5" opacity="0.6"/>
+  <!-- Glass shine -->
+  <line x1="21" y1="22" x2="21" y2="52" stroke="#ffffff" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+  <!-- White spice label -->
+  <rect x="20" y="30" width="24" height="15" rx="1.5" fill="#ffffff"/>
+  <text x="32" y="38" font-size="4" font-family="sans-serif" font-weight="bold" fill="#b91c1c" text-anchor="middle">PIMENTÓN</text>
+  <rect x="24" y="41" width="16" height="1.5" fill="#16a34a"/>
+</svg>
+

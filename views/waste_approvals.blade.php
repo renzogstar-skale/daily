@@ -1160,6 +1160,7 @@
 							<i class="fa-solid fa-circle" style="font-size: 0.5rem;"></i> Pendiente
 						</span>
 						<span class="daily-request-folio">{{ $p->case_number ?? ('MRM-#' . $p->id) }}</span>
+						<a href="#" class="dpf-link" data-process-flow="waste_record:{{ $p->id }}" title="Ver expediente"><i class="fa-solid fa-diagram-next"></i></a>
 					</div>
 
 					<div class="daily-request-body">

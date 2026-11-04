@@ -87,6 +87,21 @@
 			<i class="fa-solid fa-calculator mr-1"></i>Presupuesto y Compromisos
 		</a>
 	</li>
+	<li class="nav-item">
+		<a class="nav-link font-weight-bold" id="tab-threeway-matching-link" data-toggle="pill" href="#tab-threeway-matching" role="tab">
+			<i class="fa-solid fa-file-invoice-dollar mr-1 text-primary"></i>Conciliación Facturas (3-Way)
+		</a>
+	</li>
+	<li class="nav-item">
+		<a class="nav-link font-weight-bold" id="tab-contracts-link" data-toggle="pill" href="#tab-contracts" role="tab">
+			<i class="fa-solid fa-file-signature mr-1 text-warning"></i>Gestión de Contratos
+		</a>
+	</li>
+	<li class="nav-item">
+		<a class="nav-link font-weight-bold text-success" id="tab-supplier-portal-link" data-toggle="pill" href="#tab-supplier-portal" role="tab">
+			<i class="fa-solid fa-network-wired mr-1"></i>Portal Proveedores B2B
+		</a>
+	</li>
 </ul>
 
 <div class="tab-content" id="procurement-tab-content">
@@ -736,6 +751,283 @@
 		</div>
 	</div>
 
+
+	<!-- TAB 8: Conciliación de Facturas (3-Way Matching) -->
+	<div class="tab-pane fade" id="tab-threeway-matching" role="tabpanel">
+		<div class="row mb-3">
+			<div class="col-md-3">
+				<div class="card border-0 shadow-sm p-3 bg-white">
+					<div class="text-muted small font-weight-bold">FACTURAS EN CONCILIACIÓN</div>
+					<div class="h4 font-weight-bold text-dark mb-0">$58,400 <span class="small font-weight-normal text-muted">por liberar</span></div>
+					<div class="small text-muted mt-1"><i class="fa-solid fa-file-invoice mr-1 text-primary"></i> 18 facturas del mes</div>
+				</div>
+			</div>
+			<div class="col-md-3">
+				<div class="card border-0 shadow-sm p-3 bg-white">
+					<div class="text-muted small font-weight-bold">COINCIDENCIA EXACTA (3-WAY)</div>
+					<div class="h4 font-weight-bold text-success mb-0">88.5%</div>
+					<div class="small text-muted mt-1">PO = Recepción = Factura</div>
+				</div>
+			</div>
+			<div class="col-md-3">
+				<div class="card border-0 shadow-sm p-3 bg-white">
+					<div class="text-muted small font-weight-bold">DISCREPANCIA DE PRECIO</div>
+					<div class="h4 font-weight-bold text-warning mb-0">$1,250 <span class="small font-weight-normal text-muted">en disputa</span></div>
+					<div class="small text-muted mt-1">Precio factura &gt; Precio PO</div>
+				</div>
+			</div>
+			<div class="col-md-3">
+				<div class="card border-0 shadow-sm p-3 bg-white">
+					<div class="text-muted small font-weight-bold">FACTURAS RETENIDAS</div>
+					<div class="h4 font-weight-bold text-danger mb-0">2 facturas</div>
+					<div class="small text-muted mt-1">Bloqueo de pago preventivo</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="card shadow-sm border-0 mb-4">
+			<div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+				<div>
+					<h5 class="mb-0 font-weight-bold text-dark"><i class="fa-solid fa-file-invoice-dollar text-primary mr-2"></i>Matriz 3-Way Matching (Orden de Compra vs Muelle vs Factura)</h5>
+					<div class="small text-muted">Validación estricta de precios cotizados, cantidades efectivamente recibidas y montos cobrados por el proveedor.</div>
+				</div>
+				<div class="d-flex gap-2">
+					<a href="{{ $U('/action-center') }}" class="btn btn-sm btn-outline-danger font-weight-bold">
+						<i class="fa-solid fa-shield-halved mr-1"></i> Escalar a Action Center
+					</a>
+				</div>
+			</div>
+			<div class="table-responsive">
+				<table class="table table-hover table-sm mb-0">
+					<thead class="thead-light">
+						<tr>
+							<th>Orden Compra (PO)</th>
+							<th>Recepción Muelle (GR)</th>
+							<th>Factura Proveedor</th>
+							<th>Proveedor</th>
+							<th class="text-right">Cant. PO</th>
+							<th class="text-right">Cant. Recibida</th>
+							<th class="text-right">Precio PO</th>
+							<th class="text-right">Precio Factura</th>
+							<th class="text-right">Total Factura</th>
+							<th>Estado Matching</th>
+							<th class="text-center">Acción</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td><code>PO-2026-0810</code></td>
+							<td><code>GR-449102</code></td>
+							<td><strong>FAC-A-99124</strong></td>
+							<td>Lácteos del Valle S.A.</td>
+							<td class="text-right">150 unids</td>
+							<td class="text-right font-weight-bold text-success">150 unids</td>
+							<td class="text-right">$1.15</td>
+							<td class="text-right">$1.15</td>
+							<td class="text-right font-weight-bold">$172.50</td>
+							<td><span class="badge badge-success"><i class="fa-solid fa-check mr-1"></i> Coincidencia 100%</span></td>
+							<td class="text-center">
+								<button class="btn btn-xs btn-outline-success font-weight-bold py-0 px-2" onclick="alert('Factura liberada para programación de pago.');">
+									<i class="fa-solid fa-thumbs-up mr-1"></i> Liberar Pago
+								</button>
+							</td>
+						</tr>
+						<tr class="table-danger">
+							<td><code>PO-2026-0811</code></td>
+							<td><code>GR-449103</code></td>
+							<td><strong>FAC-B-11029</strong></td>
+							<td>Avícola Santa Rita</td>
+							<td class="text-right">200 kg</td>
+							<td class="text-right font-weight-bold text-danger">180 kg</td>
+							<td class="text-right">$3.20</td>
+							<td class="text-right font-weight-bold text-danger">$3.45</td>
+							<td class="text-right font-weight-bold text-danger">$690.00</td>
+							<td><span class="badge badge-danger"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Sobreprecio y Faltante</span></td>
+							<td class="text-center">
+								<button class="btn btn-xs btn-danger font-weight-bold py-0 px-2" onclick="alert('Factura retenida. Notificación de discrepancia enviada a compras y contabilidad.');">
+									<i class="fa-solid fa-hand mr-1"></i> Retener Pago
+								</button>
+							</td>
+						</tr>
+						<tr class="table-warning">
+							<td><code>PO-2026-0812</code></td>
+							<td><code>GR-449105</code></td>
+							<td><strong>FAC-C-33812</strong></td>
+							<td>Distribuidora Fruver SAS</td>
+							<td class="text-right">400 kg</td>
+							<td class="text-right font-weight-bold text-success">400 kg</td>
+							<td class="text-right">$0.90</td>
+							<td class="text-right font-weight-bold text-warning">$0.95</td>
+							<td class="text-right font-weight-bold">$380.00</td>
+							<td><span class="badge badge-warning text-dark"><i class="fa-solid fa-circle-exclamation mr-1"></i> Diferencia Centavos (+$20.00)</span></td>
+							<td class="text-center">
+								<button class="btn btn-xs btn-outline-warning font-weight-bold py-0 px-2" onclick="alert('Nota de débito generada automáticamente por $20.00.');">
+									<i class="fa-solid fa-file-invoice mr-1"></i> Nota Débito
+								</button>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+
+	<!-- TAB 9: Gestión de Contratos -->
+	<div class="tab-pane fade" id="tab-contracts" role="tabpanel">
+		<div class="row mb-3">
+			<div class="col-md-3">
+				<div class="card border-0 shadow-sm p-3 bg-white">
+					<div class="text-muted small font-weight-bold">CONTRATOS MARCO VIGENTES</div>
+					<div class="h4 font-weight-bold text-dark mb-0">{{ count($supplierContracts ?? []) }} <span class="small font-weight-normal text-muted">contratos</span></div>
+					<div class="small text-muted mt-1"><i class="fa-solid fa-file-signature text-success mr-1"></i> Cláusulas formalizadas</div>
+				</div>
+			</div>
+			<div class="col-md-3">
+				<div class="card border-0 shadow-sm p-3 bg-white">
+					<div class="text-muted small font-weight-bold">POR VENCER (&lt; 90 DÍAS)</div>
+					<div class="h4 font-weight-bold text-warning mb-0">1 <span class="small font-weight-normal text-muted">contrato</span></div>
+					<div class="small text-muted mt-1"><i class="fa-solid fa-clock mr-1 text-warning"></i> Avícola Santa Rita (Revisión)</div>
+				</div>
+			</div>
+			<div class="col-md-3">
+				<div class="card border-0 shadow-sm p-3 bg-white">
+					<div class="text-muted small font-weight-bold">TÉRMINO MEDIO DE CRÉDITO</div>
+					<div class="h4 font-weight-bold text-info mb-0">30 días</div>
+					<div class="small text-muted mt-1">Plazo de pago a proveedores</div>
+				</div>
+			</div>
+			<div class="col-md-3">
+				<div class="card border-0 shadow-sm p-3 bg-white">
+					<div class="text-muted small font-weight-bold">AHORRO POR REBATE</div>
+					<div class="h4 font-weight-bold text-success mb-0">$6,400</div>
+					<div class="small text-muted mt-1">Descuentos por pronto pago y volumen</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="card shadow-sm border-0 mb-4">
+			<div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+				<div>
+					<h5 class="mb-0 font-weight-bold text-dark"><i class="fa-solid fa-file-signature text-warning mr-2"></i>Contratos de Proveedores y Condiciones Comerciales</h5>
+					<div class="small text-muted">Términos de pago, pedido mínimo, descuentos pactados, cláusulas de renovación y alertas de caducidad.</div>
+				</div>
+				<div>
+					<button class="btn btn-sm btn-primary font-weight-bold" onclick="alert('Abriendo formulario de nuevo contrato comercial.');">
+						<i class="fa-solid fa-plus mr-1"></i> Nuevo Contrato
+					</button>
+				</div>
+			</div>
+			<div class="table-responsive">
+				<table class="table table-hover table-sm mb-0">
+					<thead class="thead-light">
+						<tr>
+							<th>Código</th>
+							<th>Proveedor</th>
+							<th>Título / Objeto</th>
+							<th>Vigencia</th>
+							<th class="text-right">Plazo Pago</th>
+							<th class="text-right">Pedido Mínimo</th>
+							<th>Condiciones / Descuento</th>
+							<th>Responsable</th>
+							<th>Estado</th>
+							<th class="text-center">Acción</th>
+						</tr>
+					</thead>
+					<tbody>
+						@foreach(($supplierContracts ?? []) as $ctr)
+						<tr class="@if($ctr['status'] === 'expiring_soon') table-warning @endif">
+							<td><code>{{ $ctr['contract_code'] }}</code></td>
+							<td class="font-weight-bold text-dark">{{ $ctr['supplier_name'] }}</td>
+							<td>{{ $ctr['title'] }}</td>
+							<td class="small text-muted">{{ date('d/m/Y', strtotime($ctr['start_date'])) }} al {{ date('d/m/Y', strtotime($ctr['end_date'])) }}</td>
+							<td class="text-right font-weight-bold">{{ $ctr['payment_terms_days'] }} días</td>
+							<td class="text-right">${{ number_format($ctr['minimum_order_val'], 2) }}</td>
+							<td><span class="badge badge-light border">{{ $ctr['discount_terms'] }}</span></td>
+							<td class="small">{{ $ctr['responsible_name'] }}</td>
+							<td>
+								@if($ctr['status'] === 'active')
+									<span class="badge badge-success"><i class="fa-solid fa-check mr-1"></i> Vigente</span>
+								@else
+									<span class="badge badge-warning text-dark"><i class="fa-solid fa-clock mr-1"></i> Por Vencer</span>
+								@endif
+							</td>
+							<td class="text-center">
+								<button class="btn btn-xs btn-outline-secondary py-0 px-2" onclick="alert('Descargando contrato digitalizado en PDF...');">
+									<i class="fa-solid fa-file-pdf text-danger"></i> PDF
+								</button>
+							</td>
+						</tr>
+						@endforeach
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+
+	<!-- TAB 10: Portal de Proveedores B2B -->
+	<div class="tab-pane fade" id="tab-supplier-portal" role="tabpanel">
+		<div class="card shadow-sm border-0 mb-4">
+			<div class="card-header bg-white py-3">
+				<h5 class="mb-0 font-weight-bold text-dark"><i class="fa-solid fa-network-wired text-success mr-2"></i>Portal de Proveedores B2B (DAILY Vendor Portal)</h5>
+				<div class="small text-muted">Arquitectura y acceso seguro para proveedores comerciales autorizados.</div>
+			</div>
+			<div class="card-body">
+				<div class="alert alert-info">
+					<i class="fa-solid fa-circle-info mr-2"></i>
+					El <strong>Portal B2B de Proveedores</strong> permite a los aliados comerciales consultar sus órdenes de compra activas, agendar citas de descarga en muelle, cargar manifiestos ASN electrónicos y consultar el estado contable de sus facturas en tiempo real.
+				</div>
+
+				<div class="row">
+					<div class="col-md-4 mb-3">
+						<div class="border rounded p-3 h-100 bg-light">
+							<div class="d-flex align-items-center mb-2">
+								<div class="rounded-circle p-2 bg-primary text-white mr-2" style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;">
+									<i class="fa-solid fa-cart-shopping"></i>
+								</div>
+								<strong class="text-dark">1. Órdenes de Compra</strong>
+							</div>
+							<p class="small text-muted mb-2">Proveedores reciben órdenes en firme en formato EDI o PDF para iniciar alistamiento.</p>
+							<div class="small font-weight-bold text-success"><i class="fa-solid fa-circle mr-1" style="font-size:8px;"></i> 14 órdenes enviadas este mes</div>
+						</div>
+					</div>
+					<div class="col-md-4 mb-3">
+						<div class="border rounded p-3 h-100 bg-light">
+							<div class="d-flex align-items-center mb-2">
+								<div class="rounded-circle p-2 bg-warning text-dark mr-2" style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;">
+									<i class="fa-solid fa-calendar-check"></i>
+								</div>
+								<strong class="text-dark">2. Citas de Muelle (Slotting)</strong>
+							</div>
+							<p class="small text-muted mb-2">Reserva de horario de llegada en andén para evitar filas y cuellos de botella en recepción.</p>
+							<div class="small font-weight-bold text-primary"><i class="fa-solid fa-truck mr-1"></i> 6 citas programadas para hoy</div>
+						</div>
+					</div>
+					<div class="col-md-4 mb-3">
+						<div class="border rounded p-3 h-100 bg-light">
+							<div class="d-flex align-items-center mb-2">
+								<div class="rounded-circle p-2 bg-success text-white mr-2" style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;">
+									<i class="fa-solid fa-file-invoice"></i>
+								</div>
+								<strong class="text-dark">3. Carga ASN y Facturas</strong>
+							</div>
+							<p class="small text-muted mb-2">Carga automática de remisión electrónica y facturas fiscales XML/PDF para conciliación 3-Way.</p>
+							<div class="small font-weight-bold text-info"><i class="fa-solid fa-cloud-arrow-up mr-1"></i> Carga B2B activa</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="d-flex justify-content-between align-items-center p-3 border rounded bg-white mt-2">
+					<div>
+						<span class="font-weight-bold text-dark">URL del Portal de Acceso Proveedores:</span>
+						<code class="ml-2">https://portal.dailyretail.com/b2b/suppliers</code>
+					</div>
+					<button type="button" class="btn btn-sm btn-outline-success font-weight-bold" onclick="alert('Enlace de invitación generado con token seguro de autenticación.');">
+						<i class="fa-solid fa-key mr-1"></i> Generar Invitación Proveedor
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
 </div>
 
 <!-- MODAL: Nuevo / Editar Proveedor -->

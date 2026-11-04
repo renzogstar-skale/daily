@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="goldTop" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a"/>
+      <stop offset="50%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+    <linearGradient id="goldSide" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#d97706"/>
+      <stop offset="100%" stop-color="#78350f"/>
+    </linearGradient>
+    <linearGradient id="alertRed" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ef4444"/>
+      <stop offset="100%" stop-color="#b91c1c"/>
+    </linearGradient>
+    <filter id="coinShadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="3" stdDeviation="2" flood-color="#78350f" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+
+  <!-- Shadow below -->
+  <ellipse cx="28" cy="58" rx="22" ry="4" fill="#78350f" fill-opacity="0.15"/>
+
+  <!-- Stack of Gold Coins (Left) -->
+  <g filter="url(#coinShadow)">
+    <!-- Coin 1 (Bottom) -->
+    <path d="M 12 48 C 12 44.5 19.2 42 28 42 C 36.8 42 44 44.5 44 48 L 44 53 C 44 56.5 36.8 59 28 59 C 19.2 59 12 56.5 12 53 Z" fill="url(#goldSide)"/>
+    <ellipse cx="28" cy="48" rx="16" ry="6" fill="url(#goldTop)"/>
+
+    <!-- Coin 2 (Middle) -->
+    <path d="M 12 40 C 12 36.5 19.2 34 28 34 C 36.8 34 44 36.5 44 40 L 44 45 C 44 48.5 36.8 51 28 51 C 19.2 51 12 48.5 12 45 Z" fill="url(#goldSide)"/>
+    <ellipse cx="28" cy="40" rx="16" ry="6" fill="url(#goldTop)"/>
+
+    <!-- Coin 3 (Top) -->
+    <path d="M 12 32 C 12 28.5 19.2 26 28 26 C 36.8 26 44 28.5 44 32 L 44 37 C 44 40.5 36.8 43 28 43 C 19.2 43 12 40.5 12 37 Z" fill="url(#goldSide)"/>
+    <ellipse cx="28" cy="32" rx="16" ry="6" fill="url(#goldTop)"/>
+
+    <!-- Coin 4 (Very Top) -->
+    <path d="M 12 24 C 12 20.5 19.2 18 28 18 C 36.8 18 44 20.5 44 24 L 44 29 C 44 32.5 36.8 35 28 35 C 19.2 35 12 32.5 12 29 Z" fill="url(#goldSide)"/>
+    <ellipse cx="28" cy="24" rx="16" ry="6" fill="url(#goldTop)"/>
+    <!-- Coin Inner Inscription/Rim -->
+    <ellipse cx="28" cy="24" rx="13" ry="4.5" fill="none" stroke="#fef08a" stroke-width="1"/>
+    <text x="28" y="27" font-size="7" font-weight="bold" fill="#b45309" text-anchor="middle" font-family="Arial, sans-serif">$</text>
+  </g>
+
+  <!-- Red Alert Warning Triangle in Front Right -->
+  <g filter="url(#coinShadow)">
+    <polygon points="48,22 61,46 35,46" fill="url(#alertRed)" stroke="#ffffff" stroke-width="2" stroke-linejoin="round"/>
+    <line x1="48" y1="29" x2="48" y2="39" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/>
+    <circle cx="48" cy="43" r="1.5" fill="#ffffff"/>
+  </g>
+</svg>

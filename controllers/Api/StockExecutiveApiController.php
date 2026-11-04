@@ -28,6 +28,37 @@ class StockExecutiveApiController extends BaseApiController
 		}
 	}
 
+	public function GetHeatmap(Request $request, Response $response, array $args)
+	{
+		return $this->Widget($request, $response, 'GetHeatmapWidget');
+	}
+
+	public function GetTopProducts(Request $request, Response $response, array $args)
+	{
+		return $this->Widget($request, $response, 'GetTopProductsWidget');
+	}
+
+	public function GetExpiring(Request $request, Response $response, array $args)
+	{
+		return $this->Widget($request, $response, 'GetExpiringWidget');
+	}
+
+	private function Widget(Request $request, Response $response, string $method)
+	{
+		if (!DairyAccess::CanOpen('/stockoverview'))
+		{
+			throw new \Grocy\Controllers\Users\PermissionMissingException($request, User::PERMISSION_STOCK);
+		}
+		try
+		{
+			return $this->ApiResponse($response, StockExecutiveOverviewService::GetInstance()->$method($request->getQueryParams()));
+		}
+		catch (\Exception $ex)
+		{
+			return $this->GenericErrorResponse($response, $ex->getMessage());
+		}
+	}
+
 	public function GetProduct360(Request $request, Response $response, array $args)
 	{
 		if (!DairyAccess::CanOpen('/stockoverview'))
@@ -55,6 +86,12 @@ class StockExecutiveApiController extends BaseApiController
 		try
 		{
 			$body = $request->getParsedBody() ?? [];
+			// Cada acción exige el permiso del módulo que la ejecuta
+			$actionPage = ['inspect' => '/tasks', 'rotate_task' => '/tasks', 'alert_task' => '/tasks', 'transfer' => '/transfers', 'waste' => '/waste/report'][strval($body['action'] ?? '')] ?? null;
+			if ($actionPage !== null && !DairyAccess::CanOpen($actionPage))
+			{
+				return $this->GenericErrorResponse($response, 'Sin permiso para esta acción', 403);
+			}
 			$res = StockExecutiveOverviewService::GetInstance()->ExecuteFefoAction($body, defined('GROCY_USER_ID') ? GROCY_USER_ID : 1);
 			return $this->ApiResponse($response, $res);
 		}

@@ -8,7 +8,8 @@
 	$mMonth = $selectedMonth ?? intval(date('n'));
 	$mPeriod = sprintf('%04d-%02d', $mYear, $mMonth);
 	$mPub = $mSched['publication'] ?? [];
-	$isPublished = ($mKpis['publication_status'] ?? '') === 'published';
+	$isDraft = !empty($mSched['draft_id']);
+	$isPublished = !$isDraft && ($mKpis['publication_status'] ?? '') === 'published';
 
 	$monthNames = [
 		1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril',
@@ -42,10 +43,15 @@
 				</button>
 			</div>
 
+			<div class="d-flex align-items-center">
+				<label class="small font-weight-700 text-muted mr-2 mb-0" for="genDept">Departamento:</label>
+				<select class="custom-select custom-select-sm font-weight-600" id="genDept" style="width: 170px;"><option value="">Todos</option></select>
+			</div>
+
 			<div class="d-flex align-items-center ml-lg-2">
 				<span class="badge @if($isPublished) badge-success @else badge-warning @endif px-2 py-1 mr-2" id="badgePublishStatus">
 					<i class="fa-solid @if($isPublished) fa-circle-check @else fa-clock @endif mr-1"></i>
-					{{ $isPublished ? 'OFICIAL PUBLICADO' : 'BORRADOR EN EDICIÓN' }}
+					{{ $isPublished ? 'OFICIAL PUBLICADO' : 'BORRADOR SIN APROBAR' }}
 				</span>
 				<span class="badge badge-purple px-2 py-1">
 					<i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Motor Continuo 2026–2030 Activo
@@ -55,11 +61,17 @@
 
 		<!-- Action buttons -->
 		<div class="d-flex align-items-center flex-wrap mt-2 mt-lg-0" style="gap: 0.5rem;">
-			<button type="button" class="btn btn-sm btn-outline-success font-weight-bold shadow-sm" id="btnRecalculateMonth">
-				<i class="fa-solid fa-rotate mr-1"></i> Regenerar con IA
+			<button type="button" class="btn btn-sm btn-outline-success font-weight-bold shadow-sm" id="genBuild">
+				<i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Generar automáticamente
 			</button>
-			<button type="button" class="btn btn-sm btn-success font-weight-bold shadow-sm" id="btnPublishMonthlySchedule">
-				<i class="fa-solid fa-check-double mr-1"></i> Publicar Horarios
+			<button type="button" class="btn btn-sm btn-outline-success font-weight-bold shadow-sm" id="genRecalc" disabled>
+				<i class="fa-solid fa-rotate mr-1"></i> Recalcular
+			</button>
+			<button type="button" class="btn btn-sm btn-success font-weight-bold shadow-sm" id="genApprove" disabled>
+				<i class="fa-solid fa-check-double mr-1"></i> Aprobar
+			</button>
+			<button type="button" class="btn btn-sm btn-outline-primary font-weight-bold shadow-sm" id="genExport">
+				<i class="fa-solid fa-file-excel mr-1"></i> Descargar Excel
 			</button>
 			<button type="button" class="btn btn-sm btn-outline-primary font-weight-bold shadow-sm" id="btnExportMonthlyCsv">
 				<i class="fa-solid fa-file-excel mr-1"></i> Exportar SAP (CSV)
@@ -118,20 +130,46 @@
 		</div>
 	</div>
 
+	<!-- VALIDACIÓN DEL MES Y PUNTOS POR CONFIRMAR -->
+	<div class="row mb-1" id="genKpis"></div>
+
+	<!-- VISTAS DE LA PROGRAMACIÓN -->
+	<div class="d-flex flex-wrap mb-2" id="genTabs" style="gap: 0.35rem;">
+		<button type="button" class="btn btn-sm btn-success font-weight-600" data-gen-view="calendar">Calendario mensual</button>
+		<button type="button" class="btn btn-sm btn-outline-secondary font-weight-600" data-gen-view="confirm">Por confirmar <span class="badge badge-warning" id="genConfirmCount"></span></button>
+		<button type="button" class="btn btn-sm btn-outline-secondary font-weight-600" data-gen-view="week">Vista semanal</button>
+		<button type="button" class="btn btn-sm btn-outline-secondary font-weight-600" data-gen-view="employee">Por empleado</button>
+		<button type="button" class="btn btn-sm btn-outline-secondary font-weight-600" data-gen-view="hourly">Cobertura por hora</button>
+		<button type="button" class="btn btn-sm btn-outline-secondary font-weight-600" data-gen-view="alerts">Alertas <span class="badge badge-light" id="genAlertCount"></span></button>
+		<button type="button" class="btn btn-sm btn-outline-secondary font-weight-600" data-gen-view="equity">Equidad</button>
+		<button type="button" class="btn btn-sm btn-outline-secondary font-weight-600" data-gen-view="versions">Versiones</button>
+		<button type="button" class="btn btn-sm btn-outline-secondary font-weight-600" data-gen-view="year">Vista anual</button>
+		<button type="button" class="btn btn-sm btn-outline-secondary font-weight-600" data-gen-view="planta">Planta</button>
+		<button type="button" class="btn btn-sm btn-outline-secondary font-weight-600" data-gen-view="sundays">Domingos</button>
+		<button type="button" class="btn btn-sm btn-outline-secondary font-weight-600" data-gen-view="comps">Compensatorios</button>
+		<button type="button" class="btn btn-sm btn-outline-secondary font-weight-600" data-gen-view="nights">Nocturnos</button>
+		<button type="button" class="btn btn-sm btn-outline-secondary font-weight-600" data-gen-view="absences">Vacaciones</button>
+		<button type="button" class="btn btn-sm btn-outline-secondary font-weight-600" data-gen-view="requests">Solicitudes <span class="badge badge-warning" id="genRequestCount"></span></button>
+	</div>
+
 	<!-- 3. COLOR LEGEND BAR -->
 	<div class="d-flex align-items-center flex-wrap mb-2 p-2 bg-light rounded border small font-weight-600" style="gap: 1rem;">
 		<span class="text-muted"><i class="fa-solid fa-palette mr-1"></i> Convenciones Oficiales:</span>
 		<span><span class="sch-chip sch-chip-apertura px-2 py-0 mr-1">7A...</span> Verde: Apertura (06:00 / 07:00 / 07:30)</span>
 		<span><span class="sch-chip sch-chip-cierre px-2 py-0 mr-1">7C...</span> Amarillo: Cierre (13:00 / 14:00 / 14:30)</span>
 		<span><span class="sch-chip sch-chip-noche px-2 py-0 mr-1">7N22-6</span> Negro: Nocturno (22:00 - 06:00)</span>
+		<span><span class="sch-chip sch-chip-intermedio px-2 py-0 mr-1">7i...</span> Azul: Intermedio</span>
+		<span><span class="sch-chip sch-chip-inc px-2 py-0 mr-1">INC</span> Rosado: Incapacidad o permiso</span>
 		<span><span class="sch-chip sch-chip-comp px-2 py-0 mr-1">COMP</span> Gris/Líneas: Compensatorio Dominical</span>
 		<span><span class="sch-chip sch-chip-libre px-2 py-0 mr-1">LIBRE</span> Gris: Descanso 3x1</span>
 		<span><span class="sch-chip sch-chip-vac px-2 py-0 mr-1">VC</span> Morado: Vacaciones</span>
 		<span><span class="badge badge-danger px-1 py-0 mr-1">!</span> Rojo: Conflicto / Alerta</span>
 	</div>
 
+	<div id="genBody" class="mb-4 p-3 bg-white rounded border shadow-sm" style="display: none; overflow-x: auto;"></div>
+
 	<!-- 4. FULL MONTHLY MATRIX TABLE -->
-	<div class="sch-matrix-scroll-wrapper shadow-sm mb-4">
+	<div class="sch-matrix-scroll-wrapper shadow-sm mb-4" id="genCalendar">
 		<table class="sch-matrix-table" id="schMonthlyTable">
 			<thead>
 				<tr>
@@ -169,7 +207,7 @@
 				@foreach($mCollabs as $c)
 					@if($currentDept !== $c['department'])
 						@php $currentDept = $c['department']; @endphp
-						<tr class="bg-light font-weight-700">
+						<tr class="bg-light font-weight-700" data-dept-head="{{ $currentDept }}">
 							<td colspan="{{ count($mDays) + 7 }}" class="py-1 px-3 text-uppercase text-secondary" style="font-size: 0.75rem; letter-spacing: 0.05em; background: #f1f5f9; border-top: 2px solid #cbd5e1;">
 								<i class="fa-solid fa-layer-group mr-1 text-primary"></i> Área: {{ $currentDept }}
 							</td>
@@ -199,6 +237,8 @@
 								elseif ($type === 'NOCHE') $chipClass = 'sch-chip-noche';
 								elseif ($type === 'VACACIONES') $chipClass = 'sch-chip-vac';
 								elseif ($type === 'COMPENSATORIO') $chipClass = 'sch-chip-comp';
+								elseif ($type === 'INTERMEDIO') $chipClass = 'sch-chip-intermedio';
+								elseif ($type === 'INCAPACIDAD' || $type === 'PERMISO') $chipClass = 'sch-chip-inc';
 
 								$tooltip = "$code ({$d['dow_name']} {$d['day_num']})";
 								if ($type === 'COMPENSATORIO' && !empty($s['compensatory_origin_date'])) {

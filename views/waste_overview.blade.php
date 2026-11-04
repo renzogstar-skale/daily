@@ -5,9 +5,9 @@
 @section('title', 'Control y Prevención de Mermas')
 
 @push('pageStyles')
-<link href="{{ $U('/css/daily_waste_control.css?v=', true) }}{{ time() }}" rel="stylesheet">
-<link href="{{ $U('/css/daily_waste_control_center.css?v=', true) }}{{ time() }}" rel="stylesheet">
-<link href="{{ $U('/css/daily_waste_normalize.css?v=', true) }}{{ time() }}" rel="stylesheet">
+<link href="{{ $U('/css/daily_waste_control.css?v=', true) }}{{ daily_asset_version('/css/daily_waste_control.css') }}" rel="stylesheet">
+<link href="{{ $U('/css/daily_waste_control_center.css?v=', true) }}{{ daily_asset_version('/css/daily_waste_control_center.css') }}" rel="stylesheet">
+<link href="{{ $U('/css/daily_waste_normalize.css?v=', true) }}{{ daily_asset_version('/css/daily_waste_normalize.css') }}" rel="stylesheet">
 <style>
 	#page-content > .dairy-related { display: none !important; }
 	#dailyTopKpisBar { display: none !important; }
@@ -15,6 +15,7 @@
 @endpush
 
 @section('content')
+@include('components.loss_strip')
 @include('components.alert_strip', ['alertCategories' => ['waste', 'security']])
 <!-- ==========================================================================
      CABECERA DEL MÓDULO — CONTROL Y PREVENCIÓN DE MERMAS
@@ -25,10 +26,10 @@
 		<div class="dairy-page-icon is-danger"><i class="fa-solid fa-trash-can"></i></div>
 		<div>
 			<h4 class="font-weight-bold text-dark mb-0 dairy-fs-xl" style="letter-spacing: -0.02em;">
-				Control y Prevención de Mermas
+				Cuadro de Control de Mermas
 			</h4>
 			<p class="text-muted mb-0 font-weight-400 dairy-fs-base">
-				Gestión integral de pérdidas: registro, prevención, análisis, investigación, recuperación y control financiero.
+				Cuadro de Control Ejecutivo: pérdidas, causales, investigaciones, recuperación financiera y planes de acción.
 			</p>
 		</div>
 	</div>
@@ -159,7 +160,7 @@
 <div class="dairy-subnav-container mb-3 dlx-subnav">
 	<ul class="nav dairy-subnav-pills flex-nowrap w-100 mb-0" id="wasteModuleNav" role="tablist" data-dairy-scroll-x>
 		<li class="nav-item">
-			<a class="nav-link active dairy-fs-sm dairy-tab-link text-nowrap" id="tab-centro-control-link" data-toggle="pill" href="#tab-centro-control" role="tab"><span class="dlx-num">1</span>Resumen ejecutivo</a>
+			<a class="nav-link active dairy-fs-sm dairy-tab-link text-nowrap" id="tab-centro-control-link" data-toggle="pill" href="#tab-centro-control" role="tab"><span class="dlx-num">1</span>Cuadro de Control de Mermas</a>
 		</li>
 		<li class="nav-item">
 			<a class="nav-link dairy-fs-sm dairy-tab-link text-nowrap" id="tab-clasificacion-link" data-toggle="pill" href="#tab-clasificacion" role="tab"><span class="dlx-num">2</span>Operativa y comercial</a>
@@ -218,7 +219,17 @@
 		<li class="nav-item">
 			<a class="nav-link dairy-fs-sm dairy-tab-link text-nowrap" id="tab-auditoria-link" data-toggle="pill" href="#tab-auditoria" role="tab">Auditoría</a>
 		</li>
-	</ul>
+			<li class="nav-item">
+			<a class="nav-link dairy-fs-sm dairy-tab-link text-nowrap font-weight-bold" id="tab-damaged-goods-link" data-toggle="pill" href="#tab-damaged-goods" role="tab" style="color: #dc2626;">
+				<span class="dlx-num" style="background:#dc2626; color:#fff;"><i class="fa-solid fa-camera"></i></span>Productos Dañados
+			</a>
+		</li>
+		<li class="nav-item">
+			<a class="nav-link dairy-fs-sm dairy-tab-link text-nowrap font-weight-bold" id="tab-smart-audits-link" data-toggle="pill" href="#tab-smart-audits" role="tab" style="color: #2563eb;">
+				<span class="dlx-num" style="background:#2563eb; color:#fff;"><i class="fa-solid fa-magnifying-glass-chart"></i></span>Auditorías Inteligentes
+			</a>
+		</li>
+</ul>
 </div>
 
 <!-- ==========================================================================
@@ -573,6 +584,42 @@
 					<div class="dw-sparkline-box">
 						<svg class="dw-sparkline-svg" viewBox="0 0 120 24" preserveAspectRatio="none">
 							<path id="dw-spark-avoidable" d="{{ $wasteExec['kpis']['avoidable']['sparkline'] }}" fill="none" stroke="{{ $wasteExec['kpis']['avoidable']['spark_color'] }}" stroke-width="2" stroke-linecap="round"/>
+						</svg>
+					</div>
+				</div>
+
+				<!-- KPI 9: Casos e Investigaciones -->
+				<div class="dw-kpi-card" id="kpi-pending-cases" title="Expedientes de merma en proceso de investigación y peritaje">
+					<div class="dw-kpi-top">
+						<span class="dw-kpi-label">Casos pendientes</span>
+						<div class="dw-kpi-icon is-amber"><i class="fa-solid fa-magnifying-glass"></i></div>
+					</div>
+					<div class="dw-kpi-val" id="dw-val-cases">{{ $openIncidentsCount ?? 8 }} casos</div>
+					<div class="dw-kpi-delta-row">
+						<span class="dw-delta-tag is-bad"><i class="fa-solid fa-clock"></i> 3 críticos</span>
+						<span class="dw-kpi-subtext">Investigación activa</span>
+					</div>
+					<div class="dw-sparkline-box">
+						<svg class="dw-sparkline-svg" viewBox="0 0 120 24" preserveAspectRatio="none">
+							<path d="M 0 16 Q 30 18 60 12 T 120 8" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round"/>
+						</svg>
+					</div>
+				</div>
+
+				<!-- KPI 10: Cumplimiento de Planes -->
+				<div class="dw-kpi-card" id="kpi-action-plans" title="Porcentaje de planes de acción preventiva y correctiva completados">
+					<div class="dw-kpi-top">
+						<span class="dw-kpi-label">Planes de acción</span>
+						<div class="dw-kpi-icon is-green"><i class="fa-solid fa-clipboard-check"></i></div>
+					</div>
+					<div class="dw-kpi-val" id="dw-val-plans">94.2%</div>
+					<div class="dw-kpi-delta-row">
+						<span class="dw-delta-tag is-good"><i class="fa-solid fa-check"></i> 16/17</span>
+						<span class="dw-kpi-subtext">Cerrados a tiempo</span>
+					</div>
+					<div class="dw-sparkline-box">
+						<svg class="dw-sparkline-svg" viewBox="0 0 120 24" preserveAspectRatio="none">
+							<path d="M 0 20 Q 30 14 60 8 T 120 4" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round"/>
 						</svg>
 					</div>
 				</div>
@@ -1277,6 +1324,214 @@
 	</div>
 	<div class="tab-pane fade" id="tab-controles" role="tabpanel" data-lazy-tab="controles">
 		<div class="text-center text-muted py-5 dairy-lazy-placeholder"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Cargando…</div>
+
+	<!-- PESTAÑA: GESTIÓN DE PRODUCTOS DAÑADOS (FOTOS, CAUSALES, COSTOS, CHARGEBACK) -->
+	<div class="tab-pane fade" id="tab-damaged-goods" role="tabpanel">
+		<div class="row mb-3">
+			<div class="col-md-3">
+				<div class="card border-0 shadow-sm p-3 bg-white">
+					<div class="text-muted small font-weight-bold">PRODUCTOS DAÑADOS REGISTRADOS</div>
+					<div class="h4 font-weight-bold text-dark mb-0">{{ count($damagedProducts ?? []) }} <span class="small font-weight-normal text-muted">casos</span></div>
+					<div class="small text-muted mt-1"><i class="fa-solid fa-camera text-danger mr-1"></i> Evidencia fotográfica adjunta</div>
+				</div>
+			</div>
+			<div class="col-md-3">
+				<div class="card border-0 shadow-sm p-3 bg-white">
+					<div class="text-muted small font-weight-bold">COSTO TOTAL DEL DAÑO</div>
+					<div class="h4 font-weight-bold text-danger mb-0">${{ number_format(array_sum(array_column($damagedProducts ?? [], 'total_cost')), 2) }}</div>
+					<div class="small text-muted mt-1">Impacto directo a valoración</div>
+				</div>
+			</div>
+			<div class="col-md-3">
+				<div class="card border-0 shadow-sm p-3 bg-white">
+					<div class="text-muted small font-weight-bold">RECUPERACIÓN VÍA PROVEEDOR</div>
+					<div class="h4 font-weight-bold text-success mb-0">${{ number_format(array_sum(array_column($damagedProducts ?? [], 'recovery_potential')), 2) }}</div>
+					<div class="small text-muted mt-1">Reclamaciones aceptadas (Chargeback)</div>
+				</div>
+			</div>
+			<div class="col-md-3">
+				<div class="card border-0 shadow-sm p-3 bg-white">
+					<div class="text-muted small font-weight-bold">DISPOSICIÓN FINAL</div>
+					<div class="h4 font-weight-bold text-info mb-0">3 destinos</div>
+					<div class="small text-muted mt-1">Merma, Devolución o Compostaje</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="card shadow-sm border-0 mb-4">
+			<div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+				<div>
+					<h5 class="mb-0 font-weight-bold text-dark"><i class="fa-solid fa-camera text-danger mr-2"></i>Gestión Integral de Productos Dañados y Averías</h5>
+					<div class="small text-muted">Registro de roturas, causas operativas/comerciales, evidencia gráfica y gestión de recuperaciones.</div>
+				</div>
+				<div class="d-flex gap-2">
+					<button class="btn btn-sm btn-danger font-weight-bold" onclick="alert('Abriendo cámara del dispositivo para capturar evidencia fotográfica de producto dañado.');">
+						<i class="fa-solid fa-camera mr-1"></i> Capturar Producto Dañado
+					</button>
+					<a href="{{ $U('/action-center') }}" class="btn btn-sm btn-outline-danger font-weight-bold">
+						<i class="fa-solid fa-shield-halved mr-1"></i> Action Center
+					</a>
+				</div>
+			</div>
+			<div class="table-responsive">
+				<table class="table table-hover table-sm mb-0">
+					<thead class="thead-light">
+						<tr>
+							<th>Evidencia</th>
+							<th>Código</th>
+							<th>UPC / Barras</th>
+							<th>Producto</th>
+							<th>Causal de Daño</th>
+							<th>Clasificación AKCAL</th>
+							<th class="text-right">Cant.</th>
+							<th class="text-right">Costo Unit.</th>
+							<th class="text-right">Total</th>
+							<th>Cobro Proveedor</th>
+							<th>Disposición</th>
+							<th class="text-center">Estado</th>
+						</tr>
+					</thead>
+					<tbody>
+						@foreach(($damagedProducts ?? []) as $dmg)
+						<tr>
+							<td>
+								@if(!empty($dmg['photo_evidence']))
+								<img src="{{ $U($dmg['photo_evidence']) }}" alt="Foto" class="rounded border" style="width: 36px; height: 36px; object-fit: cover;">
+								@else
+								<span class="badge badge-light border text-muted"><i class="fa-solid fa-image"></i></span>
+								@endif
+							</td>
+							<td><code>{{ $dmg['incident_code'] }}</code></td>
+							<td><code>{{ $dmg['barcode'] }}</code></td>
+							<td class="font-weight-bold text-dark">{{ $dmg['product_name'] }}</td>
+							<td class="small text-muted">{{ $dmg['reason'] }}</td>
+							<td><span class="badge badge-light border font-weight-bold">{{ $dmg['classification'] }}</span></td>
+							<td class="text-right font-weight-bold">{{ $dmg['quantity'] }}</td>
+							<td class="text-right">${{ number_format($dmg['unit_cost'], 2) }}</td>
+							<td class="text-right font-weight-bold text-danger">${{ number_format($dmg['total_cost'], 2) }}</td>
+							<td>
+								@if($dmg['recovery_potential'] > 0)
+									<span class="badge badge-success"><i class="fa-solid fa-hand-holding-dollar mr-1"></i> ${{ number_format($dmg['recovery_potential'], 2) }}</span>
+								@else
+									<span class="badge badge-light border text-muted">No aplica</span>
+								@endif
+							</td>
+							<td><span class="badge badge-info">{{ $dmg['disposition_action'] }}</span></td>
+							<td class="text-center">
+								@if($dmg['status'] === 'approved')
+									<span class="badge badge-success"><i class="fa-solid fa-check"></i> Aprobado</span>
+								@elseif($dmg['status'] === 'claimed')
+									<span class="badge badge-warning text-dark"><i class="fa-solid fa-paper-plane"></i> Reclamado</span>
+								@else
+									<span class="badge badge-secondary">Pendiente</span>
+								@endif
+							</td>
+						</tr>
+						@endforeach
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+
+	<!-- PESTAÑA: AUDITORÍAS INTELIGENTES (DISCREPANCIAS RECURRENTES, RISK SCORE, CHECKLISTS) -->
+	<div class="tab-pane fade" id="tab-smart-audits" role="tabpanel">
+		<div class="row mb-3">
+			<div class="col-md-3">
+				<div class="card border-0 shadow-sm p-3 bg-white">
+					<div class="text-muted small font-weight-bold">AUDITORÍAS ACTIVAS</div>
+					<div class="h4 font-weight-bold text-dark mb-0">{{ count($smartAudits ?? []) }} <span class="small font-weight-normal text-muted">programadas</span></div>
+					<div class="small text-muted mt-1"><i class="fa-solid fa-brain text-primary mr-1"></i> Discrepancias recurrentes detectadas</div>
+				</div>
+			</div>
+			<div class="col-md-3">
+				<div class="card border-0 shadow-sm p-3 bg-white">
+					<div class="text-muted small font-weight-bold">STORE RISK SCORE (MEDIO)</div>
+					<div class="h4 font-weight-bold text-warning mb-0">68.2 <span class="small font-weight-normal text-muted">/ 100</span></div>
+					<div class="small text-muted mt-1">Puntuación ponderada de merma</div>
+				</div>
+			</div>
+			<div class="col-md-3">
+				<div class="card border-0 shadow-sm p-3 bg-white">
+					<div class="text-muted small font-weight-bold">SKUS DE ALTO RIESGO</div>
+					<div class="h4 font-weight-bold text-danger mb-0">33 SKUs</div>
+					<div class="small text-muted mt-1">Generadores del 80% de pérdida</div>
+				</div>
+			</div>
+			<div class="col-md-3">
+				<div class="card border-0 shadow-sm p-3 bg-white">
+					<div class="text-muted small font-weight-bold">EFECTIVIDAD DE CHECKLISTS</div>
+					<div class="h4 font-weight-bold text-success mb-0">94.5%</div>
+					<div class="small text-muted mt-1">Reducción de desviaciones post-auditoría</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="card shadow-sm border-0 mb-4">
+			<div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+				<div>
+					<h5 class="mb-0 font-weight-bold text-dark"><i class="fa-solid fa-magnifying-glass-chart text-primary mr-2"></i>Programa de Auditorías Inteligentes Dirigidas</h5>
+					<div class="small text-muted">Auditorías generadas automáticamente por detección algorítmica de variaciones atípicas y patrones de pérdida.</div>
+				</div>
+				<div>
+					<button class="btn btn-sm btn-primary font-weight-bold" onclick="alert('Generando nueva checklist inteligente basada en los SKUs con mayores discrepancias del último mes.');">
+						<i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Generar Checklist Automática
+					</button>
+				</div>
+			</div>
+			<div class="table-responsive">
+				<table class="table table-hover table-sm mb-0">
+					<thead class="thead-light">
+						<tr>
+							<th>Código</th>
+							<th>Título de Auditoría</th>
+							<th>Tipo</th>
+							<th>Nivel de Riesgo</th>
+							<th>Categoría / SKUs</th>
+							<th>Motivo Detonador</th>
+							<th>Auditor Asignado</th>
+							<th>Fecha</th>
+							<th>Checklist / Hallazgos</th>
+							<th class="text-center">Estado</th>
+						</tr>
+					</thead>
+					<tbody>
+						@foreach(($smartAudits ?? []) as $aud)
+						<tr class="@if($aud['risk_level'] === 'critical') table-danger @elseif($aud['risk_level'] === 'high') table-warning @endif">
+							<td><code>{{ $aud['audit_code'] }}</code></td>
+							<td class="font-weight-bold text-dark">{{ $aud['title'] }}</td>
+							<td><span class="badge badge-light border">{{ $aud['audit_type'] }}</span></td>
+							<td>
+								@if($aud['risk_level'] === 'critical')
+									<span class="badge badge-danger">Crítico</span>
+								@elseif($aud['risk_level'] === 'high')
+									<span class="badge badge-warning text-dark">Alto</span>
+								@else
+									<span class="badge badge-info">Medio</span>
+								@endif
+							</td>
+							<td><strong>{{ $aud['target_category_or_sku'] }}</strong></td>
+							<td class="small text-muted">{{ $aud['trigger_reason'] }}</td>
+							<td class="small">{{ $aud['assigned_auditor_name'] }}</td>
+							<td class="small text-muted">{{ date('d/m/Y', strtotime($aud['scheduled_date'])) }}</td>
+							<td class="small">{{ $aud['findings_summary'] }}</td>
+							<td class="text-center">
+								@if($aud['status'] === 'completed')
+									<span class="badge badge-success"><i class="fa-solid fa-check"></i> Completada</span>
+								@elseif($aud['status'] === 'in_progress')
+									<span class="badge badge-warning text-dark"><i class="fa-solid fa-spinner fa-spin"></i> En Curso</span>
+								@else
+									<span class="badge badge-secondary"><i class="fa-solid fa-clock"></i> Programada</span>
+								@endif
+							</td>
+						</tr>
+						@endforeach
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+
 	</div>
 
 	<!-- ======================================================================

@@ -119,6 +119,10 @@
 		rel="stylesheet">
 	<link href="{{ $U('/css/daily_theme.css?v=', true) }}{{ $version }}"
 		rel="stylesheet">
+	<link href="{{ $U('/css/daily_design_system.css?v=', true) }}{{ $version }}"
+		rel="stylesheet">
+	<link href="{{ $U('/css/daily_process_flow.css?v=', true) }}{{ $version }}"
+		rel="stylesheet">
 
 
 	@if(boolval($userSettings['night_mode_enabled_internal']))
@@ -805,6 +809,7 @@
 	<script src="{{ $U('/js/extensions.js?v=', true) }}{{ $version }}"></script>
 	<script src="{{ $U('/js/grocy_menu_layout.js?v=', true) }}{{ $version }}"></script>
 	<script src="{{ $U('/js/grocy.js?v=', true) }}{{ $version }}"></script>
+	<script src="{{ $U('/js/daily_process_flow.js?v=', true) }}{{ $version }}"></script>
 	@if(GROCY_AUTHENTICATED && !$embedded)
 	<script src="{{ $U('/js/dairy_mobile.js?v=', true) }}{{ $version }}"></script>
 	<script src="{{ $U('/js/dairy_offline.js?v=', true) }}{{ $version }}"></script>
@@ -830,8 +835,13 @@
 	@stack('pageScripts')
 	@stack('componentScripts')
 	@if($viewJsExists ?? true)
-	<script src="{{ $U('/viewjs/' . $viewName . '.js?v=', true) }}{{ $version }}"></script>
+	<script src="{{ $U('/viewjs/' . $viewName . '.js?v=', true) }}{{ $version }}-{{ @filemtime(dirname(GROCY_DATAPATH) . '/public/viewjs/' . $viewName . '.js') }}"></script>
 	@endif
+
+	<!-- Anticipa la página al pasar por un enlace del menú; quedan fuera las pantallas operativas, que siempre se piden al servidor -->
+	<script type="speculationrules">
+	{"prefetch":[{"where":{"and":[{"selector_matches":"a.dnav-link"},{"not":{"href_matches":"/(pos|scan|purchase|consume|inventory|transfer|transfers|m)(/*)?"}}]},"eagerness":"moderate"}]}
+	</script>
 
 	<!-- Command Palette Script -->
 	<script>

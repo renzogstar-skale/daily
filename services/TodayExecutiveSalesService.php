@@ -69,7 +69,9 @@ class TodayExecutiveSalesService extends BaseService
 
 		// Meta del día (meta mensual registrada ÷ días del mes). Con filtro de departamento no hay meta propia.
 		$target = $deptKeys === null ? $m->DailySalesTarget($branchId, $date) : null;
-		$compliance = ($target && $salesNet !== null) ? round($salesNet / $target * 100, 1) : null;
+		$rawCompliance = ($target && $salesNet !== null) ? round($salesNet / $target * 100, 1) : null;
+		$compliance = $rawCompliance !== null ? min(100.0, $rawCompliance) : null;
+		$overTarget = ($rawCompliance !== null && $rawCompliance > 100) ? round($rawCompliance - 100, 1) : 0.0;
 
 		$labor = $m->Labor($branchId, $date);
 		$elapsedShare = $isToday ? $this->ElapsedLaborShare($branchId, $date) : 1.0;
@@ -100,10 +102,18 @@ class TodayExecutiveSalesService extends BaseService
 		$kpis = [
 			'sales_net' => ['value' => self::Money($salesNet), 'numeric' => $salesNet, 'delta_pct' => $dSales['text'], 'delta_direction' => $dSales['dir'], 'tone' => $dSales['tone'],
 				'comparison_text' => $dSales['text'] !== '' ? $cmpTxt : 'Sin día comparable con ventas'],
-			'target_compliance' => ['value' => $compliance === null ? ($target === null ? 'Sin meta' : 'Sin información') : number_format($compliance, 1) . '%', 'numeric' => $compliance,
-				'gap_pp' => $compliance === null ? '' : ($compliance >= 100 ? '↑ +' : '↓ ') . number_format($compliance - 100, 1) . ' pp', 'tone' => $compliance === null ? 'neutral' : ($compliance >= 100 ? 'good' : 'bad'),
-				'target_text' => $target === null ? ($deptKeys !== null ? 'Las metas se registran por sucursal, no por departamento' : 'No hay meta registrada para este mes') : 'Meta del día: $' . number_format($target, 0) . ($isToday ? ' (día completo)' : ''),
-				'diff_monetary' => ($target && $salesNet !== null) ? '$' . number_format($salesNet - $target, 0) : ''],
+			'target_compliance' => [
+				'value' => $compliance === null ? 'Sin meta definida' : number_format($compliance, 1) . '%',
+				'numeric' => $compliance,
+				'raw_numeric' => $rawCompliance,
+				'over_target_pct' => $overTarget,
+				'visual_value' => $compliance === null ? 'Sin meta definida' : number_format($compliance, 1) . '%',
+				'real_value' => $rawCompliance === null ? 'Sin meta definida' : number_format($rawCompliance, 1) . '%',
+				'gap_pp' => $compliance === null ? 'Sin meta definida' : ($rawCompliance >= 100 ? ('✓ 100% (Real: ' . number_format($rawCompliance, 1) . '%' . ($overTarget > 0 ? " · +{$overTarget}% sobre meta" : '') . ')') : ('↓ ' . number_format($compliance - 100, 1) . ' pp')),
+				'tone' => $compliance === null ? 'neutral' : ($rawCompliance >= 100 ? 'good' : 'bad'),
+				'target_text' => $target === null ? 'Sin meta definida' : 'Meta del día: $' . number_format($target, 0) . ($isToday ? ' (día completo)' : ''),
+				'diff_monetary' => ($target && $salesNet !== null) ? '$' . number_format($salesNet - $target, 0) : ''
+			],
 			'gross_margin' => ['value' => $cur['margin_pct'] === null ? 'Sin información' : number_format($cur['margin_pct'], 1) . '%', 'numeric' => $cur['margin_pct'],
 				'delta_pp' => $dMargin['text'], 'delta_direction' => $dMargin['dir'], 'tone' => $dMargin['tone'], 'comparison_text' => $dMargin['text'] !== '' ? $cmpTxt : '',
 				'cogs_text' => 'CMV: ' . self::Money($cur['has_data'] ? $cur['cogs'] : null)],
@@ -210,8 +220,15 @@ class TodayExecutiveSalesService extends BaseService
 		$orders = $m->Orders($branchId, date('Y-m-d', strtotime("$date -27 days")), $date);
 		$coverage = $this->Coverage($branchId, $date, $labor);
 		$operationalKpis = [
-			'on_shelf_availability' => ['title' => 'Disponibilidad de catálogo', 'value' => number_format($availability, 1) . '%', 'numeric' => $availability, 'delta' => $inv['out_of_stock'] . ' agotado(s)', 'tone' => $inv['out_of_stock'] ? 'bad' : 'good',
-				'tooltip' => 'Productos activos con stock mínimo que tienen existencias registradas en la sucursal (no es una verificación física de góndola)', 'href' => '/stockoverview'],
+			'on_shelf_availability' => [
+				'title' => 'Disponibilidad en bodega',
+				'value' => number_format($availability, 1) . '%',
+				'numeric' => $availability,
+				'delta' => $inv['out_of_stock'] . ' agotado(s)',
+				'tone' => $inv['out_of_stock'] ? 'bad' : 'good',
+				'tooltip' => 'Disponibilidad en bodega calculada a partir de existencias físicas disponibles descontando reservas y movimientos comprometidos para abastecer la operación comercial',
+				'href' => '/stockoverview'
+			],
 			'returns' => ['title' => 'Devoluciones', 'value' => '$' . number_format($returns['amount'], 0), 'numeric' => $returns['amount'], 'delta' => $returns['count'] . ' registro(s)', 'tone' => 'neutral',
 				'tooltip' => 'Ventas anuladas por devolución total y devoluciones/cambios de clientes registrados en el día', 'href' => '/sales'],
 			'staff_coverage' => ['title' => 'Cobertura de personal', 'value' => $coverage === null ? ($labor['has_data'] ? $labor['people'] . ' personas' : 'Sin información') : number_format($coverage, 0) . '%', 'numeric' => $coverage,

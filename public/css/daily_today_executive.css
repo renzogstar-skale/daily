@@ -1672,3 +1672,16 @@
 	}
 }
 
+/* Integración con DAILY Design System Tabs */
+#daily-tab-operations #cc-page {
+	display: block !important;
+	padding: 0;
+	background: transparent;
+	margin-top: 0.5rem;
+}
+
+#daily-tab-operations .cc-head {
+	display: none;
+}
+
+

@@ -208,4 +208,74 @@ document.addEventListener('DOMContentLoaded', function () {
 		</div>
 	</div>
 </div>
+
+{{-- SECCIÓN EXPANSIÓN: PRESUPUESTOS POR DEPARTAMENTO --}}
+<div class="card mb-4 border-0 shadow-sm">
+	<div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+		<div>
+			<h6 class="font-weight-bold text-dark mb-0">
+				<i class="fa-solid fa-calculator text-primary mr-2"></i>Presupuestos por Departamento · Control Mensual y Anual
+			</h6>
+			<div class="small text-muted">Comparativo de presupuesto asignado frente a gasto real ejecutado y alertas de desviación.</div>
+		</div>
+		<div class="d-flex gap-2">
+			<button class="btn btn-sm btn-primary font-weight-bold" onclick="alert('Abriendo asistente de reasignación presupuestal entre departamentos.');">
+				<i class="fa-solid fa-plus mr-1"></i> Asignar Presupuesto
+			</button>
+			<a href="{{ $U('/action-center') }}" class="btn btn-sm btn-outline-danger font-weight-bold">
+				<i class="fa-solid fa-shield-halved mr-1"></i> Action Center
+			</a>
+		</div>
+	</div>
+	<div class="card-body p-0">
+		<div class="table-responsive">
+			<table class="table table-sm table-hover mb-0">
+				<thead class="thead-light">
+					<tr>
+						<th>Sucursal</th>
+						<th>Departamento</th>
+						<th>Ejercicio</th>
+						<th class="text-right">Ppto. Mensual</th>
+						<th class="text-right">Ppto. Anual</th>
+						<th class="text-right">Gasto Real Mes</th>
+						<th class="text-right">Desviación %</th>
+						<th class="text-right">Proyección Cierre</th>
+						<th class="text-center">Estado Alerta</th>
+						<th class="text-center">Acción</th>
+					</tr>
+				</thead>
+				<tbody>
+					@foreach(($departmentBudgets ?? []) as $budg)
+					<tr class="@if($budg['alert_status'] === 'warning') table-warning @endif">
+						<td class="font-weight-bold text-dark"><i class="fa-solid fa-building mr-1 text-muted"></i> {{ $budg['branch_name'] }}</td>
+						<td><strong>{{ $budg['department'] }}</strong></td>
+						<td><span class="badge badge-light border">{{ $budg['fiscal_year'] }}</span></td>
+						<td class="text-right">${{ number_format($budg['monthly_budget'], 2) }}</td>
+						<td class="text-right">${{ number_format($budg['annual_budget'], 2) }}</td>
+						<td class="text-right font-weight-bold">${{ number_format($budg['actual_spent'], 2) }}</td>
+						<td class="text-right font-weight-bold @if($budg['variance_pct'] > 0) text-danger @else text-success @endif">
+							@if($budg['variance_pct'] > 0)+@endif{{ number_format($budg['variance_pct'], 1) }}%
+						</td>
+						<td class="text-right text-muted font-weight-600">
+							${{ number_format($budg['actual_spent'] * 12, 2) }}
+						</td>
+						<td class="text-center">
+							@if($budg['alert_status'] === 'on_track')
+								<span class="badge badge-success"><i class="fa-solid fa-circle-check mr-1"></i> Bajo Control</span>
+							@else
+								<span class="badge badge-warning text-dark"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Desvío &gt; 5%</span>
+							@endif
+						</td>
+						<td class="text-center">
+							<button class="btn btn-xs btn-outline-secondary py-0 px-2 font-weight-bold" onclick="alert('Historial de compras y gastos imputados al departamento.');">
+								<i class="fa-solid fa-receipt mr-1"></i> Detalle
+							</button>
+						</td>
+					</tr>
+					@endforeach
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
 @stop

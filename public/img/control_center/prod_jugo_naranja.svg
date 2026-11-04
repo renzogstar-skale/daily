@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="juiceGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#fdba74"/>
+      <stop offset="50%" stop-color="#f97316"/>
+      <stop offset="100%" stop-color="#ea580c"/>
+    </linearGradient>
+  </defs>
+  <!-- Cap -->
+  <rect x="26" y="6" width="12" height="7" rx="2" fill="#15803d"/>
+  <!-- Bottle body -->
+  <path d="M28 13 L28 18 L20 26 L20 56 A3 3 0 0 0 23 59 L41 59 A3 3 0 0 0 44 56 L44 26 L36 18 L36 13 Z" fill="url(#juiceGrad)"/>
+  <!-- Bottle shine -->
+  <path d="M22 28 L22 55" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" opacity="0.6"/>
+  <!-- Label with orange slice -->
+  <rect x="22" y="32" width="20" height="16" rx="2" fill="#ffffff"/>
+  <circle cx="32" cy="40" r="5" fill="#f97316"/>
+  <circle cx="32" cy="40" r="3.5" fill="#fed7aa"/>
+  <path d="M30 35 Q34 32 36 34" stroke="#16a34a" stroke-width="1.5" fill="none"/>
+</svg>
+

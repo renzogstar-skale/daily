@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="cucGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#15803d"/>
+      <stop offset="50%" stop-color="#16a34a"/>
+      <stop offset="100%" stop-color="#14532d"/>
+    </linearGradient>
+  </defs>
+  <!-- Curved cucumber -->
+  <path d="M12 48 C10 40 18 20 46 14 C52 13 56 18 54 24 C44 42 22 56 16 54 C12 52 11 50 12 48 Z" fill="url(#cucGrad)"/>
+  <!-- Cucumber texture bumps/stripes -->
+  <path d="M22 36 Q32 26 42 20" stroke="#86efac" stroke-width="1.2" stroke-linecap="round" fill="none" opacity="0.4"/>
+  <circle cx="28" cy="34" r="1" fill="#86efac" opacity="0.6"/>
+  <circle cx="38" cy="24" r="1.2" fill="#86efac" opacity="0.6"/>
+  <circle cx="48" cy="18" r="0.9" fill="#86efac" opacity="0.6"/>
+</svg>
+

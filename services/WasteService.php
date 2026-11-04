@@ -401,6 +401,7 @@ class WasteService extends BaseService
 		bool $forceApproval = false,
 		bool $confirmDuplicate = false
 	) {
+		DeviceService::AssertNotControlled($productId, 'darlo de baja');
 		if ($amount <= 0)
 		{
 			throw new \Exception('La cantidad a registrar como merma debe ser mayor a 0');
@@ -637,6 +638,29 @@ class WasteService extends BaseService
 		}
 	}
 
+	const CASE_WORKFLOW = ['detected', 'reviewing', 'investigating', 'approved', 'action_assigned', 'executed', 'verified', 'closed'];
+
+	/** Estados válidos y sin saltos que dejen la merma sin decidir: no se ejecuta, verifica ni cierra antes de aprobar o rechazar */
+	private function AssertCaseTransition($record, string $from, string $to): void
+	{
+		if ($to === $from)
+		{
+			return;
+		}
+		if (!in_array($to, self::CASE_WORKFLOW, true))
+		{
+			throw new \Exception('Estado de caso inválido: ' . $to);
+		}
+		if ($from === 'closed')
+		{
+			throw new \Exception('El caso ya está cerrado');
+		}
+		if ($record->status === 'pending_approval' && in_array($to, ['executed', 'verified', 'closed'], true))
+		{
+			throw new \Exception('La merma está pendiente de aprobación: apruébela o recházela antes de ejecutar, verificar o cerrar el caso');
+		}
+	}
+
 	/**
 	 * Update Case Investigation, Workflow Status & Action Plan
 	 */
@@ -650,6 +674,7 @@ class WasteService extends BaseService
 
 		$previousWorkflowStatus = $record->workflow_status;
 		$newWorkflowStatus = trim($data['workflow_status'] ?? $previousWorkflowStatus);
+		$this->AssertCaseTransition($record, (string) $previousWorkflowStatus, $newWorkflowStatus);
 		$investigatorUserId = isset($data['investigator_user_id']) ? (!empty($data['investigator_user_id']) ? intval($data['investigator_user_id']) : null) : $record->investigator_user_id;
 		$dueDate = $data['due_date'] ?? $record->due_date;
 		$rootCause = $data['root_cause_analysis'] ?? $record->root_cause_analysis;

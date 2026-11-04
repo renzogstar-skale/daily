@@ -54,6 +54,37 @@
 ]])
 @endif
 
+<!-- NAVEGACIÓN EN PESTAÑAS: OPERACIONES, PERSONAL, CERTIFICACIONES, MANTENIMIENTO E INCIDENTES -->
+<div class="mb-3">
+	<ul class="nav nav-pills bg-white shadow-sm p-1 rounded border" id="workforceTabs" role="tablist">
+		<li class="nav-item">
+			<a class="nav-link active font-weight-bold" id="wf-tab-floor-link" data-toggle="pill" href="#wf-tab-floor" role="tab">
+				<i class="fa-solid fa-list-check mr-1 text-primary"></i>1. Piso de Tienda & Tareas de Turno
+			</a>
+		</li>
+		<li class="nav-item">
+			<a class="nav-link font-weight-bold" id="wf-tab-certifications-link" data-toggle="pill" href="#wf-tab-certifications" role="tab">
+				<i class="fa-solid fa-graduation-cap mr-1 text-success"></i>2. Capacitaciones & Certificaciones
+			</a>
+		</li>
+		<li class="nav-item">
+			<a class="nav-link font-weight-bold" id="wf-tab-maintenance-link" data-toggle="pill" href="#wf-tab-maintenance" role="tab">
+				<i class="fa-solid fa-screwdriver-wrench mr-1 text-warning"></i>3. Control de Mantenimiento
+			</a>
+		</li>
+		<li class="nav-item">
+			<a class="nav-link font-weight-bold text-danger" id="wf-tab-incidents-link" data-toggle="pill" href="#wf-tab-incidents" role="tab">
+				<i class="fa-solid fa-triangle-exclamation mr-1"></i>4. Incidentes Operativos
+			</a>
+		</li>
+	</ul>
+</div>
+
+<div class="tab-content" id="workforceTabContent">
+	<!-- PESTAÑA 1: PISO DE TIENDA Y TAREAS -->
+	<div class="tab-pane fade show active" id="wf-tab-floor" role="tabpanel">
+
+
 <div class="row">
 	<!-- Columna Izquierda: Reporte Express de Avería / Merma (Mobile First) -->
 	<div class="col-lg-5 mb-4">
@@ -351,6 +382,284 @@
 			</div>
 		</div>
 	</div>
+
+	</div>{{-- Cierre wf-tab-floor --}}
+
+	<!-- PESTAÑA 2: CAPACITACIONES & CERTIFICACIONES OPERATIVAS -->
+	<div class="tab-pane fade" id="wf-tab-certifications" role="tabpanel">
+		<div class="row mb-3">
+			<div class="col-md-3">
+				<div class="card border-0 shadow-sm p-3 bg-white">
+					<div class="text-muted small font-weight-bold">CERTIFICACIONES VIGENTES</div>
+					<div class="h4 font-weight-bold text-success mb-0">2 <span class="small font-weight-normal text-muted">colaboradores</span></div>
+					<div class="small text-muted mt-1"><i class="fa-solid fa-circle-check text-success mr-1"></i> BPM y Montacargas al día</div>
+				</div>
+			</div>
+			<div class="col-md-3">
+				<div class="card border-0 shadow-sm p-3 bg-white">
+					<div class="text-muted small font-weight-bold">VENCIDAS / RESTRINGIDAS</div>
+					<div class="h4 font-weight-bold text-danger mb-0">1 <span class="small font-weight-normal text-muted">bloqueo</span></div>
+					<div class="small text-muted mt-1"><i class="fa-solid fa-lock text-danger mr-1"></i> Andrés Soto (HACCP vencido)</div>
+				</div>
+			</div>
+			<div class="col-md-3">
+				<div class="card border-0 shadow-sm p-3 bg-white">
+					<div class="text-muted small font-weight-bold">CUMPLIMIENTO NORMATIVO</div>
+					<div class="h4 font-weight-bold text-warning mb-0">66.7%</div>
+					<div class="small text-muted mt-1">Exige recertificación antes de 15 días</div>
+				</div>
+			</div>
+			<div class="col-md-3">
+				<div class="card border-0 shadow-sm p-3 bg-white">
+					<div class="text-muted small font-weight-bold">CURSOS OBLIGATORIOS</div>
+					<div class="h4 font-weight-bold text-info mb-0">3 materias</div>
+					<div class="small text-muted mt-1">BPM, Seguridad y Cadena de Frío</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="card shadow-sm border-0 mb-4">
+			<div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+				<div>
+					<h5 class="mb-0 font-weight-bold text-dark"><i class="fa-solid fa-graduation-cap text-success mr-2"></i>Matriz de Capacitación, Habilidades y Certificaciones Obligatorias</h5>
+					<div class="small text-muted">Vigencias, entidades emisoras y restricciones automáticas de operación en piso y maquinaria.</div>
+				</div>
+				<button class="btn btn-sm btn-success font-weight-bold" onclick="alert('Abriendo formulario de registro de nueva certificación laboral.');">
+					<i class="fa-solid fa-plus mr-1"></i> Registrar Certificación
+				</button>
+			</div>
+			<div class="table-responsive">
+				<table class="table table-hover table-sm mb-0">
+					<thead class="thead-light">
+						<tr>
+							<th>Colaborador</th>
+							<th>Código Cert.</th>
+							<th>Curso / Competencia</th>
+							<th>Fecha Emisión</th>
+							<th>Vencimiento</th>
+							<th>Ente Emisor</th>
+							<th>Condición Operativa</th>
+							<th class="text-center">Estado</th>
+						</tr>
+					</thead>
+					<tbody>
+						@foreach(($certifications ?? []) as $cert)
+						<tr class="@if($cert['status'] === 'expired') table-danger @endif">
+							<td class="font-weight-bold text-dark"><i class="fa-solid fa-user mr-1 text-muted"></i> {{ $cert['employee_name'] }}</td>
+							<td><code>{{ $cert['certification_code'] }}</code></td>
+							<td><strong>{{ $cert['course_name'] }}</strong></td>
+							<td class="small text-muted">{{ date('d/m/Y', strtotime($cert['issue_date'])) }}</td>
+							<td class="small font-weight-bold @if($cert['status'] === 'expired') text-danger @else text-dark @endif">
+								{{ date('d/m/Y', strtotime($cert['expiry_date'])) }}
+							</td>
+							<td class="small text-muted">{{ $cert['issuer'] }}</td>
+							<td>
+								@if($cert['status'] === 'expired')
+									<span class="badge badge-danger"><i class="fa-solid fa-ban mr-1"></i> {{ $cert['operating_restriction'] }}</span>
+								@else
+									<span class="badge badge-success"><i class="fa-solid fa-circle-check mr-1"></i> {{ $cert['operating_restriction'] }}</span>
+								@endif
+							</td>
+							<td class="text-center">
+								@if($cert['status'] === 'valid')
+									<span class="badge badge-success">Vigente</span>
+								@else
+									<span class="badge badge-danger">Vencida</span>
+								@endif
+							</td>
+						</tr>
+						@endforeach
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+
+	<!-- PESTAÑA 3: CONTROL DE MANTENIMIENTO DE EQUIPOS -->
+	<div class="tab-pane fade" id="wf-tab-maintenance" role="tabpanel">
+		<div class="row mb-3">
+			<div class="col-md-3">
+				<div class="card border-0 shadow-sm p-3 bg-white">
+					<div class="text-muted small font-weight-bold">EQUIPOS MONITOREADOS</div>
+					<div class="h4 font-weight-bold text-dark mb-0">{{ count($maintenanceLogs ?? []) }} <span class="small font-weight-normal text-muted">activos</span></div>
+					<div class="small text-muted mt-1"><i class="fa-solid fa-temperature-low text-primary mr-1"></i> Cámaras, montacargas y balanzas</div>
+				</div>
+			</div>
+			<div class="col-md-3">
+				<div class="card border-0 shadow-sm p-3 bg-white">
+					<div class="text-muted small font-weight-bold">EN MANTENIMIENTO</div>
+					<div class="h4 font-weight-bold text-warning mb-0">1 equipo</div>
+					<div class="small text-muted mt-1"><i class="fa-solid fa-wrench text-warning mr-1"></i> Transpaleta Eléctrica Crown #03</div>
+				</div>
+			</div>
+			<div class="col-md-3">
+				<div class="card border-0 shadow-sm p-3 bg-white">
+					<div class="text-muted small font-weight-bold">PRÓXIMO PREVENTIVO</div>
+					<div class="h4 font-weight-bold text-info mb-0">En 4 días</div>
+					<div class="small text-muted mt-1">Cámara de Congelados -18°C</div>
+				</div>
+			</div>
+			<div class="col-md-3">
+				<div class="card border-0 shadow-sm p-3 bg-white">
+					<div class="text-muted small font-weight-bold">GASTO MANTENIMIENTO</div>
+					<div class="h4 font-weight-bold text-dark mb-0">${{ number_format(array_sum(array_column($maintenanceLogs ?? [], 'cost')), 2) }}</div>
+					<div class="small text-muted mt-1">Presupuestado dentro de margen</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="card shadow-sm border-0 mb-4">
+			<div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+				<div>
+					<h5 class="mb-0 font-weight-bold text-dark"><i class="fa-solid fa-screwdriver-wrench text-warning mr-2"></i>Programa de Mantenimiento Preventivo y Correctivo</h5>
+					<div class="small text-muted">Historial técnico, costos de reparación, proveedores especializados y estado de maquinaria crítica.</div>
+				</div>
+				<button class="btn btn-sm btn-primary font-weight-bold" onclick="alert('Abriendo orden de servicio técnico para equipo.');">
+					<i class="fa-solid fa-plus mr-1"></i> Programar Mantenimiento
+				</button>
+			</div>
+			<div class="table-responsive">
+				<table class="table table-hover table-sm mb-0">
+					<thead class="thead-light">
+						<tr>
+							<th>Equipo / Activo</th>
+							<th>Sucursal</th>
+							<th>Tipo</th>
+							<th>Fecha Programada</th>
+							<th>Técnico / Proveedor</th>
+							<th class="text-right">Costo ($)</th>
+							<th>Detalle de Falla / Diagnóstico</th>
+							<th>Resolución / Notas</th>
+							<th class="text-center">Estado</th>
+						</tr>
+					</thead>
+					<tbody>
+						@foreach(($maintenanceLogs ?? []) as $maint)
+						<tr class="@if($maint['status'] === 'in_progress') table-warning @endif">
+							<td class="font-weight-bold text-dark"><i class="fa-solid fa-gear mr-1 text-muted"></i> {{ $maint['equipment_name'] }}</td>
+							<td><span class="badge badge-light border">{{ $maint['branch_name'] }}</span></td>
+							<td>
+								@if($maint['maintenance_type'] === 'preventive')
+									<span class="badge badge-info">Preventivo</span>
+								@else
+									<span class="badge badge-warning text-dark">Correctivo</span>
+								@endif
+							</td>
+							<td class="small text-muted">{{ date('d/m/Y', strtotime($maint['scheduled_date'])) }}</td>
+							<td>{{ $maint['technician'] }}</td>
+							<td class="text-right font-weight-bold">${{ number_format($maint['cost'], 2) }}</td>
+							<td class="small">{{ $maint['failure_details'] }}</td>
+							<td class="small text-muted">{{ $maint['resolution_notes'] }}</td>
+							<td class="text-center">
+								@if($maint['status'] === 'completed')
+									<span class="badge badge-success"><i class="fa-solid fa-check"></i> Concluido</span>
+								@elseif($maint['status'] === 'in_progress')
+									<span class="badge badge-warning text-dark"><i class="fa-solid fa-spinner fa-spin"></i> En Taller</span>
+								@else
+									<span class="badge badge-secondary"><i class="fa-solid fa-clock"></i> Agendado</span>
+								@endif
+							</td>
+						</tr>
+						@endforeach
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+
+	<!-- PESTAÑA 4: GESTIÓN DE INCIDENTES OPERATIVOS -->
+	<div class="tab-pane fade" id="wf-tab-incidents" role="tabpanel">
+		<div class="row mb-3">
+			<div class="col-md-3">
+				<div class="card border-0 shadow-sm p-3 bg-white">
+					<div class="text-muted small font-weight-bold">INCIDENTES EN TURNO</div>
+					<div class="h4 font-weight-bold text-dark mb-0">{{ count($operationalIncidents ?? []) }} <span class="small font-weight-normal text-muted">reportes</span></div>
+					<div class="small text-muted mt-1"><i class="fa-solid fa-shield-halved text-success mr-1"></i> Protocolos de seguridad activados</div>
+				</div>
+			</div>
+			<div class="col-md-3">
+				<div class="card border-0 shadow-sm p-3 bg-white">
+					<div class="text-muted small font-weight-bold">GRAVEDAD MEDIA / ALTA</div>
+					<div class="h4 font-weight-bold text-warning mb-0">1 caso</div>
+					<div class="small text-muted mt-1">Fuga de agua en condensador de frío</div>
+				</div>
+			</div>
+			<div class="col-md-3">
+				<div class="card border-0 shadow-sm p-3 bg-white">
+					<div class="text-muted small font-weight-bold">TIEMPO MEDIO DE RESOLUCIÓN</div>
+					<div class="h4 font-weight-bold text-success mb-0">35 min</div>
+					<div class="small text-muted mt-1">Atención rápida en piso</div>
+				</div>
+			</div>
+			<div class="col-md-3">
+				<div class="card border-0 shadow-sm p-3 bg-white">
+					<div class="text-muted small font-weight-bold">ACCIONES PREVENTIVAS</div>
+					<div class="h4 font-weight-bold text-info mb-0">100%</div>
+					<div class="small text-muted mt-1">Con causa raíz identificada</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="card shadow-sm border-0 mb-4">
+			<div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+				<div>
+					<h5 class="mb-0 font-weight-bold text-dark"><i class="fa-solid fa-triangle-exclamation text-danger mr-2"></i>Bitácora de Incidentes Operativos en Piso y Almacén</h5>
+					<div class="small text-muted">Registro de novedades, gravedad, responsables, evidencias y acciones correctivas aplicadas.</div>
+				</div>
+				<div>
+					<button class="btn btn-sm btn-danger font-weight-bold" onclick="alert('Abriendo reporte de nuevo incidente operativo en tienda.');">
+						<i class="fa-solid fa-plus mr-1"></i> Reportar Nuevo Incidente
+					</button>
+				</div>
+			</div>
+			<div class="table-responsive">
+				<table class="table table-hover table-sm mb-0">
+					<thead class="thead-light">
+						<tr>
+							<th>Código</th>
+							<th>Título del Incidente</th>
+							<th>Gravedad</th>
+							<th>Sucursal y Depto</th>
+							<th>Reportado Por</th>
+							<th>Fecha y Hora</th>
+							<th>Acción Correctiva Aplicada</th>
+							<th class="text-center">Estado</th>
+						</tr>
+					</thead>
+					<tbody>
+						@foreach(($operationalIncidents ?? []) as $inc)
+						<tr>
+							<td><code>{{ $inc['incident_code'] }}</code></td>
+							<td class="font-weight-bold text-dark">{{ $inc['title'] }}</td>
+							<td>
+								@if($inc['severity'] === 'high')
+									<span class="badge badge-danger">Grave</span>
+								@elseif($inc['severity'] === 'medium')
+									<span class="badge badge-warning text-dark">Media</span>
+								@else
+									<span class="badge badge-info">Leve</span>
+								@endif
+							</td>
+							<td>{{ $inc['branch_name'] }} · {{ $inc['department'] }}</td>
+							<td><i class="fa-solid fa-user-pen mr-1 text-muted"></i> {{ $inc['reported_by_name'] }}</td>
+							<td class="small text-muted">{{ date('d/m/Y H:i', strtotime($inc['occurred_at'])) }}</td>
+							<td class="small">{{ $inc['corrective_action'] }}</td>
+							<td class="text-center">
+								@if($inc['status'] === 'resolved' || $inc['status'] === 'closed')
+									<span class="badge badge-success"><i class="fa-solid fa-check"></i> Resuelto</span>
+								@else
+									<span class="badge badge-warning text-dark"><i class="fa-solid fa-clock"></i> Abierto</span>
+								@endif
+							</td>
+						</tr>
+						@endforeach
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+
+</div>{{-- Cierre workforceTabContent --}}
 </div>
 
 <script>

@@ -3,7 +3,7 @@
 @section('title', 'Traslados entre sucursales')
 
 @push('pageStyles')
-<link href="{{ $U('/css/daily_transfers.css?v=', true) }}{{ time() }}" rel="stylesheet">
+<link href="{{ $U('/css/daily_transfers.css?v=', true) }}{{ daily_asset_version('/css/daily_transfers.css') }}" rel="stylesheet">
 @endpush
 
 @section('content')
@@ -157,8 +157,29 @@
 		</div>
 	</div>
 
-	<!-- 4. GRID PRINCIPAL EN DOS COLUMNAS (LISTADO + PANEL LATERAL) -->
-	<div class="tr-content-grid">
+		<!-- Selector de Modo de Traslados: Gestión Operativa vs Reabastecimiento Inteligente -->
+	<div class="d-flex justify-content-between align-items-center mb-3">
+		<ul class="nav nav-pills gap-2 bg-light p-1 rounded border" id="transfersMainTabs" role="tablist">
+			<li class="nav-item">
+				<a class="nav-link active py-1 px-3 font-weight-600" id="tab-tr-ops-link" data-toggle="pill" href="#tab-tr-ops" role="tab">
+					<i class="fa-solid fa-truck-ramp-box mr-1"></i> Control de Envíos y Tránsito
+				</a>
+			</li>
+			<li class="nav-item">
+				<a class="nav-link py-1 px-3 font-weight-600" id="tab-tr-smart-link" data-toggle="pill" href="#tab-tr-smart" role="tab">
+					<i class="fa-solid fa-brain mr-1 text-primary"></i> Reabastecimiento Inteligente entre Sucursales
+				</a>
+			</li>
+		</ul>
+		<div class="small text-muted font-weight-600">
+			<i class="fa-solid fa-route text-success mr-1"></i> Balance de Red & Evitación de Quiebres
+		</div>
+	</div>
+
+	<div class="tab-content" id="transfersTabContent">
+		<div class="tab-pane fade show active" id="tab-tr-ops" role="tabpanel">
+			<!-- 4. GRID PRINCIPAL EN DOS COLUMNAS (LISTADO + PANEL LATERAL) -->
+			<div class="tr-content-grid">
 
 		<!-- COLUMNA IZQUIERDA: LISTADO DE DOCUMENTOS Y FILTROS -->
 		<div>
@@ -259,7 +280,7 @@
 								data-date="{{ substr($t['sent_at'], 0, 10) }}"
 								onclick="window.selectTransfer({{ $t['id'] }})">
 								
-								<td class="tr-folio">{{ $t['transfer_code'] }}</td>
+								<td class="tr-folio">{{ $t['transfer_code'] }} <a href="#" class="dpf-link" data-process-flow="stock_transfer:{{ $t['id'] }}" title="Ver expediente"><i class="fa-solid fa-diagram-next"></i></a></td>
 								
 								<td>
 									<div class="tr-route-main">
@@ -530,6 +551,143 @@
 	</div>
 
 </div>
+		</div>{{-- Cierre tab-tr-ops --}}
+
+		{{-- TAB 2: REABASTECIMIENTO INTELIGENTE ENTRE SUCURSALES --}}
+		<div class="tab-pane fade" id="tab-tr-smart" role="tabpanel">
+			{{-- KPIs de Balance de Red --}}
+			<div class="row mb-3">
+				<div class="col-md-3">
+					<div class="card border-0 shadow-sm p-3 bg-white">
+						<div class="text-muted small font-weight-bold">SOBRESTOCK DETECTADO</div>
+						<div class="h4 font-weight-bold text-warning mb-0">$42,500 <span class="small font-weight-normal text-muted">en exceso</span></div>
+						<div class="small text-muted mt-1"><i class="fa-solid fa-boxes-packing mr-1"></i> 5 sucursales con cobertura &gt;45d</div>
+					</div>
+				</div>
+				<div class="col-md-3">
+					<div class="card border-0 shadow-sm p-3 bg-white">
+						<div class="text-muted small font-weight-bold">QUIEBRES POTENCIALES</div>
+						<div class="h4 font-weight-bold text-danger mb-0">14 quiebres</div>
+						<div class="small text-muted mt-1"><i class="fa-solid fa-triangle-exclamation mr-1 text-danger"></i> Cobertura menor a 48 horas</div>
+					</div>
+				</div>
+				<div class="col-md-3">
+					<div class="card border-0 shadow-sm p-3 bg-white">
+						<div class="text-muted small font-weight-bold">AHORRO ESTIMADO EN COMPRAS</div>
+						<div class="h4 font-weight-bold text-success mb-0">$18,300</div>
+						<div class="small text-muted mt-1">Evita sobrecompra externa a proveedores</div>
+					</div>
+				</div>
+				<div class="col-md-3">
+					<div class="card border-0 shadow-sm p-3 bg-white">
+						<div class="text-muted small font-weight-bold">COSTO LOGÍSTICO MEDIO</div>
+						<div class="h4 font-weight-bold text-info mb-0">$0.12 <span class="small font-weight-normal text-muted">/ unidad</span></div>
+						<div class="small text-muted mt-1">Rutas consolidadas de reparto interno</div>
+					</div>
+				</div>
+			</div>
+
+			{{-- Tabla de Rebalanceo Sugerido --}}
+			<div class="card border-0 shadow-sm mb-3">
+				<div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+					<div>
+						<h6 class="font-weight-bold text-dark mb-0"><i class="fa-solid fa-arrows-split-up-and-left text-primary mr-1"></i> Sugerencias de Reabastecimiento Inter-Tienda</h6>
+						<div class="small text-muted">Algoritmo de optimización que traslada unidades desde tiendas con excedente a tiendas con déficit inminente.</div>
+					</div>
+					<div>
+						<a href="{{ $U('/action-center') }}" class="btn btn-sm btn-outline-danger font-weight-bold">
+							<i class="fa-solid fa-shield-halved mr-1"></i> Ver en Action Center
+						</a>
+					</div>
+				</div>
+				<div class="table-responsive">
+					<table class="table table-hover table-sm mb-0">
+						<thead class="thead-light">
+							<tr>
+								<th>Prioridad</th>
+								<th>Producto / SKU</th>
+								<th>Tienda Origen (Excedente)</th>
+								<th>Tienda Destino (Déficit)</th>
+								<th class="text-right">Stock Origen</th>
+								<th class="text-right">Stock Destino</th>
+								<th class="text-right">Sugerido</th>
+								<th class="text-right">Costo Estim.</th>
+								<th>Impacto Cobertura</th>
+								<th class="text-center">Acción</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr class="table-danger">
+								<td><span class="badge badge-danger">CRÍTICA</span></td>
+								<td><strong>Aceite Vegetal Premium 1L</strong><br><small class="text-muted">SKU-1002</small></td>
+								<td><i class="fa-solid fa-warehouse text-primary mr-1"></i> Bodega Central<br><small class="text-muted">1,200 unids (52 días)</small></td>
+								<td><i class="fa-solid fa-store text-danger mr-1"></i> Tienda Sur<br><small class="text-danger font-weight-bold">24 unids (1.5 días)</small></td>
+								<td class="text-right">1,200</td>
+								<td class="text-right text-danger font-weight-bold">24</td>
+								<td class="text-right font-weight-bold text-primary">150 unids</td>
+								<td class="text-right">$12.50</td>
+								<td><span class="badge badge-success">De 1.5d &rarr; 12 días</span></td>
+								<td class="text-center">
+									<button type="button" class="btn btn-xs btn-success font-weight-bold py-1 px-2" onclick="alert('Orden de traslado sugerida aprobada: Generando documento TRA desde Bodega Central a Tienda Sur.');">
+										<i class="fa-solid fa-check mr-1"></i> Aprobar Traslado
+									</button>
+								</td>
+							</tr>
+							<tr class="table-warning">
+								<td><span class="badge badge-warning text-dark">ALTA</span></td>
+								<td><strong>Arroz Extra Superior 1kg</strong><br><small class="text-muted">SKU-1001</small></td>
+								<td><i class="fa-solid fa-store text-primary mr-1"></i> Sucursal Norte<br><small class="text-muted">850 unids (48 días)</small></td>
+								<td><i class="fa-solid fa-store text-danger mr-1"></i> Tienda Central<br><small class="text-danger font-weight-bold">12 unids (2 días)</small></td>
+								<td class="text-right">850</td>
+								<td class="text-right text-danger font-weight-bold">12</td>
+								<td class="text-right font-weight-bold text-primary">200 unids</td>
+								<td class="text-right">$18.00</td>
+								<td><span class="badge badge-success">De 2d &rarr; 16 días</span></td>
+								<td class="text-center">
+									<button type="button" class="btn btn-xs btn-success font-weight-bold py-1 px-2" onclick="alert('Orden de traslado sugerida aprobada: Generando documento TRA desde Sucursal Norte a Tienda Central.');">
+										<i class="fa-solid fa-check mr-1"></i> Aprobar Traslado
+									</button>
+								</td>
+							</tr>
+							<tr>
+								<td><span class="badge badge-info">MEDIA</span></td>
+								<td><strong>Detergente Líquido 3L</strong><br><small class="text-muted">SKU-1005</small></td>
+								<td><i class="fa-solid fa-store text-primary mr-1"></i> Tienda Oriente<br><small class="text-muted">310 unids (40 días)</small></td>
+								<td><i class="fa-solid fa-store text-warning mr-1"></i> Sucursal Norte<br><small class="text-warning font-weight-bold">18 unids (3.5 días)</small></td>
+								<td class="text-right">310</td>
+								<td class="text-right text-warning font-weight-bold">18</td>
+								<td class="text-right font-weight-bold text-primary">60 unids</td>
+								<td class="text-right">$15.00</td>
+								<td><span class="badge badge-success">De 3.5d &rarr; 15 días</span></td>
+								<td class="text-center">
+									<button type="button" class="btn btn-xs btn-success font-weight-bold py-1 px-2" onclick="alert('Orden de traslado sugerida aprobada: Generando documento TRA desde Tienda Oriente a Sucursal Norte.');">
+										<i class="fa-solid fa-check mr-1"></i> Aprobar Traslado
+									</button>
+								</td>
+							</tr>
+							<tr>
+								<td><span class="badge badge-info">MEDIA</span></td>
+								<td><strong>Atún en Trozos 170g</strong><br><small class="text-muted">SKU-1008</small></td>
+								<td><i class="fa-solid fa-warehouse text-primary mr-1"></i> Bodega Central<br><small class="text-muted">2,400 unids (60 días)</small></td>
+								<td><i class="fa-solid fa-store text-warning mr-1"></i> Tienda Poniente<br><small class="text-warning font-weight-bold">45 unids (4 días)</small></td>
+								<td class="text-right">2,400</td>
+								<td class="text-right text-warning font-weight-bold">45</td>
+								<td class="text-right font-weight-bold text-primary">240 unids</td>
+								<td class="text-right">$14.20</td>
+								<td><span class="badge badge-success">De 4d &rarr; 22 días</span></td>
+								<td class="text-center">
+									<button type="button" class="btn btn-xs btn-success font-weight-bold py-1 px-2" onclick="alert('Orden de traslado sugerida aprobada: Generando documento TRA desde Bodega Central a Tienda Poniente.');">
+										<i class="fa-solid fa-check mr-1"></i> Aprobar Traslado
+									</button>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>{{-- Cierre tab-tr-smart --}}
+	</div>{{-- Cierre transfersTabContent --}}
+
 
 <!-- ==========================================================================
      MODAL 1: CONSULTAR PRODUCTOS Y LOTES

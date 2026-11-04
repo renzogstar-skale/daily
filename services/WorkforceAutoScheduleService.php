@@ -317,6 +317,13 @@ class WorkforceAutoScheduleService extends BaseService
 		$stmt->execute([':c' => $payrollCode]);
 		$row = $stmt->fetch(\PDO::FETCH_ASSOC);
 
+		if (!$row)
+		{
+			$stmt2 = $db->prepare("SELECT reference_sunday, reference_sunday_phase FROM employees WHERE payroll_code = :c OR id = :id");
+			$stmt2->execute([':c' => $payrollCode, ':id' => intval($payrollCode)]);
+			$row = $stmt2->fetch(\PDO::FETCH_ASSOC);
+		}
+
 		$refSunday = !empty($row['reference_sunday']) ? $row['reference_sunday'] : '2026-11-01';
 		$refPhase = isset($row['reference_sunday_phase']) ? intval($row['reference_sunday_phase']) : 0;
 
@@ -488,6 +495,13 @@ class WorkforceAutoScheduleService extends BaseService
 		$numDays = cal_days_in_month(CAL_GREGORIAN, $month, $year);
 		$startDate = sprintf('%04d-%02d-01', $year, $month);
 		$endDate = sprintf('%04d-%02d-%02d', $year, $month, $numDays);
+
+		$publishedRows = $db->prepare("SELECT COUNT(*) FROM workforce_monthly_schedules WHERE status = 'published' AND shift_date BETWEEN :s AND :e");
+		$publishedRows->execute([':s' => $startDate, ':e' => $endDate]);
+		if (intval($publishedRows->fetchColumn()) > 0)
+		{
+			throw new \Exception('El mes ya está publicado: use el motor de programación para proponer cambios y aprobarlos');
+		}
 
 		// 1. Load the 23 active collaborators
 		$collabStmt = $db->query("SELECT c.*, e.id AS employee_id, e.weekly_hours, e.hourly_cost
@@ -796,7 +810,7 @@ class WorkforceAutoScheduleService extends BaseService
 			$delBank = $db->prepare("DELETE FROM workforce_compensatory_bank WHERE assigned_date BETWEEN :s AND :e OR (status = 'PENDING' AND carried_over_month = :m)");
 			$delBank->execute([':s' => $startDate, ':e' => $endDate, ':m' => $monthStr]);
 
-			$insBank = $db->prepare("INSERT INTO workforce_compensatory_bank (payroll_code, origin_sunday, assigned_date, status, carried_over_month, notes) VALUES (:pcode, :orig, :ass, :st, :co, :n)");
+			$insBank = $db->prepare("INSERT OR REPLACE INTO workforce_compensatory_bank (payroll_code, origin_sunday, assigned_date, status, carried_over_month, notes) VALUES (:pcode, :orig, :ass, :st, :co, :n)");
 
 			foreach ($generatedShifts as $sh)
 			{
@@ -871,6 +885,7 @@ class WorkforceAutoScheduleService extends BaseService
 	{
 		$db = $this->Db();
 		// Delete existing employee_shifts in range
+		$startDate = max($startDate, date('Y-m-d', strtotime('+1 day')));
 		$del = $db->prepare("DELETE FROM employee_shifts WHERE branch_id = :b AND shift_date BETWEEN :s AND :e");
 		$del->execute([':b' => $branchId, ':s' => $startDate, ':e' => $endDate]);
 
@@ -882,15 +897,16 @@ class WorkforceAutoScheduleService extends BaseService
 		           e.position, e.department, 'published', 1
 		    FROM workforce_monthly_schedules m
 		    JOIN employees e ON e.id = m.employee_id
-		    WHERE m.shift_date BETWEEN :s AND :e AND m.shift_code NOT IN ('LIBRE', 'VC')");
-		$ins->execute([':b' => $branchId, ':s' => $startDate, ':e' => $endDate]);
+		    WHERE m.shift_date BETWEEN :s AND :e AND m.shift_type NOT IN ('LIBRE', 'COMPENSATORIO', 'VACACIONES', 'INCAPACIDAD', 'PERMISO') AND e.branch_id = :b2");
+		$ins->execute([':b' => $branchId, ':b2' => $branchId, ':s' => $startDate, ':e' => $endDate]);
 	}
 
 	/* =========================================================================
 	 * 5. CONSULTA Y GESTIÓN DE HORARIOS MENSUALES
 	 * ========================================================================= */
 
-	public function GetMonthSchedule(int $branchId, int $year, int $month): array
+	/** Con $preferDraft muestra el borrador activo del mes en lugar de lo oficial (solo para quien gestiona la programación) */
+	public function GetMonthSchedule(int $branchId, int $year, int $month, bool $preferDraft = false): array
 	{
 		$db = $this->Db();
 		$monthStr = sprintf('%04d-%02d', $year, $month);
@@ -904,7 +920,7 @@ class WorkforceAutoScheduleService extends BaseService
 		if (intval($checkStmt->fetchColumn()) === 0)
 		{
 			// Auto-generate month on demand!
-			$this->GenerateMonth($branchId, $year, $month, true);
+			$this->GenerateMonth($branchId, $year, $month, false);
 		}
 
 		// Load shifts
@@ -920,6 +936,11 @@ class WorkforceAutoScheduleService extends BaseService
 		$stmt = $db->prepare($shiftsSql);
 		$stmt->execute([':s' => $startDate, ':e' => $endDate]);
 		$shifts = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+		$draftId = $preferDraft && $branchId > 0 ? WorkforceScheduleEngineService::GetInstance()->ActiveDraft($branchId, $monthStr) : null;
+		if ($draftId)
+		{
+			$shifts = WorkforceScheduleEngineService::GetInstance()->PeriodRows($branchId, $year, $month)[0];
+		}
 
 		// Group by employee and date
 		$grid = [];
@@ -988,14 +1009,14 @@ class WorkforceAutoScheduleService extends BaseService
 			}
 
 			$h = floatval($s['hours']);
-			if ($s['shift_type'] === 'APERTURA')
+			if ($s['shift_type'] === 'APERTURA' || ($s['shift_type'] === 'INTERMEDIO' && $s['start_time'] < '12:00'))
 			{
 				$statsByEmp[$c]['openings']++;
 				$statsByEmp[$c]['hours_open'] += $h;
 				$dailyCoverage[$d]['openings']++;
 				$totalOpenings++;
 			}
-			elseif ($s['shift_type'] === 'CIERRE')
+			elseif ($s['shift_type'] === 'CIERRE' || $s['shift_type'] === 'INTERMEDIO')
 			{
 				$statsByEmp[$c]['closings']++;
 				$statsByEmp[$c]['hours_close'] += $h;
@@ -1025,8 +1046,16 @@ class WorkforceAutoScheduleService extends BaseService
 				$statsByEmp[$c]['libres']++;
 				$dailyCoverage[$d]['libres']++;
 			}
-			$statsByEmp[$c]['total_hours'] += $h;
-			$dailyCoverage[$d]['scheduled_hours'] += $h;
+			elseif (in_array($s['shift_type'], ['INCAPACIDAD', 'PERMISO'], true))
+			{
+				$dailyCoverage[$d]['available']--;
+			}
+			// Como en la planilla, TH solo suma horas trabajadas: un compensatorio no cuenta
+			if ($s['shift_type'] !== 'COMPENSATORIO')
+			{
+				$statsByEmp[$c]['total_hours'] += $h;
+				$dailyCoverage[$d]['scheduled_hours'] += $h;
+			}
 		}
 
 		// Load collaborators list with stats
@@ -1059,7 +1088,7 @@ class WorkforceAutoScheduleService extends BaseService
 
 			$collabRows[] = [
 				'payroll_code' => $code,
-				'name' => $c['name'],
+				'name' => $c['full_name'] ?: $c['name'],
 				'department' => $c['department'],
 				'cargo' => $c['cargo'],
 				'sunday_group' => $c['sunday_group'],
@@ -1097,7 +1126,8 @@ class WorkforceAutoScheduleService extends BaseService
 				'sundays_3x1_compliance' => '100% (Secuencia continua)',
 				'publication_status' => $pub['status'] ?? 'published'
 			],
-			'publication' => $pub
+			'publication' => $pub,
+			'draft_id' => $draftId
 		];
 	}
 

@@ -104,10 +104,11 @@ class BudgetService extends BaseService
 	}
 
 	// Base del % de merma según WASTE_PCT_BASE
-	public static function WasteBase(float $netSales, float $tax, float $cogs): array
+	// $grossSales = ventas con IVA (sales.total_amount), como lo pasan todos los llamadores; ventas netas = con IVA − IVA
+	public static function WasteBase(float $grossSales, float $tax, float $cogs): array
 	{
 		$key = defined('GROCY_WASTE_PCT_BASE') && isset(self::BASES[GROCY_WASTE_PCT_BASE]) ? GROCY_WASTE_PCT_BASE : 'net_sales';
-		$amount = $key === 'gross_sales' ? $netSales + $tax : ($key === 'cogs' ? $cogs : $netSales);
+		$amount = $key === 'gross_sales' ? $grossSales : ($key === 'cogs' ? $cogs : $grossSales - $tax);
 		return ['key' => $key, 'label' => self::BASES[$key], 'amount' => $amount];
 	}
 

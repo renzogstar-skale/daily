@@ -31,22 +31,33 @@ class KardexController extends BaseController
 		// Enrich anomalies with product, location, branch, and stock_log details
 		$enrichedItems = [];
 		$uniqueMovementsMap = [];
-		foreach ($anomaliesRaw['items'] as $item)
+		$logsById = [];
+		$logIds = array_map('intval', array_column($anomaliesRaw['items'], 'stock_log_id'));
+		foreach (array_chunk(array_values(array_unique($logIds)), 500) as $idChunk)
 		{
-			$logId = intval($item['stock_log_id']);
-			$uniqueMovementsMap[$logId] = true;
-			
-			$logStmt = $dbRaw->prepare('
+			$logRows = $dbRaw->query('
 				SELECT l.*, loc.name AS location_name, b.name AS branch_name, p.sku, qu.name AS qu_name
 				FROM stock_log l
 				LEFT JOIN products p ON p.id = l.product_id
 				LEFT JOIN quantity_units qu ON qu.id = p.qu_id_stock
 				LEFT JOIN locations loc ON loc.id = l.location_id
 				LEFT JOIN branches b ON b.id = loc.branch_id
-				WHERE l.id = :id
-			');
-			$logStmt->execute([':id' => $logId]);
-			$logData = $logStmt->fetch(\PDO::FETCH_ASSOC) ?: [];
+				WHERE l.id IN (' . implode(',', $idChunk) . ')
+			')->fetchAll(\PDO::FETCH_ASSOC);
+			foreach ($logRows as $logRow)
+			{
+				$logsById[intval($logRow['id'])] = $logRow;
+			}
+		}
+		$documents = KardexService::GetInstance()->ResolveDocuments(array_values(array_unique(array_filter(array_column($logsById, 'transaction_id')))));
+		$candidatesByProduct = [];
+
+		foreach ($anomaliesRaw['items'] as $item)
+		{
+			$logId = intval($item['stock_log_id']);
+			$uniqueMovementsMap[$logId] = true;
+
+			$logData = $logsById[$logId] ?? [];
 
 			$type = $item['type'];
 			$label = match ($type) {
@@ -93,20 +104,19 @@ class KardexController extends BaseController
 			};
 
 			$txId = $logData['transaction_id'] ?? null;
-			$document = null;
-			if ($txId)
-			{
-				$resolved = KardexService::GetInstance()->ResolveDocuments([$txId]);
-				$document = $resolved[$txId] ?? null;
-			}
+			$document = $txId ? ($documents[$txId] ?? null) : null;
 
 			// Candidate waste cases for linking if waste_without_case
 			$candidateWasteCases = [];
 			if ($type === 'waste_without_case' && !empty($item['product_id']))
 			{
-				$cwStmt = $dbRaw->prepare("SELECT id, IFNULL(case_number, 'MRM-' || id) AS case_number, created_timestamp, total_cost, amount FROM waste_records WHERE product_id = :pid AND (transaction_id IS NULL OR transaction_id = '') ORDER BY id DESC LIMIT 5");
-				$cwStmt->execute([':pid' => $item['product_id']]);
-				$candidateWasteCases = $cwStmt->fetchAll(\PDO::FETCH_ASSOC);
+				if (!isset($candidatesByProduct[$item['product_id']]))
+				{
+					$cwStmt = $dbRaw->prepare("SELECT id, IFNULL(case_number, 'MRM-' || id) AS case_number, created_timestamp, total_cost, amount FROM waste_records WHERE product_id = :pid AND (transaction_id IS NULL OR transaction_id = '') ORDER BY id DESC LIMIT 5");
+					$cwStmt->execute([':pid' => $item['product_id']]);
+					$candidatesByProduct[$item['product_id']] = $cwStmt->fetchAll(\PDO::FETCH_ASSOC);
+				}
+				$candidateWasteCases = $candidatesByProduct[$item['product_id']];
 			}
 
 			$enrichedItems[] = array_merge($item, [

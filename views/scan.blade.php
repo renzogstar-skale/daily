@@ -102,6 +102,17 @@
 			</div>
 		</a>
 		@endif
+
+		{{-- Auditoría de Etiquetas --}}
+		<a href="#" class="daily-op-card" data-mode="price-audit" role="tab" id="op-tab-price-audit" onclick="event.preventDefault(); window.togglePriceAuditMode();">
+			<div class="daily-op-card-icon text-warning">
+				<i class="fa-solid fa-tags"></i>
+			</div>
+			<div>
+				<div class="daily-op-card-title">Auditoría de Etiquetas</div>
+				<div class="daily-op-card-subtitle">UPC vs Góndola y POS</div>
+			</div>
+		</a>
 	</div>
 
 	{{-- Fila Principal: Estación de Trabajo + Paneles Laterales --}}
@@ -318,9 +329,143 @@
 					</div>
 				</div>
 			</div>
-		</div>
+						{{-- Panel de Auditoría de Etiquetas (UPC vs Góndola y POS) --}}
+				<div class="card mt-3 d-none border-0 shadow-sm" id="sc-price-audit-panel">
+					<div class="card-header bg-white d-flex justify-content-between align-items-center py-3 border-bottom">
+						<div>
+							<span class="font-weight-700 text-dark"><i class="fa-solid fa-tags text-warning mr-1"></i> Auditoría de Precios y Etiquetas en Góndola</span>
+							<div class="small text-muted">Contrasta el precio registrado en POS con la etiqueta física en estante.</div>
+						</div>
+						<span class="badge badge-warning text-dark font-weight-600 px-2 py-1">Auditoría en Vivo</span>
+					</div>
+					<div class="card-body p-3">
+						<form id="sc-price-audit-form" autocomplete="off" onsubmit="event.preventDefault(); window.registerPriceAudit();">
+							<div class="row">
+								<div class="col-md-6 form-group">
+									<label class="small font-weight-600 text-muted mb-1">UPC / Código Escaneado</label>
+									<div class="input-group input-group-sm">
+										<input type="text" class="form-control" id="audit-upc" placeholder="Escanea código del producto..." value="7750123456789">
+										<div class="input-group-append">
+											<button class="btn btn-primary" type="button" onclick="window.fetchAuditProduct()"><i class="fa-solid fa-magnifying-glass"></i></button>
+										</div>
+									</div>
+								</div>
+								<div class="col-md-6 form-group">
+									<label class="small font-weight-600 text-muted mb-1">Producto / SKU</label>
+									<input type="text" class="form-control form-control-sm" id="audit-product-name" value="Aceite Vegetal Premium 1L (SKU-1002)" readonly>
+								</div>
+							</div>
 
-		{{-- Columna Derecha: Sesiones Recientes + Estado de Lecturas --}}
+							<div class="row">
+								<div class="col-md-3 form-group">
+									<label class="small font-weight-600 text-muted mb-1">Precio POS / Sistema</label>
+									<div class="input-group input-group-sm">
+										<div class="input-group-prepend"><span class="input-group-text">$</span></div>
+										<input type="number" step="0.01" class="form-control font-weight-bold" id="audit-pos-price" value="4.50" readonly>
+									</div>
+								</div>
+								<div class="col-md-3 form-group">
+									<label class="small font-weight-600 text-muted mb-1">Precio en Góndola (Físico)</label>
+									<div class="input-group input-group-sm">
+										<div class="input-group-prepend"><span class="input-group-text">$</span></div>
+										<input type="number" step="0.01" class="form-control font-weight-bold text-primary" id="audit-shelf-price" value="4.90" oninput="window.calcPriceDiff()">
+									</div>
+								</div>
+								<div class="col-md-3 form-group">
+									<label class="small font-weight-600 text-muted mb-1">Diferencia ($ / %)</label>
+									<input type="text" class="form-control form-control-sm font-weight-bold text-danger bg-light" id="audit-diff-display" value="+$0.40 (+8.9%)" readonly>
+								</div>
+								<div class="col-md-3 form-group">
+									<label class="small font-weight-600 text-muted mb-1">Causal de Discrepancia</label>
+									<select class="custom-select custom-select-sm" id="audit-cause">
+										<option value="promo_expired">Promoción vencida en góndola</option>
+										<option value="price_changed">Precio POS actualizado sin cambio físico</option>
+										<option value="wrong_tag">Etiqueta de otro producto</option>
+										<option value="damage_tag">Etiqueta ilegible / dañada</option>
+									</select>
+								</div>
+							</div>
+
+							<div class="row mb-3">
+								<div class="col-md-6">
+									<label class="small font-weight-600 text-muted mb-1">Auditor Responsable</label>
+									<input type="text" class="form-control form-control-sm" id="audit-auditor" value="Supervisor Turno Mañana">
+								</div>
+								<div class="col-md-6">
+									<label class="small font-weight-600 text-muted mb-1">Evidencia / Observación</label>
+									<input type="text" class="form-control form-control-sm" id="audit-obs" placeholder="Ej: Góndola Pasillo 3 Nivel 2, precio anterior visible">
+								</div>
+							</div>
+
+							<div class="d-flex justify-content-between align-items-center">
+								<div>
+									<button type="submit" class="btn btn-sm btn-success font-weight-600">
+										<i class="fa-solid fa-floppy-disk mr-1"></i> Registrar Discrepancia
+									</button>
+									<button type="button" class="btn btn-sm btn-outline-primary ml-1" onclick="alert('Solicitud de reimpresión de etiqueta enviada a la impresora Zebra de tienda.');">
+										<i class="fa-solid fa-print mr-1"></i> Reimprimir Etiqueta
+									</button>
+								</div>
+								<a href="{{ $U('/action-center') }}" class="btn btn-sm btn-outline-danger">
+									<i class="fa-solid fa-arrow-up-right-from-square mr-1"></i> Escalar a Action Center
+								</a>
+							</div>
+						</form>
+
+						{{-- Historial de Auditorías de Precios en el Turno --}}
+						<div class="mt-4">
+							<div class="font-weight-700 text-dark small mb-2"><i class="fa-solid fa-clock-rotate-left mr-1"></i> Etiquetas Auditadas en este Turno</div>
+							<div class="table-responsive">
+								<table class="table table-sm table-hover border">
+									<thead class="thead-light">
+										<tr>
+											<th>Hora</th>
+											<th>UPC / Producto</th>
+											<th class="text-right">Precio POS</th>
+											<th class="text-right">Góndola</th>
+											<th class="text-right">Diferencia</th>
+											<th>Causal</th>
+											<th>Estado</th>
+										</tr>
+									</thead>
+									<tbody id="audit-history-tbody">
+										<tr>
+											<td>10:14</td>
+											<td><strong>Leche Entera 1L</strong> <small class="text-muted">(77500123)</small></td>
+											<td class="text-right">$1.85</td>
+											<td class="text-right">$1.85</td>
+											<td class="text-right text-success">$0.00</td>
+											<td><span class="badge badge-light border">Conforme</span></td>
+											<td><span class="badge badge-success"><i class="fa-solid fa-check"></i> Correcto</span></td>
+										</tr>
+										<tr class="table-warning">
+											<td>09:48</td>
+											<td><strong>Aceite Vegetal 1L</strong> <small class="text-muted">(77501234)</small></td>
+											<td class="text-right">$4.50</td>
+											<td class="text-right">$4.90</td>
+											<td class="text-right text-danger font-weight-bold">+$0.40 (+8.9%)</td>
+											<td><small>Promo vencida en góndola</small></td>
+											<td><span class="badge badge-warning text-dark"><i class="fa-solid fa-triangle-exclamation"></i> Reetiquetar</span></td>
+										</tr>
+										<tr class="table-danger">
+											<td>09:12</td>
+											<td><strong>Arroz Extra 5kg</strong> <small class="text-muted">(77508899)</small></td>
+											<td class="text-right">$8.20</td>
+											<td class="text-right">$7.50</td>
+											<td class="text-right text-danger font-weight-bold">-$0.70 (-8.5%)</td>
+											<td><small>Precio POS no aplicado a físico</small></td>
+											<td><span class="badge badge-danger"><i class="fa-solid fa-bell"></i> Escalado</span></td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+				</div>
+		</div>
+	</div>
+
+	{{-- Columna Derecha: Sesiones Recientes + Estado de Lecturas --}}
 		<div class="col-lg-5 mb-3">
 			{{-- Card Sesiones Recientes --}}
 			<div class="daily-side-card">
@@ -625,5 +770,61 @@
 		initialCode: {!! json_encode($initialCode) !!},
 		zxingUrl: '{{ $U('/packages/@zxing/library/umd/index.min.js?v=', true) }}{{ $version }}'
 	};
+
+window.togglePriceAuditMode = function() {
+	var panel = document.getElementById('sc-price-audit-panel');
+	var hero = document.getElementById('sc-hero-empty');
+	var session = document.getElementById('sc-session');
+	var setup = document.getElementById('sc-setup');
+	var cards = document.querySelectorAll('.daily-op-card');
+	cards.forEach(c => c.classList.remove('is-active'));
+	document.getElementById('op-tab-price-audit').classList.add('is-active');
+
+	if (panel) {
+		panel.classList.remove('d-none');
+	}
+	if (hero) hero.classList.add('d-none');
+	if (session) session.classList.add('d-none');
+	if (setup) setup.classList.add('d-none');
+	var title = document.getElementById('sc-workstation-title');
+	if (title) title.innerText = 'Auditoría de Etiquetas y Precios en Góndola';
+};
+
+window.calcPriceDiff = function() {
+	var pos = parseFloat(document.getElementById('audit-pos-price').value) || 0;
+	var shelf = parseFloat(document.getElementById('audit-shelf-price').value) || 0;
+	var diff = shelf - pos;
+	var pct = pos > 0 ? ((diff / pos) * 100).toFixed(1) : 0;
+	var sign = diff > 0 ? '+' : '';
+	var disp = document.getElementById('audit-diff-display');
+	disp.value = sign + '$' + diff.toFixed(2) + ' (' + sign + pct + '%)';
+	if (diff === 0) {
+		disp.className = 'form-control form-control-sm font-weight-bold text-success bg-light';
+	} else {
+		disp.className = 'form-control form-control-sm font-weight-bold text-danger bg-light';
+	}
+};
+
+window.registerPriceAudit = function() {
+	var prod = document.getElementById('audit-product-name').value;
+	var pos = document.getElementById('audit-pos-price').value;
+	var shelf = document.getElementById('audit-shelf-price').value;
+	var diff = document.getElementById('audit-diff-display').value;
+	var cause = document.getElementById('audit-cause').value;
+	var now = new Date();
+	var timeStr = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+
+	var tr = document.createElement('tr');
+	tr.className = 'table-warning';
+	tr.innerHTML = '<td>' + timeStr + '</td>' +
+		'<td><strong>' + prod + '</strong></td>' +
+		'<td class="text-right">$' + pos + '</td>' +
+		'<td class="text-right">$' + shelf + '</td>' +
+		'<td class="text-right text-danger font-weight-bold">' + diff + '</td>' +
+		'<td><small>' + cause + '</small></td>' +
+		'<td><span class="badge badge-warning text-dark">Registrado</span></td>';
+	document.getElementById('audit-history-tbody').prepend(tr);
+	alert('Discrepancia registrada exitosamente.');
+};
 </script>
 @stop

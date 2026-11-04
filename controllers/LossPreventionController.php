@@ -7,6 +7,7 @@ use Grocy\Controllers\Users\User;
 use Grocy\Helpers\DairyAccess;
 use Grocy\Services\AlertCenterService;
 use Grocy\Services\DatabaseService;
+use Grocy\Services\InventoryControlService;
 use Grocy\Services\LossPreventionService;
 use Grocy\Services\RecallService;
 use Grocy\Services\StoreAuditService;
@@ -48,15 +49,16 @@ class LossPreventionController extends BaseController
 	public function InventoryControl(Request $request, Response $response, array $args)
 	{
 		$branchId = $this->BranchParam($request, true);
-		$lp = LossPreventionService::GetInstance();
-		return $this->RenderPage($response, 'inventory_control', [
+		$queryParams = $request->getQueryParams();
+		$icService = InventoryControlService::GetInstance();
+		$controlData = $icService->GetControlData($branchId, $queryParams);
+
+		return $this->RenderPage($response, 'inventory_control', array_merge($controlData, [
 			'branchId' => $branchId,
 			'branches' => $this->Branches(),
-			'phantom' => $lp->PhantomStock($branchId),
-			'abcxyz' => $lp->AbcXyz($branchId),
-			'stagnant' => $lp->StagnantLots($branchId),
 			'canCount' => DairyAccess::HasAny([User::PERMISSION_STOCK_INVENTORY]),
-		]);
+			'canAdjust' => DairyAccess::HasAny([User::PERMISSION_STOCK_EDIT, User::PERMISSION_WASTE_APPROVE]),
+		]));
 	}
 
 	public function Recalls(Request $request, Response $response, array $args)

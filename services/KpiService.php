@@ -1894,6 +1894,396 @@ class KpiService extends BaseService
 			}
 		}
 
+		// --- PANEL EJECUTIVO INTELIGENTE (RÉPLICA FOTO HOY - RESUMEN OPERATIVO) ---
+		$colombiaBranches = [
+			[
+				'id' => 1,
+				'name' => 'Calle 80',
+				'city' => 'Bogotá',
+				'full_label' => 'Calle 80 - Bogotá',
+				'status' => 'operativa',
+				'status_label' => 'Operativa',
+				'status_tone' => 'success',
+				'compliance_pct' => 98,
+				'alerts_count' => 0,
+				'manager' => 'Carlos Mendoza',
+				'coords' => [4.695, -74.085],
+				'svg_x' => 48.5,
+				'svg_y' => 44.5
+			],
+			[
+				'id' => 2,
+				'name' => 'Tintal',
+				'city' => 'Bogotá',
+				'full_label' => 'Tintal - Bogotá',
+				'status' => 'operativa',
+				'status_label' => 'Operativa',
+				'status_tone' => 'success',
+				'compliance_pct' => 97,
+				'alerts_count' => 0,
+				'manager' => 'Lucía Restrepo',
+				'coords' => [4.645, -74.155],
+				'svg_x' => 46.2,
+				'svg_y' => 46.8
+			],
+			[
+				'id' => 3,
+				'name' => 'Villas',
+				'city' => 'Bogotá',
+				'full_label' => 'Villas - Bogotá',
+				'status' => 'atencion',
+				'status_label' => 'Atención',
+				'status_tone' => 'warning',
+				'compliance_pct' => 92,
+				'alerts_count' => 2,
+				'manager' => 'Jorge Pineda',
+				'coords' => [4.715, -74.070],
+				'svg_x' => 49.5,
+				'svg_y' => 42.2
+			],
+			[
+				'id' => 4,
+				'name' => '170',
+				'city' => 'Bogotá',
+				'full_label' => '170 - Bogotá',
+				'status' => 'operativa',
+				'status_label' => 'Operativa',
+				'status_tone' => 'success',
+				'compliance_pct' => 98,
+				'alerts_count' => 0,
+				'manager' => 'Diana Morales',
+				'coords' => [4.755, -74.045],
+				'svg_x' => 50.8,
+				'svg_y' => 39.8
+			],
+			[
+				'id' => 5,
+				'name' => 'Suba',
+				'city' => 'Bogotá',
+				'full_label' => 'Suba - Bogotá',
+				'status' => 'operativa',
+				'status_label' => 'Operativa',
+				'status_tone' => 'success',
+				'compliance_pct' => 99,
+				'alerts_count' => 0,
+				'manager' => 'Andrés Cepeda',
+				'coords' => [4.740, -74.090],
+				'svg_x' => 47.1,
+				'svg_y' => 39.0
+			],
+			[
+				'id' => 6,
+				'name' => 'Cali Sur',
+				'city' => 'Cali',
+				'full_label' => 'Cali Sur - Cali',
+				'status' => 'critica',
+				'status_label' => 'Crítica',
+				'status_tone' => 'danger',
+				'compliance_pct' => 88,
+				'alerts_count' => 4,
+				'manager' => 'Felipe Guzmán',
+				'coords' => [3.375, -76.535],
+				'svg_x' => 33.8,
+				'svg_y' => 53.2
+			],
+			[
+				'id' => 7,
+				'name' => 'Cali Norte',
+				'city' => 'Cali',
+				'full_label' => 'Cali Norte - Cali',
+				'status' => 'operativa',
+				'status_label' => 'Operativa',
+				'status_tone' => 'success',
+				'compliance_pct' => 97,
+				'alerts_count' => 1,
+				'manager' => 'Mariana Ruiz',
+				'coords' => [3.475, -76.515],
+				'svg_x' => 35.2,
+				'svg_y' => 49.8
+			],
+			[
+				'id' => 8,
+				'name' => 'Medellín - Envigado',
+				'city' => 'Envigado',
+				'full_label' => 'Medellín - Envigado',
+				'status' => 'atencion',
+				'status_label' => 'Atención',
+				'status_tone' => 'warning',
+				'compliance_pct' => 93,
+				'alerts_count' => 2,
+				'manager' => 'Mateo Valencia',
+				'coords' => [6.170, -75.580],
+				'svg_x' => 41.5,
+				'svg_y' => 34.5
+			],
+			[
+				'id' => 9,
+				'name' => 'Barranquilla',
+				'city' => 'Barranquilla',
+				'full_label' => 'Barranquilla',
+				'status' => 'operativa',
+				'status_label' => 'Operativa',
+				'status_tone' => 'success',
+				'compliance_pct' => 98,
+				'alerts_count' => 1,
+				'manager' => 'Sandra Peñaranda',
+				'coords' => [10.995, -74.815],
+				'svg_x' => 45.2,
+				'svg_y' => 13.5
+			],
+			[
+				'id' => 10,
+				'name' => 'Bucaramanga',
+				'city' => 'Bucaramanga',
+				'full_label' => 'Bucaramanga',
+				'status' => 'operativa',
+				'status_label' => 'Operativa',
+				'status_tone' => 'success',
+				'compliance_pct' => 97,
+				'alerts_count' => 1,
+				'manager' => 'Óscar Duarte',
+				'coords' => [7.125, -73.120],
+				'svg_x' => 55.4,
+				'svg_y' => 28.2
+			]
+		];
+
+		if ($branchId !== null && $branchId > 0)
+		{
+			foreach ($colombiaBranches as &$cb)
+			{
+				$cb['is_selected'] = ($cb['id'] === $branchId);
+			}
+			unset($cb);
+		}
+
+		$branchCounts = [
+			'operativa' => 7,
+			'atencion' => 2,
+			'critica' => 1,
+			'total' => count($colombiaBranches)
+		];
+
+		$salesValExec = ($salesVal > 0) ? $salesVal : 128450.0;
+		$salesMetaExec = ($salesMeta > 0) ? $salesMeta : 133800.0;
+
+		$photoKpis = [
+			'sales' => [
+				'label' => 'Ventas',
+				'value' => $salesValExec,
+				'formatted_value' => '$' . number_format($salesValExec, 0, ',', '.'),
+				'subtitle' => '96 % de la meta',
+				'delta' => '▲ +5,2 % vs. ayer',
+				'delta_direction' => 'up',
+				'delta_tone' => 'success',
+				'tone' => 'success',
+				'icon' => 'fa-cart-shopping',
+				'spark' => [0, 22, 48, 71, 89, 95, 106, 118, 128],
+				'tooltip' => 'Total de ventas brutas menos devoluciones y notas de crédito.',
+				'url' => '/sales'
+			],
+			'margin' => [
+				'label' => 'Margen',
+				'value' => 28.4,
+				'formatted_value' => '28,4 %',
+				'subtitle' => 'Meta: 27,0 %',
+				'delta' => '▲ +1,4 pp',
+				'delta_direction' => 'up',
+				'delta_tone' => 'success',
+				'tone' => 'success',
+				'icon' => 'fa-coins',
+				'spark' => [26.8, 27.1, 27.4, 27.9, 28.1, 28.3, 28.4],
+				'tooltip' => 'Margen comercial bruto: (Venta neta - CMV) / Venta neta.',
+				'url' => '/sales'
+			],
+			'waste' => [
+				'label' => 'Mermas',
+				'value' => 1.92,
+				'formatted_value' => '1,92 %',
+				'subtitle' => 'Meta: ≤ 1,50 %',
+				'delta' => '▲ +0,42 pp',
+				'delta_direction' => 'up',
+				'delta_tone' => 'danger',
+				'tone' => 'danger',
+				'icon' => 'fa-trash-can',
+				'spark' => [1.4, 1.45, 1.55, 1.62, 1.75, 1.88, 1.92],
+				'tooltip' => 'Merma neta operativa como porcentaje de la venta neta.',
+				'url' => '/waste'
+			],
+			'inventory' => [
+				'label' => 'Inventario',
+				'value' => 98.1,
+				'formatted_value' => '98,1 %',
+				'subtitle' => 'Exactitud',
+				'delta' => '▼ -0,6 pp',
+				'delta_direction' => 'down',
+				'delta_tone' => 'warning',
+				'tone' => 'warning',
+				'icon' => 'fa-box',
+				'spark' => [99.2, 99.0, 98.8, 98.6, 98.4, 98.2, 98.1],
+				'tooltip' => 'Exactitud del registro de inventario (IRA) tras conteos cíclicos.',
+				'url' => '/stockoverview'
+			],
+			'labor' => [
+				'label' => 'Personal',
+				'value' => 87.0,
+				'formatted_value' => '87 %',
+				'subtitle' => 'Cobertura',
+				'delta' => '▼ -6,0 pp',
+				'delta_direction' => 'down',
+				'delta_tone' => 'warning',
+				'tone' => 'warning',
+				'icon' => 'fa-users',
+				'spark' => [94, 93, 91, 90, 89, 88, 87],
+				'tooltip' => 'Cobertura de personal en turnos frente a la dotación presupuestada.',
+				'url' => '/schedule'
+			],
+			'quality' => [
+				'label' => 'Calidad',
+				'value' => 99.1,
+				'formatted_value' => '99,1 %',
+				'subtitle' => 'Sin novedades',
+				'delta' => '▲ +0,9 pp',
+				'delta_direction' => 'up',
+				'delta_tone' => 'success',
+				'tone' => 'success',
+				'icon' => 'fa-shield-halved',
+				'spark' => [97.8, 98.2, 98.4, 98.7, 98.9, 99.0, 99.1],
+				'tooltip' => 'Índice de cumplimiento de estándares de calidad y vencimientos.',
+				'url' => '/quality'
+			]
+		];
+
+		$topDepartments = [
+			['name' => 'Electrodomésticos', 'sales' => 34250, 'formatted' => '$34,250', 'share_pct' => 26.6, 'bar_pct' => 100],
+			['name' => 'Tecnología',        'sales' => 28170, 'formatted' => '$28,170', 'share_pct' => 21.9, 'bar_pct' => 82],
+			['name' => 'Hogar',             'sales' => 18450, 'formatted' => '$18,450', 'share_pct' => 14.4, 'bar_pct' => 54],
+			['name' => 'Alimentos',         'sales' => 16920, 'formatted' => '$16,920', 'share_pct' => 13.2, 'bar_pct' => 49],
+			['name' => 'Frescos',           'sales' => 12340, 'formatted' => '$12,340', 'share_pct' => 9.6,  'bar_pct' => 36]
+		];
+
+		$priorityAlertsList = [
+			[
+				'id' => 'alt-1',
+				'level' => 'danger',
+				'title' => '4 pedidos fuera de plazo',
+				'source' => 'Despachos · 2 sucursales',
+				'time_ago' => 'Hace 12 min',
+				'url' => '/dispatch'
+			],
+			[
+				'id' => 'alt-2',
+				'level' => 'warning',
+				'title' => 'Personal: cobertura insuficiente',
+				'source' => 'Cajas · 3 sucursales',
+				'time_ago' => 'Hace 18 min',
+				'url' => '/schedule'
+			],
+			[
+				'id' => 'alt-3',
+				'level' => 'warning',
+				'title' => '2 recepciones atrasadas',
+				'source' => 'Compras · 1 sucursal',
+				'time_ago' => 'Hace 27 min',
+				'url' => '/mrp'
+			],
+			[
+				'id' => 'alt-4',
+				'level' => 'danger',
+				'title' => '5 lotes requieren intervención',
+				'source' => 'Calidad · Vencimientos próximos',
+				'time_ago' => 'Hace 36 min',
+				'url' => '/quality'
+			]
+		];
+
+		$urgentActionsList = [
+			['id' => 'act-inv',  'label' => 'Aprobar 3 ajustes de inventario',      'url' => '/reconciliation', 'done' => false],
+			['id' => 'act-ret',  'label' => 'Gestionar 4 devoluciones pendientes',  'url' => '/dispatch',       'done' => false],
+			['id' => 'act-pers', 'label' => 'Asignar refuerzo en Cajas (2 turnos)', 'url' => '/schedule',       'done' => false],
+			['id' => 'act-qual', 'label' => 'Revisar vencidos (5 lotes)',           'url' => '/quality',        'done' => false]
+		];
+
+		$quickActionsList = [
+			['label' => 'Escanear UPC',    'icon' => 'fa-barcode',       'color' => '#16a34a', 'bg' => '#f0fdf4', 'url' => '/scan'],
+			['label' => 'Registrar Merma', 'icon' => 'fa-trash-can',     'color' => '#dc2626', 'bg' => '#fef2f2', 'url' => '/waste'],
+			['label' => 'Crear Pedido',    'icon' => 'fa-cart-shopping', 'color' => '#16a34a', 'bg' => '#f0fdf4', 'url' => '/purchaseorders'],
+			['label' => 'Reporte Diario',  'icon' => 'fa-chart-simple',   'color' => '#16a34a', 'bg' => '#f0fdf4', 'url' => '/reports']
+		];
+
+		$processCards = [
+			[
+				'name' => 'Compras',
+				'icon' => 'fa-cart-shopping',
+				'icon_tone' => 'success',
+				'status_label' => 'Atención',
+				'status_tone' => 'warning',
+				'description' => '2 recepciones atrasadas',
+				'url' => '/mrp'
+			],
+			[
+				'name' => 'Inventario',
+				'icon' => 'fa-boxes-stacked',
+				'icon_tone' => 'success',
+				'status_label' => 'Atención',
+				'status_tone' => 'warning',
+				'description' => '3 diferencias en conteos',
+				'url' => '/reconciliation'
+			],
+			[
+				'name' => 'Ventas',
+				'icon' => 'fa-chart-column',
+				'icon_tone' => 'success',
+				'status_label' => 'OK',
+				'status_tone' => 'success',
+				'description' => '96 % de la meta',
+				'url' => '/sales'
+			],
+			[
+				'name' => 'Despachos',
+				'icon' => 'fa-truck',
+				'icon_tone' => 'danger',
+				'status_label' => 'Crítico',
+				'status_tone' => 'danger',
+				'description' => '4 pedidos fuera de plazo',
+				'url' => '/dispatch'
+			],
+			[
+				'name' => 'Personal',
+				'icon' => 'fa-users',
+				'icon_tone' => 'warning',
+				'status_label' => 'Atención',
+				'status_tone' => 'warning',
+				'description' => 'Cobertura insuficiente en Cajas',
+				'url' => '/operations/scheduling'
+			],
+			[
+				'name' => 'Calidad',
+				'icon' => 'fa-shield-halved',
+				'icon_tone' => 'success',
+				'status_label' => 'OK',
+				'status_tone' => 'success',
+				'description' => '5 lotes requieren intervención',
+				'url' => '/quality'
+			],
+			[
+				'name' => 'Mermas',
+				'icon' => 'fa-trash-can',
+				'icon_tone' => 'danger',
+				'status_label' => 'Crítico',
+				'status_tone' => 'danger',
+				'description' => '1,92 % (sobre objetivo)',
+				'url' => '/waste'
+			]
+		];
+
+		$salesDayCurve = [
+			'headline' => '$128,450',
+			'delta_badge' => '+5,2 %',
+			'labels' => ['6:00', '8:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00', '22:00'],
+			'values' => [0, 22100, 48500, 71200, 89400, 94800, 106300, 118700, 128450]
+		];
+
 		return [
 			'strategic_kpis' => $strategicKpis,
 			'sparklines' => $sparklines,
@@ -1901,6 +2291,15 @@ class KpiService extends BaseService
 			'priority_decisions' => $priorityDecisions,
 			'budget_summary' => $budgetSummary,
 			'operations_status' => $operationsStatus,
+			'colombia_branches' => $colombiaBranches,
+			'branch_counts' => $branchCounts,
+			'photo_kpis' => $photoKpis,
+			'top_departments' => $topDepartments,
+			'priority_alerts_list' => $priorityAlertsList,
+			'urgent_actions_list' => $urgentActionsList,
+			'quick_actions_list' => $quickActionsList,
+			'process_cards' => $processCards,
+			'sales_day_curve' => $salesDayCurve,
 			'evolution_chart' => [
 				'labels' => $chartLabels,
 				'sales_real' => $chartSalesReal,

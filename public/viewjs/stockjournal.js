@@ -6,6 +6,32 @@
 	].concat($.fn.dataTable.defaults.columnDefs)
 });
 $('#stock-journal-table tbody').removeClass("d-none");
+
+// El menú de cada fila se arma al abrirlo (2500 menús en el HTML pesaban 11 MB)
+$('#stock-journal-table').on('show.bs.dropdown', '.dropdown', function ()
+{
+	var menu = $(this).find('.table-inline-menu');
+	if (menu.children().length > 0)
+	{
+		return;
+	}
+
+	var productId = String(menu.data('product-id'));
+	var productName = encodeURIComponent(menu.attr('data-product-name'));
+	menu.html($('#stock-journal-row-menu').html().replaceAll('__PID__', productId).replaceAll('__PNAME__', productName));
+
+	$(Grocy.UserPermissions).each(function (index, item)
+	{
+		if (item.has_permission == 0)
+		{
+			menu.find('.permission-' + item.permission_name).addClass('disabled').addClass('not-allowed');
+		}
+	});
+	menu.find('a.link-return').not(".btn").each(function ()
+	{
+		$(this).attr('href', $(this).data('href') + '?returnto=' + encodeURIComponent(Grocy.CurrentUrlRelative));
+	});
+});
 stockJournalTable.columns.adjust().draw();
 
 $("#product-filter").on("change", function ()

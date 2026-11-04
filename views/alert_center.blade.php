@@ -4,7 +4,7 @@
 @section('title', 'Centro de Alertas · DAILY')
 
 @push('pageStyles')
-<link href="{{ $U('/css/dairy_alerts.css?v=', true) }}{{ time() }}" rel="stylesheet">
+<link href="{{ $U('/css/dairy_alerts.css?v=', true) }}{{ daily_asset_version('/css/dairy_alerts.css') }}" rel="stylesheet">
 @endpush
 
 @section('content')
@@ -839,5 +839,5 @@
 {{-- Una sola carga del script, después de jQuery y sin caché obsoleta (antes se cargaba dos veces y la primera fallaba) --}}
 @php $viewJsExists = false; @endphp
 @push('pageScripts')
-<script src="{{ $U('/viewjs/alert_center.js?v=', true) }}{{ time() }}"></script>
+<script src="{{ $U('/viewjs/alert_center.js?v=', true) }}{{ daily_asset_version('/viewjs/alert_center.js') }}"></script>
 @endpush

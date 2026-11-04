@@ -1,4 +1,12 @@
-﻿var CurrentProductDetails;
+﻿// La vista Conteos Físicos 360° ya no incluye el formulario clásico de inventario
+(function ()
+{
+if (!Grocy.Components.ProductPicker)
+{
+	return;
+}
+
+var CurrentProductDetails;
 
 $('#save-inventory-button').on('click', function (e)
 {
@@ -562,3 +570,5 @@ if (Grocy.FeatureFlags.GROCY_FEATURE_FLAG_LABEL_PRINTER)
 }
 
 Grocy.Components.UserfieldsForm.Load();
+
+})();

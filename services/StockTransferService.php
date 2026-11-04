@@ -159,7 +159,16 @@ class StockTransferService extends BaseService
 		$plan = [];
 		foreach ($requested as $pid => $amount)
 		{
+			if (empty($data['pin_stock_ids'][$pid]))
+			{
+				DeviceService::AssertNotControlled($pid, 'trasladarlo');
+			}
 			$lots = $this->GetAvailableLots($pid, $from['id']);
+			// Celulares por IMEI: viajan las entradas de esos equipos, no las FEFO
+			if (!empty($data['pin_stock_ids'][$pid]))
+			{
+				$lots = array_values(array_filter($lots, fn($l) => in_array($l['stock_id'], $data['pin_stock_ids'][$pid], true)));
+			}
 			$available = array_sum(array_column($lots, 'amount'));
 			if ($amount > $available + 0.00001)
 			{

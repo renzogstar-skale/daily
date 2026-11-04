@@ -705,6 +705,10 @@ class MrpService extends BaseService
 		foreach ($data['items'] ?? [] as $in)
 		{
 			$item = $itemsById[intval($in['order_item_id'] ?? 0)] ?? null;
+			if ($item)
+			{
+				DeviceService::AssertNotControlled(intval($item['product_id']), 'recibirlo');
+			}
 			if ($item === null)
 			{
 				throw new \Exception('Línea de orden inválida');

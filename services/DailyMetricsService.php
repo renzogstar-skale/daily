@@ -20,14 +20,18 @@ class DailyMetricsService extends BaseService
 {
 	// Clave del panel => [nombre, color, departamentos de producto (products.department)]
 	const DEPARTMENTS = [
-		'dairy' => ['Lácteos y huevos', '#FFB800', ['Lácteos y huevos']],
+		'tecnologia' => ['Tecnología', '#2563EB', ['Tecnología', 'Electrónica y Telefonía', 'Electrónica']],
+		'electrodomesticos' => ['Electrodomésticos', '#0D9488', ['Electrodomésticos']],
+		'alimentos' => ['Alimentos y Despensa', '#D97706', ['Alimentos', 'Abarrotes']],
+		'hogar' => ['Hogar', '#854D0E', ['Hogar']],
+		'accesorios' => ['Accesorios', '#6366F1', ['Accesorios']],
+		'dairy' => ['Lácteos y huevos', '#FFB800', ['Lácteos y huevos', 'Lácteos']],
+		'cuidado_personal' => ['Cuidado Personal', '#EC4899', ['Cuidado Personal', 'Cuidado personal']],
 		'bebidas' => ['Bebidas', '#0EA5E9', ['Bebidas refrigeradas', 'Bebidas']],
-		'fruver' => ['Frutas y verduras', '#FF7A00', ['Frutas y verduras']],
-		'carnes' => ['Carnes', '#E11D48', ['Carnes']],
-		'bakery' => ['Panadería', '#8B5CF6', ['Panadería']],
-		'abarrotes' => ['Abarrotes', '#A16207', ['Abarrotes']],
+		'carnes' => ['Carnes y aves', '#E11D48', ['Carnes', 'Carnes y aves']],
+		'fruver' => ['Frutas y verduras', '#16A34A', ['Frutas y verduras']],
 		'congelados' => ['Congelados', '#38BDF8', ['Congelados']],
-		'electronica' => ['Electrónica', '#00C83B', ['Electrónica y Telefonía']],
+		'bakery' => ['Panadería', '#8B5CF6', ['Panadería']],
 		'otros' => ['Otros', '#64748B', null]
 	];
 
@@ -36,8 +40,8 @@ class DailyMetricsService extends BaseService
 		'frescos' => ['fruver', 'carnes', 'bakery'],
 		'refrigerados' => ['dairy', 'bebidas'],
 		'congelados' => ['congelados'],
-		'abarrotes' => ['abarrotes', 'otros'],
-		'non_food' => ['electronica']
+		'abarrotes' => ['alimentos'],
+		'non_food' => ['tecnologia', 'electrodomesticos', 'hogar', 'accesorios', 'cuidado_personal']
 	];
 
 	private function Db(): \PDO
@@ -50,6 +54,14 @@ class DailyMetricsService extends BaseService
 	{
 		$keys = null;
 		$deptKey = strtolower(trim((string) $deptKey));
+		if ($deptKey === 'electronica')
+		{
+			$deptKey = 'tecnologia';
+		}
+		elseif ($deptKey === 'abarrotes')
+		{
+			$deptKey = 'alimentos';
+		}
 		if ($deptKey !== '' && $deptKey !== 'todos' && $deptKey !== 'all' && isset(self::DEPARTMENTS[$deptKey]))
 		{
 			$keys = [$deptKey];
@@ -576,7 +588,10 @@ class DailyMetricsService extends BaseService
 		$w = $this->Waste($branchId, $from, $to);
 		$targets = $this->Targets($branchId, $to);
 		$salesTarget = $this->PeriodSalesTarget($branchId, $from, $to);
-		$compliance = ($salesTarget && $s['has_data']) ? round($s['net_sales'] / $salesTarget * 100, 1) : null;
+		$complianceReal = ($salesTarget && $s['has_data']) ? round($s['net_sales'] / $salesTarget * 100, 1) : null;
+		$complianceVisual = $complianceReal !== null ? min(100.0, $complianceReal) : null;
+		$overTargetPct = ($complianceReal !== null && $complianceReal > 100) ? round($complianceReal - 100, 1) : 0.0;
+		$compliance = $complianceReal;
 		$wasteTarget = floatval($targets['waste_target_pct']);
 		$wastePct = $s['has_data'] ? $this->WastePct($w['cost'], $s) : null;
 		$marginTarget = $targets['margin_target_pct'] !== null ? floatval($targets['margin_target_pct']) : null;
@@ -586,6 +601,9 @@ class DailyMetricsService extends BaseService
 			'sales' => $s,
 			'sales_target' => $salesTarget,
 			'compliance_pct' => $compliance,
+			'compliance_real_pct' => $complianceReal,
+			'compliance_visual_pct' => $complianceVisual,
+			'over_target_pct' => $overTargetPct,
 			'sales_level' => self::SalesLevel($compliance),
 			'margin_target_pct' => $marginTarget,
 			'margin_level' => self::MarginLevel($s['margin_pct'], $marginTarget),

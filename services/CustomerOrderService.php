@@ -369,6 +369,7 @@ class CustomerOrderService extends BaseService
 
 	public function Cancel(int $id, string $reason, int $userId): array
 	{
+		DeviceService::GetInstance()->ReleaseOrder($id, $userId);
 		$o = $this->Order($id);
 		if (in_array($o['status'], ['dispatched', 'dispatching', 'cancelled']))
 		{
@@ -434,7 +435,7 @@ class CustomerOrderService extends BaseService
 		if (strpos($n, 'leche entera') !== false) return '/img/control_center/leche_entera_galon.jpg';
 		if (strpos($n, 'leche descremada') !== false || strpos($n, 'deslactosada') !== false) return '/img/control_center/leche_descremada.jpg';
 		if (strpos($n, 'leche') !== false) return '/img/control_center/leche_entera_1l.jpg';
-		if (strpos($n, 'yogur') !== false || strpos($n, 'kefir') !== false || strpos($n, 'probi') !== false) return '/img/control_center/yogur_griego.jpg';
+		if (strpos($n, 'yogur') !== false || strpos($n, 'kefir') !== false || strpos($n, 'probi') !== false) return '/img/control_center/prod_yogur_tub.svg';
 		if (strpos($n, 'mozzarella') !== false) return '/img/control_center/queso_mozzarella.jpg';
 		if (strpos($n, 'cheddar') !== false) return '/img/control_center/queso_cheddar.jpg';
 		if (strpos($n, 'parmesano') !== false) return '/img/control_center/queso_parmesano.jpg';
@@ -449,7 +450,16 @@ class CustomerOrderService extends BaseService
 		if (strpos($n, 'rábano') !== false || strpos($n, 'rabano') !== false || strpos($n, 'verdura') !== false) return '/img/control_center/verduras_frutas.jpg';
 		if (strpos($n, 'pollo') !== false || strpos($n, 'pechuga') !== false) return '/img/control_center/pechuga_pollo.jpg';
 		if (strpos($n, 'res') !== false || strpos($n, 'lomo') !== false || strpos($n, 'carne') !== false) return '/img/control_center/carne_picada.jpg';
-		if (strpos($n, 'phone') !== false || strpos($n, 'scan') !== false || strpos($c, 'electr') !== false) return '/img/control_center/daily_scan_phone.jpg';
+		if (strpos($n, 'phone') !== false || strpos($n, 'smartphone') !== false || strpos($n, 'galaxy') !== false) return '/img/control_center/daily_scan_phone.jpg';
+		if (strpos($n, 'audífono') !== false || strpos($n, 'audifono') !== false || strpos($n, 'inalámbrico') !== false || strpos($n, 'auricular') !== false) return '/img/control_center/daily_scan_industrial.jpg';
+		if (strpos($n, 'baguette') !== false) return '/img/control_center/prod_baguette.svg';
+		if (strpos($n, 'croissant') !== false) return '/img/control_center/thumb_coffee_croissant.jpg';
+		if (strpos($n, 'pan') !== false || strpos($n, 'molde') !== false) return '/img/control_center/prod_pan_molde.svg';
+		if (strpos($n, 'aceite') !== false) return '/img/control_center/prod_aceite_vegetal.svg';
+		if (strpos($n, 'vegetal') !== false || strpos($n, 'congelado') !== false) return '/img/control_center/prod_vegetales_congelados.svg';
+		if (strpos($n, 'frutilla') !== false || strpos($n, 'fresa') !== false) return '/img/control_center/prod_yogur_tub.svg';
+		if (strpos($c, 'electr') !== false) return '/img/control_center/daily_scan_phone.jpg';
+		if (strpos($c, 'panad') !== false) return '/img/control_center/prod_baguette.svg';
 
 		return '/img/control_center/lacteos_leches.jpg';
 	}

@@ -49,7 +49,7 @@ foreach ([[1, $lastDay], [null, $lastDay], [4, date('Y-m-d', strtotime("$lastDay
 	$s = $p['strategic_kpis'];
 	ok('Ventas netas HOY = Panel', $eq($h['kpis']['sales_net']['numeric'], $s['sales']['value']), $h['kpis']['sales_net']['numeric'] . ' vs ' . $s['sales']['value']);
 	ok('Meta del día HOY = Panel', $eq($dm->DailySalesTarget($b, $date), $s['sales']['target']), json_encode([$dm->DailySalesTarget($b, $date), $s['sales']['target']]));
-	$hc = $h['kpis']['target_compliance']['numeric'];
+	$hc = $h['kpis']['target_compliance']['raw_numeric'];
 	ok('Cumplimiento HOY = Panel (pp vs. 100 %)', $hc === null ? $s['sales']['delta_pct'] === null : $eq($hc - 100, $s['sales']['delta_pct']), json_encode([$hc, $s['sales']['delta_pct']]));
 	ok('Margen % HOY = Panel', $eq($h['kpis']['gross_margin']['numeric'], $s['margin']['margin_pct']));
 	ok('Utilidad bruta HOY = Panel', $eq($h['kpis']['gross_profit']['numeric'], $s['margin']['value']));

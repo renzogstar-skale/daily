@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="chickenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fecdd3"/>
+      <stop offset="60%" stop-color="#fda4af"/>
+      <stop offset="100%" stop-color="#fb7185"/>
+    </linearGradient>
+  </defs>
+  <!-- Oval base/tray -->
+  <ellipse cx="32" cy="38" rx="26" ry="14" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5"/>
+  <!-- Chicken cutlet shape 1 -->
+  <path d="M14 36 C12 28 22 22 34 24 C44 26 48 34 44 40 C40 45 28 46 20 44 C15 42 14 39 14 36 Z" fill="url(#chickenGrad)"/>
+  <!-- Second tender cutlet layer -->
+  <path d="M22 30 C24 25 32 24 38 27 C42 29 42 35 38 38 C34 40 28 39 24 36 Z" fill="#ffe4e6" opacity="0.6"/>
+  <!-- Herbs parsley sprinkle -->
+  <circle cx="28" cy="28" r="1" fill="#16a34a"/>
+  <circle cx="34" cy="32" r="1.2" fill="#15803d"/>
+  <circle cx="26" cy="36" r="0.8" fill="#16a34a"/>
+</svg>
+

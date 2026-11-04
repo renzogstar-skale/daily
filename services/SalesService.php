@@ -39,6 +39,10 @@ class SalesService extends BaseService
 			}
 		}
 
+		// Celulares por IMEI: valida antes de la transacción para que la alerta del intento rechazado persista
+		$devices = DeviceService::GetInstance();
+		$items = $devices->PrepareSale($items, $branchId, !empty($data['customer_order_id']) ? intval($data['customer_order_id']) : null, $ext !== null, $userId);
+
 		// Bloqueo de escritura desde el inicio: ventas simultáneas esperan su turno y validan stock ya actualizado
 		$dbRaw = DatabaseService::GetInstance()->BeginWriteTransaction();
 
@@ -298,7 +302,50 @@ class SalesService extends BaseService
 				$itemRow->save();
 			}
 
+			$devices->MarkSold($items, intval($saleRow->id), $saleNumber, $userId);
 			$dbRaw->commit();
+
+			// DAILY Ciclo 1: Publicar evento canónico de venta confirmada en el Bus de Dominio
+			if (class_exists('\\Grocy\\Services\\UnifiedInventoryEventService'))
+			{
+				try
+				{
+					\Grocy\Services\UnifiedInventoryEventService::GetInstance()->Publish(
+						\Grocy\Services\UnifiedInventoryEventService::EVENT_MERCHANDISE_DISPATCHED,
+						'sale',
+						strval($saleRow->id),
+						[
+							'sale_number' => $saleNumber,
+							'branch_id' => $branchId,
+							'customer_id' => $customerId,
+							'total_amount' => $totalAmount,
+							'total_cogs' => $totalCogs,
+							'gross_margin' => $grossMargin,
+							'items_count' => count($processedItems),
+							'payment_method' => $paymentMethod
+						],
+						$branchId,
+						$userId
+					);
+				}
+				catch (\Throwable $t)
+				{
+					// La publicación no bloquea el retorno de la venta
+				}
+			}
+
+			// Sellar el libro inalterable de movimientos (Kardex SHA-256)
+			if (class_exists('\\Grocy\\Services\\MovementLedgerService'))
+			{
+				try
+				{
+					\Grocy\Services\MovementLedgerService::GetInstance()->Seal();
+				}
+				catch (\Throwable $t)
+				{
+				}
+			}
+
 			return $saleRow;
 		}
 		catch (\Exception $ex)
@@ -355,7 +402,7 @@ class SalesService extends BaseService
 			$sql .= " AND EXISTS (SELECT 1 FROM sale_items si LEFT JOIN products p ON p.id = si.product_id WHERE si.sale_id = s.id AND p.product_group_id IS NULL)";
 		}
 
-		$sql .= " ORDER BY s.created_timestamp DESC LIMIT " . intval($limit);
+		$sql .= " ORDER BY s.created_timestamp DESC, s.id ASC LIMIT " . intval($limit);
 
 		$stmt = DatabaseService::GetInstance()->GetDbConnectionRaw()->prepare($sql);
 		$stmt->execute($params);
@@ -461,7 +508,21 @@ class SalesService extends BaseService
 				'notes' => trim(($sale->notes ?? '') . "\n[Cancelada por usuario #$userId en " . date('Y-m-d H:i:s') . ']')
 			]);
 
+			DeviceService::GetInstance()->OnSaleCancelled($saleId, $userId);
 			$dbRaw->commit();
+
+			// Sellar el libro inalterable tras anulación/devolución de inventario
+			if (class_exists('\\Grocy\\Services\\MovementLedgerService'))
+			{
+				try
+				{
+					\Grocy\Services\MovementLedgerService::GetInstance()->Seal();
+				}
+				catch (\Throwable $t)
+				{
+				}
+			}
+
 			return $sale;
 		}
 		catch (\Exception $ex)

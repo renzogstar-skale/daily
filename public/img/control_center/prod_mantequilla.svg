@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="foilGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a"/>
+      <stop offset="40%" stop-color="#facc15"/>
+      <stop offset="100%" stop-color="#ca8a04"/>
+    </linearGradient>
+  </defs>
+  <!-- Butter foil block (isometric) -->
+  <path d="M10 28 L30 18 L54 22 L34 33 Z" fill="#fef9c3"/>
+  <path d="M10 28 L34 33 L34 50 L10 44 Z" fill="url(#foilGrad)"/>
+  <path d="M34 33 L54 22 L54 39 L34 50 Z" fill="#eab308"/>
+  <!-- Label on front -->
+  <rect x="14" y="33" width="16" height="8" rx="1" fill="#ffffff" transform="skewY(10)"/>
+  <text x="16" y="38" font-size="4" font-family="sans-serif" font-weight="bold" fill="#008744" transform="skewY(10)">DAILY</text>
+</svg>
+

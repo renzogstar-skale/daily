@@ -107,12 +107,19 @@ class WorkforceController extends BaseController
 			}
 		}
 
-		return $this->RenderPage($response, 'workforce', [
+				$rawDb = \Grocy\Services\DatabaseService::GetInstance()->GetDbConnectionRaw();
+		$certifications = $rawDb->query("SELECT * FROM daily_employee_certifications_ext ORDER BY id DESC")->fetchAll(\PDO::FETCH_ASSOC);
+		$maintenanceLogs = $rawDb->query("SELECT * FROM daily_equipment_maintenance ORDER BY id DESC")->fetchAll(\PDO::FETCH_ASSOC);
+		$operationalIncidents = $rawDb->query("SELECT * FROM daily_operational_incidents ORDER BY id DESC")->fetchAll(\PDO::FETCH_ASSOC);
+return $this->RenderPage($response, 'workforce', [
 			'branches' => $branches,
 			'products' => $products,
 			'reasons' => $reasons,
 			'tasks' => $tasks,
 			'selectedBranchId' => $branchId,
+			'certifications' => $certifications,
+			'maintenanceLogs' => $maintenanceLogs,
+			'operationalIncidents' => $operationalIncidents,
 			'meetingAgreements' => $meetingAgreements,
 			'taskMetrics' => [
 				'overdue' => $overdueCount,

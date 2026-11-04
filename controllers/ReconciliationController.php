@@ -44,18 +44,26 @@ class ReconciliationController extends BaseController
 		}
 
 		// Determinar producto seleccionado por defecto:
-		// Preferir el producto con ID 175 (Smartphone Galaxy Pro) o el primer producto con caso abierto / sensible
+		// Preferir el producto con SKU DEMO-SMG-001 (Celular Samsung Galaxy S24) o el primer producto con caso abierto / sensible
 		if ($selectedProductId === null && !empty($products))
 		{
-			$findPhone = array_filter($products, fn($p) => str_contains(mb_strtolower($p['name']), 'smartphone') || $p['sku'] === 'TECH-SMP-001');
-			if (!empty($findPhone))
+			$findDemo = array_filter($products, fn($p) => $p['sku'] === 'DEMO-SMG-001');
+			if (!empty($findDemo))
 			{
-				$selectedProductId = intval(reset($findPhone)['id']);
+				$selectedProductId = intval(reset($findDemo)['id']);
 			}
 			else
 			{
-				$findSensitive = array_filter($products, fn($p) => intval($p['is_sensitive']) === 1 || !empty($p['open_case_id']));
-				$selectedProductId = !empty($findSensitive) ? intval(reset($findSensitive)['id']) : intval($products[0]['id']);
+				$findPhone = array_filter($products, fn($p) => str_contains(mb_strtolower($p['name']), 'smartphone') || $p['sku'] === 'TECH-SMP-001');
+				if (!empty($findPhone))
+				{
+					$selectedProductId = intval(reset($findPhone)['id']);
+				}
+				else
+				{
+					$findSensitive = array_filter($products, fn($p) => intval($p['is_sensitive']) === 1 || !empty($p['open_case_id']));
+					$selectedProductId = !empty($findSensitive) ? intval(reset($findSensitive)['id']) : intval($products[0]['id']);
+				}
 			}
 		}
 

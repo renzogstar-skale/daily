@@ -1,0 +1,12 @@
+/* DAILY Process Flow — expediente y bandeja */
+.dpf-progress { height: 1.1rem; }
+.dpf-steps .dpf-step { padding: .3rem 0 .3rem .25rem; border-left: 3px solid transparent; }
+.dpf-steps .dpf-step.is-current { border-left-color: var(--primary, #0d6efd); background: rgba(13, 110, 253, .06); }
+.dpf-steps .dpf-step.is-blocked, .dpf-steps .dpf-step.is-skipped { border-left-color: var(--warning, #f0ad4e); }
+.dpf-steps .dpf-step.is-failed { border-left-color: var(--danger, #dc3545); }
+.dpf-steps .dpf-step.is-pending, .dpf-steps .dpf-step.is-cancelled, .dpf-steps .dpf-step.is-na { opacity: .65; }
+.dpf-history { max-height: 14rem; overflow-y: auto; }
+.dpf-inbox-card .table td { vertical-align: middle; }
+.dpf-mini { min-width: 6rem; height: .5rem; }
+.dpf-link { font-size: .85em; opacity: .75; }
+.dpf-link:hover { opacity: 1; }

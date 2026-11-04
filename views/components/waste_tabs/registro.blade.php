@@ -414,6 +414,27 @@
 		}
 	</style>
 
+	<!-- BANNER DE DISTINCIÓN DE PROCESO (PROCESO A vs PROCESO B) -->
+	<div class="card border-0 shadow-xs mb-3 bg-white" style="border-radius:12px; border-left:4px solid #ef4444 !important;">
+		<div class="card-body p-3 d-flex flex-wrap justify-content-between align-items-center">
+			<div>
+				<span class="badge badge-danger text-uppercase font-weight-bold px-2 py-1 mb-1" style="font-size:0.72rem;">Proceso A: Registro de Merma</span>
+				<h5 class="font-weight-bold text-dark mb-0">Baja Definitiva y Reclasificación por Pérdida de Valor</h5>
+				<small class="text-muted">
+					Flujo operativo: Registro con evidencia → Validación de Supervisor → Aprobación de Gerente → Movimiento automático de stock → Afectación a Kardex → Cuadro de Control.
+				</small>
+			</div>
+			<div class="mt-2 mt-md-0 d-flex align-items-center" style="gap:8px;">
+				<a href="{{ $U('/merchandise') }}" class="btn btn-sm btn-outline-secondary font-weight-600" title="Ir a entradas, salidas, traslados y conteos habituales de stock">
+					<i class="fa-solid fa-boxes-packing mr-1 text-primary"></i>Ir a Proceso B: Registro de Inventario
+				</a>
+				<a href="{{ $U('/kardex') }}" class="btn btn-sm btn-outline-info font-weight-600">
+					<i class="fa-solid fa-book-open mr-1"></i>Ver Kardex
+				</a>
+			</div>
+		</div>
+	</div>
+
 	<!-- BARRA DE PASOS (STEPPER) -->
 	<div class="daily-stepper-bar">
 		<div class="daily-step-item active" id="step-tab-1" onclick="dlxGoToStep(1)">

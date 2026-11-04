@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="crust" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#b45309"/>
+      <stop offset="50%" stop-color="#d97706"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+  </defs>
+  <!-- Diagonal crusty baguette -->
+  <path d="M10 50 C6 44 8 38 16 30 L44 10 C50 6 56 8 58 14 C60 20 54 26 46 34 L18 54 C13 58 8 56 10 50 Z" fill="url(#crust)"/>
+  <!-- Crust cuts / slashes -->
+  <line x1="22" y1="36" x2="26" y2="44" stroke="#fef3c7" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="32" y1="26" x2="36" y2="34" stroke="#fef3c7" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="42" y1="16" x2="46" y2="24" stroke="#fef3c7" stroke-width="2.5" stroke-linecap="round"/>
+</svg>
+

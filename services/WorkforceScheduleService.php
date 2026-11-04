@@ -245,6 +245,22 @@ class WorkforceScheduleService extends BaseService
 		{
 			$issues[] = ['level' => 'warning', 'code' => 'overtime', 'message' => 'Semana con ' . round($hours, 1) . " h programadas (contrato $contract h): " . round($hours - $contract, 1) . ' h extra'];
 		}
+
+		// Regla de Domingo Libre (3x1 o política legal de empresa configurada)
+		if (intval(date('N', strtotime($date))) === 7)
+		{
+			$autoSvc = \Grocy\Services\WorkforceAutoScheduleService::GetInstance();
+			$empCode = !empty($emp->payroll_code) ? $emp->payroll_code : strval($emp->id);
+			$sunStatus = $autoSvc->CalculateSundayStatus($empCode, $date, intval($emp->company_id ?? 1) ?: 1);
+			if (($sunStatus['status'] ?? '') === 'LIBRE')
+			{
+				$issues[] = [
+					'level' => 'warning',
+					'code' => 'sunday_3x1_free',
+					'message' => "Domingo de descanso obligatorio según regla {$sunStatus['cycle_length']}x1 (Fase {$sunStatus['phase']})"
+				];
+			}
+		}
 		return $issues;
 	}
 

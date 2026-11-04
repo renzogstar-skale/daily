@@ -3,6 +3,7 @@
 @section('title', 'Sucursales y Almacenes')
 
 @section('content')
+@include('components.execution_context_bar')
 <div class="row align-items-center mb-3 dairy-page-header">
 	<div class="col-md-8 d-flex align-items-center">
 		<div class="dairy-page-icon is-primary"><i class="fa-solid fa-building"></i></div>

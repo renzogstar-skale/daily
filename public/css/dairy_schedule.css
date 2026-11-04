@@ -1585,6 +1585,16 @@
 	color: #7e22ce;
 	border-color: #d8b4fe;
 }
+.sch-chip-intermedio {
+	background: #e0f2fe;
+	color: #0369a1;
+	border-color: #7dd3fc;
+}
+.sch-chip-inc {
+	background: #ffe4e6;
+	color: #be123c;
+	border-color: #fda4af;
+}
 .sch-chip-conflict {
 	background: #fee2e2;
 	color: #b91c1c;

@@ -1,0 +1,683 @@
+/**
+ * DAILY ENTERPRISE — DESIGN SYSTEM GLOBAL
+ * Sistema centralizado de estilos, componentes y jerarquía visual.
+ * Paleta corporativa: Verde (#39F500 -> #008E48), Ámbar (#FFE600 -> #B66A00), Rojo (#FF3B30 -> #7F1D1D).
+ * Sin azul predominante. Neutros sólidos, alta legibilidad y arquitectura en 3 niveles.
+ */
+
+:root {
+	/* Superficies y Neutros */
+	--daily-bg: #F8FAFC;
+	--daily-surface: #FFFFFF;
+	--daily-surface-subtle: #F1F5F9;
+	--daily-surface-hover: #E2E8F0;
+	--daily-border: #E2E8F0;
+	--daily-border-light: #F1F5F9;
+	--daily-border-strong: #CBD5E1;
+
+	/* Tipografía y Contraste */
+	--daily-text-main: #0F172A;     /* Slate 900 - Máximo contraste */
+	--daily-text-secondary: #334155;/* Slate 700 - Subtítulos */
+	--daily-text-muted: #64748B;    /* Slate 500 - Etiquetas */
+	--daily-text-disabled: #94A3B8; /* Slate 400 - Deshabilitados */
+
+	/* PALETA SEMÁFORO OFICIAL DAILY (Estricta para retail) */
+	/* 1. Verde (Normalidad, Margen, Objetivo, Resuelto) */
+	--daily-green-50: #F0FDF4;
+	--daily-green-100: #DCFCE7;
+	--daily-green-200: #BBF7D0;
+	--daily-green-500: #22C55E;
+	--daily-green-600: #16A34A;
+	--daily-green-700: #008E48;     /* Verde institucional */
+	--daily-green-glow: #39F500;    /* Verde acento */
+
+	/* 2. Ámbar / Amarillo (Atención, Vencimiento próximo, Desviación leve) */
+	--daily-amber-50: #FFFBEB;
+	--daily-amber-100: #FEF3C7;
+	--daily-amber-200: #FDE68A;
+	--daily-amber-500: #F59E0B;
+	--daily-amber-600: #D97706;
+	--daily-amber-700: #B66A00;     /* Ámbar institucional de alto contraste */
+	--daily-amber-glow: #FFE600;
+
+	/* 3. Rojo (Crítico, Merma elevada, Faltante, Descuadre, Urgente) */
+	--daily-red-50: #FEF2F2;
+	--daily-red-100: #FEE2E2;
+	--daily-red-200: #FECACA;
+	--daily-red-500: #EF4444;
+	--daily-red-600: #DC2626;
+	--daily-red-700: #7F1D1D;       /* Rojo carmesí patrimonio */
+	--daily-red-glow: #FF3B30;
+
+	/* Radios y Elevaciones */
+	--daily-radius-xs: 4px;
+	--daily-radius-sm: 8px;
+	--daily-radius-md: 12px;
+	--daily-radius-lg: 16px;
+	--daily-radius-pill: 9999px;
+
+	--daily-shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.04);
+	--daily-shadow-card: 0 1px 3px 0 rgba(15, 23, 42, 0.06), 0 1px 2px -1px rgba(15, 23, 42, 0.04);
+	--daily-shadow-hover: 0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
+	--daily-shadow-modal: 0 20px 25px -5px rgba(15, 23, 42, 0.12), 0 8px 10px -6px rgba(15, 23, 42, 0.08);
+
+	/* Transiciones */
+	--daily-transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+	--daily-transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Base & Reset Semántico */
+body {
+	background-color: var(--daily-bg) !important;
+	color: var(--daily-text-main);
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+	-webkit-font-smoothing: antialiased;
+}
+
+/* Números tabulares obligatorios para balances, KPIs y finanzas */
+.daily-tabular,
+.daily-kpi-val,
+.daily-money,
+.daily-table td.is-number {
+	font-variant-numeric: tabular-nums;
+	letter-spacing: -0.02em;
+}
+
+/* ==================== 1. CONTENEDOR MAESTRO Y CABECERA ==================== */
+.daily-container {
+	width: 100%;
+	max-width: 1680px;
+	margin: 0 auto;
+	padding: 1.25rem 1.5rem 3rem;
+}
+
+.daily-header {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	margin-bottom: 1.5rem;
+	padding-bottom: 1rem;
+	border-bottom: 1px solid var(--daily-border);
+}
+
+.daily-header-title-group h1 {
+	font-size: 1.5rem;
+	font-weight: 800;
+	color: var(--daily-text-main);
+	margin: 0 0 0.25rem 0;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.daily-header-subtitle {
+	font-size: 0.875rem;
+	color: var(--daily-text-muted);
+	margin: 0;
+}
+
+.daily-toolbar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+/* Selectores y Filtros Unificados */
+.daily-select,
+.daily-input {
+	height: 38px;
+	padding: 0 0.75rem;
+	background: var(--daily-surface);
+	border: 1px solid var(--daily-border-strong);
+	border-radius: var(--daily-radius-sm);
+	font-size: 0.8125rem;
+	color: var(--daily-text-main);
+	font-weight: 500;
+	transition: border-color var(--daily-transition-fast), box-shadow var(--daily-transition-fast);
+}
+
+.daily-select:focus,
+.daily-input:focus {
+	outline: none;
+	border-color: var(--daily-green-700);
+	box-shadow: 0 0 0 3px rgba(0, 142, 72, 0.12);
+}
+
+/* ==================== 2. BOTONES Y ACCIONES ==================== */
+.daily-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	height: 38px;
+	padding: 0 1rem;
+	border-radius: var(--daily-radius-sm);
+	font-size: 0.8125rem;
+	font-weight: 600;
+	cursor: pointer;
+	border: 1px solid transparent;
+	transition: all var(--daily-transition-fast);
+	white-space: nowrap;
+	text-decoration: none !important;
+}
+
+.daily-btn-primary {
+	background: var(--daily-green-700);
+	color: #FFFFFF !important;
+	border-color: var(--daily-green-700);
+}
+
+.daily-btn-primary:hover {
+	background: #00763C;
+	border-color: #00763C;
+	box-shadow: var(--daily-shadow-sm);
+}
+
+.daily-btn-secondary {
+	background: var(--daily-surface);
+	color: var(--daily-text-main) !important;
+	border-color: var(--daily-border-strong);
+}
+
+.daily-btn-secondary:hover {
+	background: var(--daily-surface-subtle);
+	border-color: var(--daily-text-muted);
+}
+
+.daily-btn-danger {
+	background: var(--daily-red-600);
+	color: #FFFFFF !important;
+	border-color: var(--daily-red-600);
+}
+
+.daily-btn-danger:hover {
+	background: var(--daily-red-700);
+	border-color: var(--daily-red-700);
+}
+
+.daily-btn-sm {
+	height: 30px;
+	padding: 0 0.65rem;
+	font-size: 0.75rem;
+}
+
+.daily-btn-hero {
+	height: 42px;
+	padding: 0 1.25rem;
+	font-size: 0.875rem;
+	font-weight: 700;
+	box-shadow: 0 2px 4px rgba(0, 142, 72, 0.2);
+}
+
+/* ==================== 3. ARQUITECTURA EN 3 NIVELES ==================== */
+
+/* NIVEL 1: PULSO EJECUTIVO (Primer 30% de la pantalla) */
+.daily-pulse-banner {
+	background: var(--daily-surface);
+	border: 1px solid var(--daily-border);
+	border-radius: var(--daily-radius-md);
+	padding: 1.25rem 1.5rem;
+	margin-bottom: 1.5rem;
+	box-shadow: var(--daily-shadow-card);
+	display: grid;
+	grid-template-columns: 1.4fr 1fr 1fr 1fr;
+	gap: 1.5rem;
+	align-items: center;
+}
+
+.daily-pulse-status {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	border-right: 1px solid var(--daily-border);
+	padding-right: 1.5rem;
+}
+
+.daily-pulse-indicator {
+	width: 52px;
+	height: 52px;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 1.25rem;
+	flex-shrink: 0;
+}
+
+.daily-pulse-indicator.is-good {
+	background: var(--daily-green-50);
+	color: var(--daily-green-700);
+	border: 2px solid var(--daily-green-200);
+}
+
+.daily-pulse-indicator.is-warning {
+	background: var(--daily-amber-50);
+	color: var(--daily-amber-700);
+	border: 2px solid var(--daily-amber-200);
+}
+
+.daily-pulse-indicator.is-danger {
+	background: var(--daily-red-50);
+	color: var(--daily-red-600);
+	border: 2px solid var(--daily-red-200);
+}
+
+.daily-pulse-info h3 {
+	font-size: 1.1rem;
+	font-weight: 700;
+	margin: 0;
+	color: var(--daily-text-main);
+}
+
+.daily-pulse-info p {
+	font-size: 0.8125rem;
+	color: var(--daily-text-muted);
+	margin: 0.15rem 0 0 0;
+}
+
+.daily-pulse-metric {
+	display: flex;
+	flex-direction: column;
+}
+
+.daily-pulse-metric-label {
+	font-size: 0.75rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: var(--daily-text-muted);
+	margin-bottom: 0.25rem;
+}
+
+.daily-pulse-metric-value {
+	font-size: 1.5rem;
+	font-weight: 800;
+	color: var(--daily-text-main);
+	line-height: 1;
+}
+
+.daily-pulse-metric-sub {
+	font-size: 0.75rem;
+	color: var(--daily-text-secondary);
+	margin-top: 0.35rem;
+	display: flex;
+	align-items: center;
+	gap: 0.25rem;
+}
+
+/* NIVEL 2: TARJETAS KPI DE SUPERVISIÓN */
+.daily-kpi-grid {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 1rem;
+	margin-bottom: 1.5rem;
+}
+
+.daily-kpi-card {
+	background: var(--daily-surface);
+	border: 1px solid var(--daily-border);
+	border-radius: var(--daily-radius-md);
+	padding: 1rem 1.25rem;
+	box-shadow: var(--daily-shadow-card);
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	min-height: 116px;
+	transition: transform var(--daily-transition-fast), box-shadow var(--daily-transition-fast);
+}
+
+.daily-kpi-card:hover {
+	transform: translateY(-2px);
+	box-shadow: var(--daily-shadow-hover);
+}
+
+.daily-kpi-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 0.5rem;
+}
+
+.daily-kpi-title {
+	font-size: 0.75rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+	color: var(--daily-text-muted);
+	margin: 0;
+}
+
+.daily-kpi-icon {
+	width: 28px;
+	height: 28px;
+	border-radius: var(--daily-radius-xs);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 0.8125rem;
+}
+
+.daily-kpi-icon.icon-green { background: var(--daily-green-50); color: var(--daily-green-700); }
+.daily-kpi-icon.icon-amber { background: var(--daily-amber-50); color: var(--daily-amber-700); }
+.daily-kpi-icon.icon-red { background: var(--daily-red-50); color: var(--daily-red-600); }
+.daily-kpi-icon.icon-neutral { background: var(--daily-surface-subtle); color: var(--daily-text-secondary); }
+
+.daily-kpi-body {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+}
+
+.daily-kpi-value {
+	font-size: 1.625rem;
+	font-weight: 800;
+	color: var(--daily-text-main);
+	line-height: 1;
+}
+
+.daily-kpi-foot {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	font-size: 0.75rem;
+	color: var(--daily-text-secondary);
+	margin-top: 0.5rem;
+	padding-top: 0.5rem;
+	border-top: 1px solid var(--daily-border-light);
+}
+
+.daily-delta {
+	font-weight: 600;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.2rem;
+}
+.daily-delta.is-good { color: var(--daily-green-700); }
+.daily-delta.is-bad { color: var(--daily-red-600); }
+.daily-delta.is-neutral { color: var(--daily-text-muted); }
+
+/* CONTENEDORES Y TARJETAS GENERALES */
+.daily-card {
+	background: var(--daily-surface);
+	border: 1px solid var(--daily-border);
+	border-radius: var(--daily-radius-md);
+	padding: 1.25rem;
+	box-shadow: var(--daily-shadow-card);
+	margin-bottom: 1.5rem;
+}
+
+.daily-card-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 1rem;
+	padding-bottom: 0.75rem;
+	border-bottom: 1px solid var(--daily-border-light);
+}
+
+.daily-card-title {
+	font-size: 1rem;
+	font-weight: 700;
+	color: var(--daily-text-main);
+	margin: 0;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+/* ==================== 4. TABLAS EMPRESARIALES DE NIVEL 3 ==================== */
+.daily-table-wrap {
+	width: 100%;
+	overflow-x: auto;
+	border: 1px solid var(--daily-border);
+	border-radius: var(--daily-radius-sm);
+	background: var(--daily-surface);
+}
+
+.daily-table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 0.8125rem;
+	text-align: left;
+}
+
+.daily-table thead th {
+	background: var(--daily-surface-subtle);
+	color: var(--daily-text-secondary);
+	font-weight: 600;
+	font-size: 0.75rem;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+	padding: 0.65rem 0.85rem;
+	border-bottom: 1px solid var(--daily-border);
+	white-space: nowrap;
+	position: sticky;
+	top: 0;
+	z-index: 10;
+}
+
+.daily-table tbody td {
+	padding: 0.65rem 0.85rem;
+	border-bottom: 1px solid var(--daily-border-light);
+	color: var(--daily-text-main);
+	vertical-align: middle;
+}
+
+.daily-table tbody tr:hover {
+	background: #F8FAFC;
+}
+
+.daily-table td.is-number,
+.daily-table th.is-number {
+	text-align: right;
+}
+
+.daily-table td.is-center,
+.daily-table th.is-center {
+	text-align: center;
+}
+
+/* ==================== 5. BADGES Y ESTADOS SEMÁFORO ==================== */
+.daily-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.3rem;
+	padding: 0.2rem 0.55rem;
+	border-radius: var(--daily-radius-pill);
+	font-size: 0.71875rem;
+	font-weight: 600;
+	line-height: 1.2;
+	white-space: nowrap;
+}
+
+.daily-badge-success {
+	background: var(--daily-green-50);
+	color: var(--daily-green-700);
+	border: 1px solid var(--daily-green-200);
+}
+
+.daily-badge-warning {
+	background: var(--daily-amber-50);
+	color: var(--daily-amber-700);
+	border: 1px solid var(--daily-amber-200);
+}
+
+.daily-badge-danger {
+	background: var(--daily-red-50);
+	color: var(--daily-red-600);
+	border: 1px solid var(--daily-red-200);
+}
+
+.daily-badge-neutral {
+	background: var(--daily-surface-subtle);
+	color: var(--daily-text-secondary);
+	border: 1px solid var(--daily-border-strong);
+}
+
+/* ==================== 6. SEGMENTED TABS CONTROL ==================== */
+.daily-segmented-tabs {
+	display: inline-flex;
+	background: var(--daily-surface-subtle);
+	padding: 4px;
+	border-radius: var(--daily-radius-sm);
+	border: 1px solid var(--daily-border);
+	gap: 4px;
+	margin-bottom: 1.25rem;
+	width: auto;
+	max-width: 100%;
+	overflow-x: auto;
+}
+
+.daily-tab-btn {
+	background: transparent;
+	border: none;
+	padding: 7px 16px;
+	border-radius: calc(var(--daily-radius-sm) - 2px);
+	font-size: 0.8125rem;
+	font-weight: 600;
+	color: var(--daily-text-muted);
+	cursor: pointer;
+	transition: all var(--daily-transition-fast);
+	display: inline-flex;
+	align-items: center;
+	white-space: nowrap;
+}
+
+.daily-tab-btn:hover {
+	color: var(--daily-text-main);
+	background: rgba(255, 255, 255, 0.5);
+}
+
+.daily-tab-btn.active {
+	background: var(--daily-surface);
+	color: var(--daily-text-main);
+	box-shadow: var(--daily-shadow-sm);
+	border: 1px solid var(--daily-border-strong);
+}
+
+.daily-tab-pane {
+	display: none;
+}
+
+.daily-tab-pane.active {
+	display: block;
+	animation: dailyFadeIn 200ms ease-in-out;
+}
+
+@keyframes dailyFadeIn {
+	from { opacity: 0; transform: translateY(4px); }
+	to { opacity: 1; transform: translateY(0); }
+}
+
+/* ==================== 7. DRAWER LATERAL (Detalle sin salir) ==================== */
+.daily-drawer-overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: rgba(15, 23, 42, 0.45);
+	backdrop-filter: blur(2px);
+	z-index: 1050;
+	opacity: 0;
+	visibility: hidden;
+	transition: all var(--daily-transition-normal);
+}
+
+.daily-drawer-overlay.is-active {
+	opacity: 1;
+	visibility: visible;
+}
+
+.daily-drawer {
+	position: fixed;
+	top: 0;
+	right: -520px;
+	width: 500px;
+	max-width: 95vw;
+	height: 100vh;
+	background: var(--daily-surface);
+	box-shadow: var(--daily-shadow-modal);
+	z-index: 1060;
+	display: flex;
+	flex-direction: column;
+	transition: right var(--daily-transition-normal);
+}
+
+.daily-drawer.is-active {
+	right: 0;
+}
+
+.daily-drawer-header {
+	padding: 1.25rem;
+	border-bottom: 1px solid var(--daily-border);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.daily-drawer-body {
+	flex: 1;
+	overflow-y: auto;
+	padding: 1.25rem;
+}
+
+.daily-drawer-footer {
+	padding: 1rem 1.25rem;
+	border-top: 1px solid var(--daily-border);
+	background: var(--daily-surface-subtle);
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 0.5rem;
+}
+
+/* ==================== 7. ADAPTACIÓN RESPONSIVA (MOBILE FIRST) ==================== */
+@media (max-width: 1200px) {
+	.daily-kpi-grid {
+		grid-template-columns: repeat(2, 1fr);
+	}
+	.daily-pulse-banner {
+		grid-template-columns: 1fr 1fr;
+		gap: 1rem;
+	}
+	.daily-pulse-status {
+		grid-column: span 2;
+		border-right: none;
+		border-bottom: 1px solid var(--daily-border);
+		padding-bottom: 1rem;
+	}
+}
+
+@media (max-width: 768px) {
+	.daily-container {
+		padding: 0.75rem 0.85rem 2rem;
+	}
+	.daily-header {
+		flex-direction: column;
+		align-items: stretch;
+	}
+	.daily-toolbar {
+		width: 100%;
+	}
+	.daily-toolbar .daily-select,
+	.daily-toolbar .daily-btn {
+		flex: 1 1 calc(50% - 0.25rem);
+		min-height: 44px; /* Hit target táctil */
+	}
+	.daily-pulse-banner {
+		grid-template-columns: 1fr;
+	}
+	.daily-pulse-status {
+		grid-column: span 1;
+	}
+	.daily-kpi-grid {
+		grid-template-columns: 1fr;
+	}
+	.daily-drawer {
+		width: 100vw;
+	}
+}

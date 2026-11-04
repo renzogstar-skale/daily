@@ -151,6 +151,61 @@ class StockApiController extends BaseApiController
 			$transactionId = StockService::GetInstance()->AddProduct($args['productId'], $requestBody['amount'], $bestBeforeDate, $transactionType, $purchasedDate, $price, $locationId, $shoppingLocationId, $unusedTransactionId, $stockLabelType, false, $note);
 
 			$args['transactionId'] = $transactionId;
+
+			// Notificar al Bus de Eventos Unificado 360°
+			try
+			{
+				if (class_exists('\\Grocy\\Services\\UnifiedInventoryEventService'))
+				{
+					$eventSvc = \Grocy\Services\UnifiedInventoryEventService::GetInstance();
+					$dbRaw = \Grocy\Services\DatabaseService::GetInstance()->GetDbConnectionRaw();
+					$txRow = $dbRaw->query("SELECT * FROM stock_log WHERE id = " . intval($transactionId))->fetch(\PDO::FETCH_ASSOC);
+					$amountDiff = $txRow ? floatval($txRow['amount']) : 0;
+					$prodRow = $dbRaw->query("SELECT name, sku FROM products WHERE id = " . intval($args['productId']))->fetch(\PDO::FETCH_ASSOC);
+
+					if (abs($amountDiff) > 0.0001)
+					{
+						$eventSvc->Publish(
+							\Grocy\Services\UnifiedInventoryEventService::EVENT_INVENTORY_DISCREPANCY_DETECTED,
+							'product',
+							strval($args['productId']),
+							[
+								'product_name' => $prodRow['name'] ?? '',
+								'sku' => $prodRow['sku'] ?? '',
+								'counted' => floatval($requestBody['new_amount']),
+								'difference' => $amountDiff,
+								'notes' => $note
+							],
+							1,
+							defined('GROCY_USER_ID') ? GROCY_USER_ID : 1
+						);
+					}
+					else
+					{
+						$eventSvc->Publish(
+							\Grocy\Services\UnifiedInventoryEventService::EVENT_INVENTORY_COUNT_COMPLETED,
+							'product',
+							strval($args['productId']),
+							[
+								'product_name' => $prodRow['name'] ?? '',
+								'counted' => floatval($requestBody['new_amount'])
+							],
+							1,
+							defined('GROCY_USER_ID') ? GROCY_USER_ID : 1
+						);
+					}
+
+					// Actualizar contexto operativo del usuario
+					$eventSvc->SetContext(defined('GROCY_USER_ID') ? GROCY_USER_ID : 1, [
+						'product_id' => intval($args['productId']),
+						'last_module' => '/inventory'
+					]);
+				}
+			}
+			catch (\Throwable $e)
+			{
+			}
+
 			return $this->StockTransactions($request, $response, $args);
 		}
 		catch (\Exception $ex)
@@ -317,6 +372,61 @@ class StockApiController extends BaseApiController
 			$transactionId = null;
 			$transactionId = StockService::GetInstance()->ConsumeProduct($args['productId'], $requestBody['amount'], $spoiled, $transactionType, $specificStockEntryId, $recipeId, $locationId, $transactionId, $allowSubproductSubstitution, $consumeExact);
 			$args['transactionId'] = $transactionId;
+
+			// Notificar al Bus de Eventos Unificado 360°
+			try
+			{
+				if (class_exists('\\Grocy\\Services\\UnifiedInventoryEventService'))
+				{
+					$eventSvc = \Grocy\Services\UnifiedInventoryEventService::GetInstance();
+					$dbRaw = \Grocy\Services\DatabaseService::GetInstance()->GetDbConnectionRaw();
+					$txRow = $dbRaw->query("SELECT * FROM stock_log WHERE id = " . intval($transactionId))->fetch(\PDO::FETCH_ASSOC);
+					$amountDiff = $txRow ? floatval($txRow['amount']) : 0;
+					$prodRow = $dbRaw->query("SELECT name, sku FROM products WHERE id = " . intval($args['productId']))->fetch(\PDO::FETCH_ASSOC);
+
+					if (abs($amountDiff) > 0.0001)
+					{
+						$eventSvc->Publish(
+							\Grocy\Services\UnifiedInventoryEventService::EVENT_INVENTORY_DISCREPANCY_DETECTED,
+							'product',
+							strval($args['productId']),
+							[
+								'product_name' => $prodRow['name'] ?? '',
+								'sku' => $prodRow['sku'] ?? '',
+								'counted' => floatval($requestBody['new_amount']),
+								'difference' => $amountDiff,
+								'notes' => $note
+							],
+							1,
+							defined('GROCY_USER_ID') ? GROCY_USER_ID : 1
+						);
+					}
+					else
+					{
+						$eventSvc->Publish(
+							\Grocy\Services\UnifiedInventoryEventService::EVENT_INVENTORY_COUNT_COMPLETED,
+							'product',
+							strval($args['productId']),
+							[
+								'product_name' => $prodRow['name'] ?? '',
+								'counted' => floatval($requestBody['new_amount'])
+							],
+							1,
+							defined('GROCY_USER_ID') ? GROCY_USER_ID : 1
+						);
+					}
+
+					// Actualizar contexto operativo del usuario
+					$eventSvc->SetContext(defined('GROCY_USER_ID') ? GROCY_USER_ID : 1, [
+						'product_id' => intval($args['productId']),
+						'last_module' => '/inventory'
+					]);
+				}
+			}
+			catch (\Throwable $e)
+			{
+			}
+
 			return $this->StockTransactions($request, $response, $args);
 		}
 		catch (\Exception $ex)
@@ -426,6 +536,61 @@ class StockApiController extends BaseApiController
 
 			$transactionId = StockService::GetInstance()->EditStockEntry($args['entryId'], $requestBody['amount'], $bestBeforeDate, $locationId, $shoppingLocationId, $price, $requestBody['open'], $requestBody['purchased_date'], $note);
 			$args['transactionId'] = $transactionId;
+
+			// Notificar al Bus de Eventos Unificado 360°
+			try
+			{
+				if (class_exists('\\Grocy\\Services\\UnifiedInventoryEventService'))
+				{
+					$eventSvc = \Grocy\Services\UnifiedInventoryEventService::GetInstance();
+					$dbRaw = \Grocy\Services\DatabaseService::GetInstance()->GetDbConnectionRaw();
+					$txRow = $dbRaw->query("SELECT * FROM stock_log WHERE id = " . intval($transactionId))->fetch(\PDO::FETCH_ASSOC);
+					$amountDiff = $txRow ? floatval($txRow['amount']) : 0;
+					$prodRow = $dbRaw->query("SELECT name, sku FROM products WHERE id = " . intval($args['productId']))->fetch(\PDO::FETCH_ASSOC);
+
+					if (abs($amountDiff) > 0.0001)
+					{
+						$eventSvc->Publish(
+							\Grocy\Services\UnifiedInventoryEventService::EVENT_INVENTORY_DISCREPANCY_DETECTED,
+							'product',
+							strval($args['productId']),
+							[
+								'product_name' => $prodRow['name'] ?? '',
+								'sku' => $prodRow['sku'] ?? '',
+								'counted' => floatval($requestBody['new_amount']),
+								'difference' => $amountDiff,
+								'notes' => $note
+							],
+							1,
+							defined('GROCY_USER_ID') ? GROCY_USER_ID : 1
+						);
+					}
+					else
+					{
+						$eventSvc->Publish(
+							\Grocy\Services\UnifiedInventoryEventService::EVENT_INVENTORY_COUNT_COMPLETED,
+							'product',
+							strval($args['productId']),
+							[
+								'product_name' => $prodRow['name'] ?? '',
+								'counted' => floatval($requestBody['new_amount'])
+							],
+							1,
+							defined('GROCY_USER_ID') ? GROCY_USER_ID : 1
+						);
+					}
+
+					// Actualizar contexto operativo del usuario
+					$eventSvc->SetContext(defined('GROCY_USER_ID') ? GROCY_USER_ID : 1, [
+						'product_id' => intval($args['productId']),
+						'last_module' => '/inventory'
+					]);
+				}
+			}
+			catch (\Throwable $e)
+			{
+			}
+
 			return $this->StockTransactions($request, $response, $args);
 		}
 		catch (\Exception $ex)
@@ -516,6 +681,61 @@ class StockApiController extends BaseApiController
 
 			$transactionId = StockService::GetInstance()->InventoryProduct($args['productId'], $requestBody['new_amount'], $bestBeforeDate, $locationId, $price, $shoppingLocationId, $purchasedDate, $stockLabelType, $note);
 			$args['transactionId'] = $transactionId;
+
+			// Notificar al Bus de Eventos Unificado 360°
+			try
+			{
+				if (class_exists('\\Grocy\\Services\\UnifiedInventoryEventService'))
+				{
+					$eventSvc = \Grocy\Services\UnifiedInventoryEventService::GetInstance();
+					$dbRaw = \Grocy\Services\DatabaseService::GetInstance()->GetDbConnectionRaw();
+					$txRow = $dbRaw->query("SELECT * FROM stock_log WHERE id = " . intval($transactionId))->fetch(\PDO::FETCH_ASSOC);
+					$amountDiff = $txRow ? floatval($txRow['amount']) : 0;
+					$prodRow = $dbRaw->query("SELECT name, sku FROM products WHERE id = " . intval($args['productId']))->fetch(\PDO::FETCH_ASSOC);
+
+					if (abs($amountDiff) > 0.0001)
+					{
+						$eventSvc->Publish(
+							\Grocy\Services\UnifiedInventoryEventService::EVENT_INVENTORY_DISCREPANCY_DETECTED,
+							'product',
+							strval($args['productId']),
+							[
+								'product_name' => $prodRow['name'] ?? '',
+								'sku' => $prodRow['sku'] ?? '',
+								'counted' => floatval($requestBody['new_amount']),
+								'difference' => $amountDiff,
+								'notes' => $note
+							],
+							1,
+							defined('GROCY_USER_ID') ? GROCY_USER_ID : 1
+						);
+					}
+					else
+					{
+						$eventSvc->Publish(
+							\Grocy\Services\UnifiedInventoryEventService::EVENT_INVENTORY_COUNT_COMPLETED,
+							'product',
+							strval($args['productId']),
+							[
+								'product_name' => $prodRow['name'] ?? '',
+								'counted' => floatval($requestBody['new_amount'])
+							],
+							1,
+							defined('GROCY_USER_ID') ? GROCY_USER_ID : 1
+						);
+					}
+
+					// Actualizar contexto operativo del usuario
+					$eventSvc->SetContext(defined('GROCY_USER_ID') ? GROCY_USER_ID : 1, [
+						'product_id' => intval($args['productId']),
+						'last_module' => '/inventory'
+					]);
+				}
+			}
+			catch (\Throwable $e)
+			{
+			}
+
 			return $this->StockTransactions($request, $response, $args);
 		}
 		catch (\Exception $ex)
@@ -576,6 +796,61 @@ class StockApiController extends BaseApiController
 			$transactionId = null;
 			$transactionId = StockService::GetInstance()->OpenProduct($args['productId'], $requestBody['amount'], $locationId, $specificStockEntryId, $transactionId, $allowSubproductSubstitution);
 			$args['transactionId'] = $transactionId;
+
+			// Notificar al Bus de Eventos Unificado 360°
+			try
+			{
+				if (class_exists('\\Grocy\\Services\\UnifiedInventoryEventService'))
+				{
+					$eventSvc = \Grocy\Services\UnifiedInventoryEventService::GetInstance();
+					$dbRaw = \Grocy\Services\DatabaseService::GetInstance()->GetDbConnectionRaw();
+					$txRow = $dbRaw->query("SELECT * FROM stock_log WHERE id = " . intval($transactionId))->fetch(\PDO::FETCH_ASSOC);
+					$amountDiff = $txRow ? floatval($txRow['amount']) : 0;
+					$prodRow = $dbRaw->query("SELECT name, sku FROM products WHERE id = " . intval($args['productId']))->fetch(\PDO::FETCH_ASSOC);
+
+					if (abs($amountDiff) > 0.0001)
+					{
+						$eventSvc->Publish(
+							\Grocy\Services\UnifiedInventoryEventService::EVENT_INVENTORY_DISCREPANCY_DETECTED,
+							'product',
+							strval($args['productId']),
+							[
+								'product_name' => $prodRow['name'] ?? '',
+								'sku' => $prodRow['sku'] ?? '',
+								'counted' => floatval($requestBody['new_amount']),
+								'difference' => $amountDiff,
+								'notes' => $note
+							],
+							1,
+							defined('GROCY_USER_ID') ? GROCY_USER_ID : 1
+						);
+					}
+					else
+					{
+						$eventSvc->Publish(
+							\Grocy\Services\UnifiedInventoryEventService::EVENT_INVENTORY_COUNT_COMPLETED,
+							'product',
+							strval($args['productId']),
+							[
+								'product_name' => $prodRow['name'] ?? '',
+								'counted' => floatval($requestBody['new_amount'])
+							],
+							1,
+							defined('GROCY_USER_ID') ? GROCY_USER_ID : 1
+						);
+					}
+
+					// Actualizar contexto operativo del usuario
+					$eventSvc->SetContext(defined('GROCY_USER_ID') ? GROCY_USER_ID : 1, [
+						'product_id' => intval($args['productId']),
+						'last_module' => '/inventory'
+					]);
+				}
+			}
+			catch (\Throwable $e)
+			{
+			}
+
 			return $this->StockTransactions($request, $response, $args);
 		}
 		catch (\Exception $ex)
@@ -850,6 +1125,61 @@ class StockApiController extends BaseApiController
 
 			$transactionId = StockService::GetInstance()->TransferProduct($args['productId'], $requestBody['amount'], $requestBody['location_id_from'], $requestBody['location_id_to'], $specificStockEntryId);
 			$args['transactionId'] = $transactionId;
+
+			// Notificar al Bus de Eventos Unificado 360°
+			try
+			{
+				if (class_exists('\\Grocy\\Services\\UnifiedInventoryEventService'))
+				{
+					$eventSvc = \Grocy\Services\UnifiedInventoryEventService::GetInstance();
+					$dbRaw = \Grocy\Services\DatabaseService::GetInstance()->GetDbConnectionRaw();
+					$txRow = $dbRaw->query("SELECT * FROM stock_log WHERE id = " . intval($transactionId))->fetch(\PDO::FETCH_ASSOC);
+					$amountDiff = $txRow ? floatval($txRow['amount']) : 0;
+					$prodRow = $dbRaw->query("SELECT name, sku FROM products WHERE id = " . intval($args['productId']))->fetch(\PDO::FETCH_ASSOC);
+
+					if (abs($amountDiff) > 0.0001)
+					{
+						$eventSvc->Publish(
+							\Grocy\Services\UnifiedInventoryEventService::EVENT_INVENTORY_DISCREPANCY_DETECTED,
+							'product',
+							strval($args['productId']),
+							[
+								'product_name' => $prodRow['name'] ?? '',
+								'sku' => $prodRow['sku'] ?? '',
+								'counted' => floatval($requestBody['new_amount']),
+								'difference' => $amountDiff,
+								'notes' => $note
+							],
+							1,
+							defined('GROCY_USER_ID') ? GROCY_USER_ID : 1
+						);
+					}
+					else
+					{
+						$eventSvc->Publish(
+							\Grocy\Services\UnifiedInventoryEventService::EVENT_INVENTORY_COUNT_COMPLETED,
+							'product',
+							strval($args['productId']),
+							[
+								'product_name' => $prodRow['name'] ?? '',
+								'counted' => floatval($requestBody['new_amount'])
+							],
+							1,
+							defined('GROCY_USER_ID') ? GROCY_USER_ID : 1
+						);
+					}
+
+					// Actualizar contexto operativo del usuario
+					$eventSvc->SetContext(defined('GROCY_USER_ID') ? GROCY_USER_ID : 1, [
+						'product_id' => intval($args['productId']),
+						'last_module' => '/inventory'
+					]);
+				}
+			}
+			catch (\Throwable $e)
+			{
+			}
+
 			return $this->StockTransactions($request, $response, $args);
 		}
 		catch (\Exception $ex)

@@ -59,19 +59,22 @@ class OperationsController extends BaseController
 		$orders = $svc->List($branchId, $status);
 		$allOrders = $svc->List($branchId, 'all', 200);
 
-		$orderDetailsMap = [];
-		foreach ($allOrders as $ordRow)
-		{
-			$oid = intval($ordRow['id']);
-			try
+		$orderDetailsMap = \Grocy\Services\ScanService::GetInstance()->WithAvailabilityMemo(function () use ($allOrders, $svc) {
+			$details = [];
+			foreach ($allOrders as $ordRow)
 			{
-				$orderDetailsMap[$oid] = $svc->Get($oid);
+				$oid = intval($ordRow['id']);
+				try
+				{
+					$details[$oid] = $svc->Get($oid);
+				}
+				catch (\Exception $e)
+				{
+					// Ignorar si no es accesible
+				}
 			}
-			catch (\Exception $e)
-			{
-				// Ignorar si no es accesible
-			}
-		}
+			return $details;
+		});
 
 		$selected = null;
 		if (!empty($q['id']) && isset($orderDetailsMap[intval($q['id'])]))

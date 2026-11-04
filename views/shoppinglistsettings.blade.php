@@ -17,12 +17,9 @@
 
 		<div class="form-group">
 			<div class="custom-control custom-checkbox">
-				<input type="checkbox"
-					class="form-check-input custom-control-input user-setting-control"
-					id="shopping_list_show_calendar"
-					data-setting-key="shopping_list_show_calendar">
-				<label class="form-check-label custom-control-label"
-					for="shopping_list_show_calendar">
+				<input type="checkbox" class="form-check-input custom-control-input user-setting-control"
+					id="shopping_list_show_calendar" data-setting-key="shopping_list_show_calendar">
+				<label class="form-check-label custom-control-label" for="shopping_list_show_calendar">
 					{{ $__t('Show a month-view calendar') }}
 				</label>
 			</div>
@@ -30,12 +27,9 @@
 
 		<div class="form-group">
 			<div class="custom-control custom-checkbox">
-				<input type="checkbox"
-					class="form-check-input custom-control-input user-setting-control"
-					id="shopping_list_round_up"
-					data-setting-key="shopping_list_round_up">
-				<label class="form-check-label custom-control-label"
-					for="shopping_list_round_up">
+				<input type="checkbox" class="form-check-input custom-control-input user-setting-control"
+					id="shopping_list_round_up" data-setting-key="shopping_list_round_up">
+				<label class="form-check-label custom-control-label" for="shopping_list_round_up">
 					{{ $__t('Round up quantity amounts to the nearest whole number') }}
 				</label>
 			</div>
@@ -43,8 +37,7 @@
 
 		<div class="form-group">
 			<div class="custom-control custom-checkbox">
-				<input type="checkbox"
-					class="form-check-input custom-control-input user-setting-control"
+				<input type="checkbox" class="form-check-input custom-control-input user-setting-control"
 					id="shopping_list_auto_add_below_min_stock_amount"
 					data-setting-key="shopping_list_auto_add_below_min_stock_amount">
 				<label class="form-check-label custom-control-label"
@@ -53,11 +46,9 @@
 					<select class="custom-control custom-select user-setting-control"
 						id="shopping_list_auto_add_below_min_stock_amount_list_id"
 						data-setting-key="shopping_list_auto_add_below_min_stock_amount_list_id"
-						@if(!boolval($userSettings['shopping_list_auto_add_below_min_stock_amount']))
-						disabled
-						@endif>
+						@if(!boolval($userSettings['shopping_list_auto_add_below_min_stock_amount'])) disabled @endif>
 						@foreach($shoppingLists as $shoppingList)
-						<option value="{{ $shoppingList->id }}">{{ $shoppingList->name }}</option>
+							<option value="{{ $shoppingList->id }}">{{ $shoppingList->name }}</option>
 						@endforeach
 					</select>
 				</label>
@@ -69,8 +60,7 @@
 
 		<div class="form-group">
 			<div class="custom-control custom-checkbox">
-				<input type="checkbox"
-					class="form-check-input custom-control-input user-setting-control"
+				<input type="checkbox" class="form-check-input custom-control-input user-setting-control"
 					id="shopping_list_to_stock_workflow_auto_submit_when_prefilled"
 					data-setting-key="shopping_list_to_stock_workflow_auto_submit_when_prefilled">
 				<label class="form-check-label custom-control-label"
@@ -80,8 +70,7 @@
 			</div>
 		</div>
 
-		<a href="{{ $U('/shoppinglist') }}"
-			class="btn btn-success">{{ $__t('OK') }}</a>
+		<a href="{{ $U('/shoppinglist') }}" class="btn btn-success">{{ $__t('OK') }}</a>
 	</div>
 </div>
 @stop

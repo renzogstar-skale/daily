@@ -616,6 +616,8 @@ class SupplierProcurementService extends BaseService
 
 		$cats = [];
 		$sum = ['assigned' => 0.0, 'registered' => 0.0, 'committed' => 0.0];
+		$targets = [];
+		$cogsTotal = [];
 		foreach (DailyMetricsService::DEPARTMENTS as $k => [$name])
 		{
 			$dept = $dm->DeptSql([$k]);
@@ -623,9 +625,9 @@ class SupplierProcurementService extends BaseService
 			foreach ($branches as $bid => $bname)
 			{
 				// Costo planificado de la sucursal × peso del departamento en su costo de ventas del mes
-				$t = $dm->Targets($bid, $from);
+				$t = $targets[$bid] ??= $dm->Targets($bid, $from);
 				$plan = ($t['sales_target'] !== null && ($t['sources']['sales'] ?? '') === 'budget_branch') ? $t['sales_target'] * (1 - floatval($t['margin_target_pct']) / 100) : 0.0;
-				$cogsAll = $dm->Sales($bid, $from, $to)['cogs'];
+				$cogsAll = $cogsTotal[$bid] ??= $dm->Sales($bid, $from, $to)['cogs'];
 				$cogsDept = $dm->Sales($bid, $from, $to, [$k])['cogs'];
 				$assigned = ($plan > 0 && $cogsAll > 0) ? round($plan * $cogsDept / $cogsAll, 2) : 0.0;
 

@@ -549,6 +549,57 @@ class AlertCenterService extends BaseService
 						'value' => round(abs(floatval($r['difference_cost'])), 2), 'href' => '/waste#tab-conteos'];
 				}
 				break;
+			case 'device_transfer_unconfirmed':
+				$hours = max(1, intval($this->Val("SELECT value FROM device_rules WHERE code = 'transfer_confirm_hours'")));
+				foreach ($this->Rows("SELECT d.id, d.product_id, p.name, t.transfer_code, t.sent_at, d.unit_cost FROM device_units d JOIN stock_transfers t ON t.id = d.transfer_id JOIN products p ON p.id = d.product_id WHERE d.state = 'in_transit' AND d.branch_id = :b AND t.sent_at <= :s", [':b' => $b, ':s' => date('Y-m-d H:i:s', time() - 3600 * $hours)]) as $r)
+				{
+					$out[] = ['key' => "{$r['id']}", 'title' => 'Traslado sin confirmar: ' . $r['name'], 'product_id' => $r['product_id'], 'detail' => "{$r['transfer_code']} enviado el {$r['sent_at']}: el destino no confirmó la recepción.", 'value' => round(floatval($r['unit_cost']), 2), 'href' => '/loss-prevention/devices/' . $r['id']];
+				}
+				break;
+			case 'recurrent_difference':
+				foreach ($this->Rows("SELECT c.product_id, p.name, COUNT(*) AS n, SUM(c.financial_impact) AS v FROM sensitive_investigation_cases c JOIN products p ON p.id = c.product_id WHERE c.branch_id = :b AND c.created_at >= date('now', '-90 days') AND c.device_id IS NULL GROUP BY c.product_id HAVING n > 1", [':b' => $b]) as $r)
+				{
+					$out[] = ['key' => "$b:{$r['product_id']}", 'title' => 'Diferencias repetidas: ' . $r['name'], 'product_id' => $r['product_id'], 'detail' => "{$r['n']} expedientes en 90 días. Revisar el proceso; no señala a ninguna persona.", 'value' => round(floatval($r['v']), 2), 'href' => '/merchandise?product_id=' . $r['product_id'] . '&branch_id=' . $b];
+				}
+				break;
+			case 'repeated_adjustments':
+				foreach ($this->Rows("SELECT m.product_id, p.name, COUNT(DISTINCT m.operation_ref) AS n, SUM(m.value) AS v FROM merchandise_movements m JOIN products p ON p.id = m.product_id WHERE m.branch_id = :b AND m.undone = 0 AND m.bucket = 'adjustments' AND m.effective_at >= date('now', '-30 days') GROUP BY m.product_id HAVING n >= 3", [':b' => $b]) as $r)
+				{
+					$out[] = ['key' => "$b:{$r['product_id']}", 'title' => 'Ajustes repetidos: ' . $r['name'], 'product_id' => $r['product_id'], 'detail' => "{$r['n']} ajustes en 30 días.", 'value' => round(floatval($r['v']), 2), 'href' => '/merchandise?bucket=adjustments&product_id=' . $r['product_id'] . '&branch_id=' . $b];
+				}
+				break;
+			case 'reception_difference':
+				foreach ($this->Rows("SELECT r.id, r.receipt_code, SUM(i.delivered_amount - i.accepted_amount) AS q, SUM((i.delivered_amount - i.accepted_amount) * i.unit_price) AS v FROM procurement_receipts r JOIN procurement_receipt_items i ON i.receipt_id = r.id WHERE r.branch_id = :b AND r.received_at >= date('now', '-14 days') GROUP BY r.id HAVING q > 0", [':b' => $b]) as $r)
+				{
+					$out[] = ['key' => "po{$r['id']}", 'title' => 'Recepción con diferencias: ' . $r['receipt_code'], 'detail' => floatval($r['q']) . ' u. entregadas sin aceptar.', 'value' => round(floatval($r['v']), 2), 'href' => '/mrp'];
+				}
+				foreach ($this->Rows("SELECT id, code FROM device_receipts WHERE branch_id = :b AND status = 'with_differences' AND created_at >= date('now', '-14 days')", [':b' => $b]) as $r)
+				{
+					$out[] = ['key' => "dv{$r['id']}", 'title' => 'Recepción por IMEI con diferencias: ' . $r['code'], 'detail' => 'Se cerró con faltantes o adicionales justificados.', 'value' => null, 'href' => '/loss-prevention/devices'];
+				}
+				break;
+			case 'sensitive_no_follow_up':
+				foreach ($this->Rows("SELECT p.id, p.name FROM products p WHERE p.active = 1 AND p.is_sensitive = 1 AND p.device_control = 0
+					AND EXISTS (SELECT 1 FROM stock s JOIN locations l ON l.id = s.location_id WHERE s.product_id = p.id AND l.branch_id = :b AND s.amount > 0)
+					AND NOT EXISTS (SELECT 1 FROM sensitive_inventory_movements m WHERE m.product_id = p.id AND m.branch_id = :b AND m.event_type = 'cycle_count' AND m.created_at >= date('now', '-14 days'))", [':b' => $b]) as $r)
+				{
+					$out[] = ['key' => "$b:{$r['id']}", 'title' => 'Sensible sin seguimiento: ' . $r['name'], 'product_id' => $r['id'], 'detail' => 'Sin conteo en 14 días.', 'value' => null, 'href' => '/loss-prevention/counts'];
+				}
+				break;
+			case 'sensitive_count_overdue':
+				foreach ($this->Rows("SELECT t.id, t.product_id, p.name, t.due_at FROM sensitive_count_tasks t JOIN products p ON p.id = t.product_id WHERE t.branch_id = :b AND t.status IN ('pending', 'recount') AND t.due_at < :n", [':b' => $b, ':n' => $this->Now()]) as $r)
+				{
+					$out[] = ['key' => "{$r['id']}", 'title' => 'Conteo sensible vencido: ' . $r['name'], 'product_id' => $r['product_id'], 'detail' => 'Debía ejecutarse antes de ' . $r['due_at'] . '.', 'value' => null, 'href' => '/loss-prevention/counts'];
+				}
+				break;
+			case 'sensitive_manual_adjust':
+				foreach ($this->Rows("SELECT sl.id, sl.product_id, p.name, sl.amount, sl.row_created_timestamp, ABS(sl.amount * IFNULL(sl.price, 0)) AS v FROM stock_log sl JOIN products p ON p.id = sl.product_id JOIN locations l ON l.id = sl.location_id
+					WHERE l.branch_id = :b AND p.is_sensitive = 1 AND sl.undone = 0 AND sl.transaction_type = 'inventory-correction' AND sl.row_created_timestamp >= date('now', '-7 days')
+					AND NOT EXISTS (SELECT 1 FROM sensitive_inventory_movements m WHERE m.stock_transaction_id = sl.transaction_id)", [':b' => $b]) as $r)
+				{
+					$out[] = ['key' => "{$r['id']}", 'title' => 'Ajuste sin expediente: ' . $r['name'], 'product_id' => $r['product_id'], 'detail' => floatval($r['amount']) . ' u. el ' . $r['row_created_timestamp'] . '. No está ligado a un expediente aprobado.', 'value' => round(floatval($r['v']), 2), 'href' => '/kardex?product_id=' . $r['product_id']];
+				}
+				break;
 			case 'count_overdue':
 				foreach ($this->Rows("SELECT c.id, c.product_id, p.name, c.scheduled_date FROM stock_cycle_counts c LEFT JOIN products p ON p.id = c.product_id
 					WHERE c.branch_id = :b AND c.status = 'pending' AND c.scheduled_date < :d", [':b' => $b, ':d' => $today]) as $r)
@@ -657,6 +708,84 @@ class AlertCenterService extends BaseService
 						'value' => abs(floatval($r['financial_impact'])),
 						'href' => '/dispatch?order_id=' . $r['order_id']
 					];
+				}
+				break;
+			// ── Integridad del ciclo operativo (0318): documentos detenidos o inconsistentes; el href abre el expediente o el módulo que lo resuelve
+			case 'expired_lot_unblocked':
+				// expiring_lots deja de ver el lote el día que vence: sin esta regla la alerta se autocerraba y el lote vencido seguía vendible
+				foreach ($this->Rows("SELECT s.stock_id, s.product_id, p.name, s.best_before_date AS d, SUM(s.amount) AS qty, SUM(s.amount * IFNULL(s.price, 0)) AS value, MIN(l.name) AS loc
+					FROM stock s JOIN locations l ON l.id = s.location_id LEFT JOIN products p ON p.id = s.product_id
+					WHERE l.branch_id = :b AND IFNULL(l.is_transit, 0) = 0 AND s.amount > 0 AND s.best_before_date < date('now', 'localtime') AND s.best_before_date <> '2999-12-31'
+						AND NOT EXISTS (SELECT 1 FROM quarantine_items q WHERE q.stock_id = s.stock_id AND q.status = 'in_quarantine')
+					GROUP BY s.stock_id, s.best_before_date", [':b' => $b]) as $r)
+				{
+					$out[] = ['key' => "{$r['stock_id']}", 'title' => 'Lote vencido a la venta: ' . ($r['name'] ?? 'producto #' . $r['product_id']), 'product_id' => $r['product_id'],
+						'detail' => "Venció el {$r['d']} · {$r['qty']} u. en {$r['loc']} · {$money($r['value'])} a costo. Bloquear en cuarentena y decidir merma o devolución.",
+						'value' => $r['value'], 'href' => '/quality'];
+				}
+				break;
+			case 'waste_approval_stale':
+				foreach ($this->Rows("SELECT w.id, w.case_number, w.total_cost, w.created_timestamp, p.name FROM waste_records w LEFT JOIN products p ON p.id = w.product_id
+					WHERE w.branch_id = :b AND w.status = 'pending_approval' AND IFNULL(w.inventory_deducted, 0) = 0 AND w.created_timestamp <= :lim", [':b' => $b, ':lim' => date('Y-m-d H:i:s', time() - 86400 * intval($t ?? 3))]) as $r)
+				{
+					$out[] = ['key' => "{$r['id']}", 'title' => 'Merma sin decisión: ' . ($r['case_number'] ?: '#' . $r['id']), 'detail' => ($r['name'] ?? 'Producto') . ' · ' . $money($r['total_cost']) . ' · registrada el ' . substr($r['created_timestamp'], 0, 16) . '.',
+						'value' => $r['total_cost'], 'href' => '/process-flow?type=waste_record&id=' . $r['id']];
+				}
+				break;
+			case 'waste_pending_deducted':
+				foreach ($this->Rows("SELECT w.id, w.case_number, w.total_cost, p.name FROM waste_records w LEFT JOIN products p ON p.id = w.product_id
+					WHERE w.branch_id = :b AND w.status = 'pending_approval' AND IFNULL(w.inventory_deducted, 0) = 1", [':b' => $b]) as $r)
+				{
+					$out[] = ['key' => "{$r['id']}", 'title' => 'Merma descontada sin aprobación: ' . ($r['case_number'] ?: '#' . $r['id']), 'detail' => ($r['name'] ?? 'Producto') . ' · ' . $money($r['total_cost']) . ' salió del inventario sin aprobación registrada.',
+						'value' => $r['total_cost'], 'href' => '/process-flow?type=waste_record&id=' . $r['id']];
+				}
+				break;
+			case 'order_unconciliated':
+				foreach ($this->Rows("SELECT id, order_code, dispatched_at, variance_total_cost FROM customer_orders WHERE branch_id = :b AND status = 'dispatched' AND conciliated_at IS NULL AND dispatched_at <= :lim",
+					[':b' => $b, ':lim' => date('Y-m-d H:i:s', time() - 86400 * intval($t ?? 2))]) as $r)
+				{
+					$out[] = ['key' => "{$r['id']}", 'title' => 'Despacho sin conciliar: ' . $r['order_code'], 'detail' => 'Despachado el ' . substr((string) $r['dispatched_at'], 0, 16) . ' sin conciliar lo preparado contra lo entregado.',
+						'value' => $r['variance_total_cost'], 'href' => '/process-flow?type=customer_order&id=' . $r['id']];
+				}
+				break;
+			case 'cash_shift_stale':
+				foreach ($this->Rows("SELECT id, register_name, shift_name, opened_at, total_sales FROM pos_cash_shifts WHERE branch_id = :b AND status = 'open' AND opened_at <= :lim",
+					[':b' => $b, ':lim' => date('Y-m-d H:i:s', time() - 3600 * intval($t ?? 24))]) as $r)
+				{
+					$out[] = ['key' => "{$r['id']}", 'title' => 'Caja sin cerrar: ' . trim($r['register_name'] . ' ' . $r['shift_name']), 'detail' => 'Abierta desde ' . substr($r['opened_at'], 0, 16) . ' · ventas ' . $money($r['total_sales']) . ' sin arqueo.',
+						'value' => $r['total_sales'], 'href' => '/pos'];
+				}
+				break;
+			case 'po_not_sent':
+				foreach ($this->Rows("SELECT id, order_code, approved_at, total_estimated_cost FROM procurement_orders WHERE branch_id = :b AND status = 'approved' AND sent_at IS NULL AND IFNULL(approved_at, created_at) <= :lim",
+					[':b' => $b, ':lim' => date('Y-m-d H:i:s', time() - 86400 * intval($t ?? 1))]) as $r)
+				{
+					$out[] = ['key' => "{$r['id']}", 'title' => 'OC aprobada sin enviar: ' . $r['order_code'], 'detail' => 'Aprobada el ' . substr((string) $r['approved_at'], 0, 16) . ' · ' . $money($r['total_estimated_cost']) . '. Sin envío no hay recepción ni reposición.',
+						'value' => $r['total_estimated_cost'], 'href' => '/process-flow?type=procurement_order&id=' . $r['id']];
+				}
+				break;
+			case 'return_no_destination':
+				foreach ($this->Rows("SELECT id, return_code, total_cost FROM customer_returns_exchanges WHERE branch_id = :b AND status IN ('conciliada', 'cerrada') AND waste_record_id IS NULL AND stock_booking_id IS NULL", [':b' => $b]) as $r)
+				{
+					$out[] = ['key' => "{$r['id']}", 'title' => 'Devolución sin destino: ' . $r['return_code'], 'detail' => 'Cerrada sin reingreso a stock ni merma: la mercadería no quedó registrada en ningún lugar.',
+						'value' => $r['total_cost'], 'href' => '/process-flow?type=customer_return&id=' . $r['id']];
+				}
+				break;
+			case 'transfer_without_movement':
+				foreach ($this->Rows("SELECT id, transfer_code, sent_at FROM stock_transfers WHERE from_branch_id = :b AND status = 'in_transit' AND IFNULL(send_transaction_id, '') = ''", [':b' => $b]) as $r)
+				{
+					$out[] = ['key' => "{$r['id']}", 'title' => 'Traslado sin salida de stock: ' . $r['transfer_code'], 'detail' => 'En tránsito desde ' . substr((string) $r['sent_at'], 0, 16) . ' sin movimiento de salida en el origen: el destino recibiría mercadería que no salió.',
+						'href' => '/process-flow?type=stock_transfer&id=' . $r['id']];
+				}
+				break;
+			case 'tasks_unassigned_overdue':
+				$r = $this->Row("SELECT COUNT(*) AS n, MIN(due_time) AS oldest FROM workforce_store_tasks WHERE branch_id = :b AND status IN ('pending', 'in_progress', 'blocked')
+					AND assigned_user_id IS NULL AND assigned_employee_id IS NULL AND due_time < :now", [':b' => $b, ':now' => $this->Now()]);
+				if (intval($r['n']) > 0)
+				{
+					// Una alerta por sucursal (no una por tarea): la clave cambia solo si cambia la sucursal
+					$out[] = ['key' => "$b", 'title' => intval($r['n']) . ' tareas vencidas sin responsable', 'detail' => 'La más antigua venció el ' . substr((string) $r['oldest'], 0, 16) . '. Asignar por rol y turno.',
+						'href' => '/process-flow?type=store_task'];
 				}
 				break;
 			case 'predictive_expiry_risk':
@@ -1164,6 +1293,38 @@ class AlertCenterService extends BaseService
 		$this->NotifyNew($id);
 		AutomationEngineService::GetInstance()->OnAlert('alert_created', $id);
 		return ['id' => $id, 'created' => true];
+	}
+
+	/* ---------- Incidentes con expediente propio (prevención de pérdidas): el expediente manda el estado de su única alerta */
+
+	public function RaiseIncident(array $f, ?int $userId): int
+	{
+		$now = $this->Now();
+		$existing = $this->Val('SELECT id FROM dairy_alerts WHERE dedupe_key = :k', [':k' => $f['dedupe_key']]);
+		if ($existing)
+		{
+			return intval($existing);
+		}
+		$f += ['status' => empty($f['owner_user_id']) ? 'open' : 'assigned', 'source' => 'system'];
+		$id = $this->Insert($f, $now);
+		$this->Event($id, $userId, 'created', 'Generada por el motor de conciliación');
+		$this->Reprioritize($id);
+		return $id;
+	}
+
+	public function UpdateIncident(int $id, array $f): void
+	{
+		$f = array_filter($f, fn($v) => $v !== null);
+		$cols = array_keys($f);
+		$this->Db()->prepare('UPDATE dairy_alerts SET ' . implode(', ', array_map(fn($k) => "$k = ?", $cols)) . ', updated_at = ?, last_seen_at = ? WHERE id = ?')->execute([...array_values($f), $this->Now(), $this->Now(), $id]);
+		$this->Reprioritize($id);
+	}
+
+	public function CloseIncident(int $id, string $resolution, ?int $userId, array $f = []): void
+	{
+		$now = $this->Now();
+		$this->UpdateIncident($id, $f + ['status' => 'closed', 'resolution' => $resolution, 'resolved_by_user_id' => $userId, 'resolved_at' => $now]);
+		$this->Event($id, $userId, 'closed', $resolution);
 	}
 
 	/* ---------- Evidencias y plan de acción */

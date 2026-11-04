@@ -2,3 +2,18 @@ RewriteEngine On
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^ index.php [QSA,L]
+
+# Compresión de recursos estáticos
+<IfModule mod_deflate.c>
+	AddOutputFilterByType DEFLATE text/css application/javascript text/javascript application/json image/svg+xml
+</IfModule>
+
+# packages/ lleva la versión en la URL; el resto se revalida para que un cambio de CSS o JS se vea enseguida
+<IfModule mod_headers.c>
+	<FilesMatch "\.(css|js|woff2?|ttf|svg|png|jpe?g|webp|ico)$">
+		Header set Cache-Control "public, no-cache"
+	</FilesMatch>
+	<If "%{REQUEST_URI} =~ m#/packages/#">
+		Header set Cache-Control "public, max-age=31536000, immutable"
+	</If>
+</IfModule>

@@ -84,6 +84,7 @@ ok('reconteo ratifica diferencia y eleva a faltante confirmado', $recountRes['su
 
 // Segregación de funciones: usuario 2 no puede ser el mismo que creó el caso si no es admin,
 // pero usuario 1 (admin) o un segundo usuario sí puede autorizar
+\Grocy\Services\SensitiveCaseService::GetInstance()->ProposeAdjustment($caseId, 'Reconteo ratifica la diferencia.', 1);
 $adjustRes = $svc->AuthorizeAdjustment($caseId, 'approved', 'Pérdida formalizada en merma tras reconteo.', 1);
 ok('ajuste de inventario autorizado con segregación de funciones', $adjustRes['success'] === true);
 

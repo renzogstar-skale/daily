@@ -114,7 +114,7 @@ class MovementLedgerService extends BaseService
 		$since = date('Y-m-d', strtotime('-' . max(1, $days) . ' days'));
 		$branch = $branchId ? ' AND loc.branch_id = ' . intval($branchId) : '';
 		$base = "FROM stock_log l JOIN products p ON p.id = l.product_id LEFT JOIN locations loc ON loc.id = l.location_id LEFT JOIN users u ON u.id = l.user_id
-			WHERE date(l.row_created_timestamp) >= '$since'$branch";
+			WHERE l.row_created_timestamp >= '$since'$branch";
 		$user = "IFNULL(NULLIF(TRIM(IFNULL(u.first_name, '') || ' ' || IFNULL(u.last_name, '')), ''), IFNULL(u.username, 'sistema'))";
 		$out = [];
 		$push = function (string $type, string $severity, array $r, string $detail) use (&$out) {
@@ -124,6 +124,7 @@ class MovementLedgerService extends BaseService
 		// Duplicado probable: mismo producto, tipo, cantidad y usuario en ≤ 2 min, otra transacción
 		foreach ($db->query("SELECT l.*, p.name AS product_name, $user AS user_name $base AND l.undone = 0 AND EXISTS (
 				SELECT 1 FROM stock_log o WHERE o.id < l.id AND o.undone = 0 AND o.product_id = l.product_id AND o.transaction_type = l.transaction_type
+				AND o.row_created_timestamp BETWEEN datetime(l.row_created_timestamp, '-121 seconds') AND datetime(l.row_created_timestamp, '+121 seconds')
 				AND o.amount = l.amount AND IFNULL(o.user_id, 0) = IFNULL(l.user_id, 0) AND IFNULL(o.transaction_id, '') != IFNULL(l.transaction_id, '')
 				AND ABS(strftime('%s', l.row_created_timestamp) - strftime('%s', o.row_created_timestamp)) <= 120)
 			ORDER BY l.id DESC", \PDO::FETCH_ASSOC) as $r)

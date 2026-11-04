@@ -60,6 +60,9 @@ catch (\Throwable $e)
 }
 try
 {
+	\Grocy\Services\SensitiveCaseService::GetInstance()->GenerateTasks();
+	\Grocy\Services\DeviceService::GetInstance()->GenerateCounts();
+	\Grocy\Services\SensitiveCaseService::GetInstance()->ReevaluateOpen();
 	$scan =\Grocy\Services\AlertCenterService::GetInstance()->Scan(null, null);
 	echo date('Y-m-d H:i:s') . " alertas: creadas {$scan['created']} · actualizadas {$scan['refreshed']} · cerradas {$scan['auto_closed']}\n";
 }

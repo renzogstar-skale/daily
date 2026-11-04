@@ -15,6 +15,8 @@ use Grocy\Helpers\DairyAccess;
  */
 class ScanService extends BaseService
 {
+	private ?array $AvailabilityMemo = null;
+
 	// AI GS1 de longitud fija (sin separador); el resto es variable y termina en GS o fin de cadena
 	const GS1_FIXED = ['00' => 18, '01' => 14, '02' => 14, '11' => 6, '12' => 6, '13' => 6, '15' => 6, '16' => 6, '17' => 6, '20' => 2];
 	const GS1_VARIABLE = ['10' => 20, '21' => 20, '22' => 20, '30' => 8, '37' => 8, '240' => 30, '241' => 30, '250' => 30, '400' => 30, '90' => 30];
@@ -322,6 +324,11 @@ class ScanService extends BaseService
 	 */
 	public function Availability(int $productId, ?int $branchId): array
 	{
+		$memoKey = $productId . '|' . $branchId;
+		if (isset($this->AvailabilityMemo[$memoKey]))
+		{
+			return $this->AvailabilityMemo[$memoKey];
+		}
 		$bl = $branchId ? ' AND l.branch_id = :b' : '';
 		$p = $branchId ? [':p' => $productId, ':b' => $branchId] : [':p' => $productId];
 		$today = date('Y-m-d');
@@ -332,7 +339,7 @@ class ScanService extends BaseService
 		$transit = floatval($this->Row('SELECT IFNULL(SUM(s.amount), 0) AS v FROM stock s JOIN locations l ON l.id = s.location_id WHERE s.product_id = :p AND l.is_transit = 1', [':p' => $productId])['v']);
 		$reserved = CustomerOrderService::GetInstance()->Reserved($productId, $branchId);
 		$lastCount = $this->Row("SELECT executed_date, theoretical_stock, counted_stock, difference_amount, status FROM stock_cycle_counts WHERE product_id = :p AND status <> 'pending'" . ($branchId ? ' AND branch_id = :b' : '') . ' ORDER BY executed_date DESC, id DESC LIMIT 1', $p);
-		return [
+		$result = [
 			'physical' => $physical,
 			'quarantine' => $quarantine,
 			'expired' => $expired,
@@ -342,6 +349,25 @@ class ScanService extends BaseService
 			'available' => max(0, round($physical - $quarantine - $expired - $committed - $reserved, 4)),
 			'last_count' => $lastCount,
 		];
+		if ($this->AvailabilityMemo !== null)
+		{
+			$this->AvailabilityMemo[$memoKey] = $result;
+		}
+		return $result;
+	}
+
+	/** Reutiliza Availability dentro de $read: solo para pantallas de lectura que repiten producto y sucursal, nunca al registrar operaciones */
+	public function WithAvailabilityMemo(callable $read)
+	{
+		$this->AvailabilityMemo = [];
+		try
+		{
+			return $read();
+		}
+		finally
+		{
+			$this->AvailabilityMemo = null;
+		}
 	}
 
 	/* ---------------------------------------------------------------- Sesiones */

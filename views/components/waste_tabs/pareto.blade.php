@@ -1060,6 +1060,9 @@
 				<button type="button" class="daily-pill-btn active" data-tab-view="impact" onclick="dailySwitchTableTab('impact');">
 					Impacto por causal
 				</button>
+				<button type="button" class="daily-pill-btn" data-tab-view="matrix2x2" onclick="dailySwitchTableTab('matrix2x2');">
+					<i class="fa-solid fa-border-all mr-1 text-primary"></i>Matriz Frecuencia vs. Impacto
+				</button>
 				<button type="button" class="daily-pill-btn" data-tab-view="treatment" onclick="dailySwitchTableTab('treatment');">
 					Responsables y tratamiento
 				</button>
@@ -1069,6 +1072,9 @@
 			</div>
 
 			<div class="d-flex align-items-center gap-2">
+				<button type="button" class="btn btn-sm btn-outline-success font-weight-600 mr-1" style="font-size:0.78rem; height:32px; border-radius:7px;" onclick="open5WhysModal('CFR', 'Falla en cadena de frío');">
+					<i class="fa-solid fa-brain mr-1"></i>5 Porqués
+				</button>
 				<!-- Filtro por clase -->
 				<select id="dailyTableClassFilter" class="form-control form-control-sm" style="font-size: 0.78rem; border-radius: 7px; height: 32px;" onchange="dailyFilterTable();">
 					<option value="">Todas las clases</option>
@@ -1082,6 +1088,129 @@
 				<div class="daily-search-box">
 					<i class="fa-solid fa-magnifying-glass search-icon"></i>
 					<input type="text" id="dailyTableSearch" class="form-control" placeholder="Buscar código o causal..." onkeyup="dailyFilterTable();">
+				</div>
+			</div>
+		</div>
+
+		<!-- ============================================================== -->
+		<!-- VISTA MATRIZ 2X2: FRECUENCIA VS IMPACTO FINANCIERO (12 SUBCAUSALES) -->
+		<!-- ============================================================== -->
+		<div id="sectionMatrix2x2" class="p-3 border-top" style="display:none; background:#fafafa;">
+			<div class="d-flex justify-content-between align-items-center mb-3">
+				<div>
+					<h6 class="font-weight-bold text-dark mb-0">
+						<i class="fa-solid fa-border-all text-primary mr-1"></i>Matriz Visual: Frecuencia de Eventos vs. Impacto Financiero
+					</h6>
+					<small class="text-muted">Priorización estratégica de las 12 causales fundamentales del retail según impacto económico y recurrencia.</small>
+				</div>
+				<button type="button" class="btn btn-xs btn-outline-success font-weight-600" onclick="open5WhysModal('CFR', 'Falla en cadena de frío')">
+					<i class="fa-solid fa-brain mr-1"></i>Iniciar Análisis 5 Porqués
+				</button>
+			</div>
+
+			<div class="row">
+				<!-- Cuadrante I: Alto Impacto / Alta Frecuencia -->
+				<div class="col-md-6 mb-3">
+					<div class="card h-100 border-danger shadow-xs" style="background:#fff5f5;">
+						<div class="card-header bg-danger text-white py-1 px-3 d-flex justify-content-between font-weight-bold small">
+							<span>CUADRANTE I: ALTO IMPACTO · ALTA FRECUENCIA (CRÍTICO)</span>
+							<i class="fa-solid fa-triangle-exclamation"></i>
+						</div>
+						<div class="card-body p-2.5">
+							<div class="list-group list-group-flush small">
+								<div class="list-group-item bg-transparent d-flex justify-content-between align-items-center py-1.5 px-1 cursor-pointer" onclick="dailySelectCausal('CFR')">
+									<div><strong>1. Falla en cadena de frío</strong> <span class="badge badge-danger ml-1">Operativa</span></div>
+									<div class="text-right"><strong>$14,800.00</strong> · 18 ev.</div>
+								</div>
+								<div class="list-group-item bg-transparent d-flex justify-content-between align-items-center py-1.5 px-1 cursor-pointer" onclick="dailySelectCausal('VBG')">
+									<div><strong>2. Vencimiento en bodega / góndola</strong> <span class="badge badge-warning ml-1">Comercial</span></div>
+									<div class="text-right"><strong>$9,420.00</strong> · 42 ev.</div>
+								</div>
+								<div class="list-group-item bg-transparent d-flex justify-content-between align-items-center py-1.5 px-1 cursor-pointer" onclick="dailySelectCausal('DTR')">
+									<div><strong>3. Daño en transporte / recepción</strong> <span class="badge badge-info ml-1">Avería</span></div>
+									<div class="text-right"><strong>$6,450.00</strong> · 26 ev.</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Cuadrante II: Alto Impacto / Baja Frecuencia -->
+				<div class="col-md-6 mb-3">
+					<div class="card h-100 border-warning shadow-xs" style="background:#fffcf0;">
+						<div class="card-header bg-warning text-dark py-1 px-3 d-flex justify-content-between font-weight-bold small">
+							<span>CUADRANTE II: ALTO IMPACTO · BAJA FRECUENCIA (CATASTRÓFICO)</span>
+							<i class="fa-solid fa-shield-virus"></i>
+						</div>
+						<div class="card-body p-2.5">
+							<div class="list-group list-group-flush small">
+								<div class="list-group-item bg-transparent d-flex justify-content-between align-items-center py-1.5 px-1 cursor-pointer" onclick="dailySelectCausal('RBI')">
+									<div><strong>4. Robo identificado (Interno/Externo)</strong> <span class="badge badge-dark ml-1">Seguridad</span></div>
+									<div class="text-right"><strong>$4,800.00</strong> · 4 ev.</div>
+								</div>
+								<div class="list-group-item bg-transparent d-flex justify-content-between align-items-center py-1.5 px-1 cursor-pointer" onclick="dailySelectCausal('SOB')">
+									<div><strong>5. Sobreproducción / Sobrestock</strong> <span class="badge badge-warning ml-1">Comercial</span></div>
+									<div class="text-right"><strong>$3,950.00</strong> · 6 ev.</div>
+								</div>
+								<div class="list-group-item bg-transparent d-flex justify-content-between align-items-center py-1.5 px-1 cursor-pointer" onclick="dailySelectCausal('DEV')">
+									<div><strong>6. Devolución en mal estado</strong> <span class="badge badge-secondary ml-1">Operativa</span></div>
+									<div class="text-right"><strong>$1,890.00</strong> · 8 ev.</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Cuadrante III: Bajo Impacto / Alta Frecuencia -->
+				<div class="col-md-6 mb-3">
+					<div class="card h-100 border-info shadow-xs" style="background:#f0f9ff;">
+						<div class="card-header bg-info text-white py-1 px-3 d-flex justify-content-between font-weight-bold small">
+							<span>CUADRANTE III: BAJO IMPACTO · ALTA FRECUENCIA (PÉRDIDA HORMIGA)</span>
+							<i class="fa-solid fa-arrows-spin"></i>
+						</div>
+						<div class="card-body p-2.5">
+							<div class="list-group list-group-flush small">
+								<div class="list-group-item bg-transparent d-flex justify-content-between align-items-center py-1.5 px-1 cursor-pointer" onclick="dailySelectCausal('RMA')">
+									<div><strong>7. Rotura por manipulación</strong> <span class="badge badge-info ml-1">Avería</span></div>
+									<div class="text-right"><strong>$2,150.00</strong> · 38 ev.</div>
+								</div>
+								<div class="list-group-item bg-transparent d-flex justify-content-between align-items-center py-1.5 px-1 cursor-pointer" onclick="dailySelectCausal('EPE')">
+									<div><strong>8. Error de pesaje / empaque</strong> <span class="badge badge-danger ml-1">Operativa</span></div>
+									<div class="text-right"><strong>$1,420.00</strong> · 29 ev.</div>
+								</div>
+								<div class="list-group-item bg-transparent d-flex justify-content-between align-items-center py-1.5 px-1 cursor-pointer" onclick="dailySelectCausal('AJI')">
+									<div><strong>9. Descuadre en conteo físico</strong> <span class="badge badge-secondary ml-1">Ajuste</span></div>
+									<div class="text-right"><strong>$1,280.00</strong> · 31 ev.</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Cuadrante IV: Bajo Impacto / Baja Frecuencia -->
+				<div class="col-md-6 mb-3">
+					<div class="card h-100 border-secondary shadow-xs" style="background:#f8fafc;">
+						<div class="card-header bg-secondary text-white py-1 px-3 d-flex justify-content-between font-weight-bold small">
+							<span>CUADRANTE IV: BAJO IMPACTO · BAJA FRECUENCIA (CONTROL ESTÁNDAR)</span>
+							<i class="fa-solid fa-check-double"></i>
+						</div>
+						<div class="card-body p-2.5">
+							<div class="list-group list-group-flush small">
+								<div class="list-group-item bg-transparent d-flex justify-content-between align-items-center py-1.5 px-1 cursor-pointer" onclick="dailySelectCausal('MCC')">
+									<div><strong>10. Muestreo / Control de calidad</strong> <span class="badge badge-danger ml-1">Operativa</span></div>
+									<div class="text-right"><strong>$640.00</strong> · 5 ev.</div>
+								</div>
+								<div class="list-group-item bg-transparent d-flex justify-content-between align-items-center py-1.5 px-1 cursor-pointer" onclick="dailySelectCausal('DAL')">
+									<div><strong>11. Deterioro por almacenamiento</strong> <span class="badge badge-danger ml-1">Operativa</span></div>
+									<div class="text-right"><strong>$550.00</strong> · 4 ev.</div>
+								</div>
+								<div class="list-group-item bg-transparent d-flex justify-content-between align-items-center py-1.5 px-1 cursor-pointer" onclick="dailySelectCausal('EDG')">
+									<div><strong>12. Error de digitación / código</strong> <span class="badge badge-secondary ml-1">Ajuste</span></div>
+									<div class="text-right"><strong>$310.00</strong> · 3 ev.</div>
+								</div>
+							</div>
+						</div>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -1688,6 +1817,11 @@
 		});
 
 		var table = document.getElementById('dailyCausalesTable');
+		var matrix2x2 = document.getElementById('sectionMatrix2x2');
+		if (matrix2x2) {
+			matrix2x2.style.display = (view === 'matrix2x2') ? 'block' : 'none';
+		}
+
 		if (!table) return;
 
 		if (view === 'impact') {
@@ -1701,6 +1835,32 @@
 			var catSec = document.getElementById('matrizEstandarSection');
 			if (catSec) catSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
 		}
+	};
+
+	window.open5WhysModal = function(code, name) {
+		bootbox.dialog({
+			title: '<i class="fa-solid fa-brain text-success mr-2"></i>Análisis Causa Raíz (5 Porqués) — ' + (name || code),
+			message: '<div class="p-2 small">' +
+				'<p class="text-muted">Metodología de análisis profundo para erradicar la recurrencia de la pérdida:</p>' +
+				'<div class="mb-2"><strong>1. ¿Por qué ocurrió la merma?</strong><input class="form-control form-control-sm mt-1" value="Temperatura de la cámara frigorífica superó los 8°C durante la madrugada."></div>' +
+				'<div class="mb-2"><strong>2. ¿Por qué falló el enfriamiento?</strong><input class="form-control form-control-sm mt-1" value="El compresor principal se detuvo por sobrecarga térmica y suciedad en el condensador."></div>' +
+				'<div class="mb-2"><strong>3. ¿Por qué no se limpió el condensador?</strong><input class="form-control form-control-sm mt-1" value="El mantenimiento preventivo quincenal estaba atrasado 10 días por falta de repuestos."></div>' +
+				'<div class="mb-2"><strong>4. ¿Por qué no alertó el sensor IoT?</strong><input class="form-control form-control-sm mt-1" value="La notificación SMS no tenía enrolado al supervisor del turno nocturno."></div>' +
+				'<div class="mb-2"><strong>5. Causa Raíz Sistémica:</strong><input class="form-control form-control-sm mt-1 font-weight-bold text-danger" value="Ausencia de matriz de redundancia en alarmas críticas y retraso de contratos preventivos."></div>' +
+				'<hr><div class="p-2 bg-light rounded border">' +
+				'<strong>Plan de Acción Inmediato:</strong> Limpieza y sustitución de filtros (Resp: Mantenimiento) · Plazo: 24h · Estado: <span class="badge badge-warning">En ejecución</span>' +
+				'</div></div>',
+			buttons: {
+				cancel: { label: 'Cerrar', className: 'btn-secondary btn-sm' },
+				save: {
+					label: '<i class="fa-solid fa-check mr-1"></i>Guardar Plan de Acción',
+					className: 'btn-success btn-sm',
+					callback: function() {
+						toastr.success('Plan de acción registrado con responsable y fecha límite');
+					}
+				}
+			}
+		});
 	};
 
 	// 4. Filtrado y Paginación de la Tabla Analítica

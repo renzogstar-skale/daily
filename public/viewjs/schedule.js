@@ -280,9 +280,9 @@
 		duration: '9.5h',
 		date_formatted: 'Lunes 2 de noviembre',
 		shift_date: '2026-11-02',
-		employee_name: 'DELGADO LEAL KAREN PAOLA',
+		employee_name: 'Lionel Messi',
 		employee_id: 1164,
-		employee_avatar: 'KD',
+		employee_avatar: 'LM',
 		department: 'Accesorios',
 		role: 'E.ACCESORIOS',
 		status: 'Confirmado',
@@ -295,8 +295,8 @@
 		$('#detailShiftDate').text(currentShift.date_formatted || 'Lunes 2 de noviembre');
 		$('#detailShiftTime').text((currentShift.start_time || '10:00') + ' - ' + (currentShift.end_time || '20:00') + ' (' + (currentShift.duration || '9.5h') + ')');
 		$('#detailShiftDeptRole').text((currentShift.department || 'Accesorios') + ' · ' + (currentShift.role || 'E.ACCESORIOS'));
-		$('#detailShiftAvatar').text(currentShift.employee_avatar || 'KD');
-		$('#detailShiftEmpName').text(currentShift.employee_name || 'DELGADO LEAL KAREN PAOLA');
+		$('#detailShiftAvatar').text(currentShift.employee_avatar || 'LM');
+		$('#detailShiftEmpName').text(currentShift.employee_name || 'Lionel Messi');
 		$('#detailShiftEmpId').text('ID: ' + (currentShift.employee_id || '—'));
 
 		if (currentShift.uncovered) {
@@ -542,10 +542,10 @@
 		});
 		if (coworkerOptions.length === 0) {
 			coworkerOptions = [
-				{ text: 'CABALLERO VERGARA NICOLAS STEVEN (Accesorios)', value: '1165' },
-				{ text: 'JARA PAVA JULIO CESAR (Accesorios)', value: '1166' },
-				{ text: 'MEDINA VASQUEZ LINDA VANESSA (Bodega Digital)', value: '1170' },
-				{ text: 'LOZANO BEJARANO DIANA PATRICIA (Despachos)', value: '1171' }
+				{ text: 'Cristiano Ronaldo (Accesorios)', value: '1165' },
+				{ text: 'Shakira Mebarak (Accesorios)', value: '1166' },
+				{ text: 'Taylor Swift (Bodega Digital)', value: '1170' },
+				{ text: 'Selena Gomez (Despachos)', value: '1171' }
 			];
 		}
 		bootbox.prompt({
@@ -1233,6 +1233,19 @@
 		var newShift = $('#mEditShiftSelect').val();
 		var notes = $('#mEditNotes').val();
 
+		// Con borrador activo se edita el borrador; lo oficial no cambia hasta aprobarlo
+		if (S.monthlyDraftId) {
+			$.ajax({
+				url: U('/api/schedule/engine/drafts/' + S.monthlyDraftId + '/cell'),
+				type: 'POST',
+				contentType: 'application/json',
+				data: JSON.stringify({ payroll_code: pcode, date: dateStr, shift_code: newShift }),
+				success: function () { window.location.reload(); },
+				error: function (xhr) { toastr.error(errMsg(xhr)); }
+			});
+			return;
+		}
+
 		$.ajax({
 			url: U('/api/schedule/monthly/update-shift'),
 			type: 'POST',
@@ -1288,62 +1301,6 @@
 		var m = parseInt($('#selMonthlyMonth').val(), 10) + 1;
 		if (m > 12) { m = 1; y++; }
 		gotoWithParams({ year: y, month_num: m, view: 'monthly' });
-	});
-
-	// Regenerate Month with Continuous AI Engine
-	$('#btnRecalculateMonth').on('click', function () {
-		var y = parseInt($('#selMonthlyYear').val(), 10);
-		var m = parseInt($('#selMonthlyMonth').val(), 10);
-
-		bootbox.confirm({
-			title: 'Regeneración Automática con Restricciones Laborales',
-			message: '<p>¿Desea recalcular la programación completa de <strong>' + m + '/' + y + '</strong> aplicando las secuencias de rotación, regla dominical 3x1, compensatorios y el cupo único nocturno?</p>',
-			buttons: {
-				confirm: { label: '<i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Regenerar', className: 'btn-success' },
-				cancel: { label: 'Cancelar', className: 'btn-secondary' }
-			},
-			callback: function (result) {
-				if (!result) return;
-				toastr.info('Ejecutando motor de optimización de horarios...');
-				$.ajax({
-					url: U('/api/schedule/monthly/generate'),
-					type: 'POST',
-					contentType: 'application/json',
-					data: JSON.stringify({ branch_id: S.branchId || 1, year: y, month: m, publish: true }),
-					success: function () {
-						toastr.success('Programación mensual generada y balanceada exitosamente.');
-						setTimeout(function () { window.location.reload(); }, 600);
-					},
-					error: function (xhr) {
-						toastr.error(errMsg(xhr));
-					}
-				});
-			}
-		});
-	});
-
-	// Publish Month Schedule
-	$('#btnPublishMonthlySchedule').on('click', function () {
-		var y = parseInt($('#selMonthlyYear').val(), 10);
-		var m = parseInt($('#selMonthlyMonth').val(), 10);
-
-		toastr.info('Publicando horarios oficiales...');
-		$.ajax({
-			url: U('/api/schedule/monthly/publish'),
-			type: 'POST',
-			contentType: 'application/json',
-			data: JSON.stringify({ branch_id: S.branchId || 1, year: y, month: m }),
-			success: function () {
-				toastr.success('Horarios oficiales de ' + m + '/' + y + ' publicados y sincronizados con la aplicación.');
-				$('#badgePublishStatus')
-					.removeClass('badge-warning')
-					.addClass('badge-success')
-					.html('<i class="fa-solid fa-circle-check mr-1"></i> OFICIAL PUBLICADO');
-			},
-			error: function (xhr) {
-				toastr.error(errMsg(xhr));
-			}
-		});
 	});
 
 	// Export Monthly SAP CSV

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="headbandGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#1e293b"/>
+      <stop offset="50%" stop-color="#334155"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+  </defs>
+  <!-- Headband arch -->
+  <path d="M16 35 C16 16, 48 16, 48 35" fill="none" stroke="url(#headbandGrad)" stroke-width="5" stroke-linecap="round"/>
+  <!-- Inner headband cushion -->
+  <path d="M22 26 C26 19, 38 19, 42 26" fill="none" stroke="#0f172a" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Left earcup bracket -->
+  <line x1="16" y1="33" x2="16" y2="40" stroke="#64748b" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Right earcup bracket -->
+  <line x1="48" y1="33" x2="48" y2="40" stroke="#64748b" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Left earcup -->
+  <rect x="11" y="36" width="10" height="18" rx="5" fill="#0f172a" stroke="#475569" stroke-width="1.2"/>
+  <rect x="13" y="38" width="6" height="14" rx="3" fill="#1e293b"/>
+  <!-- Right earcup -->
+  <rect x="43" y="36" width="10" height="18" rx="5" fill="#0f172a" stroke="#475569" stroke-width="1.2"/>
+  <rect x="45" y="38" width="6" height="14" rx="3" fill="#1e293b"/>
+</svg>
+

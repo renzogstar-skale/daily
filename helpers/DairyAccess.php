@@ -40,6 +40,12 @@ class DairyAccess
 		'/stockoverview' => [User::PERMISSION_STOCK],
 		'/inventory' => [User::PERMISSION_STOCK_INVENTORY],
 		'/inventory-control' => [User::PERMISSION_STOCK],
+		'/merchandise' => [User::PERMISSION_STOCK, User::PERMISSION_LOSS_PREVENTION, User::PERMISSION_KPIS_VIEW],
+		'/loss-prevention' => [User::PERMISSION_LOSS_PREVENTION, User::PERMISSION_ALERTS_SUPERVISE, User::PERMISSION_KPIS_VIEW],
+		'/loss-prevention/case/{id}' => [User::PERMISSION_LOSS_PREVENTION, User::PERMISSION_ALERTS_SUPERVISE],
+		'/loss-prevention/devices' => [User::PERMISSION_SCAN_OPERATE, User::PERMISSION_STOCK_INVENTORY, User::PERMISSION_LOSS_PREVENTION],
+		'/loss-prevention/devices/{id}' => [User::PERMISSION_SCAN_OPERATE, User::PERMISSION_STOCK_INVENTORY, User::PERMISSION_LOSS_PREVENTION],
+		'/loss-prevention/counts' => [User::PERMISSION_SCAN_OPERATE, User::PERMISSION_STOCK_INVENTORY, User::PERMISSION_LOSS_PREVENTION],
 		'/scan' => [User::PERMISSION_SCAN_OPERATE],
 		'/data-import' => [User::PERMISSION_DATA_IMPORT],
 		'/locations/labels' => [User::PERMISSION_STOCK],
@@ -51,10 +57,16 @@ class DairyAccess
 		'/recalls' => [User::PERMISSION_RECALL_MANAGE, User::PERMISSION_QUALITY_QUARANTINE],
 		'/audits' => [User::PERMISSION_AUDIT_PERFORM],
 		'/system-map' => [User::PERMISSION_ADMIN],
+		'/settings' => [User::PERMISSION_ADMIN],
+		'/audit-log' => [User::PERMISSION_ADMIN],
 		'/api/system-map' => [User::PERMISSION_ADMIN],
 		'/api/system-map/refresh' => [User::PERMISSION_ADMIN],
 		'/api/system-map/export/{format}' => [User::PERMISSION_ADMIN],
+		'/admin/economics' => [User::PERMISSION_ADMIN],
+		'/api/admin/economics/simulate' => [User::PERMISSION_ADMIN],
+		'/api/admin/economics/expense' => [User::PERMISSION_ADMIN],
 		'/alerts' => [User::PERMISSION_ALERTS_MANAGE, User::PERMISSION_ALERTS_SUPERVISE, User::PERMISSION_KPIS_VIEW, User::PERMISSION_WASTE_APPROVE, User::PERMISSION_STOCK_INVENTORY],
+		'/action-center' => [User::PERMISSION_ADMIN, User::PERMISSION_ALERTS_SUPERVISE, User::PERMISSION_KPIS_VIEW],
 	];
 
 	// Permiso para ver cada tipo de documento imprimible
@@ -128,7 +140,7 @@ class DairyAccess
 			$employeePages = [
 				'/attendance', '/operations/attendance',
 				'/schedule', '/operations/scheduling',
-				'/pos', '/workforce',
+				'/pos', '/workforce', '/loss-prevention/counts', '/loss-prevention/devices',
 				'/about', '/usersettings',
 				'/login', '/logout', '/daily/set-role'
 			];
@@ -139,7 +151,7 @@ class DairyAccess
 		}
 		elseif ($simRole === 'supervisor')
 		{
-			$restrictedForSupervisor = ['/system-map', '/data-import', '/users', '/branches', '/cost-centers'];
+			$restrictedForSupervisor = ['/system-map', '/admin/economics', '/data-import', '/users', '/branches', '/cost-centers'];
 			if (in_array($path, $restrictedForSupervisor, true))
 			{
 				return false;

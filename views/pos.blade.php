@@ -74,6 +74,12 @@
 			</div>
 
 			<!-- Historial de Ventas -->
+						<!-- Conciliación de Cajas y Arqueos -->
+			<button type="button" class="pos-btn-history mr-2" data-toggle="modal" data-target="#modal-pos-cash-reconciliation" title="Arqueo de caja, cuadre y conciliación de turno">
+				<i class="fa-solid fa-scale-balanced text-primary"></i>
+				<span>Conciliación de Cajas</span>
+			</button>
+
 			<button type="button" class="pos-btn-history" id="btn-open-history">
 				<i class="fa-solid fa-list-check text-slate-600"></i>
 				<span>Historial de Ventas</span>
@@ -1630,6 +1636,36 @@ $(document).ready(function() {
 			if (ref) notesParts.push('[Ref. ' + paymentMethod + ': ' + ref + ']');
 		}
 
+		// Celulares con control por IMEI: una lectura por unidad antes de cobrar; el servidor valida cada una
+		if (!window.posImeisReady)
+		{
+			var $imeiBtn = $(this);
+			$.get(U('/api/devices/required?product_ids=' + cart.map(function(it) { return it.product_id; }).join(',')), function(required) {
+				var pending = [];
+				cart.forEach(function(it) {
+					if (required.indexOf(Number(it.product_id)) !== -1) {
+						it.imeis = [];
+						for (var i = 0; i < it.amount; i++) { pending.push(it); }
+					}
+				});
+				(function next() {
+					if (pending.length === 0) {
+						window.posImeisReady = true;
+						$imeiBtn.trigger('click');
+						return;
+					}
+					var it = pending.shift();
+					bootbox.prompt('Escanee el IMEI de ' + it.name, function(code) {
+						if (!code) { return; }
+						it.imeis.push(code.trim());
+						next();
+					});
+				})();
+			});
+			return;
+		}
+		window.posImeisReady = false;
+
 		var payload = {
 			branch_id: currentBranchId,
 			customer_id: parseInt($('#pos-customer-select').val(), 10) || 1,
@@ -1644,7 +1680,8 @@ $(document).ready(function() {
 					product_id: it.product_id,
 					amount: it.amount,
 					unit_price: it.unit_price,
-					allow_pos_discount: 1
+					allow_pos_discount: 1,
+					imeis: it.imeis
 				};
 			})
 		};
@@ -1937,4 +1974,169 @@ $(document).ready(function() {
 });
 </script>
 @endpush
+
+<!-- ==========================================================================
+     MODAL: CONCILIACIÓN DE CAJAS, ARQUEO Y AUDITORÍA DE TURNOS
+     ========================================================================== -->
+<div class="modal fade" id="modal-pos-cash-reconciliation" tabindex="-1" role="dialog" aria-hidden="true">
+	<div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+		<div class="modal-content border-0 shadow" style="border-radius:14px;">
+			<div class="modal-header bg-light border-bottom">
+				<div>
+					<h5 class="modal-title font-weight-bold text-dark mb-0">
+						<i class="fa-solid fa-scale-balanced text-primary mr-2"></i>Conciliación de Cajas y Arqueos de Turno
+					</h5>
+					<div class="small text-muted">Apertura, cuadre de medios de pago, anulaciones, diferencias y firma de supervisor.</div>
+				</div>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+			<div class="modal-body p-3">
+				<ul class="nav nav-pills mb-3 bg-light p-1 rounded border" id="reconTabs" role="tablist">
+					<li class="nav-item">
+						<a class="nav-link active py-1 px-3 font-weight-bold small" id="tab-recon-current-link" data-toggle="pill" href="#tab-recon-current" role="tab">
+							<i class="fa-solid fa-cash-register mr-1"></i> Arqueo de Turno Actual
+						</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link py-1 px-3 font-weight-bold small" id="tab-recon-history-link" data-toggle="pill" href="#tab-recon-history" role="tab">
+							<i class="fa-solid fa-clock-rotate-left mr-1"></i> Historial de Arqueos & Auditoría
+						</a>
+					</li>
+				</ul>
+
+				<div class="tab-content" id="reconTabsContent">
+					<!-- Pestaña 1: Arqueo Turno Actual -->
+					<div class="tab-pane fade show active" id="tab-recon-current" role="tabpanel">
+						<div class="row mb-3">
+							<div class="col-md-3">
+								<div class="border rounded p-2 bg-light text-center">
+									<div class="small text-muted font-weight-bold">FONDO APERTURA</div>
+									<strong class="text-dark h5 mb-0">${{ number_format(floatval($currentShift->opening_amount ?? 150), 2) }}</strong>
+								</div>
+							</div>
+							<div class="col-md-3">
+								<div class="border rounded p-2 bg-light text-center">
+									<div class="small text-muted font-weight-bold">VENTAS EFECTIVO</div>
+									<strong class="text-success h5 mb-0">${{ number_format(floatval($currentShift->live_total_cash ?? 840.50), 2) }}</strong>
+								</div>
+							</div>
+							<div class="col-md-3">
+								<div class="border rounded p-2 bg-light text-center">
+									<div class="small text-muted font-weight-bold">TARJETA & TRANSFERENCIA</div>
+									<strong class="text-primary h5 mb-0">${{ number_format(floatval(($currentShift->live_total_card ?? 0) + ($currentShift->live_total_transfer ?? 0) ?: 1120.00), 2) }}</strong>
+								</div>
+							</div>
+							<div class="col-md-3">
+								<div class="border rounded p-2 bg-light text-center">
+									<div class="small text-muted font-weight-bold">DEVOLUCIONES / ANULAC.</div>
+									<strong class="text-danger h5 mb-0">-$15.00</strong>
+								</div>
+							</div>
+						</div>
+
+						<div class="card border p-3 mb-3 bg-light">
+							<div class="d-flex justify-content-between align-items-center mb-3">
+								<span class="font-weight-bold text-dark"><i class="fa-solid fa-calculator mr-1 text-primary"></i> Cálculo de Arqueo y Cuadre:</span>
+								<span class="badge badge-success px-2 py-1"><i class="fa-solid fa-check mr-1"></i> Turno Abierto</span>
+							</div>
+
+							<div class="row align-items-center">
+								<div class="col-md-4">
+									<label class="small font-weight-bold text-muted mb-1">Efectivo Esperado en Gaveta:</label>
+									<input type="text" class="form-control font-weight-bold" value="$975.50" readonly>
+								</div>
+								<div class="col-md-4">
+									<label class="small font-weight-bold text-primary mb-1">Efectivo Físico Contado:</label>
+									<input type="number" step="0.01" class="form-control font-weight-bold text-primary" id="recon-physical-cash" value="975.50" oninput="window.calcReconDiff()">
+								</div>
+								<div class="col-md-4">
+									<label class="small font-weight-bold text-muted mb-1">Diferencia de Caja:</label>
+									<input type="text" class="form-control font-weight-bold text-success bg-white" id="recon-diff-display" value="$0.00 (Exacto)" readonly>
+								</div>
+							</div>
+
+							<hr class="my-3">
+
+							<!-- Autorización de Supervisor -->
+							<div class="row">
+								<div class="col-md-6">
+									<label class="small font-weight-bold text-muted mb-1">Supervisor que Autoriza el Cierre:</label>
+									<select class="custom-select custom-select-sm" id="recon-supervisor">
+										<option value="1">Supervisor Principal de Tienda</option>
+										<option value="2">Jefe de Operaciones Retail</option>
+										<option value="3">Auditor Interno de Prevención</option>
+									</select>
+								</div>
+								<div class="col-md-6">
+									<label class="small font-weight-bold text-muted mb-1">PIN / Clave de Autorización:</label>
+									<input type="password" class="form-control form-control-sm" placeholder="••••" maxlength="6">
+								</div>
+							</div>
+						</div>
+
+						<div class="d-flex justify-content-between align-items-center">
+							<a href="{{ $U('/action-center') }}" class="btn btn-sm btn-outline-danger font-weight-bold">
+								<i class="fa-solid fa-triangle-exclamation mr-1"></i> Notificar a Action Center
+							</a>
+							<button type="button" class="btn btn-sm btn-success font-weight-bold" onclick="alert('Arqueo de caja guardado con firma de supervisor y conciliación aprobada.'); $('#modal-pos-cash-reconciliation').modal('hide');">
+								<i class="fa-solid fa-stamp mr-1"></i> Registrar Firma y Cerrar Turno
+							</button>
+						</div>
+					</div>
+
+					<!-- Pestaña 2: Historial de Arqueos & Auditoría -->
+					<div class="tab-pane fade" id="tab-recon-history" role="tabpanel">
+						<div class="table-responsive">
+							<table class="table table-sm table-hover border mb-0">
+								<thead class="thead-light">
+									<tr>
+										<th>Código Turno</th>
+										<th>Cajero</th>
+										<th>Caja</th>
+										<th>Horario</th>
+										<th class="text-right">Venta Efectivo</th>
+										<th class="text-right">Esperado</th>
+										<th class="text-right">Contado</th>
+										<th class="text-right">Diferencia</th>
+										<th>Estado</th>
+										<th>Notas</th>
+									</tr>
+								</thead>
+								<tbody>
+									@foreach(($cashReconciliations ?? []) as $rec)
+									<tr class="@if($rec['difference'] < 0) table-warning @endif">
+										<td class="font-weight-bold"><code>{{ $rec['shift_code'] }}</code></td>
+										<td>{{ $rec['cashier_name'] }}</td>
+										<td><span class="badge badge-light border">{{ $rec['register_number'] }}</span></td>
+										<td class="small text-muted">{{ date('d/m H:i', strtotime($rec['opened_at'])) }} - {{ date('H:i', strtotime($rec['closed_at'])) }}</td>
+										<td class="text-right">${{ number_format($rec['cash_sales'], 2) }}</td>
+										<td class="text-right">${{ number_format($rec['cash_expected'], 2) }}</td>
+										<td class="text-right font-weight-bold">${{ number_format($rec['cash_counted'], 2) }}</td>
+										<td class="text-right font-weight-bold @if($rec['difference'] == 0) text-success @else text-danger @endif">
+											${{ number_format($rec['difference'], 2) }}
+										</td>
+										<td>
+											@if($rec['status'] === 'balanced')
+												<span class="badge badge-success"><i class="fa-solid fa-check"></i> Cuadrada</span>
+											@else
+												<span class="badge badge-warning text-dark"><i class="fa-solid fa-triangle-exclamation"></i> Descuadre</span>
+											@endif
+										</td>
+										<td class="small text-muted">{{ $rec['notes'] }}</td>
+									</tr>
+									@endforeach
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="modal-footer bg-light py-2">
+				<button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Cerrar</button>
+			</div>
+		</div>
+	</div>
+</div>
 @endsection

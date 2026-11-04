@@ -39,5 +39,11 @@
 		"swagger-ui-dist": "^5.2.0",
 		"tempusdominus-bootstrap-4": "^5.39.2",
 		"toastr": "^2.1.4"
+	},
+	"devDependencies": {
+		"@testing-library/jest-dom": "^7.0.1",
+		"@testing-library/react": "^16.3.3",
+		"@testing-library/user-event": "^14.6.8",
+		"jsdom": "^29.1.1"
 	}
 }

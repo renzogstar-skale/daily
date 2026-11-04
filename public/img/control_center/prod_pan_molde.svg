@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Loaf body -->
+  <path d="M14 26 C14 17 22 14 32 14 C42 14 50 17 50 26 L50 48 C50 51 47 53 44 53 L20 53 C17 53 14 51 14 48 Z" fill="#d97706"/>
+  <!-- Front slice outline -->
+  <path d="M12 28 C12 19 20 16 30 16 C40 16 48 19 48 28 L48 50 C48 53 45 55 42 55 L18 55 C15 55 12 53 12 50 Z" fill="#fef3c7" stroke="#b45309" stroke-width="2"/>
+  <!-- Bread texture crumb -->
+  <circle cx="24" cy="30" r="1.5" fill="#fde68a"/>
+  <circle cx="36" cy="34" r="1.8" fill="#fde68a"/>
+  <circle cx="28" cy="42" r="1.5" fill="#fde68a"/>
+  <circle cx="38" cy="45" r="1.6" fill="#fde68a"/>
+  <circle cx="20" cy="40" r="1.2" fill="#fde68a"/>
+  <!-- Crust top curves -->
+  <path d="M16 26 C22 21 38 21 44 26" stroke="#b45309" stroke-width="1.5" fill="none"/>
+</svg>
+

@@ -3,7 +3,7 @@
 @section('title', 'Kardex valorizado')
 
 @section('content')
-<link href="{{ $U('/css/daily_kardex.css?v=', true) }}{{ time() }}" rel="stylesheet">
+<link href="{{ $U('/css/daily_kardex.css?v=', true) }}{{ daily_asset_version('/css/daily_kardex.css') }}" rel="stylesheet">
 
 @php
 	$fmtQty = fn($v) => rtrim(rtrim(number_format(floatval($v), 2, '.', ','), '0'), '.');

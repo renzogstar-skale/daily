@@ -4,7 +4,7 @@
 @section('title', 'Horarios y Cobertura — Motor Inteligente de Planificación')
 
 @push('pageStyles')
-<link href="{{ $U('/css/dairy_schedule.css?v=', true) }}{{ time() }}" rel="stylesheet">
+<link href="{{ $U('/css/dairy_schedule.css?v=', true) }}{{ daily_asset_version('/css/dairy_schedule.css') }}" rel="stylesheet">
 <style>
 /* Eliminar espacio en blanco superior innecesario para que Horarios y Cobertura rellene todo el espacio superior */
 .content-wrapper {
@@ -1235,6 +1235,7 @@
 <script>
 window.DairyScheduleData = {
 	branchId: {{ $branchId }},
+	monthlyDraftId: {{ intval($monthlyScheduleData['draft_id'] ?? 0) }},
 	monday: '{{ $monday }}',
 	sunday: '{{ $sunday }}',
 	analytics: {!! json_encode($analyticsData) !!},
@@ -1267,6 +1268,7 @@ window.switchScheduleView = function(view, btn) {
 	} else if (view === 'monthly') {
 		$('#schMonthlySection').fadeIn(150);
 		if (typeof toastr !== 'undefined') toastr.success('Cargando Calendario Mensual 2026–2030');
+		if (typeof window.initScheduleGenerator === 'function') window.initScheduleGenerator();
 	} else if (view === 'equity') {
 		$('#schEquitySection').fadeIn(150);
 		if (typeof window.initEquityChart === 'function') window.initEquityChart();
@@ -1446,5 +1448,6 @@ document.addEventListener('DOMContentLoaded', function() {
 @endsection
 
 @push('pageScripts')
-<script src="{{ $U('/viewjs/schedule.js?t=', true) }}{{ time() }}"></script>
+<script src="{{ $U('/viewjs/schedule.js?t=', true) }}{{ daily_asset_version('/viewjs/schedule.js') }}"></script>
+<script src="{{ $U('/viewjs/schedule_generator.js?t=', true) }}{{ daily_asset_version('/viewjs/schedule_generator.js') }}"></script>
 @endpush

@@ -282,4 +282,149 @@ class SalesApiController extends BaseApiController
 			return $this->GenericErrorResponse($response, $ex->getMessage());
 		}
 	}
+
+	public function ExecuteCommercialAction(Request $request, Response $response, array $args)
+	{
+		User::CheckPermission($request, User::PERMISSION_SALES_VIEW);
+
+		try
+		{
+			$body = $this->GetParsedAndFilteredRequestBody($request);
+			$actionType = $body['action_type'] ?? $body['action'] ?? '';
+			$branchId = isset($body['branch_id']) ? intval($body['branch_id']) : 1;
+			$db = \Grocy\Services\DatabaseService::GetInstance()->GetDbConnectionRaw();
+
+			if ($actionType === 'investigate_drop')
+			{
+				$title = $body['title'] ?? 'Investigación de caída de ventas';
+				$desc = $body['description'] ?? $body['reason'] ?? 'Detectada variación comercial negativa frente al período comparable';
+				$priority = $body['priority'] ?? 'alta';
+				$incidentCode = 'INC-VTA-' . date('Ymd') . '-' . strtoupper(bin2hex(random_bytes(2)));
+
+				$bStmt = $db->prepare("SELECT name FROM branches WHERE id = :bid");
+				$bStmt->execute([':bid' => $branchId]);
+				$branchRow = $bStmt->fetch(\PDO::FETCH_ASSOC);
+				$branchName = $branchRow['name'] ?? ("Sucursal #" . $branchId);
+
+				$stmt = $db->prepare("
+					INSERT INTO commercial_incidents (
+						incident_code, type, title, priority, branch_id, branch_name,
+						what_happened, where_happened, root_cause, recommended_action,
+						status, created_at
+					)
+					VALUES (
+						:code, 'drop_investigation', :title, :prio, :bid, :bname,
+						:what, :where, :cause, :action,
+						'Detectado', datetime('now', 'localtime')
+					)
+				");
+				$stmt->execute([
+					':code' => $incidentCode,
+					':title' => $title,
+					':prio' => $priority,
+					':bid' => $branchId,
+					':bname' => $branchName,
+					':what' => $desc,
+					':where' => "{$branchName} - Piso de venta / Punto de Cobro",
+					':cause' => 'Baja de afluencia o quiebre de inventario bajo investigación',
+					':action' => 'Auditar existencias en góndola, contrastar afluencia y verificar precios'
+				]);
+				$incidentId = $db->lastInsertId();
+
+				return $this->ApiResponse($response, [
+					'success' => true,
+					'action_type' => $actionType,
+					'incident_id' => $incidentId,
+					'incident_code' => $incidentCode,
+					'message' => "Expediente {$incidentCode} abierto en estado Detectado para la sucursal {$branchName}."
+				]);
+			}
+			elseif ($actionType === 'assign_task')
+			{
+				$title = $body['title'] ?? 'Acción comercial en piso de venta';
+				$desc = $body['description'] ?? $body['reason'] ?? 'Revisar exhibición y precios de venta';
+				$stmt = $db->prepare("
+					INSERT INTO workforce_store_tasks (branch_id, task_type, title, description, status, due_time, created_timestamp)
+					VALUES (:bid, 'commercial_action', :title, :desc, 'pending', datetime('now', '+24 hours'), datetime('now', 'localtime'))
+				");
+				$stmt->execute([
+					':bid' => $branchId,
+					':title' => $title,
+					':desc' => $desc
+				]);
+				$taskId = $db->lastInsertId();
+
+				return $this->ApiResponse($response, [
+					'success' => true,
+					'action_type' => $actionType,
+					'task_id' => $taskId,
+					'message' => "Tarea comercial #{$taskId} asignada al equipo de tienda."
+				]);
+			}
+			elseif ($actionType === 'replenish_request')
+			{
+				$productId = intval($body['product_id'] ?? 0);
+				$productName = $body['product_name'] ?? ("Producto #" . $productId);
+				$amount = floatval($body['quantity'] ?? $body['amount'] ?? 10);
+				$reason = $body['reason'] ?? "Reposición rápida solicitada desde Ventas y Rentabilidad para {$amount} unidades.";
+				$stmt = $db->prepare("
+					INSERT INTO workforce_store_tasks (branch_id, task_type, title, description, status, due_time, created_timestamp)
+					VALUES (:bid, 'replenishment_request', :title, :desc, 'pending', datetime('now', '+12 hours'), datetime('now', 'localtime'))
+				");
+				$stmt->execute([
+					':bid' => $branchId,
+					':title' => "Reposición urgente: {$productName}",
+					':desc' => "{$reason} (Cantidad solicitada: {$amount})"
+				]);
+				return $this->ApiResponse($response, [
+					'success' => true,
+					'action_type' => $actionType,
+					'message' => "Solicitud de reposición registrada y enlazada al plan de abastecimiento."
+				]);
+			}
+			elseif ($actionType === 'review_discounts')
+			{
+				$notes = $body['notes'] ?? $body['reason'] ?? 'Revisión periódica de políticas de descuento comercial';
+				$code = 'AUD-DESC-' . date('Ymd-His');
+
+				$bStmt = $db->prepare("SELECT name FROM branches WHERE id = :bid");
+				$bStmt->execute([':bid' => $branchId]);
+				$branchRow = $bStmt->fetch(\PDO::FETCH_ASSOC);
+				$branchName = $branchRow['name'] ?? ("Sucursal #" . $branchId);
+
+				$stmt = $db->prepare("
+					INSERT INTO commercial_incidents (
+						incident_code, type, title, priority, branch_id, branch_name,
+						what_happened, where_happened, root_cause, recommended_action,
+						status, created_at
+					)
+					VALUES (
+						:code, 'discount_audit', 'Auditoría de Descuentos Comerciales', 'media', :bid, :bname,
+						:notes, :where, 'Evaluación de promociones y descuentos aplicados', 'Ajustar límites de descuento en POS y revisar margen neto de categoría',
+						'Resuelto', datetime('now', 'localtime')
+					)
+				");
+				$stmt->execute([
+					':code' => $code,
+					':bid' => $branchId,
+					':bname' => $branchName,
+					':notes' => $notes,
+					':where' => "{$branchName} - Control de Caja y Precios"
+				]);
+				return $this->ApiResponse($response, [
+					'success' => true,
+					'action_type' => $actionType,
+					'message' => "Auditoría de descuentos guardada con folio {$code}."
+				]);
+			}
+			else
+			{
+				return $this->GenericErrorResponse($response, 'Acción comercial no reconocida');
+			}
+		}
+		catch (\Throwable $e)
+		{
+			return $this->GenericErrorResponse($response, $e->getMessage());
+		}
+	}
 }

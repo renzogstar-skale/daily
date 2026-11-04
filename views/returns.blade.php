@@ -3,7 +3,7 @@
 @section('title', 'Cambios y Devoluciones | DAILY')
 
 @section('content')
-<link href="{{ $U('/css/daily_returns.css?v=', true) }}{{ time() }}" rel="stylesheet">
+<link href="{{ $U('/css/daily_returns.css?v=', true) }}{{ daily_asset_version('/css/daily_returns.css') }}" rel="stylesheet">
 
 @php
 	$money = fn($v) => '$' . number_format(floatval($v), 2);
@@ -253,7 +253,7 @@
 								
 								<!-- Folio / Fecha -->
 								<td>
-									<div class="ret-folio-badge">{{ $r['return_code'] }}</div>
+									<div class="ret-folio-badge">{{ $r['return_code'] }} <a href="#" class="dpf-link" data-process-flow="customer_return:{{ $r['id'] }}" title="Ver expediente"><i class="fa-solid fa-diagram-next"></i></a></div>
 									<div class="ret-date-sub">{{ substr($r['created_at'], 0, 16) }}</div>
 								</td>
 
@@ -1170,9 +1170,11 @@
 </div>
 
 <!-- Serialized Returns Data for Instant Dynamic Detail Swapping -->
+@endsection
+
+@push('pageScripts')
 <script>
 	window.RETURNS_DATA = {!! $returnsJson !!};
 </script>
-<script src="{{ $U('/viewjs/returns.js?v=', true) }}{{ time() }}"></script>
-
-@endsection
+<script src="{{ $U('/viewjs/returns.js?v=', true) }}{{ daily_asset_version('/viewjs/returns.js') }}"></script>
+@endpush

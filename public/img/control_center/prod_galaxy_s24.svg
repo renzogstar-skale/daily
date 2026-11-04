@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="phoneScreen" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="40%" stop-color="#8b5cf6"/>
+      <stop offset="70%" stop-color="#ec4899"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+    <linearGradient id="phoneBody" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#334155"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+  </defs>
+  <!-- Phone body / frame -->
+  <rect x="16" y="5" width="32" height="54" rx="7" fill="url(#phoneBody)" stroke="#64748b" stroke-width="1.2"/>
+  <!-- Screen glass -->
+  <rect x="18" y="7" width="28" height="50" rx="5" fill="url(#phoneScreen)"/>
+  <!-- Front camera notch -->
+  <circle cx="32" cy="11" r="1.5" fill="#0f172a"/>
+  <!-- Glass shine reflection -->
+  <path d="M20 9 L38 9 L24 45 L20 45 Z" fill="#ffffff" opacity="0.15"/>
+</svg>
+

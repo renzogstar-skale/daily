@@ -5,6 +5,7 @@ namespace Grocy\Controllers;
 use DI\Container;
 use Grocy\Helpers\Grocycode;
 use Grocy\Services\LocalizationService;
+use Grocy\Services\PhysicalInventoryService;
 use Grocy\Services\RecipesService;
 use Grocy\Services\StockService;
 use Grocy\Services\UserfieldsService;
@@ -51,7 +52,12 @@ class StockController extends BaseController
 
 	public function Inventory(Request $request, Response $response, array $args)
 	{
-		return $this->RenderPage($response, 'inventory', [
+		$q = $request->getQueryParams();
+		$branchId = !empty($q['branch_id']) ? intval($q['branch_id']) : null;
+		$invService = PhysicalInventoryService::GetInstance();
+		$inventoryData = $invService->GetInventoryData($branchId, $q);
+
+		return $this->RenderPage($response, 'inventory', array_merge($inventoryData, [
 			'products' => $this->DB->products()->where('active = 1 AND no_own_stock = 0')->orderBy('name', 'COLLATE NOCASE'),
 			'barcodes' => $this->DB->product_barcodes_comma_separated(),
 			'shoppinglocations' => $this->DB->shopping_locations()->where('active = 1')->orderBy('name', 'COLLATE NOCASE'),
@@ -59,7 +65,7 @@ class StockController extends BaseController
 			'quantityUnits' => $this->DB->quantity_units()->orderBy('name', 'COLLATE NOCASE'),
 			'quantityUnitConversionsResolved' => $this->DB->cache__quantity_unit_conversions_resolved(),
 			'userfields' => UserfieldsService::GetInstance()->GetFields('stock')
-		]);
+		]));
 	}
 
 	public function Journal(Request $request, Response $response, array $args)

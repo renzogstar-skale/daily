@@ -5,7 +5,7 @@
 
 @push('pageStyles')
 <link href="{{ $U('/css/dairy_today.css?v=', true) }}{{ $version }}" rel="stylesheet">
-<link href="{{ $U('/css/daily_today_executive.css?v=', true) }}{{ time() }}" rel="stylesheet">
+<link href="{{ $U('/css/daily_today_executive.css?v=', true) }}{{ daily_asset_version('/css/daily_today_executive.css') }}" rel="stylesheet">
 @endpush
 
 @section('content')
@@ -183,84 +183,82 @@
 		</div>
 	</header>
 
-	<!-- NUEVO BLOQUE: Estado de los procesos -->
-	<section class="today-process-card" id="today-process-card" aria-labelledby="today-process-title">
-		<div class="today-process-header">
-			<div class="today-process-title-group">
-				<h2 class="today-process-title" id="today-process-title">
-					<i class="fa-solid fa-bars-progress" style="color: var(--daily-green, #00C83B); font-size: 18px; margin-right: 8px;"></i>
-					Estado de los procesos
-				</h2>
-				<span class="today-process-subtitle">Monitoreo operativo transversal · Reglas de evaluación comercial</span>
+	<!-- ==================== NIVEL 1: PULSO OPERATIVO EJECUTIVO ==================== -->
+	<section class="daily-pulse-banner" style="grid-template-columns: 1.6fr 1.2fr 1.2fr;" aria-label="Pulso Operativo del Turno">
+		<div class="daily-pulse-status">
+			<div class="daily-pulse-indicator is-{{ $state[1] === 'danger' ? 'danger' : ($state[1] === 'warning' ? 'warning' : 'good') }}">
+				<i class="fa-solid {{ $state[1] === 'danger' ? 'fa-triangle-exclamation' : ($state[1] === 'warning' ? 'fa-bell' : 'fa-circle-check') }}"></i>
 			</div>
-			<div class="today-process-header-meta">
-				<div class="today-process-legend" aria-label="Leyenda de estados">
-					<span class="today-process-legend-item" title="Datos disponibles y vigentes, sin desviaciones"><i class="fa-solid fa-circle-check" style="color: #00C83B;"></i> En objetivo</span>
-					<span class="today-process-legend-item" title="Desviación que requiere revisión"><i class="fa-solid fa-circle-exclamation" style="color: #FFB800;"></i> Atención</span>
-					<span class="today-process-legend-item" title="Se supera un umbral crítico definido"><i class="fa-solid fa-circle-xmark" style="color: #DC2626;"></i> Crítico</span>
-					<span class="today-process-legend-item" title="Faltan datos suficientes o vigentes para evaluar"><i class="fa-solid fa-circle-question" style="color: #64748B;"></i> Sin información</span>
+			<div class="daily-pulse-info">
+				<div class="d-flex align-items-center gap-2 mb-1">
+					<span class="daily-badge daily-badge-{{ $state[1] === 'danger' ? 'danger' : ($state[1] === 'warning' ? 'warning' : 'success') }}">
+						{{ $state[0] }}
+					</span>
+					<span class="text-muted" style="font-size: 11px;">Turno activo · {{ $branchName }}</span>
 				</div>
-				<div class="today-process-eval-stamp">
-					<i class="fa-regular fa-clock" style="color: #64748b; font-size: 11px;"></i>
-					<span>Evaluado con los registros a las <strong id="process-demo-clock">{{ date('H:i') }}</strong></span>
-				</div>
+				<h3 style="font-size: 1.05rem; font-weight: 700; margin: 0; color: var(--daily-text-main);">{{ $state[2] }}</h3>
+				<p style="margin: 3px 0 0; font-size: 0.8rem; color: var(--daily-text-muted);">
+					@if($nCritical > 0)
+						<span class="text-danger font-weight-bold">{{ $nCritical }} avisos críticos</span> que requieren intervención inmediata.
+					@elseif($tasksLate > 0)
+						<span class="text-warning font-weight-bold">{{ $tasksLate }} tareas fuera de plazo</span> en la tienda.
+					@else
+						Operación estabilizada sin desviaciones críticas registradas.
+					@endif
+				</p>
 			</div>
 		</div>
 
-		<!-- Tabla compacta (Desktop) / Tarjetas (Móvil) -->
-		<div class="today-process-table-wrap">
-			<table class="today-process-table" id="today-process-table">
-				<thead>
-					<tr>
-						<th style="width: 20%;">Proceso</th>
-						<th style="width: 18%;">Estado</th>
-						<th style="width: 44%;">Situación principal</th>
-						<th style="width: 18%; text-align: right;">Acción</th>
-					</tr>
-				</thead>
-				<tbody id="today-process-tbody">
-					@if(!empty($exec['process_statuses']))
-						@foreach($exec['process_statuses'] as $proc)
-							<tr class="today-process-row" data-key="{{ $proc['key'] }}">
-								<td class="today-process-name-cell">
-									<div class="today-process-name-badge">
-										<span class="today-process-icon-wrap" style="color: {{ $proc['color'] }}; background: {{ $proc['color'] }}18;">
-											<i class="fa-solid {{ $proc['icon'] }}"></i>
-										</span>
-										<strong>{{ $proc['process'] }}</strong>
-									</div>
-								</td>
-								<td class="today-process-status-cell">
-									<span class="today-proc-badge is-{{ $proc['status'] }}">
-										<i class="fa-solid {{ $proc['status_icon'] }}"></i>
-										<span>{{ $proc['status_label'] }}</span>
-									</span>
-								</td>
-								<td class="today-process-situation-cell">
-									<div class="today-proc-situation-content">
-										<span class="today-proc-situation-text">{{ $proc['situation'] }}</span>
-										@if(!empty($proc['scope_note']))
-											<span class="today-proc-scope-tag" title="El filtro actual de departamento no subdivide este proceso global">{{ $proc['scope_note'] }}</span>
-										@endif
-									</div>
-								</td>
-								<td class="today-process-action-cell text-right">
-									<div class="today-proc-action-group">
-										<a href="{{ $link($proc['href']) }}" class="today-proc-action-link" title="{{ $proc['action_text'] }} en su módulo correspondiente">
-											{{ $proc['action_text'] }}
-											<i class="fa-solid fa-arrow-right"></i>
-										</a>
-									</div>
-								</td>
-							</tr>
-						@endforeach
-					@endif
-				</tbody>
-			</table>
+		<!-- Métrica Macro 1: Ventas Netas -->
+		<div class="daily-pulse-metric">
+			<span class="daily-pulse-metric-label"><i class="fa-solid fa-chart-line text-success mr-1"></i> Ventas Netas</span>
+			<span class="daily-pulse-metric-value daily-tabular" id="pulse-sales-val">{{ $exec['kpis']['sales_net']['value'] }}</span>
+			<span class="daily-pulse-metric-sub">
+				<span class="daily-delta {{ ['good' => 'is-good', 'bad' => 'is-bad'][$exec['kpis']['sales_net']['tone'] ?? ''] ?? 'is-neutral' }}">
+					{{ $exec['kpis']['sales_net']['delta_pct'] }}
+				</span>
+				<span>vs. periodo anterior</span>
+			</span>
+		</div>
+
+		<!-- Métrica Macro 2: Cumplimiento de Meta -->
+		<div class="daily-pulse-metric">
+			<span class="daily-pulse-metric-label"><i class="fa-solid fa-bullseye text-warning mr-1"></i> Cumplimiento Meta</span>
+			<span class="daily-pulse-metric-value daily-tabular" id="pulse-target-val">{{ $exec['kpis']['target_compliance']['value'] }}</span>
+			<span class="daily-pulse-metric-sub">
+				<span class="daily-delta {{ ['good' => 'is-good', 'bad' => 'is-bad'][$exec['kpis']['target_compliance']['tone'] ?? ''] ?? 'is-neutral' }}">
+					{{ $exec['kpis']['target_compliance']['gap_pp'] }}
+				</span>
+				<span>{{ $exec['kpis']['target_compliance']['target_text'] }}</span>
+			</span>
 		</div>
 	</section>
+	</section>
 
-	<!-- 2. Fila 1 · KPI Financieros -->
+	<!-- ==================== CONTROL DE NIVELES (SEGMENTED TABS) ==================== -->
+	<div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+		<div class="daily-segmented-tabs" role="tablist">
+			<button type="button" class="daily-tab-btn active" data-tab-target="#daily-tab-commercial">
+				<i class="fa-solid fa-chart-line mr-1 text-success"></i> Nivel 1 · Pulso Comercial
+			</button>
+			<button type="button" class="daily-tab-btn" data-tab-target="#daily-tab-processes">
+				<i class="fa-solid fa-bars-progress mr-1 text-warning"></i> Nivel 2 · Estado de Procesos & Desviaciones
+			</button>
+			<button type="button" class="daily-tab-btn" data-tab-target="#daily-tab-operations">
+				<i class="fa-solid fa-list-check mr-1 text-primary"></i> Nivel 3 · Decisiones, Tareas & Aprobaciones
+				@if($nCritical > 0 || count($ap['items']) > 0)
+					<span class="daily-badge daily-badge-danger ml-1" style="font-size: 10px; padding: 1px 6px;">{{ $nCritical + count($ap['items']) }}</span>
+				@endif
+			</button>
+		</div>
+		<div class="text-muted small">
+			<i class="fa-solid fa-layer-group mr-1 text-secondary"></i> Navegación guiada en 3 niveles
+		</div>
+	</div>
+
+	<!-- TAB 1: PULSO COMERCIAL & VENTAS -->
+	<div class="daily-tab-pane active" id="daily-tab-commercial">
+		<!-- 2. Fila 1 · KPI Financieros -->
 	<div class="today-exec-kpi-grid">
 		<!-- KPI 1: Ventas netas -->
 		<div class="today-exec-kpi-card" id="card-kpi-sales" title="Ventas netas acumuladas del período">
@@ -642,13 +640,13 @@
 			<a href="{{ $U('/kpis') }}" class="today-exec-ver-todas">Ver todas</a>
 		</div>
 		<div class="today-exec-cards-row-4">
-			<!-- Card 1: Disponibilidad en góndola -->
+			<!-- Card 1: Disponibilidad en bodega -->
 			<div class="today-exec-spark-card">
 				<div class="today-exec-spark-head">
 					<div class="today-exec-spark-icon is-green">
-						<i class="fa-solid fa-shop"></i>
+						<i class="fa-solid fa-warehouse"></i>
 					</div>
-					<span class="today-exec-spark-title">Disponibilidad en góndola</span>
+					<span class="today-exec-spark-title">Disponibilidad en bodega</span>
 				</div>
 				<div class="today-exec-spark-body">
 					<div class="today-exec-spark-val-col">
@@ -978,9 +976,90 @@
 			</div>
 		</div>
 	</div>
-</div>
+	</div><!-- /#daily-tab-commercial -->
 
-<div class="cc-page" id="cc-page" style="display: none;">
+	<!-- ==================== TAB 2: ESTADO DE PROCESOS & DESVIACIONES (NIVEL 2) ==================== -->
+	<div class="daily-tab-pane" id="daily-tab-processes">
+		<section class="today-process-card" id="today-process-card" aria-labelledby="today-process-title">
+			<div class="today-process-header">
+				<div class="today-process-title-group">
+					<h2 class="today-process-title" id="today-process-title">
+						<i class="fa-solid fa-bars-progress" style="color: var(--daily-green-700); font-size: 18px; margin-right: 8px;"></i>
+						Estado de los procesos
+					</h2>
+					<span class="today-process-subtitle">Monitoreo operativo transversal · Reglas de evaluación comercial</span>
+				</div>
+				<div class="today-process-header-meta">
+					<div class="today-process-legend" aria-label="Leyenda de estados">
+						<span class="today-process-legend-item" title="Datos disponibles y vigentes, sin desviaciones"><i class="fa-solid fa-circle-check" style="color: var(--daily-green-700);"></i> En objetivo</span>
+						<span class="today-process-legend-item" title="Desviación que requiere revisión"><i class="fa-solid fa-circle-exclamation" style="color: var(--daily-amber-600);"></i> Atención</span>
+						<span class="today-process-legend-item" title="Se supera un umbral crítico definido"><i class="fa-solid fa-circle-xmark" style="color: var(--daily-red-600);"></i> Crítico</span>
+						<span class="today-process-legend-item" title="Faltan datos suficientes o vigentes para evaluar"><i class="fa-solid fa-circle-question" style="color: #64748B;"></i> Sin información</span>
+					</div>
+					<div class="today-process-eval-stamp">
+						<i class="fa-regular fa-clock" style="color: #64748b; font-size: 11px;"></i>
+						<span>Evaluado con los registros a las <strong id="process-demo-clock">{{ date('H:i') }}</strong></span>
+					</div>
+				</div>
+			</div>
+
+			<!-- Tabla compacta (Desktop) / Tarjetas (Móvil) -->
+			<div class="today-process-table-wrap">
+				<table class="today-process-table" id="today-process-table">
+					<thead>
+						<tr>
+							<th style="width: 22%;">Proceso</th>
+							<th style="width: 18%;">Estado</th>
+							<th style="width: 42%;">Situación principal</th>
+							<th style="width: 18%; text-align: right;">Acción</th>
+						</tr>
+					</thead>
+					<tbody id="today-process-tbody">
+						@if(!empty($exec['process_statuses']))
+							@foreach($exec['process_statuses'] as $proc)
+								<tr class="today-process-row" data-key="{{ $proc['key'] }}">
+									<td class="today-process-name-cell">
+										<div class="today-process-name-badge">
+											<span class="today-process-icon-wrap" style="color: {{ $proc['color'] }}; background: {{ $proc['color'] }}18;">
+												<i class="fa-solid {{ $proc['icon'] }}"></i>
+											</span>
+											<strong>{{ $proc['process'] }}</strong>
+										</div>
+									</td>
+									<td class="today-process-status-cell">
+										<span class="today-proc-badge is-{{ $proc['status'] }}">
+											<i class="fa-solid {{ $proc['status_icon'] }}"></i>
+											<span>{{ $proc['status_label'] }}</span>
+										</span>
+									</td>
+									<td class="today-process-situation-cell">
+										<div class="today-proc-situation-content">
+											<span class="today-proc-situation-text">{{ $proc['situation'] }}</span>
+											@if(!empty($proc['scope_note']))
+												<span class="today-proc-scope-tag" title="El filtro actual de departamento no subdivide este proceso global">{{ $proc['scope_note'] }}</span>
+											@endif
+										</div>
+									</td>
+									<td class="today-process-action-cell text-right">
+										<div class="today-proc-action-group">
+											<a href="{{ $link($proc['href']) }}" class="today-proc-action-link" title="{{ $proc['action_text'] }} en su módulo correspondiente">
+												{{ $proc['action_text'] }}
+												<i class="fa-solid fa-arrow-right"></i>
+											</a>
+										</div>
+									</td>
+								</tr>
+							@endforeach
+						@endif
+					</tbody>
+				</table>
+			</div>
+		</section>
+	</div><!-- /#daily-tab-processes -->
+
+	<!-- ==================== TAB 3: DECISIONES, TAREAS & APROBACIONES (NIVEL 3) ==================== -->
+	<div class="daily-tab-pane" id="daily-tab-operations">
+		<div class="cc-page" id="cc-page">
 
 {{-- Encabezado --}}
 <header class="cc-head">
@@ -1500,9 +1579,9 @@
 		</ul>
 		@endif
 	</section>
-</div>
-
-</div>
+</div><!-- /#cc-page -->
+</div><!-- /#daily-tab-operations -->
+</div><!-- /#today-exec-container -->
 @stop
 
 @push('pageScripts')
@@ -1515,7 +1594,8 @@
 	var C = { blue: (getComputedStyle(document.documentElement).getPropertyValue('--daily-primary') || '#00C83B').trim(), green: '#10B981', red: '#EF4444', amber: '#F59E0B', yellow: '#FACC15', purple: '#8B5CF6', cyan: '#06B6D4', pink: '#EC4899', gray: '#94A3B8', grid: 'rgba(100,116,139,.12)' };
 	var API = Grocy.BaseUrl.replace(/\/$/, '') + '/api';
 
-	function api(method, path, body) {
+	function api(method, path, body, retries) {
+		retries = retries !== undefined ? retries : 2;
 		return fetch(API + path, {
 			method: method, credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: body ? JSON.stringify(body) : undefined
 		}).then(function(res) {
@@ -1523,6 +1603,13 @@
 				if (!res.ok || data.success === false) { throw new Error(data.error_message || ('Error ' + res.status)); }
 				return data;
 			});
+		}).catch(function(err) {
+			if (retries > 0) {
+				return new Promise(function(resolve) { setTimeout(resolve, 800); }).then(function() {
+					return api(method, path, body, retries - 1);
+				});
+			}
+			throw err;
 		});
 	}
 	function post(path, body) { return api('POST', path, body || {}); }
@@ -1658,6 +1745,7 @@
 		$('#cc-day-skel').prop('hidden', false); $('#cc-day-err').prop('hidden', true);
 		api('GET', '/loss/summary?' + qs({ from: TODAY, to: TODAY, branch_id: BRANCH })).then(function(r) {
 			$('#cc-day-skel').prop('hidden', true);
+			$('#cc-day-err').prop('hidden', true);
 			var tot = r.total.value, prev = r.prev_period_total;
 			document.getElementById('cc-day-total').textContent = money(tot);
 			var dv = prev ? Math.round(100 * (tot - prev) / Math.abs(prev)) : null;
@@ -1759,6 +1847,7 @@
 		$('#cc-yoy-skel').prop('hidden', false); $('#cc-yoy-err').prop('hidden', true);
 		api('GET', '/loss/year-comparison?' + qs({ years: (year - 1) + ',' + year, metric: Y.metric, loss_class: Y.loss_class, format: Y.format, branch_id: BRANCH })).then(function(r) {
 			$('#cc-yoy-skel').prop('hidden', true);
+			$('#cc-yoy-err').prop('hidden', true);
 			var prev = r.years[0], cur = r.years[r.years.length - 1], pct = Y.metric === 'pct';
 			var fmt = function(v) { return v === null || v === undefined ? '—' : (pct ? Number(v).toFixed(2) + '%' : money(v)); };
 			var c = r.comparison, sub = '', big = '';
@@ -1803,6 +1892,7 @@
 		$('#cc-dist-more').attr('href', base + '#tab-causales');
 		api('GET', '/loss/causes?' + qs({ from: from, to: TODAY, branch_id: BRANCH })).then(function(r) {
 			$('#cc-dist-skel').prop('hidden', true);
+			$('#cc-dist-err').prop('hidden', true);
 			var list = r.causes.filter(function(c) { return c.cost > 0; });
 			if (!list.length) { $('#cc-dist-body').prop('hidden', true); $('#cc-dist-empty').prop('hidden', false); if (dist) { dist.destroy(); dist = null; } return; }
 			var top = list.slice(0, 6), rest = list.slice(6);
@@ -2210,6 +2300,9 @@
 
 	function updateDOM(data) {
 		var k = data.kpis;
+		$('#pulse-sales-val').text(k.sales_net.value);
+		$('#pulse-target-val').text(k.target_compliance.value);
+		$('#pulse-margin-val').text(k.gross_margin.value);
 		setDelta('#kpi-sales-delta', k.sales_net, 'delta_pct');
 		$('#kpi-sales-comp').text(k.sales_net.comparison_text);
 		setDelta('#kpi-margin-delta', k.gross_margin, 'delta_pp');
@@ -2407,24 +2500,32 @@
 	$('#exec-heatmap-metric').on('change', fetchExecSales);
 	$('#exec-refresh-btn').on('click', fetchExecSales);
 
-	var isOpsVisible = false;
-	$('#btn-toggle-ops').on('click', function() {
-		isOpsVisible = !isOpsVisible;
-		if (isOpsVisible) {
-			$('#cc-page').slideDown(250);
-			$(this).addClass('active').html('<i class="fa-solid fa-chart-line"></i> Ocultar Operaciones');
-			$('html, body').animate({ scrollTop: $('#cc-page').offset().top - 20 }, 300);
-		} else {
-			$('#cc-page').slideUp(200);
-			$(this).removeClass('active').html('<i class="fa-solid fa-clipboard-check"></i> Operaciones');
+	// Segmented Tabs Navigation
+	$(document).on('click', '.daily-tab-btn', function() {
+		var target = $(this).data('tab-target');
+		$('.daily-tab-btn').removeClass('active');
+		$(this).addClass('active');
+		$('.daily-tab-pane').removeClass('active');
+		$(target).addClass('active');
+
+		if (target === '#daily-tab-commercial') {
+			if (execSalesChart) execSalesChart.resize();
+			if (execDonutChart) execDonutChart.resize();
 		}
 	});
 
-	$('#btn-show-all-decisions').on('click', function() {
-		$('#cc-page').slideDown(250);
-		$('#btn-toggle-ops').addClass('active').html('<i class="fa-solid fa-chart-line"></i> Ocultar Operaciones');
-		$('html, body').animate({ scrollTop: $('#cc-page').offset().top - 20 }, 300);
+	$('#btn-toggle-ops, #btn-show-all-decisions').on('click', function(e) {
+		e.preventDefault();
+		$('.daily-tab-btn[data-tab-target="#daily-tab-operations"]').trigger('click');
+		$('html, body').animate({ scrollTop: $('#daily-tab-operations').offset().top - 40 }, 250);
 	});
+
+	var urlParams = new URLSearchParams(window.location.search);
+	if (urlParams.get('tab') === 'processes' || urlParams.get('tab') === 'proc') {
+		$('.daily-tab-btn[data-tab-target="#daily-tab-processes"]').trigger('click');
+	} else if (urlParams.get('tab') === 'operations' || urlParams.get('tab') === 'ops') {
+		$('.daily-tab-btn[data-tab-target="#daily-tab-operations"]').trigger('click');
+	}
 
 	$(document).on('mouseenter', '.today-exec-dept-row', function() {
 		if (!execDonutChart) return;

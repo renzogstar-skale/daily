@@ -8,6 +8,23 @@
 $root = dirname(__DIR__, 2);
 $tmp = sys_get_temp_dir() . '/dairy_tests_' . getmypid();
 @mkdir($tmp . '/viewcache', 0777, true);
+// La copia de la BD (~25 MB) se borra al terminar: antes quedaban cientos y llenaban el disco
+register_shutdown_function(function () use ($tmp) {
+	// Windows no borra un archivo abierto: soltar las conexiones SQLite antes
+	unset($GLOBALS['db']);
+	foreach (['DbConnection', 'DbConnectionRaw'] as $prop)
+	{
+		$r = new ReflectionProperty(\Grocy\Services\DatabaseService::class, $prop);
+		$r->setAccessible(true);
+		$r->setValue(null, null);
+	}
+	gc_collect_cycles();
+	foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($tmp, FilesystemIterator::SKIP_DOTS), RecursiveIteratorIterator::CHILD_FIRST) as $f)
+	{
+		@($f->isDir() ? rmdir($f->getPathname()) : unlink($f->getPathname()));
+	}
+	@rmdir($tmp);
+});
 copy($root . '/data/config.php', $tmp . '/config.php');
 
 define('GROCY_DATAPATH', $tmp);

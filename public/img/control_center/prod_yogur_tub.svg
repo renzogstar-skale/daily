@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Lid -->
+  <ellipse cx="32" cy="18" rx="20" ry="6" fill="#7c3aed"/>
+  <ellipse cx="32" cy="17" rx="19" ry="5" fill="#a78bfa"/>
+  <!-- Tub body -->
+  <path d="M14 20 L20 54 A3 3 0 0 0 23 57 L41 57 A3 3 0 0 0 44 54 L50 20 Z" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
+  <!-- Purple brand banner -->
+  <path d="M16 26 L48 26 L45 42 L19 42 Z" fill="#6d28d9"/>
+  <text x="32" y="36" font-size="6" font-family="sans-serif" font-weight="bold" fill="#ffffff" text-anchor="middle">GRIEGO</text>
+  <!-- Tub bottom shadow -->
+  <ellipse cx="32" cy="56" rx="12" ry="2.5" fill="#cbd5e1" opacity="0.4"/>
+</svg>
+

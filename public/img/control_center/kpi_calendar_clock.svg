@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="calHead" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ef4444"/>
+      <stop offset="100%" stop-color="#b91c1c"/>
+    </linearGradient>
+    <linearGradient id="calBody" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#f1f5f9"/>
+    </linearGradient>
+    <linearGradient id="clockFace" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a"/>
+      <stop offset="50%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+    <filter id="calShadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="3" stdDeviation="2" flood-color="#0f172a" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+
+  <!-- Shadow below -->
+  <ellipse cx="32" cy="58" rx="24" ry="4" fill="#0f172a" fill-opacity="0.12"/>
+
+  <!-- Calendar Page -->
+  <g filter="url(#calShadow)">
+    <rect x="10" y="10" width="44" height="42" rx="7" fill="url(#calBody)" stroke="#cbd5e1" stroke-width="1"/>
+    <!-- Red Header -->
+    <path d="M 10 17 C 10 13.1 13.1 10 17 10 L 47 10 C 50.9 10 54 13.1 54 17 L 54 22 L 10 22 Z" fill="url(#calHead)"/>
+    <!-- Spiral Rings -->
+    <rect x="18" y="7" width="3" height="6" rx="1.5" fill="#94a3b8"/>
+    <rect x="26" y="7" width="3" height="6" rx="1.5" fill="#94a3b8"/>
+    <rect x="35" y="7" width="3" height="6" rx="1.5" fill="#94a3b8"/>
+    <rect x="43" y="7" width="3" height="6" rx="1.5" fill="#94a3b8"/>
+    <!-- Calendar Grid Dots / Mini blocks -->
+    <rect x="16" y="27" width="4" height="4" rx="1" fill="#cbd5e1"/>
+    <rect x="23" y="27" width="4" height="4" rx="1" fill="#cbd5e1"/>
+    <rect x="30" y="27" width="4" height="4" rx="1" fill="#cbd5e1"/>
+    <rect x="37" y="27" width="4" height="4" rx="1" fill="#ef4444"/>
+    <rect x="44" y="27" width="4" height="4" rx="1" fill="#cbd5e1"/>
+
+    <rect x="16" y="34" width="4" height="4" rx="1" fill="#cbd5e1"/>
+    <rect x="23" y="34" width="4" height="4" rx="1" fill="#ef4444"/>
+    <rect x="30" y="34" width="4" height="4" rx="1" fill="#cbd5e1"/>
+    
+    <rect x="16" y="41" width="4" height="4" rx="1" fill="#cbd5e1"/>
+    <rect x="23" y="41" width="4" height="4" rx="1" fill="#cbd5e1"/>
+  </g>
+
+  <!-- Golden Alarm Clock in front bottom right -->
+  <g filter="url(#calShadow)">
+    <!-- Ring / bells -->
+    <circle cx="36" cy="34" r="3" fill="#d97706"/>
+    <circle cx="54" cy="34" r="3" fill="#d97706"/>
+    <!-- Feet -->
+    <line x1="38" y1="52" x2="35" y2="57" stroke="#b45309" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="52" y1="52" x2="55" y2="57" stroke="#b45309" stroke-width="2.5" stroke-linecap="round"/>
+    <!-- Outer rim -->
+    <circle cx="45" cy="44" r="14" fill="url(#clockFace)"/>
+    <circle cx="45" cy="44" r="11" fill="#ffffff"/>
+    <!-- Hour marks -->
+    <circle cx="45" cy="35" r="1" fill="#78350f"/>
+    <circle cx="54" cy="44" r="1" fill="#78350f"/>
+    <circle cx="45" cy="53" r="1" fill="#78350f"/>
+    <circle cx="36" cy="44" r="1" fill="#78350f"/>
+    <!-- Hands -->
+    <line x1="45" y1="44" x2="45" y2="38" stroke="#dc2626" stroke-width="2" stroke-linecap="round"/>
+    <line x1="45" y1="44" x2="50" y2="44" stroke="#78350f" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="45" cy="44" r="2" fill="#dc2626"/>
+  </g>
+</svg>

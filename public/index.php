@@ -31,6 +31,12 @@ else
 	define('GROCY_DATAPATH', $datapath);
 }
 
+// Páginas HTML comprimidas (las API sirven también archivos binarios y se dejan tal cual)
+if (extension_loaded('zlib') && strpos($_SERVER['REQUEST_URI'] ?? '', '/api/') === false)
+{
+	ini_set('zlib.output_compression', '1');
+}
+
 require_once __DIR__ . '/../helpers/PrerequisiteChecker.php';
 
 try

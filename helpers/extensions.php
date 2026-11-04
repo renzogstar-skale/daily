@@ -268,6 +268,13 @@ function EmptyFolder($folderPath)
 	}
 }
 
+/** Versión de un archivo de public/ para ?v=: cambia solo cuando cambia el archivo, así el navegador y el service worker reutilizan su copia */
+function daily_asset_version(string $path): int
+{
+	$file = __DIR__ . '/../public' . $path;
+	return is_file($file) ? filemtime($file) : 0;
+}
+
 function GetClientUserAgent()
 {
 	return isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : 'unknown';

@@ -47,7 +47,7 @@ ok('conciliación: líneas sin movimiento ⊆ líneas sin transacción', count($
 
 echo "2. Venta nueva por el servicio: se refleja una sola vez en todas las vistas\n";
 $stock = $db->query("SELECT st.product_id, l.branch_id FROM stock st JOIN locations l ON l.id = st.location_id WHERE IFNULL(l.is_transit, 0) = 0 AND st.amount >= 1 AND l.branch_id IS NOT NULL
-	AND st.product_id NOT IN (SELECT product_id FROM quarantine_items WHERE status = 'in_quarantine') ORDER BY st.amount DESC LIMIT 1")->fetch(PDO::FETCH_ASSOC);
+	AND st.product_id NOT IN (SELECT product_id FROM quarantine_items WHERE status = 'in_quarantine') AND st.product_id NOT IN (SELECT id FROM products WHERE is_demo = 1) ORDER BY st.amount DESC LIMIT 1")->fetch(PDO::FETCH_ASSOC);
 if ($stock)
 {
 	$today = date('Y-m-d');
@@ -101,7 +101,7 @@ $acs = \Grocy\Services\AlertCenterService::GetInstance();
 $rule = $db->query("SELECT * FROM dairy_alert_rules WHERE code = 'expiring_lots'")->fetch(PDO::FETCH_ASSOC);
 ok('regla «Lotes por vencer» instalada (migración 0285)', $rule && (int) $rule['enabled'] === 1 && (float) $rule['threshold'] === 3.0);
 $lot = $db->query("SELECT s.id, s.stock_id, l.branch_id FROM stock s JOIN locations l ON l.id = s.location_id WHERE l.branch_id IS NOT NULL AND IFNULL(l.is_transit, 0) = 0 AND s.amount > 0
-	AND NOT EXISTS (SELECT 1 FROM quarantine_items q WHERE q.stock_id = s.stock_id AND q.status = 'in_quarantine') ORDER BY s.id LIMIT 1")->fetch(PDO::FETCH_ASSOC);
+	AND NOT EXISTS (SELECT 1 FROM quarantine_items q WHERE q.stock_id = s.stock_id AND q.status = 'in_quarantine') AND s.product_id NOT IN (SELECT id FROM products WHERE is_demo = 1) ORDER BY s.id LIMIT 1")->fetch(PDO::FETCH_ASSOC);
 $setDays = fn(int $d) => $db->exec("UPDATE stock SET best_before_date = date('now', 'localtime', '+$d days') WHERE stock_id = " . $db->quote($lot['stock_id']));
 $keyFor = fn(int $d) => "expiring_lots:{$lot['stock_id']}:" . date('Y-m-d', strtotime("+$d days"));
 $setDays(2);

@@ -734,6 +734,187 @@ class ScheduleApiController extends BaseApiController
 		});
 	}
 
+	private function Engine(): \Grocy\Services\WorkforceScheduleEngineService
+	{
+		return \Grocy\Services\WorkforceScheduleEngineService::GetInstance();
+	}
+
+	private function Ym(array $d): array
+	{
+		return [intval($d['branch_id'] ?? 1), intval($d['year'] ?? date('Y')), intval($d['month'] ?? date('n'))];
+	}
+
+	public function EngineDashboard(Request $request, Response $response, array $args)
+	{
+		$this->Manage($request);
+		[$b, $y, $m] = $this->Ym($request->getQueryParams());
+		return $this->Run($response, fn() => $this->Engine()->Dashboard($b, $y, $m));
+	}
+
+	public function EngineValidate(Request $request, Response $response, array $args)
+	{
+		$this->Manage($request);
+		[$b, $y, $m] = $this->Ym($request->getQueryParams());
+		return $this->Run($response, fn() => $this->Engine()->Validate($b, $y, $m));
+	}
+
+	public function EngineBuild(Request $request, Response $response, array $args)
+	{
+		$this->Manage($request);
+		[$b, $y, $m] = $this->Ym($this->Body($request));
+		return $this->Run($response, fn() => $this->Engine()->BuildDraft($b, $y, $m, GROCY_USER_ID));
+	}
+
+	public function EngineDraft(Request $request, Response $response, array $args)
+	{
+		$this->Manage($request);
+		return $this->Run($response, fn() => $this->Engine()->GetDraft(intval($args['id']), true));
+	}
+
+	public function EngineBalance(Request $request, Response $response, array $args)
+	{
+		$this->Manage($request);
+		return $this->Run($response, fn() => $this->Engine()->Balance(intval($args['id'])));
+	}
+
+	public function EngineReplacement(Request $request, Response $response, array $args)
+	{
+		$this->Manage($request);
+		$q = $request->getQueryParams();
+		return $this->Run($response, fn() => $this->Engine()->FindReplacement(intval($args['id']), strval($q['payroll_code'] ?? ''), strval($q['date'] ?? '')));
+	}
+
+	public function EngineApplyReplacement(Request $request, Response $response, array $args)
+	{
+		$this->Manage($request);
+		$b = $this->Body($request);
+		return $this->Run($response, fn() => $this->Engine()->ApplyReplacement(intval($args['id']), strval($b['from'] ?? ''), strval($b['to'] ?? ''), strval($b['date'] ?? '')));
+	}
+
+	public function EngineApprove(Request $request, Response $response, array $args)
+	{
+		$this->Manage($request);
+		$b = $this->Body($request);
+		return $this->Run($response, fn() => $this->Engine()->Approve(intval($args['id']), GROCY_USER_ID, !empty($b['accept_coverage_gaps']), !empty($b['accept_confirmations'])));
+	}
+
+	public function EngineRecalculate(Request $request, Response $response, array $args)
+	{
+		$this->Manage($request);
+		return $this->Run($response, fn() => $this->Engine()->Recalculate(intval($args['id']), GROCY_USER_ID));
+	}
+
+	public function EngineUpdateCell(Request $request, Response $response, array $args)
+	{
+		$this->Manage($request);
+		$b = $this->Body($request);
+		return $this->Run($response, fn() => $this->Engine()->UpdateDraftCell(intval($args['id']), strval($b['payroll_code'] ?? ''), strval($b['date'] ?? ''), strval($b['shift_code'] ?? ''), GROCY_USER_ID));
+	}
+
+	public function EngineAbsenceEnd(Request $request, Response $response, array $args)
+	{
+		$this->Manage($request);
+		$b = $this->Body($request);
+		return $this->Run($response, function () use ($args, $b) {
+			$this->Engine()->SetAbsenceEnd(intval($args['id']), strval($b['return_date'] ?? ''));
+			return ['success' => true];
+		});
+	}
+
+	public function EngineDecideAbsence(Request $request, Response $response, array $args)
+	{
+		$this->Manage($request);
+		$b = $this->Body($request);
+		return $this->Run($response, fn() => \Grocy\Services\WorkforceScheduleService::GetInstance()->DecideAbsence(intval($args['id']), !empty($b['approve']), GROCY_USER_ID));
+	}
+
+	public function EngineExport(Request $request, Response $response, array $args)
+	{
+		$this->Manage($request);
+		[$b, $y, $m] = $this->Ym($request->getQueryParams());
+		try
+		{
+			$content = \Grocy\Services\WorkforceScheduleXlsxService::GetInstance()->Export($b, $y, $m);
+		}
+		catch (\Throwable $e)
+		{
+			return $this->GenericErrorResponse($response, $e->getMessage());
+		}
+		$response->getBody()->write($content);
+		return $response->withHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+			->withHeader('Content-Disposition', 'attachment; filename="' . \Grocy\Services\WorkforceScheduleXlsxService::FileName($y, $m) . '"');
+	}
+
+	public function EngineControl(Request $request, Response $response, array $args)
+	{
+		$this->Manage($request);
+		[$b, $y, $m] = $this->Ym($request->getQueryParams());
+		return $this->Run($response, fn() => \Grocy\Services\WorkforcePlantaService::GetInstance()->Control($b, $y, $m));
+	}
+
+	public function EngineSaveRestriction(Request $request, Response $response, array $args)
+	{
+		$this->Manage($request);
+		$d = $this->Body($request);
+		return $this->Run($response, fn() => ['id' => \Grocy\Services\WorkforcePlantaService::GetInstance()->SaveRestriction($d, GROCY_USER_ID)]);
+	}
+
+	public function EngineDeleteRestriction(Request $request, Response $response, array $args)
+	{
+		$this->Manage($request);
+		return $this->Run($response, function () use ($args) {
+			\Grocy\Services\WorkforcePlantaService::GetInstance()->DeactivateRestriction(intval($args['id']));
+			return ['success' => true];
+		});
+	}
+
+	public function EngineSaveConfig(Request $request, Response $response, array $args)
+	{
+		$this->Manage($request);
+		$d = $this->Body($request);
+		return $this->Run($response, function () use ($args, $d) {
+			\Grocy\Services\WorkforcePlantaService::GetInstance()->SaveConfig(strval($args['code']), $d);
+			return ['success' => true];
+		});
+	}
+
+	public function EngineCreateRequest(Request $request, Response $response, array $args)
+	{
+		$this->Manage($request);
+		$d = $this->Body($request);
+		return $this->Run($response, fn() => ['id' => \Grocy\Services\WorkforceRequestService::GetInstance()->Create($d, GROCY_USER_ID)]);
+	}
+
+	public function EngineDecideRequest(Request $request, Response $response, array $args)
+	{
+		$this->Manage($request);
+		$d = $this->Body($request);
+		return $this->Run($response, fn() => \Grocy\Services\WorkforceRequestService::GetInstance()->Decide(intval($args['id']), !empty($d['approve']), GROCY_USER_ID, $d['notes'] ?? null));
+	}
+
+	public function EngineApplyRequest(Request $request, Response $response, array $args)
+	{
+		$this->Manage($request);
+		return $this->Run($response, fn() => \Grocy\Services\WorkforceRequestService::GetInstance()->Apply(intval($args['id']), GROCY_USER_ID));
+	}
+
+	public function EngineDiscard(Request $request, Response $response, array $args)
+	{
+		$this->Manage($request);
+		return $this->Run($response, function () use ($args) {
+			$this->Engine()->Discard(intval($args['id']), GROCY_USER_ID);
+			return ['success' => true];
+		});
+	}
+
+	public function EngineReopen(Request $request, Response $response, array $args)
+	{
+		$this->Manage($request);
+		$d = $this->Body($request);
+		[$b, $y, $m] = $this->Ym($d);
+		return $this->Run($response, fn() => $this->Engine()->Reopen($b, $y, $m, strval($d['reason'] ?? ''), GROCY_USER_ID));
+	}
+
 	public function PublishMonthlySchedule(Request $request, Response $response, array $args)
 	{
 		$this->Manage($request);

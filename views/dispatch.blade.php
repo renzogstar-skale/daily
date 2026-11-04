@@ -3,11 +3,11 @@
 @section('title', 'Despachos y Validaciones | DAILY')
 
 @push('pageStyles')
-<link href="{{ $U('/css/daily_dispatch.css?v=', true) }}{{ time() }}" rel="stylesheet">
+<link href="{{ $U('/css/daily_dispatch.css?v=', true) }}{{ daily_asset_version('/css/daily_dispatch.css') }}" rel="stylesheet">
 @endpush
 
 @section('content')
-<link href="{{ $U('/css/daily_dispatch.css?v=', true) }}{{ time() }}" rel="stylesheet">
+<link href="{{ $U('/css/daily_dispatch.css?v=', true) }}{{ daily_asset_version('/css/daily_dispatch.css') }}" rel="stylesheet">
 @php
 	$money = fn($v) => $v === null ? 'Sin información' : '$' . number_format(floatval($v), 2);
 	$prepAcc = $analytics['pickup']['prep_accuracy_pct'] ?? null;
@@ -853,5 +853,5 @@ window.DispatchOrdersMap = {!! $ordersDetailMapJson !!};
 @endsection
 
 @push('pageScripts')
-<script src="{{ $U('/viewjs/dispatch.js?v=', true) }}{{ time() }}"></script>
+<script src="{{ $U('/viewjs/dispatch.js?v=', true) }}{{ daily_asset_version('/viewjs/dispatch.js') }}"></script>
 @endpush

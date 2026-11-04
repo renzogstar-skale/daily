@@ -86,13 +86,13 @@
 
 	function fillSetup() {
 		var b = parseInt($('#sc-branch').val(), 10);
-		var locs = (P.form.locations || []).filter(function (l) { return l.branch_id === b; });
+		var locs = ((P.form && P.form.locations) || []).filter(function (l) { return l.branch_id === b; });
 		var opts = '<option value="">Seleccione…</option>' + locs.map(function (l) {
 			return '<option value="' + l.id + '">' + esc(l.name) + (l.path.length > 1 ? ' · ' + esc(l.path.slice(1).join(' › ')) : '') + ' (' + esc(l.label_code) + ')</option>';
 		}).join('');
 		$('#sc-location, #sc-target').html(opts);
-		var orders = (P.form.orders || []).filter(function (o) { return o.branch_id === b; });
-		var co = (P.form.customer_orders || []).filter(function (o) { return o.branch_id === b; });
+		var orders = ((P.form && P.form.orders) || []).filter(function (o) { return o.branch_id === b; });
+		var co = ((P.form && P.form.customer_orders) || []).filter(function (o) { return o.branch_id === b; });
 		$('#sc-corder').html(co.length ? co.map(function (o) {
 			return '<option value="' + o.id + '"' + (P.pickId === o.id ? ' selected' : '') + '>' + esc(o.order_code) + ' · ' + esc(o.customer_name) + '</option>';
 		}).join('') : '<option value="">Sin pedidos confirmados</option>');
@@ -195,7 +195,7 @@
 		var code = evt.code;
 		// Etiqueta de ubicación durante la configuración de sesión: la selecciona
 		if (/^LOC-/i.test(code) && mode !== 'lookup' && !(session && session.status === 'open')) {
-			var loc = (P.form.locations || []).filter(function (l) { return l.label_code.toUpperCase() === code.toUpperCase(); })[0];
+			var loc = ((P.form && P.form.locations) || []).filter(function (l) { return l.label_code.toUpperCase() === code.toUpperCase(); })[0];
 			if (!loc) {
 				DairyScan.feedback(false);
 				msg('Ubicación ' + code + ' no encontrada o sin acceso', 'danger');

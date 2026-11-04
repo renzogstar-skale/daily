@@ -33,7 +33,9 @@ class SupplierProcurementController extends BaseController
 		}
 		$budgetData = $procService->BudgetOverview(null, $scope);
 
-		return $this->RenderPage($response, 'suppliers_procurement', [
+				$rawDb = \Grocy\Services\DatabaseService::GetInstance()->GetDbConnectionRaw();
+		$supplierContracts = $rawDb->query("SELECT * FROM daily_supplier_contracts ORDER BY id DESC")->fetchAll(\PDO::FETCH_ASSOC);
+return $this->RenderPage($response, 'suppliers_procurement', [
 			'suppliers' => $suppliers,
 			'priceHistory' => $priceHistory,
 			'deliveries' => $deliveries,
@@ -41,7 +43,8 @@ class SupplierProcurementController extends BaseController
 			'recommendations' => $recommendations,
 			'branches' => $branches,
 			'products' => $products,
-			'budgetData' => $budgetData
+			'budgetData' => $budgetData,
+			'supplierContracts' => $supplierContracts
 		]);
 	}
 }

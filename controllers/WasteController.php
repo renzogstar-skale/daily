@@ -89,8 +89,13 @@ class WasteController extends BaseController
 			!empty($params['metric']) ? $params['metric'] : 'pct'
 		);
 
-		return $this->RenderPage($response, 'waste_overview', [
+				$rawDb = \Grocy\Services\DatabaseService::GetInstance()->GetDbConnectionRaw();
+		$damagedProducts = $rawDb->query("SELECT * FROM daily_damaged_products ORDER BY id DESC")->fetchAll(\PDO::FETCH_ASSOC);
+		$smartAudits = $rawDb->query("SELECT * FROM daily_smart_audits ORDER BY id DESC")->fetchAll(\PDO::FETCH_ASSOC);
+return $this->RenderPage($response, 'waste_overview', [
 			'wasteExec' => $wasteExec,
+			'damagedProducts' => $damagedProducts,
+			'smartAudits' => $smartAudits,
 			'wasteRecords' => $wasteRecords,
 			'analytics' => $analytics,
 			'summary' => $analytics['summary'],

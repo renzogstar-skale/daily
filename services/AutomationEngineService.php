@@ -41,11 +41,17 @@ class AutomationEngineService extends BaseService
 	/** Evento con una alerta: el contexto se toma del registro (no de lo que diga quien dispara) */
 	public function OnAlert(string $event, int $alertId): array
 	{
-		$a = $this->Row('SELECT id, rule_code, branch_id, product_id, category, alert_type, department, severity, priority, status, title, value, source, owner_user_id FROM dairy_alerts WHERE id = :i', [':i' => $alertId]);
+		$a = $this->Row('SELECT id, rule_code, branch_id, product_id, category, alert_type, department, severity, priority, status, title, value, source, owner_user_id, dedupe_key FROM dairy_alerts WHERE id = :i', [':i' => $alertId]);
 		if (!$a)
 		{
 			return [];
 		}
+		// Alertas por lote: el lote viene en la clave de deduplicación (regla:stock_id[:fecha]); sin esto quarantine_lot nunca podía ejecutarse
+		if (in_array($a['rule_code'], ['expired_lot_unblocked', 'expiring_lots'], true))
+		{
+			$a['stock_id'] = explode(':', (string) $a['dedupe_key'])[1] ?? null;
+		}
+		unset($a['dedupe_key']);
 		$suffix = $event === 'alert_escalated' ? ':' . intval($this->Row('SELECT escalation_level FROM dairy_alerts WHERE id = :i', [':i' => $alertId])['escalation_level'] ?? 0) : '';
 		return $this->TriggerEvent($event, ['alert_id' => $alertId] + $a, "alert:$alertId$suffix");
 	}
@@ -383,8 +389,25 @@ class AutomationEngineService extends BaseService
 				return ['action' => 'escalated'];
 
 			case 'quarantine_lot':
-				// Solo con lote y cantidad del evento (nunca una cantidad supuesta)
 				$productId = intval($p['product_id'] ?? 0);
+				if ($productId > 0 && !empty($p['stock_id']) && !empty($p['branch_id']) && !isset($p['amount']))
+				{
+					// Lote identificado por la alerta: se aísla lo que queda en stock por ubicación (lo ya aislado no se repite)
+					$ids = [];
+					foreach ($this->Rows("SELECT s.location_id, SUM(s.amount) AS qty, (SELECT IFNULL(SUM(q.amount), 0) FROM quarantine_items q WHERE q.stock_id = s.stock_id AND IFNULL(q.location_id, 0) = s.location_id AND q.status = 'in_quarantine') AS held
+						FROM stock s JOIN locations l ON l.id = s.location_id WHERE s.stock_id = :s AND s.product_id = :p AND l.branch_id = :b AND s.amount > 0 GROUP BY s.location_id",
+						[':s' => $p['stock_id'], ':p' => $productId, ':b' => intval($p['branch_id'])]) as $r)
+					{
+						$free = round(floatval($r['qty']) - floatval($r['held']), 4);
+						if ($free > 0)
+						{
+							$ids[] = QualityExpiryService::GetInstance()->MoveToQuarantine(['product_id' => $productId, 'stock_id' => $p['stock_id'], 'location_id' => $r['location_id'],
+								'branch_id' => intval($p['branch_id']), 'amount' => $free, 'reason' => $cfg['reason'] ?? 'Bloqueo automático: ' . $label]);
+						}
+					}
+					return $ids ? ['action' => 'quarantined', 'quarantine_ids' => $ids] : ['action' => 'skipped', 'reason' => 'El lote ya no tiene stock libre en la sucursal'];
+				}
+				// Sin lote identificado: solo con lote y cantidad explícitos del evento (nunca una cantidad supuesta)
 				$amount = floatval($p['amount'] ?? 0);
 				if ($productId <= 0 || $amount <= 0 || empty($p['stock_id']) || empty($p['branch_id']))
 				{

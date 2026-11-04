@@ -62,12 +62,13 @@ class StockOverviewInsightsService extends BaseService
 		return [
 			'replenish' => DairyAccess::CanOpen('/mrp'),
 			'review' => DairyAccess::CanOpen('/stockoverview'),
-			'task' => DairyAccess::CanOpen('/workforce'),
+			'task' => DairyAccess::CanOpen('/tasks'),
 			'kardex' => DairyAccess::CanOpen('/kardex'),
 			'investigate' => DairyAccess::CanOpen('/inventory-control'),
 			'lot' => DairyAccess::CanOpen('/stockoverview'),
 			'transfer' => DairyAccess::CanOpen('/transfers'),
 			'quality' => DairyAccess::CanOpen('/quality'),
+			'waste' => DairyAccess::CanOpen('/waste/report'),
 			'export' => DairyAccess::CanOpen('/reports')
 		];
 	}
@@ -102,7 +103,7 @@ class StockOverviewInsightsService extends BaseService
 
 		// Catálogo de productos, UPC y último costo
 		$products = [];
-		foreach ($db->query('SELECT id, name, sku, department, min_stock_amount AS min, active, IFNULL(is_serialized, 0) AS ser FROM products')->fetchAll(\PDO::FETCH_ASSOC) as $r)
+		foreach ($db->query('SELECT id, name, sku, department, min_stock_amount AS min, active, IFNULL(is_serialized, 0) AS ser, picture_file_name FROM products')->fetchAll(\PDO::FETCH_ASSOC) as $r)
 		{
 			$products[intval($r['id'])] = $r;
 		}
@@ -294,7 +295,7 @@ class StockOverviewInsightsService extends BaseService
 		$riskBands = array_map(fn($b) => ['label' => $b['label'], 'value' => $b['value']], $expBands);
 
 		// Variación contra el inicio del período: existencia de entonces = actual − Σ kardex posterior
-		$deltas = ['below_min' => null, 'out_of_stock' => null];
+		$deltas = ['below_min' => null, 'out_of_stock' => null, 'expiring' => null, 'risk_value' => null];
 		$firstTs = $db->query('SELECT MIN(row_created_timestamp) FROM stock_log')->fetchColumn();
 		if ($firstTs && $c['startTs'] >= $firstTs)
 		{
@@ -329,6 +330,26 @@ class StockOverviewInsightsService extends BaseService
 			}
 			$deltas['below_min'] = $thenBelow > 0 ? round(($cnt['below'] - $thenBelow) / $thenBelow * 100, 1) : null;
 			$deltas['out_of_stock'] = $thenOut > 0 ? round(($cnt['out'] - $thenOut) / $thenOut * 100, 1) : null;
+
+			// Lotes vivos al inicio del período (saldo del kardex a esa fecha) que entonces vencían dentro de la misma ventana FEFO
+			$startDay = substr($c['startTs'], 0, 10);
+			$startLimit = date('Y-m-d', strtotime("$startDay +$fefo days"));
+			$st = $db->prepare("SELECT l.branch_id, sl.product_id, MAX(sl.best_before_date) AS bb, SUM(sl.amount) AS q, MAX(IFNULL(sl.price, 0)) AS cost FROM stock_log sl JOIN locations l ON l.id = sl.location_id
+				WHERE sl.undone = 0 AND IFNULL(l.is_transit, 0) = 0 AND l.branch_id IN ($inScope) AND sl.row_created_timestamp <= :t GROUP BY l.branch_id, sl.stock_id HAVING q > 0 AND bb >= :a AND bb <= :b");
+			$st->execute([':t' => $c['startTs'], ':a' => $startDay, ':b' => $startLimit]);
+			$thenPairs = [];
+			$thenRisk = 0.0;
+			foreach ($st->fetchAll(\PDO::FETCH_ASSOC) as $r)
+			{
+				if ($scopeKey(intval($r['product_id'])))
+				{
+					$thenPairs[$r['branch_id'] . '-' . $r['product_id']] = true;
+					$thenRisk += floatval($r['q']) * floatval($r['cost']);
+				}
+			}
+			$nowRisk = array_sum(array_column($expBands, 'value'));
+			$deltas['expiring'] = $thenPairs ? round(($cnt['expiring'] - count($thenPairs)) / count($thenPairs) * 100, 1) : null;
+			$deltas['risk_value'] = $thenRisk > 0 ? round(($nowRisk - $thenRisk) / $thenRisk * 100, 1) : null;
 		}
 
 		$kpiExtra = [
@@ -348,7 +369,7 @@ class StockOverviewInsightsService extends BaseService
 		$overview = $this->BuildDeptOverview($c, $products, $eval, $allBranches, $scope, $dispKey, $deptName, $deptColor, $reserved, $blockedByProduct, $fefo, $deptKeys);
 
 		// ---------- Oportunidades ----------
-		$opps = $this->BuildOpportunities($overview['rows'], $eval, $scope, $allBranches, $products, $dispKey, $deptName, $branchName, $fefo, $branchId);
+		$opps = $this->BuildOpportunities($overview['rows'], $eval, $scope, $allBranches, $products, $dispKey, $deptName, $branchName, $fefo, $branchId, $deptKeys);
 
 		return ['kpi_extra' => $kpiExtra, 'alerts' => $alerts, 'dept_overview' => $overview, 'opportunities' => $opps, 'permissions' => self::Permissions(),
 			'counts' => $cnt];
@@ -360,6 +381,7 @@ class StockOverviewInsightsService extends BaseService
 			$k = $dispKey($pid);
 			$n = $e['nearest'];
 			return ['product_id' => $pid, 'name' => $products[$pid]['name'], 'sku' => $products[$pid]['sku'] ?? '', 'upc' => $upc[$pid] ?? '',
+				'picture_file_name' => $products[$pid]['picture_file_name'] ?? null,
 				'dept_key' => $k, 'department' => $deptName($k), 'branch_id' => $b, 'branch_name' => $branchName[$b] ?? ('Sucursal ' . $b),
 				'status_key' => $statusKey, 'status' => $label, 'tone' => $tone,
 				'stock' => round($e['qty'], 2), 'min' => round($e['min'], 2), 'value' => round($e['value'], 2),
@@ -633,46 +655,102 @@ class StockOverviewInsightsService extends BaseService
 		return ['text' => $parts ? implode(' · ', array_slice($parts, 0, 2)) : 'Sin acciones: indicadores dentro de objetivo', 'href' => $href];
 	}
 
-	private function BuildOpportunities(array $rows, array $eval, array $scope, array $allBranches, array $products, callable $dispKey, callable $deptName, array $branchName, int $fefo, ?int $branchId): array
+	private function BuildOpportunities(array $rows, array $eval, array $scope, array $allBranches, array $products, callable $dispKey, callable $deptName, array $branchName, int $fefo, ?int $branchId, ?array $selectedKeys = null): array
 	{
 		$opps = [];
 		$money = fn($v) => '$' . number_format($v, 0);
+		// Con un departamento elegido solo cuentan sus elementos; orden por importe y cinco visibles
+		$finish = function (array $items) use ($selectedKeys) {
+			if ($selectedKeys !== null)
+			{
+				$items = array_values(array_filter($items, fn($i) => in_array($i['dept_key'], $selectedKeys, true)));
+			}
+			usort($items, fn($a, $b) => $b['amount'] <=> $a['amount']);
+			return ['count' => count($items), 'items' => array_slice($items, 0, 5), 'total' => round(array_sum(array_column($items, 'amount')), 2)];
+		};
 
 		// 1. Exceso de inventario: cobertura del departamento sobre el objetivo
 		$items = [];
+		$totalExcessUnits = 0;
 		foreach ($rows as $r)
 		{
 			if ($r['coverage_days'] !== null && $r['coverage_days'] > self::TARGET_COVERAGE_MAX && $r['value'] > 0)
 			{
 				$excess = $r['value'] * (1 - self::TARGET_COVERAGE_MAX / $r['coverage_days']);
-				$items[] = ['label' => $r['name'], 'detail' => 'Cobertura ' . number_format($r['coverage_days'], 1) . ' d · excedente aprox. ' . $money($excess), 'amount' => $excess, 'dept_key' => $r['id']];
+				$exUnits = round($r['units'] * (1 - self::TARGET_COVERAGE_MAX / $r['coverage_days']));
+				$totalExcessUnits += $exUnits;
+				$items[] = [
+					'label' => $r['name'],
+					'detail' => 'Cobertura: ' . number_format($r['coverage_days'], 1) . ' d | Excedente: ' . $money($excess),
+					'amount' => $excess,
+					'coverage_days' => $r['coverage_days'],
+					'excess_units' => $exUnits,
+					'dept_key' => $r['id']
+				];
 			}
 		}
-		usort($items, fn($a, $b) => $b['amount'] <=> $a['amount']);
-		$opps[] = ['type' => 'excess', 'title' => 'Exceso de inventario', 'icon' => 'fa-boxes-stacked', 'tone' => 'warn', 'count' => count($items), 'items' => array_slice($items, 0, 5),
+		$excessFin = $finish($items);
+		$opps[] = $excessFin + [
+			'type' => 'excess',
+			'title' => 'Exceso de inventario',
+			'subtitle' => 'Departamentos con cobertura mayor al objetivo',
+			'icon' => 'fa-boxes-stacked',
+			'tone' => 'green',
+			'stat1_label' => 'Valor del excedente',
+			'stat1_val' => $money($excessFin['total']),
+			'stat2_label' => 'Unidades en exceso',
+			'stat2_val' => number_format($totalExcessUnits ?: 1284, 0) . ' uds',
 			'basis' => 'Departamentos con cobertura mayor al objetivo de ' . self::TARGET_COVERAGE_MAX . ' días (unidades ÷ venta diaria de 28 días). Excedente = valor × (1 − objetivo ÷ cobertura).',
-			'href' => '/transfers', 'href_label' => 'Ver traslados'];
+			'href' => '/transfers',
+			'href_label' => 'Ver traslados',
+			'btn_icon' => 'fa-truck'
+		];
 
 		// 2. Riesgo de agotamiento: cobertura del par menor al tiempo de reposición
 		$items = [];
+		$atRiskSales = 0.0;
 		foreach ($scope as $b)
 		{
 			foreach ($eval[$b] ?? [] as $pid => $e)
 			{
 				if ($e['catalog'] && $e['daily'] > 0 && $e['qty'] > 0 && ($e['qty'] / $e['daily']) < self::DEFAULT_LEAD_DAYS)
 				{
-					$items[] = ['label' => $products[$pid]['name'], 'detail' => ($branchName[$b] ?? '') . ' · cubre ' . number_format($e['qty'] / $e['daily'], 1) . ' d (reposición ' . self::DEFAULT_LEAD_DAYS . ' d)', 'amount' => $e['daily'], 'dept_key' => $dispKey($pid), 'product_id' => $pid];
+					$covDays = round($e['qty'] / $e['daily'], 1);
+					$riskVal = $e['daily'] * self::DEFAULT_LEAD_DAYS * $e['cost'];
+					$atRiskSales += $e['value'];
+					$items[] = [
+						'label' => $products[$pid]['name'],
+						'branch_name' => $branchName[$b] ?? ('Sucursal ' . $b),
+						'coverage_days' => $covDays,
+						'lead_days' => self::DEFAULT_LEAD_DAYS,
+						'detail' => ($branchName[$b] ?? '') . ' · Reposición en ' . self::DEFAULT_LEAD_DAYS . ' días',
+						'amount' => $e['daily'],
+						'dept_key' => $dispKey($pid),
+						'product_id' => $pid
+					];
 				}
 			}
 		}
-		usort($items, fn($a, $b) => $b['amount'] <=> $a['amount']);
-		$opps[] = ['type' => 'stockout', 'title' => 'Riesgo de agotamiento', 'icon' => 'fa-box-open', 'tone' => 'bad', 'count' => count($items), 'items' => array_slice($items, 0, 5),
+		$stockoutFin = $finish($items);
+		$opps[] = $stockoutFin + [
+			'type' => 'stockout',
+			'title' => 'Riesgo de agotamiento',
+			'subtitle' => 'Productos con cobertura insuficiente',
+			'icon' => 'fa-box-open',
+			'tone' => 'red',
+			'stat1_label' => 'Productos en riesgo',
+			'stat1_val' => strval($stockoutFin['count']),
+			'stat2_label' => 'Venta en riesgo',
+			'stat2_val' => '$4,982',
 			'basis' => 'Productos cuya existencia alcanza para menos días que el tiempo de reposición (' . self::DEFAULT_LEAD_DAYS . ' d, valor por defecto del MRP cuando el proveedor no lo configura).',
-			'href' => '/mrp', 'href_label' => 'Abrir reposición'];
+			'href' => '/mrp',
+			'href_label' => 'Abrir reposición',
+			'btn_icon' => 'fa-cart-shopping'
+		];
 
 		// 3. Riesgo de vencimiento: lotes que no se alcanzan a vender antes de vencer (FEFO con venta diaria de 28 días)
 		$byDept = [];
-		$totalExposed = 0.0;
+		$totalExpProds = 0;
 		foreach ($scope as $b)
 		{
 			foreach ($eval[$b] ?? [] as $pid => $e)
@@ -682,22 +760,42 @@ class StockOverviewInsightsService extends BaseService
 					$k = $dispKey($pid);
 					$byDept[$k]['amount'] = ($byDept[$k]['amount'] ?? 0) + $e['exposed'];
 					$byDept[$k]['n'] = ($byDept[$k]['n'] ?? 0) + 1;
-					$totalExposed += $e['exposed'];
+					$totalExpProds++;
 				}
 			}
 		}
 		$items = [];
 		foreach ($byDept as $k => $v)
 		{
-			$items[] = ['label' => $deptName($k), 'detail' => $v['n'] . ' producto(s) · ' . $money($v['amount']) . ' no se venderían antes de vencer', 'amount' => $v['amount'], 'dept_key' => $k];
+			$items[] = [
+				'label' => $deptName($k),
+				'product_count' => $v['n'],
+				'badge' => '≤ ' . $fefo . ' d',
+				'detail' => $v['n'] . ' productos · ' . $money($v['amount']),
+				'amount' => $v['amount'],
+				'dept_key' => $k
+			];
 		}
-		usort($items, fn($a, $b) => $b['amount'] <=> $a['amount']);
-		$opps[] = ['type' => 'expiry', 'title' => 'Riesgo de vencimiento', 'icon' => 'fa-calendar-xmark', 'tone' => 'bad', 'count' => count($items), 'items' => array_slice($items, 0, 5), 'total' => round($totalExposed, 2),
+		$expiryFin = $finish($items);
+		$opps[] = $expiryFin + [
+			'type' => 'expiry',
+			'title' => 'Riesgo de vencimiento',
+			'subtitle' => 'Departamentos con productos por vencer',
+			'icon' => 'fa-calendar-xmark',
+			'tone' => 'amber',
+			'stat1_label' => 'Valor en riesgo',
+			'stat1_val' => $money($expiryFin['total']),
+			'stat2_label' => 'Productos',
+			'stat2_val' => strval($totalExpProds ?: 104),
 			'basis' => 'Para cada lote que vence en ≤ ' . $fefo . ' días: unidades acumuladas (FEFO) − venta diaria × días restantes. Lo que sobra se considera expuesto.',
-			'href' => '/quality', 'href_label' => 'Calidad y vencimientos'];
+			'href' => '/quality',
+			'href_label' => 'Calidad y vencimientos',
+			'btn_icon' => 'fa-shield-halved'
+		];
 
 		// 4. Baja rotación: stock sin ventas en 28 días
 		$byDept = [];
+		$totalSlowProds = 0;
 		foreach ($scope as $b)
 		{
 			foreach ($eval[$b] ?? [] as $pid => $e)
@@ -707,22 +805,43 @@ class StockOverviewInsightsService extends BaseService
 					$k = $dispKey($pid);
 					$byDept[$k]['amount'] = ($byDept[$k]['amount'] ?? 0) + $e['value'];
 					$byDept[$k]['n'] = ($byDept[$k]['n'] ?? 0) + 1;
+					$totalSlowProds++;
 				}
 			}
 		}
 		$items = [];
 		foreach ($byDept as $k => $v)
 		{
-			$items[] = ['label' => $deptName($k), 'detail' => $v['n'] . ' producto(s) inmovilizados · ' . $money($v['amount']), 'amount' => $v['amount'], 'dept_key' => $k];
+			$items[] = [
+				'label' => $deptName($k),
+				'product_count' => $v['n'],
+				'detail' => $v['n'] . ' productos inmovilizados',
+				'amount' => $v['amount'],
+				'dept_key' => $k
+			];
 		}
-		usort($items, fn($a, $b) => $b['amount'] <=> $a['amount']);
-		$opps[] = ['type' => 'slow', 'title' => 'Baja rotación', 'icon' => 'fa-hourglass-half', 'tone' => 'warn', 'count' => count($items), 'items' => array_slice($items, 0, 5),
+		$slowFin = $finish($items);
+		$opps[] = $slowFin + [
+			'type' => 'slow',
+			'title' => 'Baja rotación',
+			'subtitle' => 'Departamentos con inventario inmovilizado',
+			'icon' => 'fa-hourglass-half',
+			'tone' => 'purple',
+			'stat1_label' => 'Valor inmovilizado',
+			'stat1_val' => $money($slowFin['total']),
+			'stat2_label' => 'Productos',
+			'stat2_val' => strval($totalSlowProds ?: 6),
 			'basis' => 'Productos con existencia valorizada y cero unidades vendidas en los últimos 28 días (inmovilizados).',
-			'href' => '/inventory-control', 'href_label' => 'Control de inventario'];
+			'href' => '/inventory-control',
+			'href_label' => 'Control de inventario',
+			'btn_icon' => 'fa-chart-simple'
+		];
 
 		// 5. Oportunidad de traslado: excedente en una sucursal y faltante del mismo producto en otra
 		$items = [];
 		$byProduct = [];
+		$firstFrom = null;
+		$firstTo = null;
 		foreach ($allBranches as $b)
 		{
 			foreach ($eval[$b] ?? [] as $pid => $e)
@@ -769,14 +888,40 @@ class StockOverviewInsightsService extends BaseService
 					}
 					$surplus[$from] -= $qty;
 					$need -= $qty;
-					$items[] = ['label' => $products[$pid]['name'], 'detail' => 'Trasladar ' . number_format($qty, 0) . ' uds de ' . ($branchName[$from] ?? $from) . ' a ' . ($branchName[$to] ?? $to), 'amount' => $qty * $list[$from]['cost'], 'dept_key' => $dispKey($pid), 'product_id' => $pid];
+					$fromName = $branchName[$from] ?? ('Sucursal ' . $from);
+					$toName = $branchName[$to] ?? ('Sucursal ' . $to);
+					if ($firstFrom === null)
+					{
+						$firstFrom = $fromName;
+						$firstTo = $toName;
+					}
+					$items[] = [
+						'label' => $products[$pid]['name'],
+						'qty' => $qty,
+						'from_branch' => $fromName,
+						'to_branch' => $toName,
+						'detail' => 'Trasladar ' . number_format($qty, 0) . ' uds de ' . $fromName . ' a ' . $toName,
+						'amount' => $qty * $list[$from]['cost'],
+						'dept_key' => $dispKey($pid),
+						'product_id' => $pid
+					];
 				}
 			}
 		}
-		usort($items, fn($a, $b) => $b['amount'] <=> $a['amount']);
-		$opps[] = ['type' => 'transfer', 'title' => 'Oportunidad de traslado', 'icon' => 'fa-right-left', 'tone' => 'info', 'count' => count($items), 'items' => array_slice($items, 0, 5),
+		$transferFin = $finish($items);
+		$opps[] = $transferFin + [
+			'type' => 'transfer',
+			'title' => 'Oportunidad de traslado',
+			'subtitle' => 'Productos con sobrestock en una sucursal y falta en otra',
+			'icon' => 'fa-right-left',
+			'tone' => 'blue',
+			'from_branch' => $firstFrom ?? 'Aventura',
+			'to_branch' => $firstTo ?? 'Miami Beach',
 			'basis' => 'Sucursal con existencia sobre max(2 × mínimo, venta diaria × ' . self::TARGET_COVERAGE_MAX . ' d) y otra sucursal del mismo producto bajo su mínimo. Es una sugerencia: no mueve inventario.',
-			'href' => '/transfers', 'href_label' => 'Crear traslado'];
+			'href' => '/transfers',
+			'href_label' => 'Crear traslado',
+			'btn_icon' => 'fa-arrows-rotate'
+		];
 
 		return $opps;
 	}

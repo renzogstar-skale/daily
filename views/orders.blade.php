@@ -326,6 +326,7 @@
 						<div>
 							<div class="orders-detail-code-row">
 								<h3 class="orders-detail-code">{{ $o['order_code'] }}</h3>
+								<button type="button" class="btn btn-sm btn-outline-secondary" data-process-flow="customer_order:{{ $o['id'] }}"><i class="fa-solid fa-diagram-next"></i> Expediente</button>
 								<span class="order-status-pill st-{{ $o['status'] }}">{{ $o['status_label'] }}</span>
 								@if(!empty($o['has_shortage']))
 									<span class="badge badge-warning font-weight-bold">Con diferencia / faltante</span>

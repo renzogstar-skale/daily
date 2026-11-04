@@ -3,7 +3,7 @@
 @section('title', 'Registrar merma')
 
 @push('pageStyles')
-<link href="{{ $U('/css/daily_waste_control.css?v=', true) }}{{ time() }}" rel="stylesheet">
+<link href="{{ $U('/css/daily_waste_control.css?v=', true) }}{{ daily_asset_version('/css/daily_waste_control.css') }}" rel="stylesheet">
 @endpush
 
 @section('content')

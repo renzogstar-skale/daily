@@ -97,30 +97,30 @@ class ScheduleController extends BaseController
 		$bottomCards = [
 			'requests' => [
 				[
-					'name' => 'DELGADO LEAL KAREN PAOLA',
+					'name' => 'Lionel Messi',
 					'type' => 'Capacitación externa',
 					'dates' => '4 - 6 Nov',
 					'status' => 'Pendiente',
 					'badge_class' => 'sch-badge-warning',
-					'avatar' => 'KD',
+					'avatar' => 'LM',
 					'avatar_color' => '#2563eb'
 				],
 				[
-					'name' => 'MEDINA VASQUEZ LINDA VANESSA',
+					'name' => 'Taylor Swift',
 					'type' => 'Permiso médico especialista',
 					'dates' => '5 Nov',
 					'status' => 'Requiere aprobación',
 					'badge_class' => 'sch-badge-danger',
-					'avatar' => 'LM',
+					'avatar' => 'TS',
 					'avatar_color' => '#7c3aed'
 				],
 				[
-					'name' => 'CABALLERO VERGARA NICOLAS STEVEN',
-					'type' => 'Permuta con JARA PAVA JULIO CESAR',
+					'name' => 'Cristiano Ronaldo',
+					'type' => 'Permuta con Shakira Mebarak',
 					'dates' => '4 Nov',
 					'status' => 'Por revisar',
 					'badge_class' => 'sch-badge-info',
-					'avatar' => 'NC',
+					'avatar' => 'CR',
 					'avatar_color' => '#0d9488'
 				]
 			],
@@ -144,9 +144,9 @@ class ScheduleController extends BaseController
 			'duration' => '9.5h',
 			'department' => 'Accesorios',
 			'role' => 'E.ACCESORIOS',
-			'employee_name' => 'DELGADO LEAL KAREN PAOLA',
+			'employee_name' => 'Lionel Messi',
 			'employee_id' => 1164,
-			'employee_avatar' => 'KD',
+			'employee_avatar' => 'LM',
 			'status' => 'Confirmado',
 			'branch' => \Grocy\Services\BranchService::NameById(1),
 			'cost' => '$152.00'
@@ -162,7 +162,7 @@ class ScheduleController extends BaseController
 		}
 
 		$autoSchedSvc = \Grocy\Services\WorkforceAutoScheduleService::GetInstance();
-		$monthlyScheduleData = $autoSchedSvc->GetMonthSchedule($branchId, $selectedYear, $selectedMonth);
+		$monthlyScheduleData = $autoSchedSvc->GetMonthSchedule($branchId, $selectedYear, $selectedMonth, true);
 		$skillsMatrix = $autoSchedSvc->GetSkillsMatrix();
 		$colombianHolidays = $autoSchedSvc->GetColombianHolidays($selectedYear);
 		$vacationsList = $autoSchedSvc->GetVacations();

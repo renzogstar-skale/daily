@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="box1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fcd34d"/>
+      <stop offset="50%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+    <linearGradient id="boxDark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#d97706"/>
+      <stop offset="100%" stop-color="#b45309"/>
+    </linearGradient>
+    <linearGradient id="boxSide" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#92400e"/>
+    </linearGradient>
+    <linearGradient id="tape" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#fef3c7"/>
+      <stop offset="100%" stop-color="#fde68a"/>
+    </linearGradient>
+    <filter id="boxShadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="3" stdDeviation="2" flood-color="#78350f" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+
+  <!-- Shadow below -->
+  <ellipse cx="32" cy="58" rx="26" ry="5" fill="#78350f" fill-opacity="0.15"/>
+
+  <!-- Back Box -->
+  <g filter="url(#boxShadow)">
+    <!-- Top Face -->
+    <polygon points="34,14 48,8 60,14 46,20" fill="url(#box1)"/>
+    <!-- Front Face -->
+    <polygon points="34,14 46,20 46,38 34,32" fill="url(#boxSide)"/>
+    <!-- Right Face -->
+    <polygon points="46,20 60,14 60,32 46,38" fill="url(#boxDark)"/>
+    <!-- Tape -->
+    <polygon points="45,11 49,9 49,27 45,29" fill="url(#tape)" opacity="0.9"/>
+  </g>
+
+  <!-- Left Bottom Box -->
+  <g filter="url(#boxShadow)">
+    <polygon points="8,32 24,24 38,32 22,40" fill="url(#box1)"/>
+    <polygon points="8,32 22,40 22,56 8,48" fill="url(#boxSide)"/>
+    <polygon points="22,40 38,32 38,48 22,56" fill="url(#boxDark)"/>
+    <!-- Tape -->
+    <polygon points="21,27 25,25 25,46 21,48" fill="url(#tape)" opacity="0.9"/>
+  </g>
+
+  <!-- Front Right Box -->
+  <g filter="url(#boxShadow)">
+    <polygon points="26,38 42,30 56,38 40,46" fill="#fde68a"/>
+    <polygon points="26,38 40,46 40,60 26,52" fill="url(#boxSide)"/>
+    <polygon points="40,46 56,38 56,52 40,60" fill="url(#boxDark)"/>
+    <!-- Tape -->
+    <polygon points="39,33 43,31 43,51 39,53" fill="url(#tape)" opacity="0.9"/>
+    <!-- Mini label -->
+    <rect x="29" y="44" width="7" height="4" rx="1" fill="#ffffff" opacity="0.85"/>
+  </g>
+</svg>

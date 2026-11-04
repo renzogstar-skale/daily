@@ -70,6 +70,44 @@ class LossPreventionApiController extends BaseApiController
 		return $this->Run($response, fn() => CycleCountService::GetInstance()->ScheduleForProducts(intval($b['branch_id'] ?? 0), (array) ($b['product_ids'] ?? []), trim(strval($b['note'] ?? '')) ?: 'Conteo ciego por sospecha de stock fantasma', GROCY_USER_ID));
 	}
 
+	public function ScheduleBlindCount(Request $request, Response $response, array $args)
+	{
+		User::CheckPermission($request, User::PERMISSION_STOCK_INVENTORY);
+		$b = $this->Body($request);
+		$productId = intval($b['product_id'] ?? 0);
+		$branchId = !empty($b['branch_id']) ? intval($b['branch_id']) : $this->Branch($request);
+		$notes = strval($b['notes'] ?? 'Conteo ciego programado desde Control de Inventario');
+		return $this->Run($response, fn() => \Grocy\Services\InventoryControlService::GetInstance()->ScheduleBlindCount($productId, $branchId, $notes, GROCY_USER_ID));
+	}
+
+	public function DismissPhantom(Request $request, Response $response, array $args)
+	{
+		User::CheckPermission($request, User::PERMISSION_STOCK);
+		$b = $this->Body($request);
+		$productId = intval($b['product_id'] ?? 0);
+		$branchId = !empty($b['branch_id']) ? intval($b['branch_id']) : $this->Branch($request);
+		$reason = strval($b['reason'] ?? 'Descartado tras verificación');
+		return $this->Run($response, fn() => \Grocy\Services\InventoryControlService::GetInstance()->DismissPhantomAlert($productId, $branchId, $reason, GROCY_USER_ID));
+	}
+
+	public function RequestGondolaReview(Request $request, Response $response, array $args)
+	{
+		User::CheckPermission($request, User::PERMISSION_STOCK);
+		$b = $this->Body($request);
+		$productId = intval($b['product_id'] ?? 0);
+		$branchId = !empty($b['branch_id']) ? intval($b['branch_id']) : $this->Branch($request);
+		$shelfZone = strval($b['shelf_zone'] ?? 'Góndola Principal');
+		$notes = strval($b['notes'] ?? 'Revisar presencia física de producto');
+		return $this->Run($response, fn() => \Grocy\Services\InventoryControlService::GetInstance()->RequestGondolaReview($productId, $branchId, $shelfZone, $notes, GROCY_USER_ID));
+	}
+
+	public function ReclassifyAbcXyz(Request $request, Response $response, array $args)
+	{
+		User::CheckPermission($request, User::PERMISSION_STOCK);
+		$branchId = $this->Branch($request);
+		return $this->Run($response, fn() => \Grocy\Services\InventoryControlService::GetInstance()->ReclassifyAbcXyz($branchId, GROCY_USER_ID));
+	}
+
 	public function TotalLoss(Request $request, Response $response, array $args)
 	{
 		User::CheckPermission($request, User::PERMISSION_WASTE_APPROVE);

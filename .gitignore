@@ -5,3 +5,6 @@ embedded.txt
 /tests/dairy/.http_sandbox
 /tests/dairy/.sweep_sandbox
 /tests/dairy/.s34_sandbox
+# Playwright CLI output (may contain credentials)
+.playwright-cli/
+node_modules

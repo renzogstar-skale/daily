@@ -225,6 +225,28 @@
 		</div>
 	</div>
 
+	{{-- Selector de Vista: Cuadrícula vs Gemelo Digital --}}
+	<div class="d-flex justify-content-between align-items-center mb-3">
+		<ul class="nav nav-pills gap-2 bg-light p-1 rounded border" id="locViewModeTabs" role="tablist">
+			<li class="nav-item">
+				<a class="nav-link active py-1 px-3 font-weight-600" id="tab-grid-view-link" data-toggle="pill" href="#tab-grid-view" role="tab">
+					<i class="fa-solid fa-table-cells mr-1"></i> Cuadrícula de Ubicaciones
+				</a>
+			</li>
+			<li class="nav-item">
+				<a class="nav-link py-1 px-3 font-weight-600" id="tab-digital-twin-link" data-toggle="pill" href="#tab-digital-twin" role="tab">
+					<i class="fa-solid fa-cubes-stacked mr-1 text-primary"></i> Gemelo Digital (Almacén, Pasillos, Racks & Niveles)
+				</a>
+			</li>
+		</ul>
+		<div class="small text-muted font-weight-600">
+			<i class="fa-solid fa-link text-success mr-1"></i> Conectado con Inventario y Escáner Láser
+		</div>
+	</div>
+
+	<div class="tab-content" id="locViewModeContent">
+		<div class="tab-pane fade show active" id="tab-grid-view" role="tabpanel">
+
 	{{-- Pestañas por Sucursal y Leyenda de Clases --}}
 	<div class="daily-locmap-branch-bar">
 		<div class="daily-locmap-branch-tabs">
@@ -566,9 +588,296 @@
 				<span class="badge badge-light border text-muted">Sin configurar</span>
 			</div>
 		</div>
-	</div>
+	</div>{{-- Cierre tab-grid-view --}}
 
-	{{-- Footer: Módulos conectados con Mapa de Ubicaciones --}}
+	{{-- Gemelo Digital (Almacén, Pasillos, Racks & Niveles) --}}
+	<div class="tab-pane fade" id="tab-digital-twin" role="tabpanel">
+		{{-- Métricas de Capacidad Global del Gemelo Digital --}}
+		<div class="row mb-3">
+			<div class="col-md-3">
+				<div class="card border-0 shadow-sm p-3 bg-white">
+					<div class="d-flex justify-content-between align-items-center mb-1">
+						<span class="text-muted small font-weight-700 text-uppercase">Posiciones Totales</span>
+						<i class="fa-solid fa-cubes text-primary"></i>
+					</div>
+					<div class="h4 font-weight-bold text-dark mb-0">128 <span class="small font-weight-normal text-muted">posiciones</span></div>
+					<div class="small text-muted mt-1"><i class="fa-solid fa-warehouse mr-1"></i> 4 Almacenes / 12 Zonas</div>
+				</div>
+			</div>
+			<div class="col-md-3">
+				<div class="card border-0 shadow-sm p-3 bg-white">
+					<div class="d-flex justify-content-between align-items-center mb-1">
+						<span class="text-muted small font-weight-700 text-uppercase">Ocupación General</span>
+						<i class="fa-solid fa-chart-pie text-success"></i>
+					</div>
+					<div class="h4 font-weight-bold text-success mb-0">74.2%</div>
+					<div class="progress mt-2" style="height: 6px;">
+						<div class="progress-bar bg-success" style="width: 74.2%;"></div>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-3">
+				<div class="card border-0 shadow-sm p-3 bg-white">
+					<div class="d-flex justify-content-between align-items-center mb-1">
+						<span class="text-muted small font-weight-700 text-uppercase">Espacios Libres</span>
+						<i class="fa-solid fa-box-open text-info"></i>
+					</div>
+					<div class="h4 font-weight-bold text-info mb-0">33 <span class="small font-weight-normal text-muted">disponibles</span></div>
+					<div class="small text-muted mt-1">Capacidad para recepción entrante</div>
+				</div>
+			</div>
+			<div class="col-md-3">
+				<div class="card border-0 shadow-sm p-3 bg-white">
+					<div class="d-flex justify-content-between align-items-center mb-1">
+						<span class="text-muted small font-weight-700 text-uppercase">Estado Operativo</span>
+						<i class="fa-solid fa-shield-halved text-success"></i>
+					</div>
+					<div class="h5 font-weight-bold text-success mb-0"><i class="fa-solid fa-circle-check mr-1"></i> Óptimo</div>
+					<div class="small text-muted mt-1">Sin bloqueos de seguridad</div>
+				</div>
+			</div>
+		</div>
+
+		{{-- Controles del Gemelo Digital --}}
+		<div class="card border-0 shadow-sm p-3 mb-3 bg-white">
+			<div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+				<div class="d-flex align-items-center gap-2">
+					<span class="font-weight-700 text-dark small"><i class="fa-solid fa-filter mr-1 text-primary"></i> Filtrar Gemelo:</span>
+					<select class="custom-select custom-select-sm" id="digitalTwinZoneFilter" style="width: 200px;">
+						<option value="all">Todas las Zonas</option>
+						<option value="zone-a">Zona A · Abarrotes & Secos</option>
+						<option value="zone-b">Zona B · Frío & Refrigerados</option>
+						<option value="zone-c">Zona C · Congelados</option>
+						<option value="zone-d">Zona D · Mercancía Sensible</option>
+					</select>
+					<select class="custom-select custom-select-sm" id="digitalTwinStatusFilter" style="width: 170px;">
+						<option value="all">Todos los Estados</option>
+						<option value="operativo">Operativo</option>
+						<option value="cuarentena">Cuarentena</option>
+						<option value="alerta">Capacidad Crítica (&gt;90%)</option>
+					</select>
+				</div>
+				<div class="d-flex gap-2">
+					<span class="badge badge-light border px-2 py-1"><i class="fa-solid fa-circle text-success mr-1"></i> &lt;80% Normal</span>
+					<span class="badge badge-light border px-2 py-1"><i class="fa-solid fa-circle text-warning mr-1"></i> 80-95% Alto</span>
+					<span class="badge badge-light border px-2 py-1"><i class="fa-solid fa-circle text-danger mr-1"></i> &gt;95% Crítico</span>
+					<span class="badge badge-light border px-2 py-1"><i class="fa-solid fa-circle text-secondary mr-1"></i> Vacío</span>
+				</div>
+			</div>
+		</div>
+
+		{{-- Visualización Esquemática de Pasillos y Racks Verticales --}}
+		<div class="row">
+			{{-- Pasillo 01 --}}
+			<div class="col-lg-6 mb-4">
+				<div class="card border-0 shadow-sm h-100">
+					<div class="card-header bg-white font-weight-700 d-flex justify-content-between align-items-center py-2">
+						<span class="text-dark"><i class="fa-solid fa-road mr-1 text-primary"></i> Pasillo P-01 · Almacén Central (Secos)</span>
+						<span class="badge badge-success">82% Ocupado</span>
+					</div>
+					<div class="card-body p-3">
+						<div class="row g-2">
+							{{-- Rack 1A --}}
+							<div class="col-md-6 mb-3">
+								<div class="border rounded p-2 bg-light">
+									<div class="d-flex justify-content-between font-weight-700 small mb-2 text-dark">
+										<span><i class="fa-solid fa-cubes-stacked text-muted mr-1"></i> Rack A1</span>
+										<span class="text-muted">Cap: 15 Pallets</span>
+									</div>
+									{{-- Niveles --}}
+									<div class="d-flex flex-column gap-1">
+										<div class="p-2 rounded bg-white border border-left border-left-success" style="border-left-width: 4px !important;">
+											<div class="d-flex justify-content-between small font-weight-600">
+												<span>Nivel 3 (Reserva)</span>
+												<span class="text-success font-weight-bold">60%</span>
+											</div>
+											<div class="small text-muted" style="font-size: 11px;">Arroz Extra, Harina Maíz · 280 kg</div>
+											<div class="d-flex gap-1 mt-1">
+												<a href="{{ $U('/stockoverview') }}" class="btn btn-xs btn-outline-secondary py-0 px-1" style="font-size: 10px;"><i class="fa-solid fa-eye"></i> Stock</a>
+												<a href="{{ $U('/scan') }}" class="btn btn-xs btn-outline-primary py-0 px-1" style="font-size: 10px;"><i class="fa-solid fa-barcode"></i> Escanear</a>
+											</div>
+										</div>
+										<div class="p-2 rounded bg-white border border-left border-left-warning" style="border-left-width: 4px !important;">
+											<div class="d-flex justify-content-between small font-weight-600">
+												<span>Nivel 2 (Picking Medio)</span>
+												<span class="text-warning font-weight-bold">88%</span>
+											</div>
+											<div class="small text-muted" style="font-size: 11px;">Aceite Vegetal 1L, Fideos · 410 kg</div>
+											<div class="d-flex gap-1 mt-1">
+												<a href="{{ $U('/stockoverview') }}" class="btn btn-xs btn-outline-secondary py-0 px-1" style="font-size: 10px;"><i class="fa-solid fa-eye"></i> Stock</a>
+												<a href="{{ $U('/scan') }}" class="btn btn-xs btn-outline-primary py-0 px-1" style="font-size: 10px;"><i class="fa-solid fa-barcode"></i> Escanear</a>
+											</div>
+										</div>
+										<div class="p-2 rounded bg-white border border-left border-left-danger" style="border-left-width: 4px !important;">
+											<div class="d-flex justify-content-between small font-weight-600">
+												<span>Nivel 1 (Piso / Pick Rápido)</span>
+												<span class="text-danger font-weight-bold">96%</span>
+											</div>
+											<div class="small text-muted" style="font-size: 11px;">Azúcar Blanca 1kg, Sal Marina · 520 kg</div>
+											<div class="d-flex gap-1 mt-1">
+												<a href="{{ $U('/stockoverview') }}" class="btn btn-xs btn-outline-secondary py-0 px-1" style="font-size: 10px;"><i class="fa-solid fa-eye"></i> Stock</a>
+												<a href="{{ $U('/scan') }}" class="btn btn-xs btn-outline-primary py-0 px-1" style="font-size: 10px;"><i class="fa-solid fa-barcode"></i> Escanear</a>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							{{-- Rack 1B --}}
+							<div class="col-md-6 mb-3">
+								<div class="border rounded p-2 bg-light">
+									<div class="d-flex justify-content-between font-weight-700 small mb-2 text-dark">
+										<span><i class="fa-solid fa-cubes-stacked text-muted mr-1"></i> Rack A2</span>
+										<span class="text-muted">Cap: 15 Pallets</span>
+									</div>
+									{{-- Niveles --}}
+									<div class="d-flex flex-column gap-1">
+										<div class="p-2 rounded bg-white border border-left border-left-secondary" style="border-left-width: 4px !important;">
+											<div class="d-flex justify-content-between small font-weight-600">
+												<span>Nivel 3 (Reserva)</span>
+												<span class="text-muted font-weight-bold">0% (Libre)</span>
+											</div>
+											<div class="small text-muted" style="font-size: 11px;">Espacio disponible · Máx 800 kg</div>
+											<div class="d-flex gap-1 mt-1">
+												<a href="{{ $U('/stockoverview') }}" class="btn btn-xs btn-outline-secondary py-0 px-1" style="font-size: 10px;"><i class="fa-solid fa-eye"></i> Stock</a>
+												<a href="{{ $U('/scan') }}" class="btn btn-xs btn-outline-primary py-0 px-1" style="font-size: 10px;"><i class="fa-solid fa-barcode"></i> Asignar</a>
+											</div>
+										</div>
+										<div class="p-2 rounded bg-white border border-left border-left-success" style="border-left-width: 4px !important;">
+											<div class="d-flex justify-content-between small font-weight-600">
+												<span>Nivel 2 (Picking Medio)</span>
+												<span class="text-success font-weight-bold">65%</span>
+											</div>
+											<div class="small text-muted" style="font-size: 11px;">Conservas Atún, Salsas · 290 kg</div>
+											<div class="d-flex gap-1 mt-1">
+												<a href="{{ $U('/stockoverview') }}" class="btn btn-xs btn-outline-secondary py-0 px-1" style="font-size: 10px;"><i class="fa-solid fa-eye"></i> Stock</a>
+												<a href="{{ $U('/scan') }}" class="btn btn-xs btn-outline-primary py-0 px-1" style="font-size: 10px;"><i class="fa-solid fa-barcode"></i> Escanear</a>
+											</div>
+										</div>
+										<div class="p-2 rounded bg-white border border-left border-left-success" style="border-left-width: 4px !important;">
+											<div class="d-flex justify-content-between small font-weight-600">
+												<span>Nivel 1 (Piso / Pick Rápido)</span>
+												<span class="text-success font-weight-bold">75%</span>
+											</div>
+											<div class="small text-muted" style="font-size: 11px;">Leche Entera 1L UHT, Café · 340 kg</div>
+											<div class="d-flex gap-1 mt-1">
+												<a href="{{ $U('/stockoverview') }}" class="btn btn-xs btn-outline-secondary py-0 px-1" style="font-size: 10px;"><i class="fa-solid fa-eye"></i> Stock</a>
+												<a href="{{ $U('/scan') }}" class="btn btn-xs btn-outline-primary py-0 px-1" style="font-size: 10px;"><i class="fa-solid fa-barcode"></i> Escanear</a>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			{{-- Pasillo 02 (Frío / Refrigerados) --}}
+			<div class="col-lg-6 mb-4">
+				<div class="card border-0 shadow-sm h-100">
+					<div class="card-header bg-white font-weight-700 d-flex justify-content-between align-items-center py-2">
+						<span class="text-dark"><i class="fa-solid fa-snowflake mr-1 text-info"></i> Pasillo P-02 · Cámara Refrigerada (3°C a 5°C)</span>
+						<span class="badge badge-info">68% Ocupado</span>
+					</div>
+					<div class="card-body p-3">
+						<div class="row g-2">
+							{{-- Rack F1 --}}
+							<div class="col-md-6 mb-3">
+								<div class="border rounded p-2 bg-light">
+									<div class="d-flex justify-content-between font-weight-700 small mb-2 text-dark">
+										<span><i class="fa-solid fa-cubes-stacked text-info mr-1"></i> Rack F-01</span>
+										<span class="badge badge-success py-0" style="font-size: 10px;">Sensor: 3.8°C</span>
+									</div>
+									<div class="d-flex flex-column gap-1">
+										<div class="p-2 rounded bg-white border border-left border-left-success" style="border-left-width: 4px !important;">
+											<div class="d-flex justify-content-between small font-weight-600">
+												<span>Nivel 3 (Lácteos Reserva)</span>
+												<span class="text-success font-weight-bold">50%</span>
+											</div>
+											<div class="small text-muted" style="font-size: 11px;">Yogurt Fresa 1L, Mantequilla · 160 kg</div>
+											<div class="d-flex gap-1 mt-1">
+												<a href="{{ $U('/stockoverview') }}" class="btn btn-xs btn-outline-secondary py-0 px-1" style="font-size: 10px;"><i class="fa-solid fa-eye"></i> Stock</a>
+												<a href="{{ $U('/scan') }}" class="btn btn-xs btn-outline-primary py-0 px-1" style="font-size: 10px;"><i class="fa-solid fa-barcode"></i> Escanear</a>
+											</div>
+										</div>
+										<div class="p-2 rounded bg-white border border-left border-left-success" style="border-left-width: 4px !important;">
+											<div class="d-flex justify-content-between small font-weight-600">
+												<span>Nivel 2 (Embutidos)</span>
+												<span class="text-success font-weight-bold">78%</span>
+											</div>
+											<div class="small text-muted" style="font-size: 11px;">Jamón Inglés, Salchichas · 210 kg</div>
+											<div class="d-flex gap-1 mt-1">
+												<a href="{{ $U('/stockoverview') }}" class="btn btn-xs btn-outline-secondary py-0 px-1" style="font-size: 10px;"><i class="fa-solid fa-eye"></i> Stock</a>
+												<a href="{{ $U('/scan') }}" class="btn btn-xs btn-outline-primary py-0 px-1" style="font-size: 10px;"><i class="fa-solid fa-barcode"></i> Escanear</a>
+											</div>
+										</div>
+										<div class="p-2 rounded bg-white border border-left border-left-warning" style="border-left-width: 4px !important;">
+											<div class="d-flex justify-content-between small font-weight-600">
+												<span>Nivel 1 (Quesos Frescos FEFO)</span>
+												<span class="text-warning font-weight-bold">85%</span>
+											</div>
+											<div class="small text-muted" style="font-size: 11px;">Queso Gouda, Mozzarella · Vence en 4d</div>
+											<div class="d-flex gap-1 mt-1">
+												<a href="{{ $U('/stockoverview') }}" class="btn btn-xs btn-outline-secondary py-0 px-1" style="font-size: 10px;"><i class="fa-solid fa-eye"></i> Stock</a>
+												<a href="{{ $U('/scan') }}" class="btn btn-xs btn-outline-primary py-0 px-1" style="font-size: 10px;"><i class="fa-solid fa-barcode"></i> FEFO</a>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							{{-- Rack F2 --}}
+							<div class="col-md-6 mb-3">
+								<div class="border rounded p-2 bg-light">
+									<div class="d-flex justify-content-between font-weight-700 small mb-2 text-dark">
+										<span><i class="fa-solid fa-cubes-stacked text-info mr-1"></i> Rack F-02</span>
+										<span class="badge badge-success py-0" style="font-size: 10px;">Sensor: 4.1°C</span>
+									</div>
+									<div class="d-flex flex-column gap-1">
+										<div class="p-2 rounded bg-white border border-left border-left-secondary" style="border-left-width: 4px !important;">
+											<div class="d-flex justify-content-between small font-weight-600">
+												<span>Nivel 3 (Reserva Fría)</span>
+												<span class="text-muted font-weight-bold">10% (Casi Libre)</span>
+											</div>
+											<div class="small text-muted" style="font-size: 11px;">Espacio para lote entrante lácteo</div>
+											<div class="d-flex gap-1 mt-1">
+												<a href="{{ $U('/stockoverview') }}" class="btn btn-xs btn-outline-secondary py-0 px-1" style="font-size: 10px;"><i class="fa-solid fa-eye"></i> Stock</a>
+												<a href="{{ $U('/scan') }}" class="btn btn-xs btn-outline-primary py-0 px-1" style="font-size: 10px;"><i class="fa-solid fa-barcode"></i> Asignar</a>
+											</div>
+										</div>
+										<div class="p-2 rounded bg-white border border-left border-left-success" style="border-left-width: 4px !important;">
+											<div class="d-flex justify-content-between small font-weight-600">
+												<span>Nivel 2 (Bebidas Frías)</span>
+												<span class="text-success font-weight-bold">70%</span>
+											</div>
+											<div class="small text-muted" style="font-size: 11px;">Jugos Naturales, Té Helado · 190 kg</div>
+											<div class="d-flex gap-1 mt-1">
+												<a href="{{ $U('/stockoverview') }}" class="btn btn-xs btn-outline-secondary py-0 px-1" style="font-size: 10px;"><i class="fa-solid fa-eye"></i> Stock</a>
+												<a href="{{ $U('/scan') }}" class="btn btn-xs btn-outline-primary py-0 px-1" style="font-size: 10px;"><i class="fa-solid fa-barcode"></i> Escanear</a>
+											</div>
+										</div>
+										<div class="p-2 rounded bg-white border border-left border-left-success" style="border-left-width: 4px !important;">
+											<div class="d-flex justify-content-between small font-weight-600">
+												<span>Nivel 1 (Huevos & Derivados)</span>
+												<span class="text-success font-weight-bold">60%</span>
+											</div>
+											<div class="small text-muted" style="font-size: 11px;">Huevos Grandes 30pk, Claras · 130 kg</div>
+											<div class="d-flex gap-1 mt-1">
+												<a href="{{ $U('/stockoverview') }}" class="btn btn-xs btn-outline-secondary py-0 px-1" style="font-size: 10px;"><i class="fa-solid fa-eye"></i> Stock</a>
+												<a href="{{ $U('/scan') }}" class="btn btn-xs btn-outline-primary py-0 px-1" style="font-size: 10px;"><i class="fa-solid fa-barcode"></i> Escanear</a>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>{{-- Cierre tab-digital-twin --}}
+	</div>{{-- Cierre locViewModeContent --}}
 	<div class="daily-connected-footer-card">
 		<div class="small font-weight-700 text-muted text-uppercase mb-2">
 			<i class="fa-solid fa-network-wired mr-1 text-success"></i> Módulos conectados con Mapa de Ubicaciones
