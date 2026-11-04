@@ -1,0 +1,516 @@
+/* ==========================================================================
+   DAILY CRYSTAL — capa global Crystal Design / Liquid Glass (tema claro)
+   Se carga al final (después de los estilos de cada módulo) y solo actúa con
+   body.crystal-ui (no se activa en modo noche). Solo presentación: no cambia
+   lógica, rutas ni datos.
+
+   Receta (skill liquid-glass): fondo ambiental + tinte incoloro + borde (rim).
+   - Superficies repetidas (tarjetas, KPI, tablas): tinte blanco translúcido y
+     rim, SIN backdrop-filter (el fondo es un degradado suave: el desenfoque no
+     aporta nada y cuesta GPU en páginas con muchas tarjetas).
+   - Superficies flotantes (encabezado, menú lateral, menús, modales, paneles
+     fijos): backdrop-filter moderado, con alternativa opaca si no hay soporte.
+
+   Componentes (clases públicas, también aplicadas a clases existentes):
+   .crystal-card .crystal-panel .crystal-kpi .crystal-table .crystal-modal
+   .crystal-btn .crystal-sidebar .crystal-header .crystal-tabs .crystal-filters
+   .crystal-chart .crystal-alert(--ok|--warn|--crit) .crystal-badge(--ok|--warn|--crit)
+   .crystal-search .crystal-dropdown
+   ========================================================================== */
+
+:root {
+	/* Identidad DAILY */
+	--crystal-green-1: #39F500;
+	--crystal-green-2: #00C83B;
+	--crystal-green-3: #008E48;
+	--crystal-red-1: #FF3B30;
+	--crystal-red-2: #7F1D1D;
+	--crystal-yellow-1: #FFE600;
+	--crystal-yellow-2: #B66A00;
+
+	/* Lienzo y fondo ambiental (lo que el cristal "recoge") */
+	--crystal-page: #f3f6f4;
+	--crystal-mesh-green: rgba(57, 245, 0, 0.17);
+	--crystal-mesh-mint: rgba(0, 142, 72, 0.12);
+	--crystal-mesh-yellow: rgba(255, 230, 0, 0.16);
+	--crystal-mesh-cyan: rgba(6, 182, 212, 0.09);
+
+	/* Cristal: tinte blanco (incoloro) + rim */
+	--crystal-tint-top: rgba(255, 255, 255, 0.80);
+	--crystal-tint-bottom: rgba(255, 255, 255, 0.56);
+	--crystal-tint-top-hover: rgba(255, 255, 255, 0.92);
+	--crystal-tint-bottom-hover: rgba(255, 255, 255, 0.74);
+	--crystal-nested: rgba(255, 255, 255, 0.55);
+	--crystal-rim-top: rgba(255, 255, 255, 0.95);
+	--crystal-rim-hairline: rgba(255, 255, 255, 0.55);
+	--crystal-rim-bottom: rgba(15, 23, 42, 0.03);
+	--crystal-border: rgba(15, 23, 42, 0.08);
+	--crystal-border-strong: rgba(15, 23, 42, 0.14);
+	--crystal-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 10px 28px -14px rgba(15, 23, 42, 0.16);
+	--crystal-shadow-hover: 0 2px 4px rgba(15, 23, 42, 0.05), 0 18px 36px -16px rgba(15, 23, 42, 0.24);
+	--crystal-sheen: linear-gradient(165deg, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0) 42%);
+	--crystal-rim: inset 0 1px 0 var(--crystal-rim-top), inset 0 0 0 1px var(--crystal-rim-hairline), inset 0 -1px 0 var(--crystal-rim-bottom);
+
+	/* Flotantes (menús, modales, encabezado) */
+	--crystal-float-bg: rgba(255, 255, 255, 0.78);
+	--crystal-menu-bg: rgba(250, 251, 252, 0.88);
+	--crystal-modal-bg: rgba(255, 255, 255, 0.90);
+	--crystal-blur: blur(18px) saturate(160%);
+	--crystal-blur-sm: blur(10px) saturate(140%);
+	--crystal-menu-shadow: 0 16px 40px -8px rgba(15, 23, 42, 0.20), 0 4px 12px rgba(15, 23, 42, 0.06);
+	--crystal-scrim: rgba(15, 23, 42, 0.32);
+
+	--crystal-ring: 0 0 0 3px rgba(0, 200, 59, 0.22);
+	--crystal-radius: 14px;
+	--crystal-radius-lg: 18px;
+	--crystal-radius-sm: 10px;
+	--crystal-ease: cubic-bezier(0.16, 1, 0.3, 1);
+	--crystal-dur: 180ms;
+}
+
+/* --------------------------------------------------------------------------
+   Lienzo + fondo ambiental fijo
+   -------------------------------------------------------------------------- */
+body.crystal-ui {
+	background: var(--crystal-page) !important;
+	isolation: isolate;
+}
+body.crystal-ui::before {
+	content: '';
+	position: fixed;
+	inset: 0;
+	z-index: -1;
+	pointer-events: none;
+	background:
+		radial-gradient(46rem 34rem at 8% -6%, var(--crystal-mesh-green), transparent 62%),
+		radial-gradient(40rem 32rem at 98% 4%, var(--crystal-mesh-yellow), transparent 60%),
+		radial-gradient(52rem 40rem at 70% 108%, var(--crystal-mesh-mint), transparent 62%),
+		radial-gradient(36rem 30rem at 30% 70%, var(--crystal-mesh-cyan), transparent 64%),
+		radial-gradient(30rem 24rem at 58% 38%, rgba(57, 245, 0, 0.06), transparent 64%);
+}
+body.crystal-ui .content-wrapper,
+body.crystal-ui #page-content,
+body.crystal-ui .crystal-canvas { background-color: transparent !important; }
+body.crystal-ui ::selection { background: rgba(0, 200, 59, 0.18); }
+
+/* Anillo de foco de marca (antes azul) */
+body.crystal-ui { --dairy-ring: var(--crystal-ring); --dnav-focus: rgba(0, 142, 72, 0.45); }
+
+/* --------------------------------------------------------------------------
+   CrystalHeader — encabezado fijo
+   -------------------------------------------------------------------------- */
+body.crystal-ui #mainNav,
+body.crystal-ui .crystal-header {
+	background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.66)) !important;
+	-webkit-backdrop-filter: var(--crystal-blur);
+	backdrop-filter: var(--crystal-blur);
+	border-bottom: 1px solid var(--crystal-border) !important;
+	box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.7), 0 6px 20px -14px rgba(15, 23, 42, 0.18) !important;
+}
+
+/* CrystalSearch y controles del encabezado */
+body.crystal-ui .dairy-hsearch,
+body.crystal-ui .dairy-hbtn,
+body.crystal-ui .crystal-search {
+	background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7)) !important;
+	border: 1px solid var(--crystal-border) !important;
+	box-shadow: inset 0 1px 0 var(--crystal-rim-top), 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+	transition: box-shadow var(--crystal-dur) var(--crystal-ease), border-color var(--crystal-dur) var(--crystal-ease);
+}
+body.crystal-ui .dairy-hsearch:hover,
+body.crystal-ui .dairy-hbtn:hover,
+body.crystal-ui .crystal-search:hover { border-color: var(--crystal-border-strong) !important; box-shadow: inset 0 1px 0 var(--crystal-rim-top), 0 4px 12px -6px rgba(15, 23, 42, 0.16) !important; }
+body.crystal-ui .dairy-hsearch:focus,
+body.crystal-ui .crystal-search:focus-within { border-color: var(--crystal-green-2) !important; box-shadow: var(--crystal-ring) !important; }
+
+/* --------------------------------------------------------------------------
+   CrystalSidebar — menú lateral
+   -------------------------------------------------------------------------- */
+body.crystal-ui {
+	--dnav-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.46));
+	--dnav-bg-hover: rgba(0, 142, 72, 0.06);
+	--dnav-active-bg: linear-gradient(180deg, rgba(57, 245, 0, 0.13), rgba(0, 142, 72, 0.09));
+	--dnav-border: var(--crystal-border);
+}
+body.crystal-ui #mainNav.navbar-light .navbar-collapse .navbar-sidenav.dnav,
+body.crystal-ui .crystal-sidebar {
+	-webkit-backdrop-filter: var(--crystal-blur);
+	backdrop-filter: var(--crystal-blur);
+	box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.7);
+}
+body.crystal-ui .dnav .dnav-item.is-active > .dnav-link { color: var(--crystal-green-3) !important; font-weight: 600; }
+body.crystal-ui .dnav .dnav-item.is-active > .dnav-link,
+body.crystal-ui .dnav-group.is-active > .dnav-group-btn { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8); }
+body.crystal-ui .dnav-link,
+body.crystal-ui .dnav-group-btn,
+body.crystal-ui .dnav-cat-btn { transition: background-color var(--crystal-dur) var(--crystal-ease), color var(--crystal-dur) var(--crystal-ease); }
+
+/* --------------------------------------------------------------------------
+   CrystalCard / CrystalPanel / CrystalKpiCard — superficies
+   .crystal-surface la asigna daily_crystal.js a toda superficie blanca opaca
+   con radio; las clases listadas cubren el primer pintado sin esperar al JS.
+   -------------------------------------------------------------------------- */
+body.crystal-ui .card,
+body.crystal-ui .crystal-card,
+body.crystal-ui .crystal-panel,
+body.crystal-ui .crystal-kpi,
+body.crystal-ui .crystal-surface,
+body.crystal-ui .dairy-kpi-accent,
+body.crystal-ui .dairy-kpi-card,
+body.crystal-ui .dairy-card-table,
+body.crystal-ui .today-exec-card,
+body.crystal-ui .today-exec-kpi-card,
+body.crystal-ui .today-exec-spark-card,
+body.crystal-ui .cc-card,
+body.crystal-ui .ep-card-box,
+body.crystal-ui .ep-kpi-card,
+body.crystal-ui .daily-kpi-stat-card,
+body.crystal-ui .daily-analytics-card,
+body.crystal-ui .daily-table-container-card,
+body.crystal-ui .daily-kpi-card,
+body.crystal-ui .dsm-card,
+body.crystal-ui .dsm-kpi-card {
+	background: var(--crystal-sheen), linear-gradient(180deg, var(--crystal-tint-top), var(--crystal-tint-bottom)) !important;
+	border: 1px solid var(--crystal-border) !important;
+	box-shadow: var(--crystal-shadow), var(--crystal-rim) !important;
+}
+body.crystal-ui .card { border-radius: var(--crystal-radius) !important; }
+body.crystal-ui .card-header,
+body.crystal-ui .card-footer { background: transparent !important; border-color: rgba(15, 23, 42, 0.06) !important; }
+
+/* Hijo de una superficie: sin superficie propia (regla 3 del skill) */
+body.crystal-ui .crystal-surface--nested,
+body.crystal-ui .card .card {
+	background: var(--crystal-nested) !important;
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+	-webkit-backdrop-filter: none !important;
+	backdrop-filter: none !important;
+}
+
+/* KPI: microinteracción de elevación */
+body.crystal-ui .crystal-kpi,
+body.crystal-ui .dairy-kpi-accent,
+body.crystal-ui .dairy-kpi-card,
+body.crystal-ui .today-exec-kpi-card,
+body.crystal-ui .cc-kpi,
+body.crystal-ui .ep-kpi-card,
+body.crystal-ui .daily-kpi-stat-card,
+body.crystal-ui .daily-kpi-card,
+body.crystal-ui .dsm-kpi-card,
+body.crystal-ui .crystal-surface--interactive {
+	transition: transform var(--crystal-dur) var(--crystal-ease), box-shadow var(--crystal-dur) var(--crystal-ease), border-color var(--crystal-dur) var(--crystal-ease);
+}
+body.crystal-ui .crystal-kpi:hover,
+body.crystal-ui .dairy-kpi-accent:hover,
+body.crystal-ui .dairy-kpi-card:hover,
+body.crystal-ui .today-exec-kpi-card:hover,
+body.crystal-ui .cc-kpi:hover,
+body.crystal-ui .ep-kpi-card:hover,
+body.crystal-ui .daily-kpi-stat-card:hover,
+body.crystal-ui .daily-kpi-card:hover,
+body.crystal-ui .dsm-kpi-card:hover,
+body.crystal-ui .crystal-surface--interactive:hover {
+	transform: translateY(-2px);
+	background: linear-gradient(180deg, var(--crystal-tint-top-hover), var(--crystal-tint-bottom-hover)) !important;
+	border-color: var(--crystal-border-strong) !important;
+	box-shadow: var(--crystal-shadow-hover), var(--crystal-rim) !important;
+}
+
+/* Superficie flotante/fija (paneles laterales, barras pegajosas) */
+body.crystal-ui .crystal-surface--floating {
+	background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.8)) !important;
+	-webkit-backdrop-filter: var(--crystal-blur);
+	backdrop-filter: var(--crystal-blur);
+	box-shadow: var(--crystal-menu-shadow), var(--crystal-rim) !important;
+}
+
+/* Encabezado de página */
+body.crystal-ui .dairy-page-icon {
+	background: linear-gradient(150deg, rgba(57, 245, 0, 0.18), rgba(0, 142, 72, 0.12)) !important;
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 4px 12px -6px rgba(0, 142, 72, 0.35) !important;
+	border: 1px solid rgba(0, 142, 72, 0.16) !important;
+}
+
+/* --------------------------------------------------------------------------
+   CrystalChartContainer
+   -------------------------------------------------------------------------- */
+body.crystal-ui .crystal-chart { position: relative; border-radius: var(--crystal-radius-sm); }
+body.crystal-ui canvas { background: transparent !important; }
+
+/* --------------------------------------------------------------------------
+   CrystalTable — legibilidad primero (sin desenfoque en filas)
+   -------------------------------------------------------------------------- */
+body.crystal-ui .table,
+body.crystal-ui .crystal-table { background: transparent !important; }
+body.crystal-ui .table thead th,
+body.crystal-ui .crystal-table thead th {
+	background: rgba(241, 245, 249, 0.82) !important;
+	color: #475569 !important;
+	border-bottom: 1px solid var(--crystal-border) !important;
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+body.crystal-ui .table tbody td { border-top-color: rgba(15, 23, 42, 0.06) !important; }
+body.crystal-ui .table tbody tr { transition: background-color 120ms linear; }
+body.crystal-ui .table-hover tbody tr:hover,
+body.crystal-ui .crystal-table tbody tr:hover { background: rgba(0, 142, 72, 0.045) !important; }
+body.crystal-ui .table-striped tbody tr:nth-of-type(odd) { background: rgba(248, 250, 252, 0.55); }
+body.crystal-ui table.dataTable tbody tr.selected { background: rgba(0, 200, 59, 0.10) !important; }
+body.crystal-ui .table-responsive,
+body.crystal-ui .dataTables_wrapper { border-radius: var(--crystal-radius-sm); }
+
+/* --------------------------------------------------------------------------
+   CrystalButton — hover, focus, active, disabled
+   -------------------------------------------------------------------------- */
+body.crystal-ui .btn,
+body.crystal-ui .crystal-btn {
+	transition: transform 120ms var(--crystal-ease), box-shadow var(--crystal-dur) var(--crystal-ease), background-color var(--crystal-dur) var(--crystal-ease), border-color var(--crystal-dur) var(--crystal-ease), filter var(--crystal-dur) var(--crystal-ease);
+}
+body.crystal-ui .btn:not(:disabled):not(.disabled):hover { transform: translateY(-1px); }
+body.crystal-ui .btn:not(:disabled):not(.disabled):active,
+body.crystal-ui .btn:not(:disabled):not(.disabled).active { transform: translateY(0) scale(0.98); }
+body.crystal-ui .btn:focus-visible { box-shadow: var(--crystal-ring) !important; outline: none; }
+body.crystal-ui .btn:disabled,
+body.crystal-ui .btn.disabled { opacity: 0.5; transform: none; box-shadow: none !important; cursor: not-allowed; }
+
+body.crystal-ui .btn-primary,
+body.crystal-ui .btn-success,
+body.crystal-ui .crystal-btn--primary {
+	background: linear-gradient(180deg, var(--crystal-green-2), var(--crystal-green-3)) !important;
+	border: 1px solid rgba(0, 110, 56, 0.55) !important;
+	color: #fff !important;
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 4px 12px -6px rgba(0, 142, 72, 0.55) !important;
+}
+body.crystal-ui .btn-primary:not(:disabled):hover,
+body.crystal-ui .btn-success:not(:disabled):hover,
+body.crystal-ui .crystal-btn--primary:not(:disabled):hover {
+	filter: brightness(1.05) saturate(1.08);
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 10px 20px -8px rgba(0, 142, 72, 0.6) !important;
+}
+body.crystal-ui .btn-danger {
+	background: linear-gradient(180deg, var(--crystal-red-1), #c81e1e) !important;
+	border: 1px solid rgba(127, 29, 29, 0.5) !important;
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 4px 12px -6px rgba(200, 30, 30, 0.5) !important;
+}
+body.crystal-ui .btn-warning {
+	background: linear-gradient(180deg, var(--crystal-yellow-1), #f5b800) !important;
+	border: 1px solid rgba(182, 106, 0, 0.45) !important;
+	color: #5c3600 !important;
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 4px 12px -6px rgba(182, 106, 0, 0.45) !important;
+}
+body.crystal-ui .btn-light,
+body.crystal-ui .btn-secondary,
+body.crystal-ui .btn-outline-secondary,
+body.crystal-ui .btn-outline-dark,
+body.crystal-ui .btn-outline-primary,
+body.crystal-ui .btn-outline-success,
+body.crystal-ui .crystal-btn {
+	background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.72)) !important;
+	border: 1px solid var(--crystal-border-strong) !important;
+	box-shadow: inset 0 1px 0 var(--crystal-rim-top), 0 1px 2px rgba(15, 23, 42, 0.05) !important;
+}
+body.crystal-ui .btn-light,
+body.crystal-ui .btn-secondary,
+body.crystal-ui .btn-outline-secondary,
+body.crystal-ui .btn-outline-dark,
+body.crystal-ui .crystal-btn { color: #334155 !important; }
+body.crystal-ui .btn-outline-primary,
+body.crystal-ui .btn-outline-success { color: var(--crystal-green-3) !important; border-color: rgba(0, 142, 72, 0.35) !important; }
+body.crystal-ui .btn-light:not(:disabled):hover,
+body.crystal-ui .btn-secondary:not(:disabled):hover,
+body.crystal-ui .btn-outline-secondary:not(:disabled):hover,
+body.crystal-ui .btn-outline-dark:not(:disabled):hover,
+body.crystal-ui .btn-outline-primary:not(:disabled):hover,
+body.crystal-ui .btn-outline-success:not(:disabled):hover,
+body.crystal-ui .crystal-btn:not(:disabled):hover {
+	background: linear-gradient(180deg, #fff, rgba(255, 255, 255, 0.86)) !important;
+	box-shadow: inset 0 1px 0 #fff, 0 6px 14px -8px rgba(15, 23, 42, 0.28) !important;
+}
+body.crystal-ui .btn-outline-danger { background: rgba(255, 255, 255, 0.8) !important; }
+body.crystal-ui .btn-outline-warning { background: rgba(255, 255, 255, 0.8) !important; color: var(--crystal-yellow-2) !important; border-color: rgba(182, 106, 0, 0.4) !important; }
+
+/* --------------------------------------------------------------------------
+   CrystalFilters / formularios
+   -------------------------------------------------------------------------- */
+body.crystal-ui .form-control,
+body.crystal-ui .custom-select,
+body.crystal-ui .crystal-filters .form-control,
+body.crystal-ui .bootstrap-select > .dropdown-toggle {
+	background-color: rgba(255, 255, 255, 0.82) !important;
+	border-color: var(--crystal-border-strong) !important;
+	box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04);
+	transition: border-color var(--crystal-dur) var(--crystal-ease), box-shadow var(--crystal-dur) var(--crystal-ease), background-color var(--crystal-dur) var(--crystal-ease);
+}
+/* select pequeño: el tema dejaba 7,2 px de relleno en 31 px y recortaba el texto */
+body.crystal-ui select.form-control-sm { padding-top: 3px; padding-bottom: 3px; }
+body.crystal-ui .form-control:hover,
+body.crystal-ui .custom-select:hover { background-color: rgba(255, 255, 255, 0.95) !important; }
+body.crystal-ui .form-control:focus,
+body.crystal-ui .custom-select:focus {
+	background-color: #fff !important;
+	border-color: var(--crystal-green-2) !important;
+	box-shadow: var(--crystal-ring) !important;
+}
+body.crystal-ui .form-control:disabled,
+body.crystal-ui .form-control[readonly],
+body.crystal-ui .custom-select:disabled { background-color: rgba(241, 245, 249, 0.7) !important; opacity: 0.85; }
+body.crystal-ui .custom-control-input:checked ~ .custom-control-label::before { background-color: var(--crystal-green-2) !important; border-color: var(--crystal-green-3) !important; }
+body.crystal-ui .crystal-filters {
+	display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+	padding: 8px; border-radius: var(--crystal-radius);
+	background: linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.5));
+	border: 1px solid var(--crystal-border);
+	box-shadow: var(--crystal-rim);
+}
+
+/* --------------------------------------------------------------------------
+   CrystalTabs
+   -------------------------------------------------------------------------- */
+body.crystal-ui .nav-tabs,
+body.crystal-ui .crystal-tabs { border-bottom-color: var(--crystal-border) !important; }
+body.crystal-ui .nav-tabs .nav-link,
+body.crystal-ui .nav-pills .nav-link,
+body.crystal-ui .crystal-tabs .nav-link { transition: background-color var(--crystal-dur) var(--crystal-ease), color var(--crystal-dur) var(--crystal-ease), box-shadow var(--crystal-dur) var(--crystal-ease); }
+body.crystal-ui .nav-tabs .nav-link:hover { background: rgba(255, 255, 255, 0.6); }
+body.crystal-ui .nav-tabs .nav-link.active,
+body.crystal-ui .crystal-tabs .nav-link.active {
+	background: linear-gradient(180deg, #fff, rgba(255, 255, 255, 0.85)) !important;
+	border-color: var(--crystal-border) var(--crystal-border) transparent !important;
+	box-shadow: inset 0 1px 0 #fff;
+}
+body.crystal-ui .nav-pills .nav-link.active {
+	background: linear-gradient(180deg, var(--crystal-green-2), var(--crystal-green-3)) !important;
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 4px 10px -6px rgba(0, 142, 72, 0.55);
+}
+
+/* --------------------------------------------------------------------------
+   CrystalDropdown — nivel "menú" (desenfoque fuerte + lavado legible)
+   -------------------------------------------------------------------------- */
+body.crystal-ui .dropdown-menu,
+body.crystal-ui .crystal-dropdown,
+body.crystal-ui .daterangepicker,
+body.crystal-ui .bootstrap-datetimepicker-widget.dropdown-menu,
+body.crystal-ui .dsm-fdd-menu {
+	background: var(--crystal-menu-bg) !important;
+	border: 1px solid var(--crystal-border) !important;
+	border-radius: var(--crystal-radius-sm) !important;
+	box-shadow: var(--crystal-menu-shadow), inset 0 1px 0 var(--crystal-rim-top) !important;
+	-webkit-backdrop-filter: blur(22px) saturate(150%);
+	backdrop-filter: blur(22px) saturate(150%);
+}
+body.crystal-ui .dropdown-item { border-radius: 7px; transition: background-color 120ms linear; }
+body.crystal-ui .dropdown-menu .dropdown-item { width: auto; margin: 0 4px; }
+body.crystal-ui .dropdown-item:hover,
+body.crystal-ui .dropdown-item:focus { background: rgba(0, 142, 72, 0.07) !important; }
+body.crystal-ui .dropdown-item.active,
+body.crystal-ui .dropdown-item:active { background: linear-gradient(180deg, var(--crystal-green-2), var(--crystal-green-3)) !important; color: #fff !important; }
+
+/* --------------------------------------------------------------------------
+   CrystalModal — escarcha opaca para que el texto se lea sobre el velo
+   -------------------------------------------------------------------------- */
+body.crystal-ui .modal-content,
+body.crystal-ui .crystal-modal {
+	background: var(--crystal-modal-bg) !important;
+	border: 1px solid rgba(255, 255, 255, 0.7) !important;
+	border-radius: var(--crystal-radius-lg) !important;
+	box-shadow: 0 30px 70px -20px rgba(15, 23, 42, 0.38), 0 0 0 1px var(--crystal-border), inset 0 1px 0 #fff !important;
+	-webkit-backdrop-filter: var(--crystal-blur);
+	backdrop-filter: var(--crystal-blur);
+}
+body.crystal-ui .modal-header,
+body.crystal-ui .modal-footer { background: transparent !important; border-color: rgba(15, 23, 42, 0.07) !important; }
+body.crystal-ui .modal-backdrop { background: var(--crystal-scrim) !important; }
+body.crystal-ui .modal-backdrop.show { opacity: 1 !important; -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+body.crystal-ui .toast,
+body.crystal-ui #toast-container > div {
+	-webkit-backdrop-filter: var(--crystal-blur-sm);
+	backdrop-filter: var(--crystal-blur-sm);
+	border-radius: var(--crystal-radius-sm) !important;
+	box-shadow: var(--crystal-menu-shadow) !important;
+}
+
+/* --------------------------------------------------------------------------
+   CrystalAlert
+   -------------------------------------------------------------------------- */
+body.crystal-ui .alert,
+body.crystal-ui .crystal-alert {
+	border-radius: var(--crystal-radius-sm) !important;
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 4px 14px -10px rgba(15, 23, 42, 0.2);
+}
+body.crystal-ui .alert-success,
+body.crystal-ui .crystal-alert--ok { background: linear-gradient(180deg, rgba(57, 245, 0, 0.10), rgba(0, 142, 72, 0.07)) !important; border: 1px solid rgba(0, 142, 72, 0.25) !important; color: #005c30 !important; }
+body.crystal-ui .alert-warning,
+body.crystal-ui .crystal-alert--warn { background: linear-gradient(180deg, rgba(255, 230, 0, 0.16), rgba(182, 106, 0, 0.07)) !important; border: 1px solid rgba(182, 106, 0, 0.3) !important; color: #6b3f00 !important; }
+body.crystal-ui .alert-danger,
+body.crystal-ui .crystal-alert--crit { background: linear-gradient(180deg, rgba(255, 59, 48, 0.10), rgba(127, 29, 29, 0.06)) !important; border: 1px solid rgba(255, 59, 48, 0.28) !important; color: var(--crystal-red-2) !important; }
+body.crystal-ui .alert-info,
+body.crystal-ui .alert-secondary,
+body.crystal-ui .alert-light { background: linear-gradient(180deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.65)) !important; border: 1px solid var(--crystal-border) !important; color: #334155 !important; }
+
+/* --------------------------------------------------------------------------
+   CrystalStatusBadge
+   -------------------------------------------------------------------------- */
+body.crystal-ui .badge { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35); }
+body.crystal-ui .crystal-badge {
+	display: inline-flex; align-items: center; gap: 4px;
+	padding: 2px 9px; border-radius: 999px;
+	font-size: 11px; font-weight: 700; line-height: 1.6;
+	background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.65));
+	border: 1px solid var(--crystal-border-strong);
+	box-shadow: inset 0 1px 0 #fff;
+	color: #334155;
+}
+body.crystal-ui .crystal-badge--ok { background: rgba(57, 245, 0, 0.14); border-color: rgba(0, 142, 72, 0.3); color: #00643a; }
+body.crystal-ui .crystal-badge--warn { background: rgba(255, 230, 0, 0.22); border-color: rgba(182, 106, 0, 0.35); color: #7a4700; }
+body.crystal-ui .crystal-badge--crit { background: rgba(255, 59, 48, 0.12); border-color: rgba(255, 59, 48, 0.35); color: var(--crystal-red-2); }
+
+/* Barras de progreso */
+body.crystal-ui .progress { background: rgba(15, 23, 42, 0.06) !important; box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.06); }
+
+/* Navegación móvil inferior */
+body.crystal-ui .dairy-mobile-nav,
+body.crystal-ui .dm-bottom-nav {
+	background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.7)) !important;
+	-webkit-backdrop-filter: var(--crystal-blur);
+	backdrop-filter: var(--crystal-blur);
+	border-top: 1px solid var(--crystal-border) !important;
+}
+
+/* --------------------------------------------------------------------------
+   Sin backdrop-filter: superficies flotantes opacas (legibles siempre)
+   -------------------------------------------------------------------------- */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+	body.crystal-ui #mainNav,
+	body.crystal-ui .crystal-header,
+	body.crystal-ui .dairy-mobile-nav { background: rgba(255, 255, 255, 0.97) !important; }
+	body.crystal-ui { --dnav-bg: #fbfcfc; }
+	body.crystal-ui .dropdown-menu,
+	body.crystal-ui .crystal-dropdown,
+	body.crystal-ui .daterangepicker,
+	body.crystal-ui .dsm-fdd-menu,
+	body.crystal-ui .crystal-surface--floating,
+	body.crystal-ui .modal-content { background: #fff !important; }
+}
+
+/* Pantallas táctiles/móvil: menos capas con desenfoque */
+@media (max-width: 767.98px) {
+	body.crystal-ui { --crystal-blur: blur(12px) saturate(150%); }
+	body.crystal-ui .modal-backdrop.show { -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+
+/* Movimiento reducido */
+@media (prefers-reduced-motion: reduce) {
+	body.crystal-ui *,
+	body.crystal-ui *::before,
+	body.crystal-ui *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+	body.crystal-ui .btn:hover,
+	body.crystal-ui .btn:active,
+	body.crystal-ui [class*="kpi"]:hover,
+	body.crystal-ui .crystal-surface--interactive:hover { transform: none !important; }
+}
+
+/* Impresión: superficies planas */
+@media print {
+	body.crystal-ui::before { display: none; }
+	body.crystal-ui .crystal-surface,
+	body.crystal-ui .card { background: #fff !important; box-shadow: none !important; }
+}

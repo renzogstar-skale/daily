@@ -133,6 +133,11 @@
 
 	@stack('pageStyles')
 
+	@if(!boolval($userSettings['night_mode_enabled_internal']))
+	<link href="{{ $U('/css/daily_crystal.css?v=', true) }}{{ daily_asset_version('/css/daily_crystal.css') }}"
+		rel="stylesheet">
+	@endif
+
 	@if(file_exists(GROCY_DATAPATH . '/custom_css.html'))
 	@php include GROCY_DATAPATH . '/custom_css.html' @endphp
 	@endif
@@ -171,7 +176,7 @@
 	</script>
 </head>
 
-<body class="fixed-nav @if(boolval($userSettings['night_mode_enabled_internal'])) night-mode @endif @if($embedded) embedded @endif">
+<body class="fixed-nav @if(boolval($userSettings['night_mode_enabled_internal'])) night-mode @else crystal-ui @endif @if($embedded) embedded @endif">
 	<script>
 		// Estado del sidebar antes del primer pintado (sin saltos de layout ni parpadeo del logo)
 		try { var dnW = window.innerWidth, dnS = localStorage.getItem('dairy_sidebar_state') || localStorage.getItem('sidebar_state'); if (dnW >= 768 && (dnW < 1024 ? dnS !== 'expanded' : dnS === 'collapsed')) { document.body.classList.add('sidenav-toggled'); } } catch (e) { }
@@ -832,6 +837,7 @@
 	<script src="{{ $U('/js/dairy_charts.js?v=', true) }}{{ $version }}"></script>
 	@endif
 
+	<script src="{{ $U('/js/daily_crystal.js?v=', true) }}{{ daily_asset_version('/js/daily_crystal.js') }}"></script>
 	@stack('pageScripts')
 	@stack('componentScripts')
 	@if($viewJsExists ?? true)

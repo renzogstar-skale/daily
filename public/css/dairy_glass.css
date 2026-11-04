@@ -695,7 +695,8 @@ body.night-mode .dairy-related { background: rgba(17, 24, 39, .7); border-color:
 body.night-mode .dairy-related-link { border-color: rgba(255,255,255,.08); }
 @media (max-width: 767.98px) {
 	.dairy-related { margin-top: 20px; padding: 14px 12px; }
-	.dairy-related-grid { grid-template-columns: 1fr; }
+	.dairy-related-grid { grid-template-columns: minmax(0, 1fr); }
+	.dairy-related-col, .dairy-related-link { min-width: 0; }
 	.dairy-related-map { margin-left: 0; width: 100%; }
 }
 @media print { .dairy-related, .dairy-export { display: none !important; } }

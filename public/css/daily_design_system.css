@@ -641,7 +641,7 @@ body {
 		grid-template-columns: repeat(2, 1fr);
 	}
 	.daily-pulse-banner {
-		grid-template-columns: 1fr 1fr;
+		grid-template-columns: 1fr 1fr !important; /* vence el style en línea de HOY */
 		gap: 1rem;
 	}
 	.daily-pulse-status {
@@ -669,7 +669,7 @@ body {
 		min-height: 44px; /* Hit target táctil */
 	}
 	.daily-pulse-banner {
-		grid-template-columns: 1fr;
+		grid-template-columns: 1fr !important;
 	}
 	.daily-pulse-status {
 		grid-column: span 1;
