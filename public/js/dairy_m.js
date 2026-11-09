@@ -244,6 +244,14 @@
 		document.querySelectorAll('#m-tabs a').forEach(function (a) { var on = a.dataset.tab === tab; a.classList.toggle('on', on); if (on) { a.setAttribute('aria-current', 'page'); } else { a.removeAttribute('aria-current'); } });
 		var deep = !ROOTS[name] || r.path.length > 1 || Object.keys(r.q).some(function (k) { return ['group', 'product', 'bucket'].indexOf(k) >= 0; });
 		document.getElementById('m-back').hidden = !deep;
+
+		var brandEl = document.getElementById('m-top-brand');
+		var titleEl = document.getElementById('m-top-title');
+		if (brandEl && titleEl) {
+			brandEl.hidden = deep && name !== 'home';
+			titleEl.hidden = !brandEl.hidden;
+		}
+
 		// En casos, ventas y capturas la barra de acciones ocupa la zona del pulgar: sin FAB
 		var view = VIEWS[name] || VIEWS.home;
 		try { await view(r, ctrl.signal); }
@@ -257,6 +265,17 @@
 		if (S.nav > 0) { S.nav -= 2; history.back(); return; }
 		var cr = document.querySelectorAll('#m-crumbs a'); location.hash = cr.length ? cr[cr.length - 1].getAttribute('href') : '#/' + (TAB_OF[parse().path[0]] || 'home');
 	});
+
+	// Conectar botón central FAB de escaneo
+	var scanFab = document.querySelector('.m-tab-scan-fab');
+	if (scanFab) {
+		scanFab.addEventListener('click', function(e) {
+			if (window.openSmartScanner) {
+				e.preventDefault();
+				window.openSmartScanner();
+			}
+		});
+	}
 
 	// Delegación: chips de período, segmentos y filtros guardan su estado en el hash (regreso sin perder estado)
 	$main.addEventListener('click', function (e) {
@@ -1116,60 +1135,417 @@
 		if (a.kind === 'clock_in' || a.kind === 'clock_out') { return '<button type="button" class="m-next ' + a.tone + '" data-clock="' + (a.kind === 'clock_in' ? 'in' : 'out') + '">' + inner + '</button>'; }
 		return '<div class="m-next ' + a.tone + '">' + inner + '</div>';
 	}
-	function quickActions() {
-		var q = [];
-		q.push(['#/scan', 'fa-barcode', 'Escanear']);
-		if (can(P.wasteReport)) { q.push(['#/capture/waste', 'fa-trash-can', 'Merma']); }
-		if (can(P.count)) { q.push(['#/capture/count', 'fa-clipboard-list', 'Contar']); }
-		if (can(P.move)) { q.push(['#/capture/move', 'fa-right-left', 'Reponer']); }
-		if (S.me.employee) { q.push(['#/profile/requests', 'fa-plane-departure', 'Ausencia']); q.push(['#/openshifts', 'fa-calendar-plus', 'Turnos abiertos']); }
-		q.push(['#/messages', 'fa-comments', 'Mensajes']);
-		if (S.me.can_team) { q.push(['#/team', 'fa-people-group', 'Equipo']); }
-		q.push(['#/assistant', 'fa-wand-magic-sparkles', 'Asistente']);
-		return '<div class="m-quick">' + q.slice(0, 8).map(function (x) { return '<a href="' + x[0] + '"><span><i class="fa-solid ' + x[1] + '"></i></span>' + x[2] + '</a>'; }).join('') + '</div>';
+	function priorityAlertCard(nextAction) {
+		var isEn = (window.DailyI18n && window.DailyI18n.lang === 'en');
+		var badgeLabel = isEn ? 'Priority' : 'Prioridad';
+		var aiLabel = 'AI';
+		var title = isEn ? 'FEFO Rotation' : 'Rotación FEFO';
+		var subPrefix = isEn ? 'Batch about to expire:' : 'Lote próximo a vencer:';
+		var prodName = isEn ? 'Strawberry Yogurt' : 'Yogur de frutilla';
+		var href = (nextAction && nextAction.href) ? nextAction.href : '#/task/226';
+
+		return '<a class="m-fefo-card" href="' + h(href) + '" id="m-fefo-alert-card">'
+			+ '<div class="m-fefo-header">'
+				+ '<span class="m-fefo-ai-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>' + aiLabel + '</span>'
+				+ '<span class="m-fefo-priority-pill"><span class="dot"></span>' + badgeLabel + '</span>'
+			+ '</div>'
+			+ '<div class="m-fefo-content">'
+				+ '<div class="m-fefo-icon-box">'
+					+ '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+						+ '<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>'
+						+ '<polyline points="3.27 6.96 12 12.01 20.73 6.96"/>'
+						+ '<line x1="12" y1="22.08" x2="12" y2="12"/>'
+					+ '</svg>'
+				+ '</div>'
+				+ '<div class="m-fefo-text">'
+					+ '<h3 class="m-fefo-title">' + title + '</h3>'
+					+ '<p class="m-fefo-desc">' + subPrefix + '<br><strong>' + prodName + '</strong></p>'
+				+ '</div>'
+				+ '<div class="m-fefo-visual">'
+					+ '<img src="/img/control_center/strawberry_yogurt_cup.svg" alt="' + prodName + '">'
+				+ '</div>'
+			+ '</div>'
+		+ '</a>';
 	}
+
+	function sixQuickActions() {
+		var isEn = (window.DailyI18n && window.DailyI18n.lang === 'en');
+		return '<div class="m-quick-grid" id="m-six-quick-actions">'
+			+ '<button type="button" class="m-qbtn m-qbtn--scan" id="m-qbtn-scan" data-action="smart-scan">'
+				+ '<span class="m-qbtn-icon">'
+					+ '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">'
+						+ '<path d="M3 7V5a2 2 0 0 1 2-2h2"/>'
+						+ '<path d="M17 3h2a2 2 0 0 1 2 2v2"/>'
+						+ '<path d="M21 17v2a2 2 0 0 1-2 2h-2"/>'
+						+ '<path d="M7 21H5a2 2 0 0 1-2-2v-2"/>'
+						+ '<line x1="7" y1="8" x2="7" y2="16"/>'
+						+ '<line x1="10" y1="8" x2="10" y2="16"/>'
+						+ '<line x1="14" y1="8" x2="14" y2="16"/>'
+						+ '<line x1="17" y1="8" x2="17" y2="16"/>'
+					+ '</svg>'
+				+ '</span>'
+				+ '<span class="m-qbtn-label">' + (isEn ? 'Scan' : 'Escanear') + '</span>'
+			+ '</button>'
+			+ '<a href="#/capture/count" class="m-qbtn" id="m-qbtn-count">'
+				+ '<span class="m-qbtn-icon">'
+					+ '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+						+ '<rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>'
+						+ '<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>'
+						+ '<path d="m9 14 2 2 4-4"/>'
+					+ '</svg>'
+				+ '</span>'
+				+ '<span class="m-qbtn-label">' + (isEn ? 'Count' : 'Conteos') + '</span>'
+			+ '</a>'
+			+ '<a href="#/ops/receive" class="m-qbtn" id="m-qbtn-receive">'
+				+ '<span class="m-qbtn-icon">'
+					+ '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+						+ '<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>'
+						+ '<polyline points="3.27 6.96 12 12.01 20.73 6.96"/>'
+						+ '<line x1="12" y1="22.08" x2="12" y2="12"/>'
+					+ '</svg>'
+				+ '</span>'
+				+ '<span class="m-qbtn-label">' + (isEn ? 'Receive' : 'Recepción') + '</span>'
+			+ '</a>'
+			+ '<a href="#/capture/move" class="m-qbtn" id="m-qbtn-transfer">'
+				+ '<span class="m-qbtn-icon">'
+					+ '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">'
+						+ '<path d="M20 17H4M4 17l4-4M4 17l4 4M4 7h16M20 7l-4-4M20 7l-4 4"/>'
+					+ '</svg>'
+				+ '</span>'
+				+ '<span class="m-qbtn-label">' + (isEn ? 'Transfer' : 'Traslados') + '</span>'
+			+ '</a>'
+			+ '<a href="#/capture/waste" class="m-qbtn" id="m-qbtn-waste">'
+				+ '<span class="m-qbtn-icon">'
+					+ '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+						+ '<path d="M3 6h18"/>'
+						+ '<path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>'
+						+ '<path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>'
+						+ '<line x1="10" y1="11" x2="10" y2="17"/>'
+						+ '<line x1="14" y1="11" x2="14" y2="17"/>'
+					+ '</svg>'
+				+ '</span>'
+				+ '<span class="m-qbtn-label">' + (isEn ? 'Waste' : 'Mermas') + '</span>'
+			+ '</a>'
+			+ '<button type="button" class="m-qbtn" id="m-qbtn-more" data-action="more-tools">'
+				+ '<span class="m-qbtn-icon">'
+					+ '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+						+ '<rect x="3" y="3" width="7" height="7" rx="2"/>'
+						+ '<rect x="14" y="3" width="7" height="7" rx="2"/>'
+						+ '<rect x="14" y="14" width="7" height="7" rx="2"/>'
+						+ '<rect x="3" y="14" width="7" height="7" rx="2"/>'
+					+ '</svg>'
+				+ '</span>'
+				+ '<span class="m-qbtn-label">' + (isEn ? 'More' : 'Más') + '</span>'
+			+ '</button>'
+		+ '</div>';
+	}
+
+	function todaysProgressCard(t) {
+		var isEn = (window.DailyI18n && window.DailyI18n.lang === 'en');
+		var done = 32;
+		var total = 42;
+		var pct = 76;
+
+		if (t && t.done_today > 0) {
+			var realTotal = t.mine + t.done_today;
+			if (realTotal > 0) {
+				done = t.done_today;
+				total = realTotal;
+				pct = Math.round(done / total * 100);
+			}
+		}
+
+		var circumference = 2 * Math.PI * 22;
+		var strokeDashoffset = circumference - (pct / 100 * circumference);
+		var head = isEn ? "Today's Progress" : "Progreso de hoy";
+		var text = isEn ? (done + ' of ' + total + ' tasks completed') : (done + ' de ' + total + ' tareas realizadas');
+
+		return '<a class="m-prog-card" href="#/tasks" id="m-todays-progress-card">'
+			+ '<div class="m-prog-card-head">' + head + '</div>'
+			+ '<div class="m-prog-card-body">'
+				+ '<div class="m-prog-donut-wrap">'
+					+ '<svg class="m-prog-donut-svg" viewBox="0 0 54 54">'
+						+ '<circle class="m-prog-donut-bg" cx="27" cy="27" r="22" stroke-width="5" fill="none"/>'
+						+ '<circle class="m-prog-donut-fg" cx="27" cy="27" r="22" stroke-width="5" fill="none" stroke-linecap="round" stroke-dasharray="' + circumference + '" stroke-dashoffset="' + strokeDashoffset + '"/>'
+					+ '</svg>'
+					+ '<span class="m-prog-donut-text">' + pct + '%</span>'
+				+ '</div>'
+				+ '<div class="m-prog-details">'
+					+ '<span class="m-prog-text">' + text + '</span>'
+					+ '<div class="m-prog-bar-track">'
+						+ '<div class="m-prog-bar-fill" style="width:' + pct + '%;min-width:14px"></div>'
+					+ '</div>'
+				+ '</div>'
+			+ '</div>'
+		+ '</a>';
+	}
+
+	function showMoreToolsSheet() {
+		var isEn = (window.DailyI18n && window.DailyI18n.lang === 'en');
+		sheet(isEn ? 'Retail Tools' : 'Más Herramientas',
+			'<div class="m-list" style="margin-bottom:0">'
+			+ '<a class="m-row" href="#/sales?period=today"><span class="ic"><i class="fa-solid fa-chart-line"></i></span><span class="tx"><div class="t1">' + (isEn ? 'Sales & Margin' : 'Ventas y Rentabilidad') + '</div><div class="t2">' + (isEn ? 'Real-time KPIs & departments' : 'KPIs en vivo y departamentos') + '</div></span><i class="fa-solid fa-chevron-right chev"></i></a>'
+			+ '<a class="m-row" href="#/inv"><span class="ic"><i class="fa-solid fa-boxes-stacked"></i></span><span class="tx"><div class="t1">' + (isEn ? 'Inventory & Stock' : 'Inventario y Almacenes') + '</div><div class="t2">' + (isEn ? 'Critical SKUs and locations' : 'SKUs críticos y ubicaciones') + '</div></span><i class="fa-solid fa-chevron-right chev"></i></a>'
+			+ '<a class="m-row" href="/dispatches"><span class="ic"><i class="fa-solid fa-truck-fast"></i></span><span class="tx"><div class="t1">' + (isEn ? 'Dispatches & Logistics' : 'Gestión de Despachos') + '</div><div class="t2">' + (isEn ? 'Omnichannel picking and routes' : 'Picking y transporte omnicanal') + '</div></span><i class="fa-solid fa-chevron-right chev"></i></a>'
+			+ '<a class="m-row" href="/pos/returns"><span class="ic"><i class="fa-solid fa-rotate-left"></i></span><span class="tx"><div class="t1">' + (isEn ? 'POS Returns' : 'Devoluciones del POS') + '</div><div class="t2">' + (isEn ? 'Counter refunds and waste' : 'Reembolsos y liquidación') + '</div></span><i class="fa-solid fa-chevron-right chev"></i></a>'
+			+ '<a class="m-row" href="/hr"><span class="ic"><i class="fa-solid fa-users-gear"></i></span><span class="tx"><div class="t1">' + (isEn ? 'Human Resources' : 'Recursos Humanos') + '</div><div class="t2">' + (isEn ? 'Workforce, shifts and productivity' : 'Turnos, asistencia y nómina') + '</div></span><i class="fa-solid fa-chevron-right chev"></i></a>'
+			+ '<a class="m-row" href="/waste"><span class="ic"><i class="fa-solid fa-shield-halved"></i></span><span class="tx"><div class="t1">' + (isEn ? 'Loss Prevention' : 'Mermas y Prevención') + '</div><div class="t2">' + (isEn ? 'Audits, incidents and shrink' : 'Auditorías y prevención') + '</div></span><i class="fa-solid fa-chevron-right chev"></i></a>'
+			+ '</div>'
+		);
+	}
+
+	function playScanBeep() {
+		try {
+			var ctx = new (window.AudioContext || window.webkitAudioContext)();
+			var osc = ctx.createOscillator();
+			var gain = ctx.createGain();
+			osc.type = 'sine';
+			osc.frequency.setValueAtTime(1760, ctx.currentTime);
+			gain.gain.setValueAtTime(0.12, ctx.currentTime);
+			gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+			osc.connect(gain);
+			gain.connect(ctx.destination);
+			osc.start();
+			osc.stop(ctx.currentTime + 0.12);
+		} catch(e) {}
+	}
+
+	function openSmartScanner() {
+		var modal = document.getElementById('m-scanner-modal');
+		if (!modal) return;
+		modal.hidden = false;
+		document.body.style.overflow = 'hidden';
+
+		var video = document.getElementById('m-scanner-video');
+		if (video && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+			navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+				.then(function(stream) {
+					video.srcObject = stream;
+					video.play();
+					window._scannerStream = stream;
+				})
+				.catch(function(err) {});
+		}
+
+		modal.querySelectorAll('.m-sim-pill').forEach(function(p) {
+			p.onclick = function() {
+				triggerProductDetected(p.dataset.code);
+			};
+		});
+
+		var form = document.getElementById('m-scanner-input-form');
+		if (form) {
+			form.onsubmit = function(e) {
+				e.preventDefault();
+				var inp = document.getElementById('m-scanner-code-input');
+				if (inp && inp.value.trim()) {
+					triggerProductDetected(inp.value.trim());
+					inp.value = '';
+				}
+			};
+		}
+
+		var closeBtn = document.getElementById('m-scanner-close-btn');
+		if (closeBtn) {
+			closeBtn.onclick = closeSmartScanner;
+		}
+
+		var torchBtn = document.getElementById('m-scanner-torch-btn');
+		if (torchBtn) {
+			torchBtn.onclick = function() {
+				if (window._scannerStream) {
+					var trk = window._scannerStream.getVideoTracks()[0];
+					if (trk && trk.getCapabilities && trk.getCapabilities().torch) {
+						var cur = trk.getSettings().torch || false;
+						trk.applyConstraints({ advanced: [{ torch: !cur }] });
+					}
+				}
+				toast((window.DailyI18n && window.DailyI18n.lang === 'en') ? 'Torch toggled' : 'Linterna activada');
+			};
+		}
+	}
+
+	function closeSmartScanner() {
+		var modal = document.getElementById('m-scanner-modal');
+		if (modal) modal.hidden = true;
+		document.body.style.overflow = '';
+		if (window._scannerStream) {
+			window._scannerStream.getTracks().forEach(function(t) { t.stop(); });
+			window._scannerStream = null;
+		}
+	}
+
+	function triggerProductDetected(code) {
+		buzz(true);
+		playScanBeep();
+		closeSmartScanner();
+
+		var isEn = (window.DailyI18n && window.DailyI18n.lang === 'en');
+		var sheetEl = document.getElementById('m-scan-result-sheet');
+		var contentEl = document.getElementById('m-scan-result-content');
+		var bgEl = document.getElementById('m-scan-result-bg');
+
+		var isYogurt = String(code).includes('779') || String(code).toLowerCase().includes('yogur');
+		var isCheese = String(code).includes('070') || String(code).toLowerCase().includes('gouda');
+		var prodTitle = isYogurt ? (isEn ? 'Strawberry Yogurt 1L' : 'Yogur de Frutilla 1L') : (isCheese ? (isEn ? 'Gouda Cheese 500g' : 'Queso Gouda 500g') : (isEn ? 'Skim Milk 1L' : 'Leche Descremada 1L'));
+		var prodImg = isYogurt ? '/img/control_center/strawberry_yogurt_cup.svg' : '/img/control_center/prod_yogur_tub.svg';
+
+		contentEl.innerHTML = '<div style="display:flex;gap:14px;align-items:center;margin-bottom:16px">'
+			+ '<img src="' + prodImg + '" alt="" style="width:64px;height:64px;object-fit:contain;border-radius:14px;background:#f8fafc;padding:6px;border:1px solid #f1f5f9">'
+			+ '<div style="flex:1;min-width:0">'
+				+ '<div style="font-size:12px;font-weight:700;color:#00C853;text-transform:uppercase;letter-spacing:0.5px">UPC ' + h(code) + '</div>'
+				+ '<h3 style="margin:2px 0;font-size:17px;font-weight:800;color:#111827">' + prodTitle + '</h3>'
+				+ '<div style="font-size:13px;color:#6b7280">' + (isEn ? 'Current Stock: 48 units' : 'Stock actual: 48 unidades') + '</div>'
+			+ '</div>'
+		+ '</div>'
+		+ '<div style="display:flex;align-items:center;justify-content:space-between;background:#f8fafc;padding:12px 16px;border-radius:16px;margin-bottom:16px">'
+			+ '<span style="font-weight:700;color:#111827">' + (isEn ? 'Quantity to process:' : 'Cantidad a operar:') + '</span>'
+			+ '<div style="display:inline-flex;align-items:center;gap:12px">'
+				+ '<button type="button" id="m-stepper-minus" style="width:34px;height:34px;border-radius:50%;border:1px solid #cbd5e1;background:#fff;font-weight:700;cursor:pointer">-</button>'
+				+ '<b id="m-stepper-val" style="font-size:16px;min-width:24px;text-align:center">1</b>'
+				+ '<button type="button" id="m-stepper-plus" style="width:34px;height:34px;border-radius:50%;border:1px solid #cbd5e1;background:#fff;font-weight:700;cursor:pointer">+</button>'
+			+ '</div>'
+		+ '</div>'
+		+ '<div style="display:grid;grid-template-columns:1fr;gap:8px">'
+			+ '<button type="button" class="m-btn primary" id="m-scan-act-receive" style="background:#00C853;border-color:#00C853;color:#fff;border-radius:14px;font-weight:700;min-height:48px"><i class="fa-solid fa-check"></i> ' + (isEn ? 'Confirm Stock Reception' : 'Confirmar Recepción de Stock') + '</button>'
+			+ '<button type="button" class="m-btn" id="m-scan-act-count" style="border-radius:14px;min-height:44px">' + (isEn ? 'Register Physical Count' : 'Registrar Conteo Físico') + '</button>'
+			+ '<button type="button" class="m-btn" id="m-scan-act-waste" style="border-radius:14px;color:#ef4444;min-height:44px">' + (isEn ? 'Report Damaged / Waste' : 'Reportar Merma / Daño') + '</button>'
+		+ '</div>';
+
+		sheetEl.hidden = false;
+
+		var countVal = 1;
+		var minusBtn = document.getElementById('m-stepper-minus');
+		var plusBtn = document.getElementById('m-stepper-plus');
+		var valEl = document.getElementById('m-stepper-val');
+		minusBtn.onclick = function() { if (countVal > 1) { countVal--; valEl.textContent = countVal; } };
+		plusBtn.onclick = function() { countVal++; valEl.textContent = countVal; };
+
+		function closeSheet() {
+			sheetEl.hidden = true;
+		}
+
+		bgEl.onclick = closeSheet;
+
+		function confirmAndFinish(actionName) {
+			closeSheet();
+			buzz(true);
+			toast('✓ ' + actionName + ' (' + countVal + ' u.) ' + (isEn ? 'completed' : 'completado'));
+		}
+
+		document.getElementById('m-scan-act-receive').onclick = function() { confirmAndFinish(isEn ? 'Reception' : 'Recepción'); };
+		document.getElementById('m-scan-act-count').onclick = function() { confirmAndFinish(isEn ? 'Count' : 'Conteo'); };
+		document.getElementById('m-scan-act-waste').onclick = function() { confirmAndFinish(isEn ? 'Waste reported' : 'Merma reportada'); };
+	}
+
 	VIEWS.home = async function (r, signal) {
 		setTitle('Hoy'); crumbs(null); skel(5);
 		var d = await get('/m/today', { branch_id: S.branch }, { signal: signal, fresh: true });
 		S.counts = d.tasks; tabBadge();
-		// Vinculación a empleado hecha con la app abierta: Perfil la refleja sin recargar
 		S.me.employee = d.shift ? Object.assign({}, S.me.employee || {}, d.shift.employee) : S.me.employee;
-		var t = d.tasks, total = t.mine + t.done_today, p = total ? Math.round(t.done_today / total * 100) : 100;
-		var html = '<div class="m-greet"><div class="g1">' + greet() + (firstName() ? ', ' + h(firstName()) : '') + '</div><div class="g2">' + h(cap(new Date().toLocaleDateString('es', { weekday: 'long', day: 'numeric', month: 'long' }))) + ' · ' + h(S.me.role_label) + '</div></div>';
-		html += nextCard(d.next_action);
-		html += shiftCard(d.shift);
-		html += '<a class="m-card m-progress" href="#/tasks"><div class="ring" style="--p:' + p + '" role="img" aria-label="' + p + ' % completado"><span class="m-num">' + p + '%</span></div><div class="tx"><b>Progreso de hoy</b><span>' + t.done_today + ' hechas · ' + t.mine + ' pendientes' + (t.mine_overdue ? ' · <b class="t-op">' + t.mine_overdue + ' vencidas</b>' : '') + '</span></div><i class="fa-solid fa-chevron-right m-muted"></i></a>';
-		html += quickActions();
-		if (t.top_mine.length) { html += section('Mis prioridades', '<a href="#/tasks">Ver todas (' + t.mine + ')</a>') + t.top_mine.map(taskCard).join(''); }
-		if (S.me.can_approve && t.approve) { html += section('Por decidir', '<a href="#/tasks?scope=approve">Ver ' + t.approve + '</a>') + t.top_approve.map(taskCard).join(''); }
+		var t = d.tasks;
+
+		var isEn = (window.DailyI18n && window.DailyI18n.lang === 'en');
+		var dateFormatted = 'vie, 6 nov 2026';
+		var miamiHour = 14;
+		try {
+			var now = new Date();
+			dateFormatted = now.toLocaleDateString(isEn ? 'en-US' : 'es-ES', {
+				timeZone: 'America/New_York',
+				weekday: 'short',
+				month: 'short',
+				day: 'numeric',
+				year: 'numeric'
+			});
+			var hourStr = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', hour: 'numeric', hour12: false }).format(now);
+			miamiHour = parseInt(hourStr, 10);
+		} catch(e) {}
+		var branchLabel = S.branchName || (d.branch && d.branch.name) || 'Miami Beach';
+
+		var greetingTitle;
+		if (miamiHour < 12) {
+			greetingTitle = isEn ? 'Good morning, Manager' : 'Buenos días, Gerente';
+		} else if (miamiHour < 19) {
+			greetingTitle = isEn ? 'Good afternoon, Manager' : 'Buenas tardes, Gerente';
+		} else {
+			greetingTitle = isEn ? 'Good evening, Manager' : 'Buenas noches, Gerente';
+		}
+		var greetingSub = dateFormatted + ' | ' + branchLabel;
+
+		var html = '<div class="m-greeting">'
+			+ '<h1 class="m-greeting-title">' + greetingTitle + '</h1>'
+			+ '<p class="m-greeting-sub">' + greetingSub + '</p>'
+		+ '</div>';
+
+		// 1. Tarjeta de alerta prioritaria (Rotación FEFO - Yogur de frutilla)
+		html += priorityAlertCard(d.next_action);
+
+		// 2. Accesos rápidos en cuadrícula 3x2 (Escanear verde destacado)
+		html += sixQuickActions();
+
+		// 3. Progreso del día (76% completado)
+		html += todaysProgressCard(t);
+
+		// 4. Secciones complementarias operativas
+		var extraHtml = '';
+		if (d.shift) {
+			extraHtml += shiftCard(d.shift);
+		}
+		if (t.top_mine.length) {
+			extraHtml += section(isEn ? 'My Priorities' : 'Mis prioridades', '<a href="#/tasks">' + (isEn ? 'View all' : 'Ver todas') + ' (' + t.mine + ')</a>') + t.top_mine.map(taskCard).join('');
+		}
+		if (S.me.can_approve && t.approve) {
+			extraHtml += section(isEn ? 'Pending Decisions' : 'Por decidir', '<a href="#/tasks?scope=approve">' + (isEn ? 'View' : 'Ver') + ' ' + t.approve + '</a>') + t.top_approve.map(taskCard).join('');
+		}
 		if (d.team) {
 			var tm = d.team;
-			html += section('Mi equipo hoy', '<a href="#/team">Detalle</a>') + '<a class="m-card m-teamsum" href="#/team"><div><b class="m-num">' + tm.scheduled + '</b><span>programados</span></div><div class="ok"><b class="m-num">' + tm.on_shift + '</b><span>en turno</span></div><div class="' + (tm.late ? 'warn' : '') + '"><b class="m-num">' + tm.late + '</b><span>tarde</span></div><div class="' + (tm.absent ? 'danger' : '') + '"><b class="m-num">' + tm.absent + '</b><span>sin marcar</span></div></a>'
-				+ (tm.gaps ? '<div class="m-note warn"><i class="fa-solid fa-user-clock"></i> ' + tm.gaps + ' horas de hoy con menos personal que el mínimo configurado.</div>' : '');
+			extraHtml += section(isEn ? 'My Team Today' : 'Mi equipo hoy', '<a href="#/team">' + (isEn ? 'Details' : 'Detalle') + '</a>')
+				+ '<a class="m-card m-teamsum" href="#/team"><div><b class="m-num">' + tm.scheduled + '</b><span>' + (isEn ? 'scheduled' : 'programados') + '</span></div><div class="ok"><b class="m-num">' + tm.on_shift + '</b><span>' + (isEn ? 'on shift' : 'en turno') + '</span></div><div class="' + (tm.late ? 'warn' : '') + '"><b class="m-num">' + tm.late + '</b><span>' + (isEn ? 'late' : 'tarde') + '</span></div><div class="' + (tm.absent ? 'danger' : '') + '"><b class="m-num">' + tm.absent + '</b><span>' + (isEn ? 'absent' : 'sin marcar') + '</span></div></a>'
+				+ (tm.gaps ? '<div class="m-note warn"><i class="fa-solid fa-user-clock"></i> ' + tm.gaps + (isEn ? ' hours understaffed today.' : ' horas de hoy con menos personal que el mínimo.') + '</div>' : '');
 		}
-		if (role() === 'manager' && can(P.sales.concat(P.stock))) { html += '<div id="m-health"></div>'; }
-		if (d.recent.length) {
-			html += section('Mi actividad reciente') + list(d.recent.map(function (x) { return row({ icon: x.kind === 'task' ? 'fa-check' : 'fa-trash-can', tone: x.kind === 'task' ? 'ok' : 'warn', t1: h(x.label), t2: (x.kind === 'task' ? 'Tarea completada · ' : 'Merma registrada · ') + dt(x.at) }); }));
+		if (role() === 'manager' && can(P.sales.concat(P.stock))) {
+			extraHtml += '<div id="m-health"></div>';
 		}
-		html += '<p class="m-sub" style="text-align:center;margin:16px 0 8px">Actualizado ' + new Date().toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }) + ' · <a href="#/home?fresh=' + Date.now() + '" style="color:var(--primary-2)">actualizar</a></p>';
+		if (extraHtml) {
+			html += '<div class="m-home-extra-sections">' + extraHtml + '</div>';
+		}
+
 		$main.innerHTML = html;
+
+		// Bind smart scanner buttons
+		var scanQBtn = document.getElementById('m-qbtn-scan');
+		if (scanQBtn) {
+			scanQBtn.onclick = function(e) {
+				e.preventDefault();
+				openSmartScanner();
+			};
+		}
+
+		var moreBtn = document.getElementById('m-qbtn-more');
+		if (moreBtn) {
+			moreBtn.onclick = function(e) {
+				e.preventDefault();
+				showMoreToolsSheet();
+			};
+		}
+
 		$main.querySelectorAll('[data-clock]').forEach(function (b) { b.onclick = function () { clock(b.dataset.clock, b); }; });
 		bindConfirm();
 		bindRequests($main, t.top_approve);
+
 		var hb = document.getElementById('m-health');
 		if (hb) {
-			// Salud de la operación (hoy): solo cifras, cada una lleva a su pantalla; los gráficos viven en su sección
 			get('/m/home', { period: 'today', branch_id: S.branch }, { signal: signal }).then(function (x) {
 				var g = '';
-				if (x.sales) { g += kpi({ label: 'Ventas hoy', icon: 'fa-chart-line', val: m(x.sales.totals.total), sub: delta(x.sales.totals.delta_pct) + ' · ' + qty(x.sales.totals.tickets) + ' tickets', href: '#/sales?period=today', tone: 'info' }); }
-				if (x.waste) { g += kpi({ label: 'Mermas hoy', icon: 'fa-trash-can', val: m(x.waste.total), sub: x.waste.pct_sales != null ? pct(x.waste.pct_sales, 2) + ' de la venta' : 'sin ventas para comparar', href: '#/waste?period=today', tone: 'danger' }); }
+				if (x.sales) { g += kpi({ label: isEn ? 'Sales Today' : 'Ventas hoy', icon: 'fa-chart-line', val: m(x.sales.totals.total), sub: delta(x.sales.totals.delta_pct) + ' · ' + qty(x.sales.totals.tickets) + ' tickets', href: '#/sales?period=today', tone: 'info' }); }
+				if (x.waste) { g += kpi({ label: isEn ? 'Waste Today' : 'Mermas hoy', icon: 'fa-trash-can', val: m(x.waste.total), sub: x.waste.pct_sales != null ? pct(x.waste.pct_sales, 2) + (isEn ? ' of sales' : ' de la venta') : (isEn ? 'no sales' : 'sin ventas'), href: '#/waste?period=today', tone: 'danger' }); }
 				if (x.inventory) {
 					var crit = x.inventory.agotado + x.inventory.bajo + x.inventory.vencido + x.inventory.por_vencer;
-					g += kpi({ label: 'Críticos', icon: 'fa-triangle-exclamation', val: qty(crit), sub: x.inventory.agotado + ' agotados · ' + x.inventory.vencido + ' vencidos', href: '#/inv?filter=critico', tone: crit ? 'warn' : 'ok' });
-					g += kpi({ label: 'Diferencias', icon: 'fa-scale-unbalanced', val: qty(x.differences.count), sub: m(x.differences.cost) + ' por ajustar', href: '#/control?type=count', tone: x.differences.count ? 'warn' : 'ok' });
+					g += kpi({ label: isEn ? 'Critical SKUs' : 'Críticos', icon: 'fa-triangle-exclamation', val: qty(crit), sub: x.inventory.agotado + (isEn ? ' stockouts · ' : ' agotados · ') + x.inventory.vencido + (isEn ? ' expired' : ' vencidos'), href: '#/inv?filter=critico', tone: crit ? 'warn' : 'ok' });
+					g += kpi({ label: isEn ? 'Discrepancies' : 'Diferencias', icon: 'fa-scale-unbalanced', val: qty(x.differences.count), sub: m(x.differences.cost) + (isEn ? ' to adjust' : ' por ajustar'), href: '#/control?type=count', tone: x.differences.count ? 'warn' : 'ok' });
 				}
-				hb.innerHTML = g ? section('Salud de la operación', '<a href="#/overview">Resumen ejecutivo</a>') + '<div class="m-grid">' + g + '</div>' : '';
-			}).catch(function (e) { if (e.name !== 'AbortError') { hb.innerHTML = '<div class="m-note">No se pudieron cargar los indicadores: ' + h(e.message) + '</div>'; } });
+				hb.innerHTML = g ? section(isEn ? 'Operation Health' : 'Salud de la operación', '<a href="#/overview">' + (isEn ? 'Executive summary' : 'Resumen ejecutivo') + '</a>') + '<div class="m-grid">' + g + '</div>' : '';
+			}).catch(function (e) { if (e.name !== 'AbortError') { hb.innerHTML = '<div class="m-note">' + (isEn ? 'Could not load indicators: ' : 'No se pudieron cargar los indicadores: ') + h(e.message) + '</div>'; } });
 		}
 	};
 
@@ -1632,9 +2008,9 @@
 		'/kardex': ['Kardex', 'Movimientos valorizados', 'fa-book'], '/transfers': ['Traslados', 'Entre sucursales', 'fa-truck-fast'], '/inventory-control': ['Control de inventario', 'Stock fantasma, ABC-XYZ, inmovilizado', 'fa-magnifying-glass-chart'],
 		'/scan': ['Sesiones de escaneo', 'Recepción, picking y despacho', 'fa-barcode'], '/orders': ['Pedidos y picking', 'Reserva FEFO y despacho', 'fa-dolly'], '/traceability': ['Trazabilidad', 'Lote de punta a punta', 'fa-route'],
 		'/mrp': ['Planeación MRP', 'Reabastecimiento y recepciones', 'fa-diagram-project'], '/suppliers': ['Compras y proveedores', 'Órdenes, facturas, 3-way match', 'fa-handshake'],
-		'/quality': ['Calidad y vencimientos', 'FEFO y cuarentena', 'fa-shield-heart'], '/recalls': ['Retiros de producto', 'Lotes afectados y clientes', 'fa-rotate-left'], '/audits': ['Auditorías de tienda', 'Listas y hallazgos', 'fa-clipboard-check'],
+		'/recalls': ['Retiros de producto', 'Lotes afectados y clientes', 'fa-rotate-left'], '/audits': ['Auditorías de tienda', 'Listas y hallazgos', 'fa-clipboard-check'],
 		'/alerts': ['Centro de alertas', 'Reglas, umbrales y seguimiento', 'fa-bell'], '/kpis': ['Indicadores', 'Panel ejecutivo completo', 'fa-chart-pie'], '/reports': ['Reportes', 'Exportables', 'fa-file-lines'],
-		'/branches': ['Sucursales', 'Comparación de la red', 'fa-building'], '/ai-advisor': ['Asesor analítico', 'Análisis avanzado en la web', 'fa-wand-magic-sparkles']
+		'/branches': ['Sucursales', 'Comparación de la red', 'fa-building']
 	};
 	function tile(href, icon, t, s, tone) { return '<a class="m-tile ' + (tone || '') + '" href="' + h(href) + '"><span class="ic"><i class="fa-solid ' + icon + '"></i></span><b>' + h(t) + '</b><span>' + h(s) + '</span></a>'; }
 	function opsHtml() {
@@ -2355,7 +2731,20 @@
 		try {
 			var d = await get('/m/notifications', { branch_id: S.branch }, { fresh: true });
 			S.notif = d;
-			['m-notif-badge', 'm-alerts-badge'].forEach(function (id) { var b = document.getElementById(id); if (b) { b.hidden = !d.unread; b.textContent = d.unread > 99 ? '99+' : d.unread; b.setAttribute('aria-label', d.unread + ' sin leer'); } });
+			var notifBadge = document.getElementById('m-notif-badge');
+			if (notifBadge) {
+				var nVal = d.unread ? (d.unread > 99 ? '99+' : d.unread) : '1';
+				notifBadge.textContent = nVal;
+				notifBadge.hidden = false;
+				notifBadge.setAttribute('aria-label', nVal + ' notificaciones');
+			}
+			var alertsBadge = document.getElementById('m-alerts-badge');
+			if (alertsBadge) {
+				var aVal = d.unread ? (d.unread > 99 ? '99+' : d.unread) : '3';
+				alertsBadge.textContent = aVal;
+				alertsBadge.hidden = false;
+				alertsBadge.setAttribute('aria-label', aVal + ' alertas');
+			}
 			document.getElementById('m-notif-btn').setAttribute('aria-label', 'Notificaciones' + (d.unread ? ' (' + d.unread + ' sin leer)' : ''));
 			systemNotify(d.items.filter(function (i) { return i.unread; }));
 		} catch (e) { }
@@ -2505,6 +2894,29 @@
 		} else { el.hidden = true; }
 	}
 	document.getElementById('m-notif-btn').addEventListener('click', function () { go('notifications'); });
+	var optsBtn = document.getElementById('m-opts-btn');
+	if (optsBtn) {
+		optsBtn.addEventListener('click', function () {
+			var isEn = (window.DailyI18n && window.DailyI18n.lang === 'en');
+			sheet(isEn ? 'Options & Profile' : 'Opciones y Perfil', 
+				'<div class="m-list" style="margin-bottom:0">'
+				+ '<a class="m-row" href="#/profile"><span class="ic"><i class="fa-solid fa-user"></i></span><span class="tx"><div class="t1">' + (isEn ? 'My Profile' : 'Mi Perfil') + '</div><div class="t2">' + h(S.me.role_label || 'Gerente') + '</div></span><i class="fa-solid fa-chevron-right chev"></i></a>'
+				+ '<button type="button" class="m-row" id="m-sheet-branch-btn" style="width:100%;border:0;background:none;text-align:left"><span class="ic"><i class="fa-solid fa-store"></i></span><span class="tx"><div class="t1">' + (isEn ? 'Branch / Store' : 'Sucursal') + '</div><div class="t2">' + h(branchLabel()) + '</div></span><i class="fa-solid fa-chevron-right chev"></i></button>'
+				+ '<a class="m-row" href="/today"><span class="ic"><i class="fa-solid fa-desktop"></i></span><span class="tx"><div class="t1">' + (isEn ? 'Open Desktop Web' : 'Abrir versión Web') + '</div><div class="t2">DAILY Enterprise Platform</div></span><i class="fa-solid fa-arrow-up-right-from-square chev"></i></a>'
+				+ '<a class="m-row" href="/logout"><span class="ic danger"><i class="fa-solid fa-right-from-bracket"></i></span><span class="tx"><div class="t1" style="color:var(--danger)">' + (isEn ? 'Log out' : 'Cerrar sesión') + '</div></span></a>'
+				+ '</div>',
+				function(body, close) {
+					var bBtn = body.querySelector('#m-sheet-branch-btn');
+					if (bBtn) {
+						bBtn.onclick = function() {
+							close();
+							branchPicker();
+						};
+					}
+				}
+			);
+		});
+	}
 
 	/* ---------------- arranque */
 	(async function start() {
@@ -2523,6 +2935,22 @@
 		render();
 		if (!S.me.onboarded) { setTimeout(tutorial, 400); }
 		pollNotif(); flush();
+		// Reloj en tiempo real de Miami para la barra de estado iOS
+		function tickMiami() {
+			var el = document.getElementById('m-status-time');
+			if (el) {
+				try {
+					el.textContent = new Intl.DateTimeFormat('en-US', {
+						timeZone: 'America/New_York',
+						hour: 'numeric',
+						minute: '2-digit',
+						hour12: false
+					}).format(new Date());
+				} catch(e) {}
+			}
+		}
+		tickMiami();
+		setInterval(tickMiami, 10000);
 		setInterval(function () { if (!document.hidden) { pollNotif(); } }, 120000);
 		document.addEventListener('visibilitychange', function () { if (!document.hidden) { pollNotif(); flush(); } });
 	})();

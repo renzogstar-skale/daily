@@ -133,6 +133,11 @@ class DailyCompanySeedService extends BaseService
 		}
 		finally
 		{
+			// Si algo falló a mitad de una transacción, se descarta; si no, el cierre de conexión revertiría también el trigger restaurado
+			if ($this->db->inTransaction())
+			{
+				$this->db->rollBack();
+			}
 			$this->db->exec("INSERT OR IGNORE INTO dairy_movement_ledger (stock_log_id, product_id, amount, transaction_type, stock_id, location_id, price, spoiled, best_before_date, transaction_id, correlation_id, user_id, note, row_created_timestamp, recorded_timestamp)
 				SELECT sl.id, sl.product_id, sl.amount, sl.transaction_type, sl.stock_id, IFNULL(sl.location_id, p.location_id), sl.price, sl.spoiled, sl.best_before_date, sl.transaction_id, sl.correlation_id, sl.user_id, sl.note, sl.row_created_timestamp, sl.row_created_timestamp
 				FROM stock_log sl LEFT JOIN products p ON p.id = sl.product_id WHERE sl.id > $firstLogId ORDER BY sl.id");
@@ -340,7 +345,7 @@ class DailyCompanySeedService extends BaseService
 	private function EnsureBranchLocations(): array
 	{
 		$out = [];
-		$ins = $this->db->prepare('INSERT INTO locations (name, description, branch_id, storage_class, is_freezer, active) VALUES (?, ?, ?, ?, ?, 1)');
+		$ins = $this->db->prepare('INSERT OR IGNORE INTO locations (name, description, branch_id, storage_class, is_freezer, active) VALUES (?, ?, ?, ?, ?, 1)');
 		foreach ($this->db->query('SELECT id, name FROM branches ORDER BY id')->fetchAll(\PDO::FETCH_ASSOC) as $br)
 		{
 			$b = intval($br['id']);
@@ -353,7 +358,7 @@ class DailyCompanySeedService extends BaseService
 			if (count($has) === 0)
 			{
 				$ins->execute(['Cámara Fría ' . $br['name'], 'Cámara principal refrigerada sucursal ' . $br['name'], $b, 'chilled', 0]);
-				$has[] = intval($this->db->lastInsertId());
+				$has[] = intval($this->db->lastInsertId()) ?: intval($this->db->query("SELECT id FROM locations WHERE name = " . $this->db->quote('Cámara Fría ' . $br['name']))->fetchColumn());
 				$ins->execute(['Góndola Refrigerada ' . $br['name'], 'Exhibición lácteos piso de venta ' . $br['name'], $b, 'chilled', 0]);
 			}
 			$out[$b]['chilled'] = intval($has[0]);
@@ -362,8 +367,9 @@ class DailyCompanySeedService extends BaseService
 				$id = intval($this->db->query("SELECT id FROM locations WHERE branch_id = $b AND storage_class = '$class' AND IFNULL(is_transit, 0) = 0 ORDER BY id LIMIT 1")->fetchColumn());
 				if ($id === 0)
 				{
-					$ins->execute([$name . $br['name'], $desc . $br['name'], $b, $class, $freezer]);
-					$id = intval($this->db->lastInsertId());
+					$locName = $name . $br['name'];
+					$ins->execute([$locName, $desc . $br['name'], $b, $class, $freezer]);
+					$id = intval($this->db->lastInsertId()) ?: intval($this->db->query("SELECT id FROM locations WHERE name = " . $this->db->quote($locName))->fetchColumn());
 				}
 				$out[$b][$class] = $id;
 			}
@@ -454,6 +460,11 @@ class DailyCompanySeedService extends BaseService
 	 */
 	public function CatchUp(int $maxSeconds = 60): array
 	{
+		// En segundo plano (CLI) no hay sesión: los movimientos de stock quedan a nombre del usuario de la semilla
+		if (!defined('GROCY_USER_ID'))
+		{
+			define('GROCY_USER_ID', self::USER_ID);
+		}
 		$this->db = DatabaseService::GetInstance()->GetDbConnectionRaw();
 		$base = $this->db->query("SELECT run_at FROM daily_seed_runs WHERE code = '" . self::CODE . "'")->fetchColumn();
 		if (!$base)
@@ -487,11 +498,18 @@ class DailyCompanySeedService extends BaseService
 		$ins = $this->db->prepare('INSERT INTO cold_chain_temperatures (location_id, branch_id, temperature, humidity, recorded_timestamp, recorded_by, status, action_taken) VALUES (?, ?, ?, ?, ?, ?, ?, NULL)');
 
 		$ledgerTrigger = $this->db->query("SELECT sql FROM sqlite_master WHERE type = 'trigger' AND name = 'dairy_movement_ledger_capture'")->fetchColumn();
-		$firstLogId = intval($this->db->query('SELECT IFNULL(MAX(id), 0) FROM stock_log')->fetchColumn());
-		if ($ledgerTrigger)
+		// Una corrida cortada a la mitad (proceso terminado, servidor reiniciado) deja el trigger borrado y movimientos
+		// fuera del libro: se completa el libro desde el último movimiento registrado y se restaura el trigger al final
+		$firstLogId = intval($this->db->query('SELECT IFNULL(MAX(stock_log_id), 0) FROM dairy_movement_ledger')->fetchColumn());
+		if (!$ledgerTrigger)
 		{
-			$this->db->exec('DROP TRIGGER dairy_movement_ledger_capture');
+			$ledgerTrigger = "CREATE TRIGGER IF NOT EXISTS dairy_movement_ledger_capture AFTER INSERT ON stock_log
+BEGIN
+	INSERT OR IGNORE INTO dairy_movement_ledger (stock_log_id, product_id, amount, transaction_type, stock_id, location_id, price, spoiled, best_before_date, transaction_id, correlation_id, user_id, note, row_created_timestamp)
+	VALUES (NEW.id, NEW.product_id, NEW.amount, NEW.transaction_type, NEW.stock_id, IFNULL(NEW.location_id, (SELECT location_id FROM products WHERE id = NEW.product_id)), NEW.price, NEW.spoiled, NEW.best_before_date, NEW.transaction_id, NEW.correlation_id, NEW.user_id, NEW.note, NEW.row_created_timestamp);
+END";
 		}
+		$this->db->exec('DROP TRIGGER IF EXISTS dairy_movement_ledger_capture');
 		$reached = $until;
 		$newDay = false;
 		try
@@ -552,13 +570,15 @@ class DailyCompanySeedService extends BaseService
 		}
 		finally
 		{
+			// Si algo falló a mitad de una transacción, se descarta; si no, el cierre de conexión revertiría también el trigger restaurado
+			if ($this->db->inTransaction())
+			{
+				$this->db->rollBack();
+			}
 			$this->db->exec("INSERT OR IGNORE INTO dairy_movement_ledger (stock_log_id, product_id, amount, transaction_type, stock_id, location_id, price, spoiled, best_before_date, transaction_id, correlation_id, user_id, note, row_created_timestamp, recorded_timestamp)
 				SELECT sl.id, sl.product_id, sl.amount, sl.transaction_type, sl.stock_id, IFNULL(sl.location_id, p.location_id), sl.price, sl.spoiled, sl.best_before_date, sl.transaction_id, sl.correlation_id, sl.user_id, sl.note, sl.row_created_timestamp, sl.row_created_timestamp
 				FROM stock_log sl LEFT JOIN products p ON p.id = sl.product_id WHERE sl.id > $firstLogId ORDER BY sl.id");
-			if ($ledgerTrigger)
-			{
-				$this->db->exec($ledgerTrigger);
-			}
+			$this->db->exec($ledgerTrigger);
 			$this->db->exec("DELETE FROM daily_seed_runs WHERE code = '" . self::CODE . "_lock'");
 		}
 		if ($newDay)
@@ -705,6 +725,50 @@ class DailyCompanySeedService extends BaseService
 		catch (\Throwable $e)
 		{
 			// La página se muestra igual con lo ya registrado
+		}
+	}
+
+	/**
+	 * Igual que DemoCatchUp pero sin bloquear la petición: una hora simulada tarda ~23 s y el servidor de desarrollo
+	 * (php -S) atiende de a una petición, así que hacerlo en el GET dejaba toda la app cargando. Si faltan horas y no
+	 * hay otra ejecución en curso, lanza bin/dairy_catchup.php en un proceso aparte; la página muestra lo ya registrado.
+	 */
+	public static function DemoCatchUpInBackground(): void
+	{
+		if (GROCY_MODE !== 'demo')
+		{
+			return;
+		}
+		try
+		{
+			$db = DatabaseService::GetInstance()->GetDbConnectionRaw();
+			$until = $db->query("SELECT run_at FROM daily_seed_runs WHERE code = '" . self::CODE . "_until'")->fetchColumn();
+			$busy = $db->query("SELECT COUNT(*) FROM daily_seed_runs WHERE code = '" . self::CODE . "_lock' AND run_at >= datetime('now', 'localtime', '-15 minutes')")->fetchColumn();
+			if (!$until || $until >= date('Y-m-d H:00:00') || $busy)
+			{
+				return;
+			}
+			// Evita lanzar varios procesos mientras el primero aún no toma el bloqueo
+			$mark = GROCY_DATAPATH . '/demo_catchup.spawned';
+			if (is_file($mark) && filemtime($mark) > time() - 120)
+			{
+				return;
+			}
+			touch($mark);
+			$script = dirname(__DIR__) . '/bin/dairy_catchup.php';
+			$log = GROCY_DATAPATH . '/demo_catchup.log';
+			if (PHP_OS_FAMILY === 'Windows')
+			{
+				pclose(popen('start "" /B "' . PHP_BINARY . '" "' . $script . '" >> "' . $log . '" 2>&1', 'r'));
+			}
+			else
+			{
+				exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg($script) . ' >> ' . escapeshellarg($log) . ' 2>&1 &');
+			}
+		}
+		catch (\Throwable $e)
+		{
+			error_log('DemoCatchUpInBackground: ' . $e->getMessage());
 		}
 	}
 
@@ -1111,6 +1175,11 @@ class DailyCompanySeedService extends BaseService
 			}
 			catch (\Throwable $e)
 			{
+				// Un error interno no debe dejar la transacción abierta (bloquearía las compras del día)
+				if ($this->db->inTransaction())
+				{
+					$this->db->rollBack();
+				}
 				$this->stats['waste_errors'][] = $e->getMessage();
 			}
 		}

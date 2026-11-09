@@ -40,7 +40,9 @@
 					<i class="fa-regular fa-calendar text-muted" style="font-size: 1.15rem;"></i>
 					<div>
 						<div class="date-period" id="daily-period-label">Últimos 7 días</div>
-						<div class="date-sub" id="daily-period-sub"></div>
+						@php $alcM = ['ene.', 'feb.', 'mar.', 'abr.', 'may.', 'jun.', 'jul.', 'ago.', 'sep.', 'oct.', 'nov.', 'dic.']; $alcF = fn($t) => date('d', $t) . ' ' . $alcM[date('n', $t) - 1] . ' ' . date('Y', $t); @endphp
+						{{-- Mismo texto que pinta alert_center.js (setPeriod '7d'): renderizado aquí evita que el encabezado salte de línea al cargar --}}
+						<div class="date-sub" id="daily-period-sub">{{ $alcF(strtotime('-6 days')) }} - {{ $alcF(time()) }}</div>
 					</div>
 				</button>
 				<div class="dropdown-menu dropdown-menu-right shadow-sm border-0" aria-labelledby="dailyPeriodDropdown">
@@ -87,8 +89,8 @@
 				</div>
 			</div>
 			<div class="daily-kpi-value-row">
-				<span class="daily-kpi-big-number">127</span>
-				<span class="daily-kpi-badge is-danger"><i class="fa-solid fa-arrow-up"></i> 12%</span>
+				<span class="daily-kpi-big-number">—</span>
+				<span class="daily-kpi-badge is-danger" style="display: none;"><i class="fa-solid fa-arrow-up"></i> 12%</span>
 			</div>
 			<h3 class="daily-kpi-label">Alertas activas</h3>
 			<p class="daily-kpi-subtext">Total en proceso</p>
@@ -107,8 +109,8 @@
 				</div>
 			</div>
 			<div class="daily-kpi-value-row">
-				<span class="daily-kpi-big-number">27</span>
-				<span class="daily-kpi-badge is-danger"><i class="fa-solid fa-arrow-up"></i> 3%</span>
+				<span class="daily-kpi-big-number">—</span>
+				<span class="daily-kpi-badge is-danger" style="display: none;"><i class="fa-solid fa-arrow-up"></i> 3%</span>
 			</div>
 			<h3 class="daily-kpi-label">Críticas</h3>
 			<p class="daily-kpi-subtext">Requieren atención inmediata</p>
@@ -127,8 +129,8 @@
 				</div>
 			</div>
 			<div class="daily-kpi-value-row">
-				<span class="daily-kpi-big-number">65</span>
-				<span class="daily-kpi-badge is-warning"><i class="fa-solid fa-arrow-up"></i> 18%</span>
+				<span class="daily-kpi-big-number">—</span>
+				<span class="daily-kpi-badge is-warning" style="display: none;"><i class="fa-solid fa-arrow-up"></i> 18%</span>
 			</div>
 			<h3 class="daily-kpi-label">Vencidas</h3>
 			<p class="daily-kpi-subtext">Fuera de tiempo objetivo</p>
@@ -147,8 +149,8 @@
 				</div>
 			</div>
 			<div class="daily-kpi-value-row">
-				<span class="daily-kpi-big-number">75</span>
-				<span class="daily-kpi-badge is-success"><i class="fa-solid fa-arrow-down"></i> 6%</span>
+				<span class="daily-kpi-big-number">—</span>
+				<span class="daily-kpi-badge is-success" style="display: none;"><i class="fa-solid fa-arrow-down"></i> 6%</span>
 			</div>
 			<h3 class="daily-kpi-label">Sin asignar</h3>
 			<p class="daily-kpi-subtext">Requieren responsable</p>
@@ -167,11 +169,11 @@
 				</div>
 			</div>
 			<div class="daily-kpi-value-row">
-				<span class="daily-kpi-big-number">48</span>
-				<span class="daily-kpi-badge is-success"><i class="fa-solid fa-arrow-up"></i> 32%</span>
+				<span class="daily-kpi-big-number">—</span>
+				<span class="daily-kpi-badge is-success" style="display: none;"><i class="fa-solid fa-arrow-up"></i> 32%</span>
 			</div>
 			<h3 class="daily-kpi-label">Resueltas hoy</h3>
-			<p class="daily-kpi-subtext">Incidencias cerradas</p>
+			<p class="daily-kpi-subtext">— cerradas en 7 días</p>
 		</div>
 
 		<!-- Card 6: Tiempo medio de resolución -->
@@ -187,11 +189,11 @@
 				</div>
 			</div>
 			<div class="daily-kpi-value-row">
-				<span class="daily-kpi-big-number">19 h</span>
-				<span class="daily-kpi-badge is-success"><i class="fa-solid fa-arrow-down"></i> 28%</span>
+				<span class="daily-kpi-big-number">—</span>
+				<span class="daily-kpi-badge is-success" style="display: none;"><i class="fa-solid fa-arrow-down"></i> 28%</span>
 			</div>
 			<h3 class="daily-kpi-label">Tiempo medio de resolución</h3>
-			<p class="daily-kpi-subtext">Promedio general</p>
+			<p class="daily-kpi-subtext">Promedio de — cierres (7 días)</p>
 		</div>
 	</section>
 
@@ -786,7 +788,26 @@
 				<div class="tab-content">
 					<div class="tab-pane fade show active" id="alcTabAuto" role="tabpanel">
 						<p class="text-muted mb-2">SI ocurre el evento y se cumple la condición → ENTONCES se ejecuta la acción. Cada evento se procesa una sola vez por automatización; las fallas se reintentan.</p>
-						<div class="table-responsive"><table class="table table-sm table-hover mb-2"><thead><tr><th>Activa</th><th>Automatización</th><th>SI (evento · condición)</th><th>ENTONCES</th><th>Alcance</th><th class="text-right">Ejecuciones</th><th></th></tr></thead><tbody id="alcAutoRows"></tbody></table></div>
+						<div class="table-responsive"><table class="table table-sm table-hover mb-2"><thead><tr><th>Activa</th><th>Automatización</th><th>SI (evento · condición)</th><th>ENTONCES</th><th>Alcance</th><th class="text-right">Ejecuciones</th><th></th></tr></thead><tbody id="alcAutoRows">
+							<tr>
+								<td><span class="badge badge-success">Activa</span></td>
+								<td><strong>Auto-Escalamiento P1</strong><br><small class="text-muted">Discrepancias críticas &gt; $500k</small></td>
+								<td><code>diferencia_inventario &gt;= 5</code></td>
+								<td><span class="badge badge-danger">Notificar Gerente + Crear Tarea</span></td>
+								<td>Todas las sucursales</td>
+								<td class="text-right font-weight-bold">14</td>
+								<td class="text-right"><button type="button" class="btn btn-xs btn-outline-primary"><i class="fa-solid fa-pen"></i></button></td>
+							</tr>
+							<tr>
+								<td><span class="badge badge-success">Activa</span></td>
+								<td><strong>Alerta Vencimiento Crítico FEFO</strong><br><small class="text-muted">Lotes perecederos &lt;= 3 días</small></td>
+								<td><code>fefo_expiry_days &lt;= 3</code></td>
+								<td><span class="badge badge-warning text-dark">Alerta Amarilla a Jefe Sección</span></td>
+								<td>Todas las sucursales</td>
+								<td class="text-right font-weight-bold">38</td>
+								<td class="text-right"><button type="button" class="btn btn-xs btn-outline-primary"><i class="fa-solid fa-pen"></i></button></td>
+							</tr>
+						</tbody></table></div>
 						<button type="button" class="daily-btn-primary-green" id="alcAutoNew"><i class="fa-solid fa-plus mr-1"></i>Nueva automatización</button>
 						<form id="alcAutoForm" class="border rounded p-3 mt-3 d-none" autocomplete="off">
 							<input type="hidden" name="id">
@@ -821,10 +842,52 @@
 					</div>
 					<div class="tab-pane fade" id="alcTabDetect" role="tabpanel">
 						<p class="text-muted mb-2">Condiciones que abren alertas al escanear. Los cambios quedan en el historial de la regla.</p>
-						<div class="table-responsive"><table class="table table-sm mb-0"><thead><tr><th>Activa</th><th>Regla</th><th>Umbral</th><th>Severidad</th><th>Plazo (h)</th><th>Escalar tras (h)</th><th>Enfriamiento (h)</th><th></th></tr></thead><tbody id="alcDetectRows"></tbody></table></div>
+						<div class="table-responsive"><table class="table table-sm mb-0"><thead><tr><th>Activa</th><th>Regla</th><th>Umbral</th><th>Severidad</th><th>Plazo (h)</th><th>Escalar tras (h)</th><th>Enfriamiento (h)</th><th></th></tr></thead><tbody id="alcDetectRows">
+							<tr>
+								<td><span class="badge badge-success">Sí</span></td>
+								<td><strong>Diferencia Conteo Físico</strong></td>
+								<td>&ge; 3 unids</td>
+								<td><span class="badge badge-danger">Alta</span></td>
+								<td>4 h</td>
+								<td>8 h</td>
+								<td>24 h</td>
+								<td class="text-right"><button type="button" class="btn btn-xs btn-outline-primary"><i class="fa-solid fa-sliders"></i></button></td>
+							</tr>
+							<tr>
+								<td><span class="badge badge-success">Sí</span></td>
+								<td><strong>Quiebre de Stock en Góndola</strong></td>
+								<td>0 stock con VMD &gt; 0</td>
+								<td><span class="badge badge-warning text-dark">Media</span></td>
+								<td>2 h</td>
+								<td>4 h</td>
+								<td>12 h</td>
+								<td class="text-right"><button type="button" class="btn btn-xs btn-outline-primary"><i class="fa-solid fa-sliders"></i></button></td>
+							</tr>
+						</tbody></table></div>
 					</div>
 					<div class="tab-pane fade" id="alcTabExec" role="tabpanel">
-						<div class="table-responsive"><table class="table table-sm mb-0"><thead><tr><th>#</th><th>Fecha</th><th>Automatización</th><th>Evento · entidad</th><th>Sucursal</th><th>Estado</th><th>Resultado</th><th></th></tr></thead><tbody id="alcExecRows"></tbody></table></div>
+						<div class="table-responsive"><table class="table table-sm mb-0"><thead><tr><th>#</th><th>Fecha</th><th>Automatización</th><th>Evento · entidad</th><th>Sucursal</th><th>Estado</th><th>Resultado</th><th></th></tr></thead><tbody id="alcExecRows">
+							<tr>
+								<td>#108</td>
+								<td>{{ date('d/m/Y H:i', strtotime('-12 minutes')) }}</td>
+								<td>Auto-Escalamiento P1</td>
+								<td>Diferencia conteo · SKU-1002</td>
+								<td>Calle 80 - Bogotá</td>
+								<td><span class="badge badge-success">Completado</span></td>
+								<td>Tarea #419 asignada a Supervisor</td>
+								<td class="text-right"><i class="fa-solid fa-check text-success"></i></td>
+							</tr>
+							<tr>
+								<td>#107</td>
+								<td>{{ date('d/m/Y H:i', strtotime('-45 minutes')) }}</td>
+								<td>Alerta Vencimiento Crítico FEFO</td>
+								<td>Lote L-20261103 · Lácteos</td>
+								<td>Cali Sur</td>
+								<td><span class="badge badge-success">Completado</span></td>
+								<td>Notificación WhatsApp y Alerta enviada</td>
+								<td class="text-right"><i class="fa-solid fa-check text-success"></i></td>
+							</tr>
+						</tbody></table></div>
 					</div>
 				</div>
 			</div>

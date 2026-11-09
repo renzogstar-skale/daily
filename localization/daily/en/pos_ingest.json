@@ -1,0 +1,22 @@
+{
+    ": precio unitario inválido": ": invalid unit price",
+    "CSV vacío o sin filas de datos": "Empty CSV or no data rows",
+    "Devolución parcial (": "Partial return (",
+    "Devolución/anulación sin ticket original (original_external_id)": "Return/void without original ticket (original_external_id)",
+    "Fecha/hora en el futuro:": "Date/time in the future:",
+    "Fecha/hora requerida": "Date/time required",
+    "Firma del webhook inválida (X-Dairy-Signature)": "Invalid webhook signature (X-Dairy-Signature)",
+    "GROCY-API-KEY con permiso POS_INTEGRATION": "GROCY-API-KEY with POS_INTEGRATION permission",
+    "La devolución es de otra sucursal que la venta original": "The return is from a different branch than the original sale",
+    "Línea": "Line",
+    "Máximo {0} {1} ventas por envío": "Maximum {0} {1} sales per submission",
+    "No hay ventas para importar": "There are no sales to import",
+    "Origen POS inválido ({0}–{1} letras, números, - o _)": "Invalid POS source ({0}–{1} letters, numbers, - or _)",
+    "Producto no encontrado:": "Product not found:",
+    "Sin conector de extracción configurado (POS_CONNECTOR). Use CSV o el webhook.": "No extraction connector configured (POS_CONNECTOR). Use CSV or the webhook.",
+    "Solo se reintentan ventas fallidas": "Only failed sales are retried",
+    "Sucursal requerida": "Branch required",
+    "Venta externa no encontrada": "External sale not found",
+    "Venta sin productos": "Sale without products",
+    "external_id requerido (≤ {0}, sin espacios)": "external_id required (≤ {0}, no spaces)"
+}

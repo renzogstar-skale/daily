@@ -1,0 +1,18 @@
+{
+    "Acceso de usuarios por sucursal": "User access by branch",
+    "Administrador · toda la red": "Administrator · whole network",
+    "Directorio de Sucursales": "Branch Directory",
+    "Gestión de unidades operativas, almacenes físicos y aislamiento de inventarios por sucursal.": "Management of operating units, physical warehouses and inventory isolation by branch.",
+    "Inventario Global": "Global Inventory",
+    "Merma $": "Shrink $",
+    "Nombre de la Sucursal": "Branch Name",
+    "Participación relativa en ventas": "Relative share of sales",
+    "Scorecard por Sucursal": "Scorecard by Branch",
+    "Sin ninguna sucursal marcada el usuario ve toda la red. Los administradores siempre ven toda la red.": "With no branch checked, the user sees the whole network. Administrators always see the whole network.",
+    "Teléfono de Contacto": "Contact Phone",
+    "Vence ≤{0} d": "Expires ≤{0} d",
+    "Ver Existencias en esta Sucursal": "View Stock at this Branch",
+    "Ver Stock": "View Stock",
+    "sucursal(es)": "branch(es)",
+    "· semáforo de merma s/ventas": "· shrink traffic light vs. sales"
+}

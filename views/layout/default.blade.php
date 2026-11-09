@@ -1,10 +1,46 @@
 @php global $GROCY_REQUIRED_FRONTEND_PACKAGES; @endphp
 
 <!DOCTYPE html>
-<html lang="{{ GROCY_LOCALE }}"
-	dir="{{ $dir }}">
+@php
+$dailyLang = \Grocy\Helpers\DailyI18n::Lang();
+// Modo Día/Noche: cookie daily_mode (la escribe DailyTheme) o el ajuste de usuario night_mode (otros dispositivos)
+$dailyModePref = in_array($_COOKIE['daily_mode'] ?? '', ['light', 'dark', 'system'], true) ? $_COOKIE['daily_mode'] : ['on' => 'dark', 'off' => 'light'][$userSettings['night_mode'] ?? ''] ?? 'system';
+$dailyDark = $dailyModePref === 'dark';
+@endphp
+<html lang="{{ $dailyLang }}"
+	dir="{{ $dir }}"@if($dailyDark) class="daily-dark daily-night" style="color-scheme: dark"@endif>
 
 <head>
+	<!-- Cero flash blanco: fondo ambiental de DAILY aplicado inmediatamente antes de cualquier pintado -->
+	<style>
+		html, body {
+			background-color: #f7fbf8 !important;
+			background: #f7fbf8 !important;
+		}
+		html.daily-dark, html.daily-dark body {
+			background-color: #0b1220 !important;
+			background: #0b1220 !important;
+		}
+	</style>
+	<!-- Modo Día/Noche antes del primer pintado (preferencia guardada o la del sistema) -->
+	<script>window.DAILY_MODE_SERVER = '{{ $dailyModePref }}';</script>
+	<script src="{{ $U('/js/daily_mode.js?v=', true) }}{{ daily_asset_version('/js/daily_mode.js') }}"></script>
+	<link href="{{ $U('/css/daily_nav.css?v=', true) }}{{ daily_asset_version('/css/daily_nav.css') }}" rel="stylesheet">
+	<link href="{{ $U('/css/daily_filters.css?v=', true) }}{{ daily_asset_version('/css/daily_filters.css') }}" rel="stylesheet">
+	<script src="{{ $U('/js/daily_nav.js?v=', true) }}{{ daily_asset_version('/js/daily_nav.js') }}"></script>
+	<script src="{{ $U('/js/daily_errors.js?v=', true) }}{{ daily_asset_version('/js/daily_errors.js') }}"></script>
+	<!-- Iconos listos en el primer cuadro de cada dashboard (font-display: block los ocultaba al llegar) -->
+	<link rel="preload" href="{{ $U('/packages/@fortawesome/fontawesome-free/webfonts/fa-solid-900.woff2', true) }}" as="font" type="font/woff2" crossorigin>
+	<!-- Inter: display=fallback espera hasta 100 ms la fuente (en caché llega a tiempo) y así el texto no salta de ancho al cargar -->
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=fallback" rel="stylesheet">
+
+	<script>window.DAILY_I18N_SRC = '{{ $U('/i18n/daily_en.js?v=', true) }}{{ daily_asset_version('/i18n/daily_en.js') }}';</script>
+	@if($dailyLang === 'en')
+	<script src="{{ $U('/i18n/daily_en.js?v=', true) }}{{ daily_asset_version('/i18n/daily_en.js') }}"></script>
+	@endif
+	<script src="{{ $U('/js/daily_i18n.js?v=', true) }}{{ daily_asset_version('/js/daily_i18n.js') }}"></script>
 	<script>
 		(function() {
 			try {
@@ -109,34 +145,31 @@
 		rel="stylesheet">
 	@endif
 
-	<link href="{{ $U('/css/grocy_menu_layout.css?v=', true) }}{{ $version }}"
+	<link href="{{ $U('/css/grocy_menu_layout.css?v=', true) }}{{ daily_asset_version('/css/grocy_menu_layout.css') }}"
 		rel="stylesheet">
-	<link href="{{ $U('/css/grocy.css?v=', true) }}{{ $version }}"
+	<link href="{{ $U('/css/grocy.css?v=', true) }}{{ daily_asset_version('/css/grocy.css') }}"
 		rel="stylesheet">
-	<link href="{{ $U('/css/dairy_enterprise_theme.css?v=', true) }}{{ $version }}"
+	<link href="{{ $U('/css/dairy_enterprise_theme.css?v=', true) }}{{ daily_asset_version('/css/dairy_enterprise_theme.css') }}"
 		rel="stylesheet">
-	<link href="{{ $U('/css/dairy_glass.css?v=', true) }}{{ $version }}"
+	<link href="{{ $U('/css/dairy_glass.css?v=', true) }}{{ daily_asset_version('/css/dairy_glass.css') }}"
 		rel="stylesheet">
-	<link href="{{ $U('/css/daily_theme.css?v=', true) }}{{ $version }}"
+	<link href="{{ $U('/css/daily_theme.css?v=', true) }}{{ daily_asset_version('/css/daily_theme.css') }}"
 		rel="stylesheet">
-	<link href="{{ $U('/css/daily_design_system.css?v=', true) }}{{ $version }}"
+	<link href="{{ $U('/css/daily_design_system.css?v=', true) }}{{ daily_asset_version('/css/daily_design_system.css') }}"
 		rel="stylesheet">
-	<link href="{{ $U('/css/daily_process_flow.css?v=', true) }}{{ $version }}"
+	<link href="{{ $U('/css/daily_process_flow.css?v=', true) }}{{ daily_asset_version('/css/daily_process_flow.css') }}"
 		rel="stylesheet">
 
-
-	@if(boolval($userSettings['night_mode_enabled_internal']))
-	<link id="night-mode-stylesheet"
-		href="{{ $U('/css/grocy_night_mode.css?v=', true) }}{{ $version }}"
-		rel="stylesheet">
-	@endif
 
 	@stack('pageStyles')
+	<link href="{{ $U('/css/daily_subscription.css?v=', true) }}{{ daily_asset_version('/css/daily_subscription.css') }}"
+		rel="stylesheet">
 
-	@if(!boolval($userSettings['night_mode_enabled_internal']))
 	<link href="{{ $U('/css/daily_crystal.css?v=', true) }}{{ daily_asset_version('/css/daily_crystal.css') }}"
 		rel="stylesheet">
-	@endif
+	<!-- Modo Noche global (tokens + componentes + adaptador de colores fijos) -->
+	<link href="{{ $U('/css/daily_dark.css?v=', true) }}{{ daily_asset_version('/css/daily_dark.css') }}"
+		rel="stylesheet">
 
 	@if(file_exists(GROCY_DATAPATH . '/custom_css.html'))
 	@php include GROCY_DATAPATH . '/custom_css.html' @endphp
@@ -174,21 +207,30 @@
 		Grocy.UserSettings = { };
 		@endif
 	</script>
+	@if (GROCY_AUTHENTICATED)
+	@php $dailySub = \Grocy\Helpers\DailySubscription::ClientState(); @endphp
+	<script>window.DAILY_SUBSCRIPTION = {!! json_encode($dailySub) !!};</script>
+	@if(count($dailySub['lockedSelectors']) > 0)
+	{{-- Herramientas internas fuera del plan: ocultas antes del primer pintado (sin parpadeo) --}}
+	<style id="daily-plan-locks">{{ implode(',', $dailySub['lockedSelectors']) }}{display:none!important}</style>
+	@endif
+	@endif
 </head>
 
-<body class="fixed-nav @if(boolval($userSettings['night_mode_enabled_internal'])) night-mode @else crystal-ui @endif @if($embedded) embedded @endif">
+<body class="fixed-nav crystal-ui @if($dailyDark) night-mode @endif @if($embedded) embedded @endif @if(($viewName ?? '') === 'login') daily-login-body @endif">
 	<script>
 		// Estado del sidebar antes del primer pintado (sin saltos de layout ni parpadeo del logo)
 		try { var dnW = window.innerWidth, dnS = localStorage.getItem('dairy_sidebar_state') || localStorage.getItem('sidebar_state'); if (dnW >= 768 && (dnW < 1024 ? dnS !== 'expanded' : dnS === 'collapsed')) { document.body.classList.add('sidenav-toggled'); } } catch (e) { }
 		document.body.classList.add('dnav-preload');
+		document.body.classList.toggle('night-mode', document.documentElement.classList.contains('daily-dark'));
 	</script>
-	@if(!$embedded)
+	@if(!$embedded && ($viewName ?? '') !== 'login')
 	<nav id="mainNav"
 		class="navbar navbar-expand-md navbar-light fixed-top">
 		<div class="header-brand-zone">
 			<a class="navbar-brand py-0 mr-0 d-flex align-items-center"
-				href="{{ $U('/') }}"
-				aria-label="DAILY">
+				href="{{ $U('/app') }}"
+				aria-label="DAILY — Gestión, Control y Beneficios" title="DAILY — Gestión, Control y Beneficios">
 				<svg class="daily-logo-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 152 40" width="114" height="30" role="img" aria-label="DAILY">
 					<defs>
 						<radialGradient id="dailyBadgeGrad" cx="50%" cy="50%" r="50%">
@@ -273,7 +315,7 @@
 				$hdrBranchName = 'Red Consolidada';
 				foreach ($hdrBranches as $hb) { if ($hdrBranchId !== null && intval($hb->id) === $hdrBranchId) { $hdrBranchName = $hb->name; } }
 				@endphp
-				<li class="nav-item dropdown mr-2 d-none d-md-flex align-items-center">
+				<li class="nav-item dropdown mr-2 d-none align-items-center">
 					<button class="dairy-hbtn dropdown-toggle" type="button" data-toggle="dropdown" aria-label="Seleccionar sucursal">
 						<i class="fa-solid fa-store"></i>
 						<span id="headerCurrentBranchName">{{ $hdrBranchName }}</span>
@@ -290,7 +332,7 @@
 					</div>
 				</li>
 
-				<!-- Selector de Rol Simulado (Demostración) -->
+				<!-- Variables de Rol y Suscripción para el Menú Integrado -->
 				@php
 				$simRole = \Grocy\Helpers\DairyAccess::GetSimulatedRole();
 				$simRoleLabels = [
@@ -302,103 +344,242 @@
 				$simRoleIcons = [
 					'manager' => 'fa-user-tie text-primary',
 					'supervisor' => 'fa-user-shield text-warning',
-					'empleado' => 'fa-user text-success'
+					'empleado' => 'fa-user text-success',
+					'demo' => 'fa-id-badge text-info'
 				];
 				@endphp
-				<li class="nav-item dropdown mr-2 d-none @if($simRole !== 'demo') d-sm-flex @endif align-items-center">
-					<button class="dairy-hbtn dropdown-toggle" type="button" data-toggle="dropdown" aria-label="Rol simulado" title="Perfil funcional simulado: cambia los permisos visibles sin iniciar sesión">
-						<i class="fa-solid {{ $simRoleIcons[$simRole] ?? 'fa-id-badge' }}"></i>
-						<span class="d-none d-lg-inline text-muted mr-1" style="opacity: 0.75;">Rol:</span>
-						<strong>{{ $simRoleLabels[$simRole] ?? 'Manager' }}</strong>
+
+				<!-- 1. Botón Independiente: Idioma global ES / EN -->
+				<li class="nav-item dropdown mr-2 d-flex align-items-center daily-lang-switch">
+					<button class="dairy-hbtn dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-label="Idioma" title="Idioma de la plataforma">
+						<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align: -3px;"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+						<strong class="ml-1 notranslate" data-daily-lang-current>{{ strtoupper($dailyLang) }}</strong>
 					</button>
-					<div class="dropdown-menu dropdown-menu-right" style="min-width: 250px;">
-						<div class="dropdown-header text-uppercase font-weight-bold" style="font-size: var(--dairy-fs-xs);">
-							<i class="fa-solid fa-masks-theater mr-1"></i>Perfil simulado
-						</div>
-						<a class="dropdown-item @if($simRole === 'manager') active font-weight-bold @endif" href="{{ $U('/daily/set-role?role=manager') }}">
-							<div class="d-flex align-items-center">
-								<i class="fa-solid fa-user-tie mr-2 text-primary" style="width: 16px;"></i>
-								<div>
-									<div>Manager / Administrador</div>
-									<small class="text-muted d-block font-weight-normal" style="font-size: 10.5px;">Toda la red, KPIs estratégicos y aprobaciones</small>
-								</div>
-							</div>
+					<div class="dropdown-menu dropdown-menu-right" role="menu" style="min-width: 190px;">
+						<a class="dropdown-item d-flex align-items-center notranslate @if($dailyLang === 'es') active @endif" href="#" role="menuitemradio" data-daily-lang="es" aria-checked="{{ $dailyLang === 'es' ? 'true' : 'false' }}">
+							<span class="mr-2" aria-hidden="true">🇪🇸</span><span class="flex-grow-1">Español (ES)</span><i class="fa-solid fa-check ml-2 daily-lang-check"></i>
 						</a>
-						<a class="dropdown-item @if($simRole === 'supervisor') active font-weight-bold @endif" href="{{ $U('/daily/set-role?role=supervisor') }}">
-							<div class="d-flex align-items-center">
-								<i class="fa-solid fa-user-shield mr-2 text-warning" style="width: 16px;"></i>
-								<div>
-									<div>Supervisor de Tienda</div>
-									<small class="text-muted d-block font-weight-normal" style="font-size: 10.5px;">Supervisión de piso, equipo, incidencias y alertas</small>
-								</div>
-							</div>
+						<a class="dropdown-item d-flex align-items-center notranslate @if($dailyLang === 'en') active @endif" href="#" role="menuitemradio" data-daily-lang="en" aria-checked="{{ $dailyLang === 'en' ? 'true' : 'false' }}">
+							<span class="mr-2" aria-hidden="true">🇺🇸</span><span class="flex-grow-1">English (EN)</span><i class="fa-solid fa-check ml-2 daily-lang-check"></i>
 						</a>
-						<a class="dropdown-item @if($simRole === 'empleado') active font-weight-bold @endif" href="{{ $U('/daily/set-role?role=empleado') }}">
-							<div class="d-flex align-items-center">
-								<i class="fa-solid fa-user mr-2 text-success" style="width: 16px;"></i>
-								<div>
-									<div>Empleado / Asociado</div>
-									<small class="text-muted d-block font-weight-normal" style="font-size: 10.5px;">Consulta de turnos, fichaje y solicitudes</small>
-								</div>
-							</div>
-						</a>
-						<div class="dropdown-divider"></div>
-						<div class="px-3 py-1 text-muted" style="font-size: 10px; line-height: 1.35;">
-							<i class="fa-solid fa-circle-info mr-1 text-info"></i>Roles simulados sin autenticación real: solo cambian los permisos visibles.
-						</div>
 					</div>
 				</li>
+				<style>.daily-lang-switch .daily-lang-check { visibility: hidden; } .daily-lang-switch .dropdown-item.active .daily-lang-check { visibility: visible; }</style>
 
-				<!-- Notificaciones activas -->
-				<li class="nav-item mr-1 position-relative">
-					<button class="dairy-hicon" type="button" id="headerAlertsButton" aria-label="Alertas" title="Alertas de merma y cadena de frío" onclick="var t = $('#tab-alertas-link, [href=\'#tab-prevencion\']').first(); if (t.length) { t.click(); } else { window.location.href = '{{ $U(\Grocy\Helpers\DairyAccess::CanOpen('/today') ? '/today' : '/ai-advisor') }}'; }">
+				<!-- 1b. Modo Día / Noche global (DailyTheme, daily_mode.js) -->
+				<li class="nav-item mr-2 d-flex align-items-center daily-mode-switch">
+					<button type="button" class="dairy-hbtn daily-mode-toggle" id="dailyModeToggle" data-daily-mode-toggle aria-pressed="{{ $dailyDark ? 'true' : 'false' }}" aria-label="{{ $dailyDark ? 'Cambiar a modo día' : 'Cambiar a modo noche' }}" title="Modo Día / Noche">
+						<span class="daily-mode-thumb" aria-hidden="true"></span>
+						<span class="daily-mode-ico daily-mode-ico--sun" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg></span>
+						<span class="daily-mode-ico daily-mode-ico--moon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></span>
+					</button>
+				</li>
+
+				<!-- 2. Botón Independiente: Notificaciones activas -->
+				<li class="nav-item mr-2 position-relative d-flex align-items-center">
+					<button class="dairy-hicon" type="button" id="headerAlertsButton" aria-label="Notificaciones" title="Notificaciones y alertas activas" onclick="var t = $('#tab-alertas-link, [href=\'#tab-prevencion\']').first(); if (t.length) { t.click(); } else { window.location.href = '{{ $U(\Grocy\Helpers\DairyAccess::CanOpen('/today') ? '/today' : '/alerts') }}'; }">
 						<i class="fa-solid fa-bell"></i>
 						<span id="headerAlertsBadge" class="dairy-hicon-badge d-none"></span>
 					</button>
 				</li>
 
-				<!-- Perfil de Usuario -->
+				<!-- 3. Perfil de Usuario Optimizado: [RG — rgiovine ▼] con Menú Organizado Completo -->
 				@php
 				$hdrRole = '';
-				try { if (defined('GROCY_USER_ID')) { $hdrRole = (string) \Grocy\Services\DatabaseService::GetInstance()->GetDbConnectionRaw()->query('SELECT r.name FROM user_roles ur JOIN roles r ON r.id = ur.role_id WHERE ur.user_id = ' . intval(GROCY_USER_ID) . ' LIMIT 1')->fetchColumn(); } } catch (\Throwable $e) { }
+				try {
+					if (defined('GROCY_USER_ID')) {
+						$hdrRole = (string) \Grocy\Services\DatabaseService::GetInstance()->GetDbConnectionRaw()->query('SELECT r.name FROM user_roles ur JOIN roles r ON r.id = ur.role_id WHERE ur.user_id = ' . intval(GROCY_USER_ID) . ' LIMIT 1')->fetchColumn();
+					}
+				} catch (\Throwable $e) { }
+				$userInitials = defined('GROCY_USER_USERNAME') ? mb_strtoupper(mb_substr(GROCY_USER_USERNAME, 0, 2)) : 'RG';
+				$userName = defined('GROCY_USER_USERNAME') ? GROCY_USER_USERNAME : 'rgiovine';
+				$userTitle = $simRole === 'demo' ? 'Recorrido guiado' : 'Gerente / Administrador';
 				@endphp
-				<li class="nav-item dropdown mr-1">
-					<a class="nav-link dropdown-toggle discrete-link py-0 d-flex align-items-center dairy-hprofile" href="#" data-toggle="dropdown">
-						<div class="dairy-havatar mr-2">
-							{{ defined('GROCY_USER_USERNAME') ? mb_strtoupper(mb_substr(GROCY_USER_USERNAME, 0, 2)) : '' }}
+				<li class="nav-item dropdown mr-1 daily-user-profile-item">
+					<a class="nav-link dropdown-toggle discrete-link py-1 px-2 d-flex align-items-center daily-profile-trigger"
+						href="#"
+						id="dailyUserProfileDropdown"
+						data-toggle="dropdown"
+						aria-haspopup="true"
+						aria-expanded="false"
+						title="Perfil de {{ $userName }}">
+						<div class="daily-profile-avatar mr-2">
+							{{ $userInitials }}
 						</div>
-						<div class="d-none d-xl-block text-left mr-1">
-							<div class="dairy-hprofile-name">{{ defined('GROCY_USER_USERNAME') ? GROCY_USER_USERNAME : '' }}</div>
-							<div class="dairy-hprofile-role">{{ $simRole === 'demo' ? 'Recorrido guiado' : (($hdrRole ?: ($simRoleLabels[$simRole] ?? 'Manager')) . ' · Simulado') }}</div>
+						<div class="d-none d-sm-flex flex-column text-left mr-1.5" style="line-height: 1.15;">
+							<span class="daily-profile-name font-weight-bold">{{ $userName }}</span>
+							<span class="daily-profile-role-sub text-muted">{{ $userTitle }}</span>
 						</div>
+						<i class="fa-solid fa-chevron-down daily-profile-caret"></i>
 					</a>
-					<div class="dropdown-menu dropdown-menu-right">
-						<div class="dropdown-header text-uppercase font-weight-bold" style="font-size: var(--dairy-fs-xs);">Sesión Activa</div>
-						@if($simRole !== 'demo')
-						<a class="dropdown-item discrete-link" href="{{ $U('/usersettings') }}"><i class="fa-solid fa-user-gear mr-2 text-primary"></i>Perfil de Usuario</a>
-						<div class="dropdown-divider"></div>
-						<div class="dropdown-header text-uppercase font-weight-bold" style="font-size: 10px; color: var(--dairy-text-muted);">Rol Simulado</div>
-						<a class="dropdown-item @if($simRole === 'manager') font-weight-bold text-primary @endif" href="{{ $U('/daily/set-role?role=manager') }}"><i class="fa-solid fa-user-tie mr-2"></i>Manager / Admin</a>
-						<a class="dropdown-item @if($simRole === 'supervisor') font-weight-bold text-warning @endif" href="{{ $U('/daily/set-role?role=supervisor') }}"><i class="fa-solid fa-user-shield mr-2"></i>Supervisor</a>
-						<a class="dropdown-item @if($simRole === 'empleado') font-weight-bold text-success @endif" href="{{ $U('/daily/set-role?role=empleado') }}"><i class="fa-solid fa-user mr-2"></i>Empleado</a>
-						<div class="dropdown-divider"></div>
-						@endif
-						<div class="px-3 py-1">
-							<div class="small font-weight-bold text-muted mb-1">Tema de Identidad Visual</div>
+
+					<div class="dropdown-menu dropdown-menu-right daily-profile-dropdown-menu shadow-lg"
+						aria-labelledby="dailyUserProfileDropdown">
+						
+						<!-- Encabezado de Perfil: RG — rgiovine / Gerente / Administrador -->
+						<div class="daily-profile-header-card px-3 py-3 border-bottom d-flex align-items-center">
+							<div class="daily-profile-avatar-lg mr-3">
+								{{ $userInitials }}
+							</div>
+							<div class="flex-grow-1 overflow-hidden">
+								<div class="d-flex align-items-center">
+									<strong class="daily-profile-header-name text-truncate">{{ $userName }}</strong>
+									<span class="daily-status-dot ml-2" title="Usuario activo"></span>
+								</div>
+								<div class="daily-profile-header-role text-muted text-truncate">
+									{{ $userTitle }}
+								</div>
+							</div>
+						</div>
+
+						<!-- SECCIÓN 1: CUENTA Y ACCESO -->
+						<div class="daily-menu-section-header px-3 pt-2.5 pb-1 text-uppercase">
+							Cuenta y acceso
+						</div>
+
+						<!-- Mi perfil -->
+						<a class="dropdown-item daily-profile-menu-item px-3 py-2 d-flex align-items-center" href="{{ $U('/usersettings') }}">
+							<i class="fa-solid fa-user-circle mr-2.5 text-muted" style="width: 16px;"></i>
+							<span class="flex-grow-1">Mi perfil</span>
+						</a>
+
+						<!-- Rol actual: Manager (Selector desplegable) -->
+						<div class="daily-profile-control-box px-3 py-2">
+							<div class="d-flex align-items-center justify-content-between mb-1.5">
+								<span class="daily-profile-control-title">
+									<i class="fa-solid {{ $simRoleIcons[$simRole] ?? 'fa-user-tie text-primary' }} mr-2" style="width: 16px;"></i>Rol actual:
+								</span>
+								<span class="badge badge-pill badge-primary-subtle font-weight-bold">
+									{{ $simRoleLabels[$simRole] ?? 'Manager' }}
+								</span>
+							</div>
+							<div class="daily-select-wrap">
+								<select class="form-control form-control-sm daily-profile-select"
+									id="dailyProfileRoleSelect"
+									onchange="if(this.value) window.location.href='{{ $U('/daily/set-role?role=') }}' + this.value;"
+									aria-label="Seleccionar rol">
+									<option value="manager" @if($simRole === 'manager') selected @endif>🛡️ Manager (Toda la red y aprobaciones)</option>
+									<option value="supervisor" @if($simRole === 'supervisor') selected @endif>👔 Supervisor (Piso, equipo e incidencias)</option>
+									<option value="empleado" @if($simRole === 'empleado') selected @endif>👤 Empleado (Turnos y solicitudes)</option>
+								</select>
+							</div>
+						</div>
+
+						<!-- Plan actual: Enterprise (Selector / información del plan) -->
+						<div class="daily-profile-control-box px-3 py-2">
+							<div class="d-flex align-items-center justify-content-between mb-1.5">
+								<span class="daily-profile-control-title">
+									<i class="fa-solid {{ \Grocy\Helpers\DailySubscription::PLAN_INFO[$dailySub['plan']]['icon'] ?? 'fa-crown' }} text-warning mr-2" style="width: 16px;"></i>Plan actual:
+								</span>
+								<span class="badge badge-pill badge-success-subtle font-weight-bold">
+									{{ $dailySub['planName'] }} @if($dailySub['preview'])· Vista previa @else · Activo @endif
+								</span>
+							</div>
+							<div class="d-flex align-items-center" style="gap: 6px;">
+								<select class="form-control form-control-sm daily-profile-select flex-grow-1"
+									id="dailyProfilePlanSelect"
+									onchange="window.location.href='{{ $U('/daily/set-plan?plan=') }}' + this.value;"
+									aria-label="Seleccionar plan">
+									@foreach(\Grocy\Helpers\DailySubscription::PLANS as $pp)
+										@if(\Grocy\Helpers\DailySubscription::PlanRank($pp) <= \Grocy\Helpers\DailySubscription::PlanRank($dailySub['contractedPlan']))
+											<option value="{{ $pp === $dailySub['contractedPlan'] ? '' : $pp }}" @if($pp === $dailySub['plan']) selected @endif>
+												{{ \Grocy\Helpers\DailySubscription::PlanName($pp) }} @if($pp === $dailySub['contractedPlan'])(Contratado)@else(Vista previa)@endif
+											</option>
+										@endif
+									@endforeach
+								</select>
+								<a href="{{ $U('/subscription') }}" class="btn btn-sm btn-outline-success daily-plan-link-btn" title="Gestionar planes y suscripción">
+									<i class="fa-solid fa-arrow-up-right-from-square"></i>
+								</a>
+							</div>
+						</div>
+
+						<!-- Centro Operativo / Sucursal (Integrado en el perfil) -->
+						<div class="daily-profile-control-box px-3 py-2">
+							<div class="d-flex align-items-center justify-content-between mb-1.5">
+								<span class="daily-profile-control-title">
+									<i class="fa-solid fa-store text-muted mr-2" style="width: 16px;"></i>Centro Operativo:
+								</span>
+								<span class="badge badge-pill badge-light border text-muted font-weight-bold" style="font-size: 10.5px;">
+									{{ $hdrBranchName }}
+								</span>
+							</div>
+							<div class="daily-select-wrap">
+								<select class="form-control form-control-sm daily-profile-select"
+									onchange="window.location.href='?branch_id=' + this.value;"
+									aria-label="Seleccionar centro operativo">
+									@foreach($hdrBranches as $hb)
+										<option value="{{ $hb->id }}" @if($hdrBranchId === intval($hb->id)) selected @endif>{{ $hb->name }}</option>
+									@endforeach
+									@unless($hdrRestricted)
+										<option value="" @if($hdrBranchId === null) selected @endif>Red Consolidada (Todas)</option>
+									@endunless
+								</select>
+							</div>
+						</div>
+
+						<!-- Configuración de cuenta -->
+						<a class="dropdown-item daily-profile-menu-item px-3 py-2 d-flex align-items-center" href="{{ $U('/usersettings') }}">
+							<i class="fa-solid fa-sliders mr-2.5 text-muted" style="width: 16px;"></i>
+							<span class="flex-grow-1">Configuración de cuenta</span>
+						</a>
+
+						<div class="dropdown-divider my-1.5"></div>
+
+						<!-- SECCIÓN 2: PREFERENCIAS -->
+						<div class="daily-menu-section-header px-3 pt-2 pb-1 text-uppercase">
+							Preferencias
+						</div>
+
+						<!-- Idioma -->
+						<div class="daily-profile-control-box px-3 py-2">
+							<div class="d-flex align-items-center justify-content-between mb-1.5">
+								<span class="daily-profile-control-title">
+									<i class="fa-solid fa-globe text-info mr-2" style="width: 16px;"></i>Idioma
+								</span>
+							</div>
+							<div class="btn-group btn-group-sm w-100 daily-pref-lang-group" role="group">
+								<button type="button" class="btn btn-outline-secondary py-1 @if($dailyLang === 'es') active font-weight-bold @endif" data-daily-lang="es">
+									🇪🇸 Español (ES)
+								</button>
+								<button type="button" class="btn btn-outline-secondary py-1 @if($dailyLang === 'en') active font-weight-bold @endif" data-daily-lang="en">
+									🇺🇸 English (EN)
+								</button>
+							</div>
+						</div>
+
+						<!-- Apariencia -->
+						<div class="daily-profile-control-box px-3 py-2">
+							<div class="d-flex align-items-center justify-content-between mb-1.5">
+								<span class="daily-profile-control-title">
+									<i class="fa-solid fa-palette text-success mr-2" style="width: 16px;"></i>Apariencia
+								</span>
+								<button type="button" class="btn btn-sm btn-light border py-0 px-2 daily-theme-mode-btn" id="dailyMenuThemeToggle" data-daily-mode-toggle title="Modo Día / Noche">
+									<i class="fa-solid fa-circle-half-stroke mr-1"></i>Tema
+								</button>
+							</div>
+							<!-- Selector de paleta de color de marca -->
 							<div class="btn-group btn-group-toggle btn-group-sm w-100" data-toggle="buttons" id="dailyQuickThemePicker">
-								<label class="btn btn-outline-secondary py-1 px-2" id="daily-btn-green" title="DAILY Verde (Predeterminado)" style="font-size: 11px;">
+								<label class="btn btn-outline-secondary py-1 px-1 text-truncate @if(($userSettings['daily_theme_color'] ?? 'green') === 'green') active @endif" id="daily-btn-green" title="DAILY Verde" style="font-size: 11px;">
 									<input type="radio" name="daily_quick_theme_opt" value="green"> <i class="fa-solid fa-circle text-success mr-1"></i>Verde
 								</label>
-								<label class="btn btn-outline-secondary py-1 px-2" id="daily-btn-red" title="DAILY Rojo" style="font-size: 11px;">
+								<label class="btn btn-outline-secondary py-1 px-1 text-truncate @if(($userSettings['daily_theme_color'] ?? '') === 'red') active @endif" id="daily-btn-red" title="DAILY Rojo" style="font-size: 11px;">
 									<input type="radio" name="daily_quick_theme_opt" value="red"> <i class="fa-solid fa-circle text-danger mr-1"></i>Rojo
 								</label>
-								<label class="btn btn-outline-secondary py-1 px-2" id="daily-btn-yellow" title="DAILY Amarillo" style="font-size: 11px;">
+								<label class="btn btn-outline-secondary py-1 px-1 text-truncate @if(($userSettings['daily_theme_color'] ?? '') === 'yellow') active @endif" id="daily-btn-yellow" title="DAILY Amarillo" style="font-size: 11px;">
 									<input type="radio" name="daily_quick_theme_opt" value="yellow"> <i class="fa-solid fa-circle text-warning mr-1"></i>Amarillo
 								</label>
 							</div>
 						</div>
-						<div class="dropdown-divider"></div>
-						<a class="dropdown-item logout-button discrete-link text-danger" href="{{ $U('/logout') }}"><i class="fa-solid fa-sign-out-alt mr-2"></i>Cerrar Sesión</a>
+
+						<div class="dropdown-divider my-1.5"></div>
+
+						<!-- SECCIÓN 3: CERRAR SESIÓN -->
+						<a class="dropdown-item daily-profile-menu-item daily-logout-item px-3 py-2.5 d-flex align-items-center text-danger font-weight-500" href="{{ $U('/logout') }}">
+							<i class="fa-solid fa-arrow-right-from-bracket mr-2.5" style="width: 16px;"></i>
+							<span>Cerrar sesión</span>
+						</a>
+
 					</div>
 				</li>
 
@@ -604,8 +785,8 @@
 	@endif
 	@endif
 
-	<div class="@if(GROCY_AUTHENTICATED) content-wrapper @endif pt-0">
-		<div class="container-fluid @if(GROCY_AUTHENTICATED && !$embedded) dashboard-container px-0 @endif @if($embedded) px-1 @endif">
+	<div class="@if(GROCY_AUTHENTICATED) content-wrapper @endif pt-0 @if(($viewName ?? '') === 'login') p-0 m-0 @endif">
+		<div class="container-fluid @if(GROCY_AUTHENTICATED && !$embedded) dashboard-container px-0 @endif @if($embedded) px-1 @endif @if(($viewName ?? '') === 'login') p-0 @endif">
 			<div class="row mb-0 mx-0">
 				<div id="page-content"
 					class="col-12 px-0 content-text fa-width-auto" style="min-width: 0;">
@@ -613,6 +794,9 @@
 					@if(GROCY_AUTHENTICATED && !$embedded)
 					@include('components.dairy_related')
 					@endif
+					{{-- Modo noche: adapta los colores fijos antes del primer cuadro (aún bloqueado por rel=expect) --}}
+					<script>window.DailyTheme && DailyTheme.boot();</script>
+					<span id="page-content-end" hidden></span>
 				</div>
 			</div>
 		</div>
@@ -654,6 +838,14 @@
 						</div>
 						<span class="dairy-command-badge">Móvil</span>
 					</a>
+					<a href="{{ $U('/hr') }}" class="dairy-command-item" data-tags="recursos humanos hr hcm personal colaboradores contratacion nomina horarios asistencia">
+						<div class="dairy-command-item-icon" style="background: rgba(37, 99, 235, 0.12); color: #2563eb;"><i class="fa-solid fa-users-gear"></i></div>
+						<div class="dairy-command-item-content">
+							<div class="dairy-command-item-title">Recursos Humanos (HCM)</div>
+							<div class="dairy-command-item-sub">Colaboradores, contratación, turnos, nómina, productividad y capacitación</div>
+						</div>
+						<span class="dairy-command-badge">HCM</span>
+					</a>
 					<a href="{{ $U('/pos') }}" class="dairy-command-item" data-tags="punto de venta pos caja cobrar ticket fefo ventas venta rapida">
 						<div class="dairy-command-item-icon" style="background: var(--dairy-success-bg); color: var(--dairy-success-dark);"><i class="fa-solid fa-cash-register"></i></div>
 						<div class="dairy-command-item-content">
@@ -662,19 +854,19 @@
 						</div>
 						<span class="dairy-command-badge">Caja</span>
 					</a>
-					<a href="{{ $U('/ai-advisor') }}" class="dairy-command-item" data-tags="arturito ia asesor inteligencia artificial alertas prediccion recomendacion mrp simulador">
-						<div class="dairy-command-item-icon" style="background: var(--dairy-purple-bg); color: var(--dairy-purple);"><i class="fa-solid fa-robot"></i></div>
-						<div class="dairy-command-item-content">
-							<div class="dairy-command-item-title">Arturito IA — Asesor Ejecutivo</div>
-							<div class="dairy-command-item-sub">Diagnósticos en tiempo real, alertas de cadena de frío y reducción de pérdidas</div>
-						</div>
-						<span class="dairy-command-badge" style="background: var(--dairy-purple-bg); color: var(--dairy-purple);">IA Agent</span>
-					</a>
 					<a href="{{ $U('/stockoverview') }}" class="dairy-command-item" data-tags="stock inventario lotes ubicaciones transferencias articulos productos">
 						<div class="dairy-command-item-icon" style="background: var(--dairy-border-subtle); color: var(--dairy-text-secondary);"><i class="fa-solid fa-boxes-stacked"></i></div>
 						<div class="dairy-command-item-content">
 							<div class="dairy-command-item-title">Inventario & Stock General</div>
 							<div class="dairy-command-item-sub">Existencias por ubicación, valorización contable y rotación</div>
+						</div>
+						<span class="dairy-command-badge">Stock</span>
+					</a>
+					<a href="{{ $U('/warehouse') }}" class="dairy-command-item" data-tags="almacen bodega wms recepcion muelles putaway racks picking devoluciones logistica">
+						<div class="dairy-command-item-icon" style="background: rgba(14, 165, 233, 0.12); color: #0284c7;"><i class="fa-solid fa-warehouse"></i></div>
+						<div class="dairy-command-item-content">
+							<div class="dairy-command-item-title">Almacén y Bodega (WMS)</div>
+							<div class="dairy-command-item-sub">Recepción, muelles, inspección, putaway en racks, preparación y devoluciones</div>
 						</div>
 						<span class="dairy-command-badge">WMS</span>
 					</a>
@@ -692,22 +884,6 @@
 							<div class="dairy-command-item-sub">Cálculo de pedidos sugeridos según lead time y consumo ponderado</div>
 						</div>
 						<span class="dairy-command-badge">MRP</span>
-					</a>
-					<a href="{{ $U('/quality') }}" class="dairy-command-item" data-tags="calidad vencimientos fefo semaforo lote bloqueo caducidad frio qm">
-						<div class="dairy-command-item-icon" style="background: var(--dairy-danger-bg); color: var(--dairy-danger-dark);"><i class="fa-solid fa-calendar-xmark"></i></div>
-						<div class="dairy-command-item-content">
-							<div class="dairy-command-item-title">Calidad & Vencimientos FEFO</div>
-							<div class="dairy-command-item-sub">Semáforo de caducidad, auditoría de cadena de frío y bloqueos QM</div>
-						</div>
-						<span class="dairy-command-badge">QM</span>
-					</a>
-					<a href="{{ $U('/ai-advisor') }}#tab-simulator" class="dairy-command-item" data-tags="simulador what if proyeccion margen descuentos decisiones">
-						<div class="dairy-command-item-icon" style="background: var(--dairy-primary-subtle); color: var(--dairy-primary);"><i class="fa-solid fa-calculator"></i></div>
-						<div class="dairy-command-item-content">
-							<div class="dairy-command-item-title">Simulador de Decisiones (What-If)</div>
-							<div class="dairy-command-item-sub">Modelado de descuentos vs. descarte y optimización de márgenes</div>
-						</div>
-						<span class="dairy-command-badge">What-If</span>
 					</a>
 					<a href="{{ $U('/suppliers') }}" class="dairy-command-item" data-tags="proveedores procurement compras evaluacion otif scorecard reclamos">
 						<div class="dairy-command-item-icon" style="background: var(--dairy-purple-bg); color: var(--dairy-purple-dark);"><i class="fa-solid fa-truck-ramp-box"></i></div>
@@ -805,39 +981,45 @@
 	@endif
 	@if(in_array('chartjs', $GROCY_REQUIRED_FRONTEND_PACKAGES))
 	<script src="{{ $U('/packages/chart.js/dist/Chart.min.js?v=', true) }}{{ $version }}"></script>
+	<script>window.DailyI18n && DailyI18n.hookCharts();</script>
 	<script src="{{ $U('/packages/chartjs-plugin-colorschemes/dist/chartjs-plugin-colorschemes.min.js?v=', true) }}{{ $version}}"></script>
 	<script src="{{ $U('/packages/chartjs-plugin-doughnutlabel/dist/chartjs-plugin-doughnutlabel.js?v=', true) }}{{ $version }}"></script>
 	<script src="{{ $U('/packages/chartjs-plugin-piechart-outlabels/dist/chartjs-plugin-piechart-outlabels.min.js?v=', true) }}{{ $version}}"></script>
 	<script src="{{ $U('/packages/chartjs-plugin-trendline/dist/chartjs-plugin-trendline.min.js?v=', true) }}{{ $version}}"></script>
 	@endif
 
-	<script src="{{ $U('/js/extensions.js?v=', true) }}{{ $version }}"></script>
-	<script src="{{ $U('/js/grocy_menu_layout.js?v=', true) }}{{ $version }}"></script>
-	<script src="{{ $U('/js/grocy.js?v=', true) }}{{ $version }}"></script>
-	<script src="{{ $U('/js/daily_process_flow.js?v=', true) }}{{ $version }}"></script>
+	<script src="{{ $U('/js/extensions.js?v=', true) }}{{ daily_asset_version('/js/extensions.js') }}"></script>
+	<script src="{{ $U('/js/grocy_menu_layout.js?v=', true) }}{{ daily_asset_version('/js/grocy_menu_layout.js') }}"></script>
+	<script src="{{ $U('/js/grocy.js?v=', true) }}{{ daily_asset_version('/js/grocy.js') }}"></script>
+	<script src="{{ $U('/js/daily_process_flow.js?v=', true) }}{{ daily_asset_version('/js/daily_process_flow.js') }}"></script>
 	@if(GROCY_AUTHENTICATED && !$embedded)
-	<script src="{{ $U('/js/dairy_mobile.js?v=', true) }}{{ $version }}"></script>
-	<script src="{{ $U('/js/dairy_offline.js?v=', true) }}{{ $version }}"></script>
-	<script src="{{ $U('/js/dairy_ui.js?v=', true) }}{{ $version }}"></script>
-	<script src="{{ $U('/js/dairy_scan.js?v=', true) }}{{ $version }}"></script>
+	<script src="{{ $U('/js/dairy_mobile.js?v=', true) }}{{ daily_asset_version('/js/dairy_mobile.js') }}"></script>
+	<script src="{{ $U('/js/dairy_offline.js?v=', true) }}{{ daily_asset_version('/js/dairy_offline.js') }}"></script>
+	<script src="{{ $U('/js/dairy_ui.js?v=', true) }}{{ daily_asset_version('/js/dairy_ui.js') }}"></script>
+	<script src="{{ $U('/js/dairy_scan.js?v=', true) }}{{ daily_asset_version('/js/dairy_scan.js') }}"></script>
 	@endif
-	<script src="{{ $U('/js/grocy_dbchangedhandling.js?v=', true) }}{{ $version }}"></script>
-	<script src="{{ $U('/js/grocy_wakelockhandling.js?v=', true) }}{{ $version }}"></script>
-	<script src="{{ $U('/js/grocy_nightmode.js?v=', true) }}{{ $version }}"></script>
-	<script src="{{ $U('/js/grocy_clock.js?v=', true) }}{{ $version }}"></script>
+	<script src="{{ $U('/js/grocy_dbchangedhandling.js?v=', true) }}{{ daily_asset_version('/js/grocy_dbchangedhandling.js') }}"></script>
+	<script src="{{ $U('/js/grocy_wakelockhandling.js?v=', true) }}{{ daily_asset_version('/js/grocy_wakelockhandling.js') }}"></script>
+	<script src="{{ $U('/js/grocy_nightmode.js?v=', true) }}{{ daily_asset_version('/js/grocy_nightmode.js') }}"></script>
+	<script src="{{ $U('/js/grocy_clock.js?v=', true) }}{{ daily_asset_version('/js/grocy_clock.js') }}"></script>
 
 	@if(in_array('datatables', $GROCY_REQUIRED_FRONTEND_PACKAGES))
-	<script src="{{ $U('/js/grocy_datatables.js?v=', true) }}{{ $version }}"></script>
+	<script src="{{ $U('/js/grocy_datatables.js?v=', true) }}{{ daily_asset_version('/js/grocy_datatables.js') }}"></script>
 	@endif
 	@if(in_array('summernote', $GROCY_REQUIRED_FRONTEND_PACKAGES))
-	<script src="{{ $U('/js/grocy_summernote.js?v=', true) }}{{ $version }}"></script>
+	<script src="{{ $U('/js/grocy_summernote.js?v=', true) }}{{ daily_asset_version('/js/grocy_summernote.js') }}"></script>
 	@endif
 
 	@if(in_array('chartjs', $GROCY_REQUIRED_FRONTEND_PACKAGES))
-	<script src="{{ $U('/js/dairy_charts.js?v=', true) }}{{ $version }}"></script>
+	<script src="{{ $U('/js/dairy_charts.js?v=', true) }}{{ daily_asset_version('/js/dairy_charts.js') }}"></script>
 	@endif
 
 	<script src="{{ $U('/js/daily_crystal.js?v=', true) }}{{ daily_asset_version('/js/daily_crystal.js') }}"></script>
+	@if (GROCY_AUTHENTICATED)
+	<script src="{{ $U('/js/daily_subscription.js?v=', true) }}{{ daily_asset_version('/js/daily_subscription.js') }}"></script>
+	@endif
+	<script type="application/json" id="dailyFilterRoutes" data-base="{{ $U('/') }}">{!! json_encode(\Grocy\Helpers\DailyFilters::ROUTES) !!}</script>
+	<script src="{{ $U('/js/daily_filters.js?v=', true) }}{{ daily_asset_version('/js/daily_filters.js') }}"></script>
 	@stack('pageScripts')
 	@stack('componentScripts')
 	@if($viewJsExists ?? true)
@@ -901,20 +1083,8 @@
 		});
 	});
 
-	// Contador real de alertas (merma, vencimiento, frío) en el header
-	$(document).ready(function() {
-		var params = new URLSearchParams(window.location.search);
-		var url = Grocy.BaseUrl + '/api/ai/alerts' + (params.get('branch_id') ? '?branch_id=' + encodeURIComponent(params.get('branch_id')) : '');
-		$.getJSON(url, function(alerts) {
-			var n = Array.isArray(alerts) ? alerts.filter(function(a) { return a.severity === 'danger'; }).length : 0;
-			if (n > 0) {
-				$('#headerAlertsBadge').text(n).removeClass('d-none');
-				if (window.DairyNav) { DairyNav.setBadge('alerts', n); }
-				$('#headerAlertsButton').attr('title', n + ' alertas críticas de merma y cadena de frío');
-			}
-			if (window.DairyMobile && DairyMobile.notifyAlerts) { DairyMobile.notifyAlerts(alerts); }
-		});
-	});
+	// El contador del header dependía de /api/ai/alerts, eliminado junto con el asesor IA: la petición fallaba en
+	// cada página. El badge queda oculto hasta conectarlo a una fuente de alertas vigente.
 
 	$(document).ready(function() {
 		var modal = $('#commandPaletteModal');

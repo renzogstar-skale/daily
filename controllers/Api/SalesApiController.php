@@ -427,4 +427,105 @@ class SalesApiController extends BaseApiController
 			return $this->GenericErrorResponse($response, $e->getMessage());
 		}
 	}
+
+	public function GetDepartmentPerformance(Request $request, Response $response, array $args)
+	{
+		User::CheckPermission($request, User::PERMISSION_SALES_VIEW);
+		try
+		{
+			$params = $request->getQueryParams();
+			$data = \Grocy\Services\DepartmentPerformanceService::GetInstance()->GetDepartmentPerformance($params);
+			return $this->ApiResponse($response, $data);
+		}
+		catch (\Throwable $e)
+		{
+			return $this->GenericErrorResponse($response, $e->getMessage());
+		}
+	}
+
+	/** Comparativo TY vs. LY por departamento (filtros compartidos); ?drill=<clave> agrega el desglose del departamento */
+	public function GetTyLyComparison(Request $request, Response $response, array $args)
+	{
+		User::CheckPermission($request, User::PERMISSION_SALES_VIEW);
+		try
+		{
+			$params = $request->getQueryParams();
+			$drill = !empty($params['drill']) ? strval($params['drill']) : null;
+			$data = \Grocy\Services\DepartmentPerformanceService::GetInstance()->GetTyLyComparison(\Grocy\Helpers\DailyFilters::FromQuery($params), $drill);
+			return $this->ApiResponse($response, $data);
+		}
+		catch (\Throwable $e)
+		{
+			return $this->GenericErrorResponse($response, $e->getMessage());
+		}
+	}
+
+	public function GetDepartmentCategoryProducts(Request $request, Response $response, array $args)
+	{
+		User::CheckPermission($request, User::PERMISSION_SALES_VIEW);
+		try
+		{
+			$groupId = intval($args['groupId'] ?? 0);
+			$params = $request->getQueryParams();
+			$data = \Grocy\Services\DepartmentPerformanceService::GetInstance()->GetCategoryProducts($groupId, $params);
+			return $this->ApiResponse($response, $data);
+		}
+		catch (\Throwable $e)
+		{
+			return $this->GenericErrorResponse($response, $e->getMessage());
+		}
+	}
+
+	public function LookupSaleForReturn(Request $request, Response $response, array $args)
+	{
+		User::CheckPermission($request, User::PERMISSION_SALES_VIEW);
+		try
+		{
+			$params = $request->getQueryParams();
+			$q = $params['q'] ?? '';
+			$branchId = isset($params['branch_id']) && $params['branch_id'] !== '' ? intval($params['branch_id']) : null;
+			$sales = \Grocy\Services\PosReturnsService::GetInstance()->LookupSale($q, $branchId);
+			return $this->ApiResponse($response, ['sales' => $sales]);
+		}
+		catch (\Throwable $e)
+		{
+			return $this->GenericErrorResponse($response, $e->getMessage());
+		}
+	}
+
+	public function ValidatePosReturn(Request $request, Response $response, array $args)
+	{
+		User::CheckPermission($request, User::PERMISSION_SALES_VIEW);
+		try
+		{
+			$b = $request->getParsedBody();
+			$saleId = intval($b['sale_id'] ?? 0);
+			$saleItemId = intval($b['sale_item_id'] ?? 0);
+			$qty = floatval($b['quantity'] ?? 1.0);
+			$condition = strval($b['condition_state'] ?? 'sin_uso');
+			$resolution = strval($b['resolution'] ?? 'reembolso');
+			$val = \Grocy\Services\PosReturnsService::GetInstance()->ValidateReturn($saleId, $saleItemId, $qty, $condition, $resolution);
+			return $this->ApiResponse($response, $val);
+		}
+		catch (\Throwable $e)
+		{
+			return $this->GenericErrorResponse($response, $e->getMessage(), 400);
+		}
+	}
+
+	public function ProcessPosReturn(Request $request, Response $response, array $args)
+	{
+		User::CheckPermission($request, User::PERMISSION_SALES_POS);
+		try
+		{
+			$b = $request->getParsedBody();
+			$userId = GROCY_USER_ID;
+			$res = \Grocy\Services\PosReturnsService::GetInstance()->ProcessPosReturn($b, $userId);
+			return $this->ApiResponse($response, $res);
+		}
+		catch (\Throwable $e)
+		{
+			return $this->GenericErrorResponse($response, $e->getMessage(), 400);
+		}
+	}
 }

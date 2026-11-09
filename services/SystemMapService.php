@@ -151,7 +151,6 @@ class SystemMapService extends BaseService
 				}
 			}
 			$paths = array_values(array_unique($paths));
-			// El simulador vive dentro de /ai-advisor: no se apropia de sus rutas
 			$owned = $tab ? [] : $paths;
 			foreach ($owned as $p)
 			{

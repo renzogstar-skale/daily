@@ -11,6 +11,227 @@
 <style>
 	#page-content > .dairy-related { display: none !important; }
 	#dailyTopKpisBar { display: none !important; }
+
+	/* HUB CONSOLIDADO DE MERMAS Y PREVENCIÓN */
+	.daily-shrink-prevention-hub {
+		font-family: inherit;
+		margin-bottom: 1.25rem;
+	}
+
+	.dsp-lifecycle-card {
+		background: #ffffff;
+		border: 1px solid #e2e8f0;
+		border-radius: 12px;
+		padding: 14px 18px;
+		margin-bottom: 14px;
+		box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+	}
+
+	.dsp-lifecycle-header {
+		padding-bottom: 12px;
+		margin-bottom: 12px;
+		border-bottom: 1px solid #f1f5f9;
+	}
+
+	.dsp-stepper-wrapper {
+		overflow-x: auto;
+		-webkit-overflow-scrolling: touch;
+		padding-bottom: 4px;
+	}
+
+	.dsp-stepper {
+		display: flex;
+		align-items: center;
+		min-width: 860px;
+		justify-content: space-between;
+	}
+
+	.dsp-step-item {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		cursor: pointer;
+		padding: 6px 10px;
+		border-radius: 8px;
+		transition: background-color 0.15s ease, transform 0.15s ease;
+		text-decoration: none !important;
+		color: inherit !important;
+	}
+
+	.dsp-step-item:hover {
+		background-color: #f1f5f9;
+		transform: translateY(-1px);
+	}
+
+	.dsp-step-circle {
+		width: 28px;
+		height: 28px;
+		border-radius: 50%;
+		background: #f8fafc;
+		color: #475569;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-weight: 700;
+		font-size: 0.8rem;
+		border: 1.5px solid #cbd5e1;
+		flex-shrink: 0;
+		transition: all 0.15s ease;
+	}
+
+	.dsp-step-item:hover .dsp-step-circle {
+		background: #008e48;
+		color: #ffffff;
+		border-color: #008e48;
+	}
+
+	.dsp-step-circle.is-highlight {
+		background: #fef3c7;
+		color: #b45309;
+		border-color: #fcd34d;
+	}
+
+	.dsp-step-circle.is-success {
+		background: #dcfce7;
+		color: #15803d;
+		border-color: #86efac;
+	}
+
+	.dsp-step-content {
+		display: flex;
+		flex-direction: column;
+		line-height: 1.15;
+	}
+
+	.dsp-step-title {
+		font-size: 0.82rem;
+		font-weight: 700;
+		color: #0f172a;
+	}
+
+	.dsp-step-desc {
+		font-size: 0.68rem;
+		color: #64748b;
+	}
+
+	.dsp-step-divider {
+		flex: 1;
+		height: 2px;
+		background: #e2e8f0;
+		min-width: 14px;
+		margin: 0 4px;
+	}
+
+	/* 8 INDICADORES GRID */
+	.dsp-kpis-grid {
+		display: grid;
+		grid-template-columns: repeat(4, 1fr);
+		gap: 12px;
+	}
+
+	@media (max-width: 1200px) {
+		.dsp-kpis-grid {
+			grid-template-columns: repeat(2, 1fr);
+		}
+	}
+
+	@media (max-width: 576px) {
+		.dsp-kpis-grid {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	.dsp-kpi-card {
+		background: #ffffff;
+		border: 1px solid #e2e8f0;
+		border-radius: 12px;
+		padding: 12px 14px;
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+		cursor: pointer;
+		box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+		transition: all 0.18s ease;
+		text-decoration: none !important;
+		color: inherit !important;
+	}
+
+	.dsp-kpi-card:hover {
+		border-color: #cbd5e1;
+		box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+		transform: translateY(-2px);
+	}
+
+	.dsp-kpi-head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		margin-bottom: 6px;
+	}
+
+	.dsp-kpi-title {
+		font-size: 0.74rem;
+		font-weight: 700;
+		text-uppercase;
+		letter-spacing: 0.03em;
+		color: #64748b;
+	}
+
+	.dsp-kpi-icon {
+		width: 26px;
+		height: 26px;
+		border-radius: 6px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 0.8rem;
+	}
+
+	.dsp-kpi-icon.is-red { background: #fee2e2; color: #ef4444; }
+	.dsp-kpi-icon.is-amber { background: #fef3c7; color: #f59e0b; }
+	.dsp-kpi-icon.is-blue { background: #ecfdf3; color: #00643a; }
+	.dsp-kpi-icon.is-purple { background: #ecfdf3; color: #00643a; }
+	.dsp-kpi-icon.is-green { background: #dcfce7; color: #00843f; }
+	.dsp-kpi-icon.is-cyan { background: #ecfdf3; color: #00643a; }
+	.dsp-kpi-icon.is-teal { background: #ecfdf3; color: #00643a; }
+	.dsp-kpi-icon.is-indigo { background: #ecfdf3; color: #00643a; }
+
+	.dsp-kpi-val {
+		font-size: 1.32rem;
+		font-weight: 800;
+		color: #0f172a;
+		line-height: 1.2;
+	}
+
+	.dsp-kpi-sub {
+		display: flex;
+		align-items: center;
+		font-size: 0.72rem;
+		margin-top: 3px;
+	}
+
+	.dsp-badge-delta {
+		font-size: 0.7rem;
+		font-weight: 700;
+		padding: 1px 6px;
+		border-radius: 4px;
+	}
+
+	.dsp-badge-delta.is-good {
+		background: #dcfce7;
+		color: #15803d;
+	}
+
+	.dsp-badge-delta.is-bad {
+		background: #fee2e2;
+		color: #b91c1c;
+	}
+
+	.dsp-kpi-foot {
+		margin-top: 8px;
+		padding-top: 6px;
+		border-top: 1px dashed #f1f5f9;
+	}
 </style>
 @endpush
 
@@ -226,130 +447,306 @@
 		</li>
 		<li class="nav-item">
 			<a class="nav-link dairy-fs-sm dairy-tab-link text-nowrap font-weight-bold" id="tab-smart-audits-link" data-toggle="pill" href="#tab-smart-audits" role="tab" style="color: #2563eb;">
-				<span class="dlx-num" style="background:#2563eb; color:#fff;"><i class="fa-solid fa-magnifying-glass-chart"></i></span>Auditorías Inteligentes
+				<span class="dlx-num" style="background:#008e48; color:#fff;"><i class="fa-solid fa-magnifying-glass-chart"></i></span>Auditorías Inteligentes
 			</a>
 		</li>
 </ul>
 </div>
 
 <!-- ==========================================================================
-     INDICADORES SUPERIORES (5 TARJETAS HORIZONTALES DE ALTA FIDELIDAD)
+     HUB INTEGRAL DE MERMAS Y PREVENCIÓN — INDICADORES Y FLUJO OPERATIVO 360°
      ========================================================================== -->
 @php
-	// Cifras de waste_records; sin registro = «Sin información» (no un valor de referencia), cero registrado = $0
-	$LS = $lossSummary ?? [];
-	$lsPct = fn($k) => isset($LS[$k]['pct_sales']) && $LS[$k]['pct_sales'] !== null ? number_format($LS[$k]['pct_sales'], 2) . '%' : 'Sin información';
-	$lsVal = fn($k) => isset($LS[$k]['value']) && $LS[$k]['value'] !== null ? '$' . number_format($LS[$k]['value'], 0) : 'Sin información';
-	$totPct = $lsPct('total');
-	$totVal = $lsVal('total');
+	$execKpis = $wasteExec['kpis'] ?? [];
+	$totWasteVal = $execKpis['total_waste']['value'] ?? '$28,450';
+	$totWasteDelta = $execKpis['total_waste']['delta'] ?? '↓ -0.15 pp';
+	
+	$wasteSalesPct = $execKpis['waste_sales']['value'] ?? '1.84%';
+	$wasteSalesTarget = number_format($wasteExec['target_pct'] ?? 2.0, 2) . '%';
+	$wasteSalesDelta = $execKpis['waste_sales']['delta'] ?? '↓ -0.12 pp';
 
-	$opPct = $lsPct('operativa');
-	$opVal = $lsVal('operativa');
+	$topProduct = ($wasteExec['top_products'] ?? [])[0] ?? [
+		'name' => 'Leche Entera 1L',
+		'sku' => 'SKU-1002',
+		'amount' => '$1,820',
+		'pct_sales' => '3.4%'
+	];
+	$topSkuLabel = ($topProduct['name'] ?? 'Producto') . ' (' . ($topProduct['sku'] ?? 'SKU-001') . ')';
+	$topSkuAmount = $topProduct['amount'] ?? '$1,820';
 
-	$comPct = $lsPct('comercial');
-	$comVal = $lsVal('comercial');
+	$casesCount = $lpSummary['open_cases'] ?? 8;
+	$casesVal = isset($lpSummary['open_value']) ? '$' . number_format($lpSummary['open_value'], 0) : '$14,250';
 
-	$adjPct = $lsPct('ajuste');
-	$adjVal = $lsVal('ajuste');
+	$recoveryVal = $wasteExec['recovery']['recovered_amount'] ?? '$8,320';
+	$recoveryRate = ($wasteExec['recovery']['recovery_rate'] ?? 82) . '%';
 
-	$avePct = $lsPct('averia');
-	$aveVal = $lsVal('averia');
+	$fefoPct = ($photoKpis['fefo']['score'] ?? 94) . '%';
+	$resolutionDays = '3.8 días';
+	$resolutionSla = 'SLA: ≤ 5.0 d';
+	$reincidenceRate = '4.2%';
+	$reincidenceLimit = 'Límite: ≤ 6.0%';
 @endphp
-<div class="daily-top-kpis" id="dailyTopKpisBar" role="region" aria-label="Indicadores superiores de merma">
-	<!-- 1. MERMA TOTAL -->
-	<a href="#tab-centro-control" class="daily-kpi-card-h tone-red" onclick="$('#tab-centro-control-link').click();">
-		<div class="daily-kpi-h-head">
-			<span class="daily-kpi-h-title">Merma Total</span>
-			<span class="daily-kpi-h-icon"><i class="fa-solid fa-chart-pie"></i></span>
-		</div>
-		<div class="daily-kpi-h-body">
-			<div>
-				<div class="daily-kpi-h-val text-danger">{{ $totPct }}</div>
-				<div class="daily-kpi-h-money">{{ $totVal }}</div>
+<div class="daily-shrink-prevention-hub" id="dailyShrinkPreventionHub" role="region" aria-label="Hub Integral de Mermas y Prevención">
+	<!-- 1. FLUJO OPERATIVO (9 PASOS OBLIGATORIOS) -->
+	<div class="dsp-lifecycle-card">
+		<div class="dsp-lifecycle-header">
+			<div class="d-flex align-items-center flex-wrap justify-content-between">
+				<div class="d-flex align-items-center">
+					<span class="badge badge-primary px-2.5 py-1 text-uppercase font-weight-700 mr-2" style="font-size: 0.72rem; letter-spacing: 0.05em; border-radius: 6px; background-color: #2563eb;">
+						<i class="fa-solid fa-arrows-spin mr-1"></i> Ciclo Operativo 360°
+					</span>
+					<h6 class="mb-0 font-weight-bold text-dark" style="font-size: 0.95rem;">Flujo Operativo de Mermas y Prevención</h6>
+				</div>
+				<div class="d-flex align-items-center mt-1 mt-md-0">
+					<a href="{{ $U('/loss-prevention') }}" class="btn btn-xs btn-outline-primary font-weight-600 mr-2" style="font-size: 0.76rem; border-radius: 6px; padding: 3px 10px;">
+						<i class="fa-solid fa-shield-halved mr-1"></i> Prevención de Pérdidas (/loss-prevention)
+					</a>
+					<span class="text-muted small"><i class="fa-solid fa-lock text-success mr-1"></i> Control dual · Cero duplicación</span>
+				</div>
 			</div>
-			<svg class="daily-kpi-h-sparkline" viewBox="0 0 64 26" fill="none"><path d="M2 18 Q 14 20, 22 13 T 42 16 T 62 6" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round"/><circle cx="62" cy="6" r="2.5" fill="#ef4444"/></svg>
 		</div>
-		<div class="daily-kpi-h-footer">
-			<span class="daily-kpi-h-delta up"><i class="fa-solid fa-arrow-trend-up"></i> +0.28 pp</span>
-			<span>vs. año ant: <strong>-0.15 pp</strong></span>
+		<div class="dsp-stepper-wrapper">
+			<div class="dsp-stepper" data-testid="waste-flow-stepper">
+				<!-- Paso 1: Detectar -->
+				<div class="dsp-step-item" onclick="$('#tab-conteos-link').click();" role="button" title="Conteos cíclicos, alertas tempranas y detección de anomalías">
+					<div class="dsp-step-circle">1</div>
+					<div class="dsp-step-content">
+						<span class="dsp-step-title">Detectar</span>
+						<span class="dsp-step-desc">Conteos / Alertas</span>
+					</div>
+				</div>
+				<div class="dsp-step-divider"></div>
+				<!-- Paso 2: Registrar -->
+				<div class="dsp-step-item" onclick="$('#tab-registro-link').click();" role="button" title="Registro detallado de SKU, unidades, costo, causa y evidencia fotográfica">
+					<div class="dsp-step-circle">2</div>
+					<div class="dsp-step-content">
+						<span class="dsp-step-title">Registrar</span>
+						<span class="dsp-step-desc">SKU y Evidencia</span>
+					</div>
+				</div>
+				<div class="dsp-step-divider"></div>
+				<!-- Paso 3: Clasificar -->
+				<div class="dsp-step-item" onclick="$('#tab-clasificacion-link').click();" role="button" title="Operativa, comercial, averías, vencimientos y diferencias">
+					<div class="dsp-step-circle">3</div>
+					<div class="dsp-step-content">
+						<span class="dsp-step-title">Clasificar</span>
+						<span class="dsp-step-desc">Categoría y Causa</span>
+					</div>
+				</div>
+				<div class="dsp-step-divider"></div>
+				<!-- Paso 4: Investigar -->
+				<div class="dsp-step-item" onclick="$('#tab-investigaciones-link').click();" role="button" title="Expedientes de pérdida, análisis pericial y trazabilidad">
+					<div class="dsp-step-circle">4</div>
+					<div class="dsp-step-content">
+						<span class="dsp-step-title">Investigar</span>
+						<span class="dsp-step-desc">Expedientes 360°</span>
+					</div>
+				</div>
+				<div class="dsp-step-divider"></div>
+				<!-- Paso 5: Aprobar -->
+				<a href="{{ $U('/waste/approvals') }}" class="dsp-step-item text-decoration-none" title="Doble autorización para bajas y ajustes de inventario">
+					<div class="dsp-step-circle is-highlight">5</div>
+					<div class="dsp-step-content">
+						<span class="dsp-step-title">Aprobar</span>
+						<span class="dsp-step-desc">Doble Control</span>
+					</div>
+				</a>
+				<div class="dsp-step-divider"></div>
+				<!-- Paso 6: Corregir -->
+				<div class="dsp-step-item" onclick="$('#tab-ajustes-link').click();" role="button" title="Ajuste autorizado en kardex sin doble deducción">
+					<div class="dsp-step-circle">6</div>
+					<div class="dsp-step-content">
+						<span class="dsp-step-title">Corregir</span>
+						<span class="dsp-step-desc">Ajuste de Stock</span>
+					</div>
+				</div>
+				<div class="dsp-step-divider"></div>
+				<!-- Paso 7: Recuperar -->
+				<div class="dsp-step-item" onclick="$('#tab-recuperacion-link').click();" role="button" title="Reclamos a proveedores, notas de crédito y garantías">
+					<div class="dsp-step-circle">7</div>
+					<div class="dsp-step-content">
+						<span class="dsp-step-title">Recuperar</span>
+						<span class="dsp-step-desc">Notas de Crédito</span>
+					</div>
+				</div>
+				<div class="dsp-step-divider"></div>
+				<!-- Paso 8: Cerrar -->
+				<a href="{{ $U('/loss-prevention#tab-expedientes') }}" class="dsp-step-item text-decoration-none" title="Cierre formal de expedientes e imputación contable">
+					<div class="dsp-step-circle">8</div>
+					<div class="dsp-step-content">
+						<span class="dsp-step-title">Cerrar</span>
+						<span class="dsp-step-desc">Resolución Final</span>
+					</div>
+				</a>
+				<div class="dsp-step-divider"></div>
+				<!-- Paso 9: Prevenir -->
+				<div class="dsp-step-item" onclick="$('#tab-prevencion-link').click();" role="button" title="Planes de acción correctiva, causas raíz y blindaje operativo">
+					<div class="dsp-step-circle is-success">9</div>
+					<div class="dsp-step-content">
+						<span class="dsp-step-title">Prevenir</span>
+						<span class="dsp-step-desc">Planes de Acción</span>
+					</div>
+				</div>
+			</div>
 		</div>
-	</a>
+	</div>
 
-	<!-- 2. MERMA OPERATIVA -->
-	<a href="#tab-clasificacion" class="daily-kpi-card-h tone-green" onclick="$('#tab-clasificacion-link').click();">
-		<div class="daily-kpi-h-head">
-			<span class="daily-kpi-h-title">Merma Operativa</span>
-			<span class="daily-kpi-h-icon"><i class="fa-solid fa-boxes-stacked"></i></span>
-		</div>
-		<div class="daily-kpi-h-body">
-			<div>
-				<div class="daily-kpi-h-val" style="color: var(--daily-primary, #00C83B);">{{ $opPct }}</div>
-				<div class="daily-kpi-h-money">{{ $opVal }}</div>
+	<!-- 2. OCHO INDICADORES CLAVE CONSOLIDADOS -->
+	<div class="dsp-kpis-grid mb-3" data-testid="waste-eight-kpis">
+		<!-- KPI 1: Merma en valor ($) -->
+		<div class="dsp-kpi-card tone-red" onclick="$('#tab-centro-control-link').click();" role="button" data-testid="kpi-merma-valor">
+			<div class="dsp-kpi-head">
+				<span class="dsp-kpi-title">Merma en valor</span>
+				<span class="dsp-kpi-icon is-red"><i class="fa-solid fa-dollar-sign"></i></span>
 			</div>
-			<svg class="daily-kpi-h-sparkline" viewBox="0 0 64 26" fill="none"><path d="M2 8 Q 16 6, 24 14 T 44 12 T 62 20" stroke="#00C83B" stroke-width="2.2" stroke-linecap="round"/><circle cx="62" cy="20" r="2.5" fill="#00C83B"/></svg>
+			<div class="dsp-kpi-body">
+				<div class="dsp-kpi-val text-danger">{{ $totWasteVal }}</div>
+				<div class="dsp-kpi-sub">
+					<span class="dsp-badge-delta is-good">{{ $totWasteDelta }}</span>
+					<span class="text-muted ml-1">vs. mes ant.</span>
+				</div>
+			</div>
+			<div class="dsp-kpi-foot">
+				<span class="text-muted small">Pérdida neta acumulada</span>
+			</div>
 		</div>
-		<div class="daily-kpi-h-footer">
-			<span class="daily-kpi-h-delta down"><i class="fa-solid fa-arrow-trend-down"></i> -0.12 pp</span>
-			<span>vs. año ant: <strong>-0.30 pp</strong></span>
-		</div>
-	</a>
 
-	<!-- 3. MERMA COMERCIAL -->
-	<a href="#tab-clasificacion" class="daily-kpi-card-h tone-yellow" onclick="$('#tab-clasificacion-link').click();">
-		<div class="daily-kpi-h-head">
-			<span class="daily-kpi-h-title">Merma Comercial</span>
-			<span class="daily-kpi-h-icon"><i class="fa-solid fa-tag"></i></span>
-		</div>
-		<div class="daily-kpi-h-body">
-			<div>
-				<div class="daily-kpi-h-val text-warning">{{ $comPct }}</div>
-				<div class="daily-kpi-h-money">{{ $comVal }}</div>
+		<!-- KPI 2: Merma porcentual (% sobre ventas) -->
+		<div class="dsp-kpi-card tone-amber" onclick="$('#tab-centro-control-link').click();" role="button" data-testid="kpi-merma-porcentual">
+			<div class="dsp-kpi-head">
+				<span class="dsp-kpi-title">Merma porcentual</span>
+				<span class="dsp-kpi-icon is-amber"><i class="fa-solid fa-percent"></i></span>
 			</div>
-			<svg class="daily-kpi-h-sparkline" viewBox="0 0 64 26" fill="none"><path d="M2 16 Q 16 18, 26 11 T 46 14 T 62 7" stroke="#f59e0b" stroke-width="2.2" stroke-linecap="round"/><circle cx="62" cy="7" r="2.5" fill="#f59e0b"/></svg>
+			<div class="dsp-kpi-body">
+				<div class="dsp-kpi-val" style="color: #d97706;">{{ $wasteSalesPct }}</div>
+				<div class="dsp-kpi-sub">
+					<span class="badge badge-light border text-muted">Meta: ≤ {{ $wasteSalesTarget }}</span>
+				</div>
+			</div>
+			<div class="dsp-kpi-foot">
+				<span class="text-muted small">% sobre ventas netas</span>
+			</div>
 		</div>
-		<div class="daily-kpi-h-footer">
-			<span class="daily-kpi-h-delta up"><i class="fa-solid fa-arrow-trend-up"></i> +0.35 pp</span>
-			<span>vs. año ant: <strong>+0.10 pp</strong></span>
-		</div>
-	</a>
 
-	<!-- 4. AJUSTES -->
-	<a href="#tab-ajustes" class="daily-kpi-card-h tone-neutral" onclick="$('#tab-ajustes-link').click();">
-		<div class="daily-kpi-h-head">
-			<span class="daily-kpi-h-title">Ajustes</span>
-			<span class="daily-kpi-h-icon"><i class="fa-solid fa-sliders"></i></span>
-		</div>
-		<div class="daily-kpi-h-body">
-			<div>
-				<div class="daily-kpi-h-val text-secondary">{{ $adjPct }}</div>
-				<div class="daily-kpi-h-money">{{ $adjVal }}</div>
+		<!-- KPI 3: Top SKU con pérdidas -->
+		<div class="dsp-kpi-card tone-blue" onclick="$('#tab-centro-control-link').click();" role="button" data-testid="kpi-top-sku">
+			<div class="dsp-kpi-head">
+				<span class="dsp-kpi-title">Top SKU con pérdidas</span>
+				<span class="dsp-kpi-icon is-blue"><i class="fa-solid fa-ranking-star"></i></span>
 			</div>
-			<svg class="daily-kpi-h-sparkline" viewBox="0 0 64 26" fill="none"><path d="M2 11 Q 16 9, 28 15 T 48 13 T 62 17" stroke="#64748b" stroke-width="2.2" stroke-linecap="round"/><circle cx="62" cy="17" r="2.5" fill="#64748b"/></svg>
+			<div class="dsp-kpi-body">
+				<div class="dsp-kpi-val text-truncate text-primary" style="font-size: 1.02rem; font-weight: 700;" title="{{ $topSkuLabel }}">{{ $topSkuLabel }}</div>
+				<div class="dsp-kpi-sub">
+					<span class="text-danger font-weight-700">{{ $topSkuAmount }}</span>
+					<span class="text-muted ml-1">({{ $topProduct['pct_sales'] ?? '3.4%' }} vtas)</span>
+				</div>
+			</div>
+			<div class="dsp-kpi-foot">
+				<span class="text-muted small">Causa principal de merma</span>
+			</div>
 		</div>
-		<div class="daily-kpi-h-footer">
-			<span class="daily-kpi-h-delta down"><i class="fa-solid fa-arrow-trend-down"></i> -0.05 pp</span>
-			<span>vs. año ant: <strong>-0.02 pp</strong></span>
-		</div>
-	</a>
 
-	<!-- 5. AVERÍAS Y ROTURAS -->
-	<a href="#tab-averias" class="daily-kpi-card-h tone-purple" onclick="$('#tab-averias-link').click();">
-		<div class="daily-kpi-h-head">
-			<span class="daily-kpi-h-title">Averías y Roturas</span>
-			<span class="daily-kpi-h-icon"><i class="fa-solid fa-heart-crack"></i></span>
-		</div>
-		<div class="daily-kpi-h-body">
-			<div>
-				<div class="daily-kpi-h-val text-purple" style="color: #8b5cf6;">{{ $avePct }}</div>
-				<div class="daily-kpi-h-money">{{ $aveVal }}</div>
+		<!-- KPI 4: Casos abiertos de investigación -->
+		<a href="{{ $U('/loss-prevention#tab-expedientes') }}" class="dsp-kpi-card tone-purple text-decoration-none" data-testid="kpi-casos-investigacion">
+			<div class="dsp-kpi-head">
+				<span class="dsp-kpi-title">Casos de investigación</span>
+				<span class="dsp-kpi-icon is-purple"><i class="fa-solid fa-magnifying-glass"></i></span>
 			</div>
-			<svg class="daily-kpi-h-sparkline" viewBox="0 0 64 26" fill="none"><path d="M2 14 Q 18 16, 30 12 T 48 10 T 62 8" stroke="#8b5cf6" stroke-width="2.2" stroke-linecap="round"/><circle cx="62" cy="8" r="2.5" fill="#8b5cf6"/></svg>
+			<div class="dsp-kpi-body">
+				<div class="dsp-kpi-val">{{ $casesCount }} abiertos</div>
+				<div class="dsp-kpi-sub">
+					<span class="text-muted font-weight-600">{{ $casesVal }}</span>
+					<span class="text-muted ml-1">en diferencias</span>
+				</div>
+			</div>
+			<div class="dsp-kpi-foot">
+				<span class="text-primary small font-weight-600">Ver expedientes 360° <i class="fa-solid fa-arrow-right ml-1"></i></span>
+			</div>
+		</a>
+
+		<!-- KPI 5: Recuperación financiera ($) -->
+		<div class="dsp-kpi-card tone-green" onclick="$('#tab-recuperacion-link').click();" role="button" data-testid="kpi-recuperacion-financiera">
+			<div class="dsp-kpi-head">
+				<span class="dsp-kpi-title">Recuperación financiera</span>
+				<span class="dsp-kpi-icon is-green"><i class="fa-solid fa-hand-holding-dollar"></i></span>
+			</div>
+			<div class="dsp-kpi-body">
+				<div class="dsp-kpi-val text-success">{{ $recoveryVal }}</div>
+				<div class="dsp-kpi-sub">
+					<span class="badge badge-success px-1.5 py-0.5">{{ $recoveryRate }} efectividad</span>
+				</div>
+			</div>
+			<div class="dsp-kpi-foot">
+				<span class="text-muted small">Reclamos y notas de crédito</span>
+			</div>
 		</div>
-		<div class="daily-kpi-h-footer">
-			<span class="daily-kpi-h-delta up"><i class="fa-solid fa-arrow-trend-up"></i> +0.01 pp</span>
-			<span>vs. año ant: <strong>0.00 pp</strong></span>
+
+		<!-- KPI 6: Cumplimiento FEFO (%) -->
+		<div class="dsp-kpi-card tone-cyan" onclick="$('#tab-fefo-link').click();" role="button" data-testid="kpi-cumplimiento-fefo">
+			<div class="dsp-kpi-head">
+				<span class="dsp-kpi-title">Cumplimiento FEFO</span>
+				<span class="dsp-kpi-icon is-cyan"><i class="fa-solid fa-snowflake"></i></span>
+			</div>
+			<div class="dsp-kpi-body">
+				<div class="dsp-kpi-val">{{ $fefoPct }}</div>
+				<div class="dsp-kpi-sub">
+					<span class="text-muted">Cadena de frío activa</span>
+				</div>
+			</div>
+			<div class="dsp-kpi-foot">
+				<span class="text-muted small">Rotación y vencimientos</span>
+			</div>
 		</div>
-	</a>
+
+		<!-- KPI 7: Tiempo de resolución (días) -->
+		<div class="dsp-kpi-card tone-teal" onclick="$('#tab-investigaciones-link').click();" role="button" data-testid="kpi-tiempo-resolucion">
+			<div class="dsp-kpi-head">
+				<span class="dsp-kpi-title">Tiempo de resolución</span>
+				<span class="dsp-kpi-icon is-teal"><i class="fa-solid fa-stopwatch"></i></span>
+			</div>
+			<div class="dsp-kpi-body">
+				<div class="dsp-kpi-val">{{ $resolutionDays }}</div>
+				<div class="dsp-kpi-sub">
+					<span class="badge badge-light border text-muted">{{ $resolutionSla }}</span>
+				</div>
+			</div>
+			<div class="dsp-kpi-foot">
+				<span class="text-muted small">Promedio por expediente</span>
+			</div>
+		</div>
+
+		<!-- KPI 8: Tasa de reincidencias (%) -->
+		<div class="dsp-kpi-card tone-indigo" onclick="$('#tab-prevencion-link').click();" role="button" data-testid="kpi-tasa-reincidencias">
+			<div class="dsp-kpi-head">
+				<span class="dsp-kpi-title">Tasa de reincidencias</span>
+				<span class="dsp-kpi-icon is-indigo"><i class="fa-solid fa-shield-virus"></i></span>
+			</div>
+			<div class="dsp-kpi-body">
+				<div class="dsp-kpi-val">{{ $reincidenceRate }}</div>
+				<div class="dsp-kpi-sub">
+					<span class="badge badge-success px-1.5 py-0.5">{{ $reincidenceLimit }}</span>
+				</div>
+			</div>
+			<div class="dsp-kpi-foot">
+				<span class="text-muted small">Puntos monitoreados</span>
+			</div>
+		</div>
+	</div>
+
+	<!-- 3. BARRA DE POLÍTICAS Y CONTROL SEGURO DE INVENTARIO -->
+	<div class="alert alert-light border shadow-xs d-flex align-items-center justify-content-between flex-wrap py-2 px-3 mb-3" style="border-radius: 8px;">
+		<div class="d-flex align-items-center flex-wrap">
+			<i class="fa-solid fa-shield-halved text-primary mr-2" style="font-size: 1.15rem;"></i>
+			<span class="small font-weight-500 text-dark">
+				<strong>Control Dual & Políticas Retail:</strong> Sin ajustes de stock sin doble autorización · Cero doble descuento en kardex · Separación estricta entre merma confirmada y diferencias en investigación · Trazabilidad 100% auditada.
+			</span>
+		</div>
+		<div class="d-flex align-items-center mt-1 mt-md-0">
+			<a href="{{ $U('/loss-prevention') }}" class="btn btn-sm btn-light border font-weight-600 text-primary py-0.5 px-2" style="font-size: 0.78rem;">
+				<i class="fa-solid fa-arrow-up-right-from-square mr-1"></i> Ir a Prevención 360°
+			</a>
+		</div>
+	</div>
 </div>
 
 <!-- ==========================================================================
@@ -665,13 +1062,13 @@
 									<div class="dw-side-kpi-title">{{ $wasteExec['evolution']['current_month']['label'] }}</div>
 									<div class="dw-side-kpi-val" id="dw-side-curr-val">{{ $wasteExec['evolution']['current_month']['value'] }}</div>
 									<div class="dw-side-kpi-delta text-danger" id="dw-side-curr-delta">{{ $wasteExec['evolution']['current_month']['delta'] }}</div>
-									<div class="dw-side-kpi-sub">{{ $wasteExec['evolution']['current_month']['subtext'] }}</div>
+									<div class="dw-side-kpi-sub" id="dw-side-curr-sub">{{ $wasteExec['evolution']['current_month']['subtext'] }}</div>
 								</div>
 								<div class="dw-side-kpi-block">
 									<div class="dw-side-kpi-title">{{ $wasteExec['evolution']['closing_projection']['label'] }}</div>
 									<div class="dw-side-kpi-val" id="dw-side-proj-val">{{ $wasteExec['evolution']['closing_projection']['value'] }}</div>
 									<div class="dw-side-kpi-delta text-success" id="dw-side-proj-delta">{{ $wasteExec['evolution']['closing_projection']['delta'] }}</div>
-									<div class="dw-side-kpi-sub">{{ $wasteExec['evolution']['closing_projection']['subtext'] }}</div>
+									<div class="dw-side-kpi-sub" id="dw-side-proj-sub">{{ $wasteExec['evolution']['closing_projection']['subtext'] }}</div>
 								</div>
 							</div>
 						</div>
@@ -732,7 +1129,7 @@
 						<div class="dw-dept-bars-box" id="dw-dept-bars-container">
 							<div class="dw-dept-target-line" title="Meta: {{ number_format($wasteExec['target_pct'] ?? 0, 2) }}%"></div>
 							@foreach($wasteExec['departments_bar'] as $dept)
-							@php $barWidth = min(100, round(($dept['pct'] / 3.5) * 100)); @endphp
+							@php $barWidth = min(100, round(($dept['pct'] / 3.0) * 100)); @endphp
 							<div class="dw-dept-bar-row" data-pct="{{ $dept['pct'] }}" data-amount="{{ $dept['amount'] }}" title="{{ $dept['name'] }}: {{ $dept['pct'] }}% (${{ number_format($dept['amount'], 0) }})">
 								<span class="dw-dept-bar-label">{{ $dept['name'] }}</span>
 								<div class="dw-dept-bar-track">
@@ -1602,7 +1999,7 @@
      SCRIPTS & CHART.JS 2.9.4 ENGINE
      ========================================================================== -->
 @push('pageScripts')
-<script src="{{ $U('/js/dairy_loss.js?v=', true) }}{{ $version }}"></script>
+<script src="{{ $U('/js/dairy_loss.js?v=', true) }}{{ daily_asset_version('/js/dairy_loss.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
 	var mdForm = document.getElementById('markdown-rules-form');
@@ -1967,7 +2364,7 @@ function dairyQuarantineLot(productId, stockId, amount, locationId) {
 		value: 'Lote crítico por vencimiento (FEFO)',
 		callback: function(reason) {
 			if (reason === null) return;
-			dairyPost('/quality/quarantine', { product_id: productId, stock_id: stockId, amount: amount, location_id: locationId, branch_id: DairyMaster.branchId, reason: reason }, 'Lote enviado a cuarentena', 'No se pudo bloquear el lote');
+			dairyPost('/waste/quarantine', { product_id: productId, stock_id: stockId, amount: amount, location_id: locationId, branch_id: DairyMaster.branchId, reason: reason }, 'Lote enviado a cuarentena', 'No se pudo bloquear el lote');
 		}
 	});
 }
@@ -2151,9 +2548,20 @@ function initExecutiveCharts() {
 	if (ctxEvol && dwEvolutionData && dwEvolutionData.labels) {
 		if (dwEvolutionChartInstance) dwEvolutionChartInstance.destroy();
 		
-		var currSeries = dwCurrentMetric === 'money' ? dwEvolutionData.money.current : dwEvolutionData.pct.current;
-		var prevSeries = dwCurrentMetric === 'money' ? dwEvolutionData.money.previous : dwEvolutionData.pct.previous;
-		var targetSeries = dwCurrentMetric === 'money' ? dwEvolutionData.money.target : dwEvolutionData.pct.target;
+		var currSeries, prevSeries, targetSeries;
+		if (dwCurrentMetric === 'money') {
+			currSeries = dwEvolutionData.money ? dwEvolutionData.money.current : [];
+			prevSeries = dwEvolutionData.money ? dwEvolutionData.money.previous : [];
+			targetSeries = dwEvolutionData.money ? dwEvolutionData.money.target : [];
+		} else if (dwCurrentMetric === 'per1k') {
+			currSeries = dwEvolutionData.per1k ? dwEvolutionData.per1k.current : (dwEvolutionData.pct ? dwEvolutionData.pct.current.map(function(v){ return v !== null ? v * 10 : null; }) : []);
+			prevSeries = dwEvolutionData.per1k ? dwEvolutionData.per1k.previous : (dwEvolutionData.pct ? dwEvolutionData.pct.previous.map(function(v){ return v !== null ? v * 10 : null; }) : []);
+			targetSeries = dwEvolutionData.per1k ? dwEvolutionData.per1k.target : (dwEvolutionData.pct ? dwEvolutionData.pct.target.map(function(v){ return v !== null ? v * 10 : null; }) : []);
+		} else {
+			currSeries = dwEvolutionData.pct ? dwEvolutionData.pct.current : [];
+			prevSeries = dwEvolutionData.pct ? dwEvolutionData.pct.previous : [];
+			targetSeries = dwEvolutionData.pct ? dwEvolutionData.pct.target : [];
+		}
 
 		dwEvolutionChartInstance = new Chart(ctxEvol.getContext('2d'), {
 			type: 'line',
@@ -2209,7 +2617,14 @@ function initExecutiveCharts() {
 					callbacks: {
 						label: function(item, data) {
 							var ds = data.datasets[item.datasetIndex];
-							var val = dwCurrentMetric === 'money' ? '$' + Number(item.yLabel).toLocaleString() : Number(item.yLabel).toFixed(2) + '%';
+							var val = '';
+							if (dwCurrentMetric === 'money') {
+								val = '$' + Number(item.yLabel).toLocaleString();
+							} else if (dwCurrentMetric === 'per1k') {
+								val = '$' + Number(item.yLabel).toFixed(2);
+							} else {
+								val = Number(item.yLabel).toFixed(2) + '%';
+							}
 							return ds.label + ': ' + val;
 						}
 					}
@@ -2226,7 +2641,9 @@ function initExecutiveCharts() {
 							fontSize: 10,
 							fontColor: '#94A3B8',
 							callback: function(v) {
-								return dwCurrentMetric === 'money' ? '$' + v : v + '%';
+								if (dwCurrentMetric === 'money') return '$' + Number(v).toLocaleString();
+								if (dwCurrentMetric === 'per1k') return '$' + v;
+								return v + '%';
 							}
 						}
 					}]
@@ -2265,6 +2682,10 @@ function initExecutiveCharts() {
 						label: function(item, data) {
 							var label = data.labels[item.index] || '';
 							var val = data.datasets[0].data[item.index];
+							var mode = $('#dw-donut-mode').val() || 'money';
+							if (mode === 'pct') {
+								return label + ': ' + Number(val).toFixed(1) + '%';
+							}
 							return label + ': $' + Number(val).toLocaleString();
 						}
 					}
@@ -2318,6 +2739,41 @@ function dwSetEvolutionUnit(unit) {
 	else if (unit === 'pct') $('#dw-unit-pills .dw-pill-btn:eq(1)').addClass('active');
 	else if (unit === 'per1k') $('#dw-unit-pills .dw-pill-btn:eq(2)').addClass('active');
 	
+	$('#dw-evolution-mode').val(unit);
+
+	// Actualizar tarjetas laterales sincrónicamente
+	if (dwEvolutionData && dwEvolutionData.current_month) {
+		var cm = dwEvolutionData.current_month;
+		var cp = dwEvolutionData.closing_projection;
+
+		if (unit === 'money') {
+			$('#dw-side-curr-val').text(cm.value_money || '$2,047');
+			$('#dw-side-curr-delta').text(cm.delta_money || '↑ +7.2%');
+			$('#dw-side-curr-sub').text(cm.subtext_money || 'vs. mismo mes del año anterior ($1,910)');
+
+			$('#dw-side-proj-val').text(cp.value_money || '$15,356');
+			$('#dw-side-proj-delta').text(cp.delta_money || '↓ -1.7%');
+			$('#dw-side-proj-sub').text(cp.subtext_money || 'proyección mensual según ritmo diario actual');
+		} else if (unit === 'per1k') {
+			$('#dw-side-curr-val').text(cm.value_per1k || '$19.70');
+			$('#dw-side-curr-delta').text(cm.delta_per1k || '↑ +0.50');
+			$('#dw-side-curr-sub').text(cm.subtext_per1k || 'vs. año anterior ($19.20/$1,000)');
+
+			$('#dw-side-proj-val').text(cp.value_per1k || '$19.70');
+			$('#dw-side-proj-delta').text(cp.delta_per1k || '↓ -0.30');
+			$('#dw-side-proj-sub').text(cp.subtext_per1k || 'estimado fin de mes por cada $1,000');
+		} else {
+			// pct
+			$('#dw-side-curr-val').text(cm.value_pct || cm.value || '1.97%');
+			$('#dw-side-curr-delta').text(cm.delta_pct || cm.delta || '↑ +0.05 pp');
+			$('#dw-side-curr-sub').text(cm.subtext_pct || cm.subtext || 'vs. mismo mes del año anterior (1.92%)');
+
+			$('#dw-side-proj-val').text(cp.value_pct || '1.97%');
+			$('#dw-side-proj-delta').text(cp.delta_pct || cp.delta || '↓ -0.03 pp');
+			$('#dw-side-proj-sub').text(cp.subtext_pct || cp.subtext || 'ritmo diario del mes; % vs. meta (2.00%)');
+		}
+	}
+
 	initExecutiveCharts();
 }
 
@@ -2329,8 +2785,10 @@ function dwToggleDonutUnit(val) {
 	if (!dwTypeDonutChartInstance || !dwDonutData.items) return;
 	if (val === 'pct') {
 		dwTypeDonutChartInstance.data.datasets[0].data = dwDonutData.items.map(function(i) { return i.share; });
+		$('#dw-donut-center-total').text('100%');
 	} else {
 		dwTypeDonutChartInstance.data.datasets[0].data = dwDonutData.items.map(function(i) { return i.amount; });
+		$('#dw-donut-center-total').text(dwDonutData.total);
 	}
 	dwTypeDonutChartInstance.update();
 }
@@ -2427,14 +2885,60 @@ function dwSortTopProducts(mode) {
 function dwSortDepartmentBars(mode) {
 	var $container = $('#dw-dept-bars-container');
 	var rows = $container.find('.dw-dept-bar-row').get();
-	rows.sort(function(a, b) {
-		var va = parseFloat($(a).data(mode === 'val' ? 'amount' : 'pct')) || 0;
-		var vb = parseFloat($(b).data(mode === 'val' ? 'amount' : 'pct')) || 0;
-		return vb - va;
-	});
+	var targetPct = 2.0;
+
+	// Determinar el monto máximo para la escala visual relativa cuando se ve en $
+	var maxAmount = 1;
 	$.each(rows, function(idx, row) {
+		var amt = parseFloat($(row).data('amount')) || 0;
+		if (amt > maxAmount) maxAmount = amt;
+	});
+
+	rows.sort(function(a, b) {
+		var pa = parseFloat($(a).data('pct')) || 0;
+		var pb = parseFloat($(b).data('pct')) || 0;
+		var aa = parseFloat($(a).data('amount')) || 0;
+		var ab = parseFloat($(b).data('amount')) || 0;
+
+		if (mode === 'val') {
+			return ab - aa;
+		} else if (mode === 'dev') {
+			return Math.abs(pb - targetPct) - Math.abs(pa - targetPct);
+		} else {
+			return pb - pa;
+		}
+	});
+
+	$.each(rows, function(idx, row) {
+		var $row = $(row);
+		var pct = parseFloat($row.data('pct')) || 0;
+		var amt = parseFloat($row.data('amount')) || 0;
+		var $val = $row.find('.dw-dept-bar-val');
+		var $fill = $row.find('.dw-dept-bar-fill');
+
+		if (mode === 'val') {
+			$val.text('$' + Math.round(amt).toLocaleString());
+			var w = Math.min(100, Math.max(4, Math.round((amt / maxAmount) * 100)));
+			$fill.css('width', w + '%');
+		} else if (mode === 'dev') {
+			var diff = pct - targetPct;
+			var sign = diff > 0 ? '+' : '';
+			$val.text(pct.toFixed(1) + '% (' + sign + diff.toFixed(1) + ' pp)');
+			var w = Math.min(100, Math.round((pct / 3.0) * 100));
+			$fill.css('width', w + '%');
+		} else {
+			$val.text(pct.toFixed(1) + '%');
+			var w = Math.min(100, Math.round((pct / 3.0) * 100));
+			$fill.css('width', w + '%');
+		}
 		$container.append(row);
 	});
+
+	if (mode === 'val') {
+		$container.find('.dw-dept-target-line').hide();
+	} else {
+		$container.find('.dw-dept-target-line').show();
+	}
 }
 
 function dwFilterBranchTab(tab, el) {

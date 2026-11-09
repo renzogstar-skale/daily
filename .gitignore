@@ -8,3 +8,7 @@ embedded.txt
 # Playwright CLI output (may contain credentials)
 .playwright-cli/
 node_modules
+
+.claude/settings.local.json
+.env
+.vercel

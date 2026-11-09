@@ -105,6 +105,63 @@ $dnavHref = function ($route) use ($U) {
 		</div>
 	</li>
 	@endforeach
+
+	@php $dnavLocked = \Grocy\Helpers\DairyNavigation::Locked(fn($s) => $__t($s)); @endphp
+	@if(count($dnavLocked) > 0)
+	<!-- Ampliación de plan: separado del trabajo diario, cerrado por defecto -->
+	<li class="dnav-cat dnav-upgrade"
+		data-cat="upgrade">
+		<button type="button"
+			class="dnav-cat-btn"
+			id="dnav-btn-upgrade"
+			aria-expanded="false"
+			aria-controls="dnav-sub-upgrade"
+			data-toggle="tooltip"
+			data-placement="right"
+			title="AMPLIAR PLAN">
+			<i class="fa-solid fa-gem dnav-icon"
+				aria-hidden="true"></i>
+			<span class="nav-link-text">AMPLIAR PLAN</span>
+			<i class="fa-solid fa-chevron-down dnav-caret"
+				aria-hidden="true"></i>
+		</button>
+		<div class="dnav-sub-wrap"
+			id="dnav-sub-upgrade"
+			role="region"
+			aria-labelledby="dnav-btn-upgrade">
+			<ul class="dnav-sub">
+				<li class="dnav-flyout-title"
+					aria-hidden="true">AMPLIAR PLAN</li>
+				@foreach($dnavLocked as $lockedPlan => $lockedItems)
+				<li class="dnav-upgrade-plan"
+					aria-hidden="true">{{ \Grocy\Helpers\DailySubscription::PlanName($lockedPlan) }}</li>
+				@foreach($lockedItems as $item)
+				<li class="dnav-item dnav-locked"
+					data-item="{{ $item['id'] }}">
+					<a class="dnav-link discrete-link"
+						href="{{ $dnavHref($item['route']) }}"
+						title="{{ $item['desc'] }}">
+						<i class="fa-solid {{ $item['icon'] }} dnav-icon"
+							aria-hidden="true"></i>
+						<span class="nav-link-text">{{ $item['label'] }}</span>
+						<i class="fa-solid fa-lock dnav-lock"
+							aria-hidden="true"></i>
+					</a>
+				</li>
+				@endforeach
+				@endforeach
+				<li class="dnav-item">
+					<a class="dnav-link discrete-link dnav-upgrade-cta"
+						href="{{ $U('/subscription#planes') }}">
+						<i class="fa-solid fa-table-columns dnav-icon"
+							aria-hidden="true"></i>
+						<span class="nav-link-text">Ver planes</span>
+					</a>
+				</li>
+			</ul>
+		</div>
+	</li>
+	@endif
 </ul>
 <script>
 	// Antes del primer pintado: corrige el activo para rutas con fragmento y restaura la última categoría

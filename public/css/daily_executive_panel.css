@@ -1474,3 +1474,321 @@
 		grid-template-columns: repeat(2, 1fr);
 	}
 }
+
+/* ==========================================================================
+   DAILY — PANEL EJECUTIVO BASADO EN STOCK & MOVIMIENTOS
+   Réplica de estructura visual, proporciones y experiencia de usuario
+   ========================================================================== */
+
+/* 5 Tarjetas KPI del Resumen Ejecutivo */
+.dsm-kpi-grid-5 {
+	display: grid;
+	grid-template-columns: repeat(5, 1fr);
+	gap: 14px;
+	margin-bottom: 16px;
+}
+
+@media (max-width: 1400px) {
+	.dsm-kpi-grid-5 {
+		grid-template-columns: repeat(3, 1fr);
+	}
+}
+
+@media (max-width: 900px) {
+	.dsm-kpi-grid-5 {
+		grid-template-columns: repeat(2, 1fr);
+	}
+}
+
+@media (max-width: 600px) {
+	.dsm-kpi-grid-5 {
+		grid-template-columns: 1fr;
+	}
+}
+
+/* Ciclo Integral del Retail (8 Etapas) */
+.dsm-cycle-section {
+	margin-bottom: 16px;
+}
+
+.dsm-cycle-grid {
+	display: grid;
+	grid-template-columns: repeat(8, 1fr);
+	gap: 10px;
+}
+
+@media (max-width: 1440px) {
+	.dsm-cycle-grid {
+		grid-template-columns: repeat(4, 1fr);
+	}
+}
+
+@media (max-width: 768px) {
+	.dsm-cycle-grid {
+		grid-template-columns: repeat(2, 1fr);
+	}
+}
+
+@media (max-width: 480px) {
+	.dsm-cycle-grid {
+		grid-template-columns: 1fr;
+	}
+}
+
+.dsm-cycle-card {
+	background: #ffffff;
+	border: 1px solid var(--dsm-border);
+	border-radius: var(--dsm-radius);
+	padding: 12px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	text-decoration: none !important;
+	color: inherit;
+	box-shadow: var(--dsm-shadow);
+	transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+	position: relative;
+	overflow: hidden;
+}
+
+.dsm-cycle-card:hover {
+	transform: translateY(-2px);
+	border-color: #00c83b;
+	box-shadow: 0 8px 20px rgba(0, 200, 59, 0.12);
+	color: inherit;
+}
+
+.dsm-cycle-top {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 8px;
+}
+
+.dsm-cycle-step-num {
+	width: 22px;
+	height: 22px;
+	border-radius: 50%;
+	background: #f1f5f9;
+	color: #64748b;
+	font-size: 11px;
+	font-weight: 800;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.dsm-cycle-icon-box {
+	width: 34px;
+	height: 34px;
+	border-radius: 10px;
+	background: #ecfdf5;
+	color: #059669;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 14px;
+	margin-bottom: 8px;
+	transition: transform 0.2s ease;
+}
+
+.dsm-cycle-card:hover .dsm-cycle-icon-box {
+	transform: scale(1.08);
+	background: #10b981;
+	color: #ffffff;
+}
+
+.dsm-cycle-name {
+	font-size: 13px;
+	font-weight: 700;
+	color: #0f172a;
+	margin-bottom: 4px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.dsm-cycle-status-pill {
+	font-size: 10px;
+	font-weight: 700;
+	padding: 2px 7px;
+	border-radius: 999px;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+}
+
+.dsm-cycle-status-pill.is-ok {
+	background: #dcfce7;
+	color: #15803d;
+	border: 1px solid #bbf7d0;
+}
+
+.dsm-cycle-status-pill.is-warning {
+	background: #fef3c7;
+	color: #b45309;
+	border: 1px solid #fde68a;
+}
+
+.dsm-cycle-status-pill.is-danger {
+	background: #fee2e2;
+	color: #b91c1c;
+	border: 1px solid #fecaca;
+}
+
+.dsm-cycle-metric {
+	font-size: 12.5px;
+	font-weight: 800;
+	color: #059669;
+	margin-bottom: 4px;
+}
+
+.dsm-cycle-deviation {
+	font-size: 11px;
+	color: #64748b;
+	line-height: 1.25;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+.dsm-cycle-footer-arrow {
+	margin-top: 8px;
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	font-size: 11px;
+	color: #94a3b8;
+	font-weight: 600;
+	gap: 4px;
+	transition: color 0.15s ease;
+}
+
+.dsm-cycle-card:hover .dsm-cycle-footer-arrow {
+	color: #059669;
+}
+
+/* Tabla de Decisiones y Alertas Prioritarias */
+.dsm-decisions-table-wrap {
+	overflow-x: auto;
+}
+
+.dsm-decisions-table {
+	width: 100%;
+	border-collapse: separate;
+	border-spacing: 0;
+	font-size: 12.5px;
+}
+
+.dsm-decisions-table th {
+	background: #f8fafc;
+	padding: 10px 14px;
+	font-size: 11px;
+	font-weight: 700;
+	color: #64748b;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	border-bottom: 1px solid #e2e8f0;
+}
+
+.dsm-decisions-table td {
+	padding: 12px 14px;
+	border-bottom: 1px solid #f1f5f9;
+	vertical-align: middle;
+	color: #1e293b;
+}
+
+.dsm-decisions-table tr:hover td {
+	background: #f8fafc;
+}
+
+.dsm-decisions-table tr:last-child td {
+	border-bottom: none;
+}
+
+.dsm-badge-severity {
+	font-size: 10.5px;
+	font-weight: 700;
+	padding: 3px 8px;
+	border-radius: 6px;
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.dsm-badge-severity.is-critica {
+	background: #fee2e2;
+	color: #dc2626;
+	border: 1px solid #fecaca;
+}
+
+.dsm-badge-severity.is-atencion {
+	background: #fef3c7;
+	color: #d97706;
+	border: 1px solid #fde68a;
+}
+
+.dsm-badge-severity.is-info {
+	background: #e0f2fe;
+	color: #0284c7;
+	border: 1px solid #bae6fd;
+}
+
+.dsm-impact-badge {
+	font-weight: 800;
+	color: #0f172a;
+	font-size: 12.5px;
+}
+
+.dsm-impact-badge.is-danger {
+	color: #dc2626;
+}
+
+/* Barras de Rendimiento Operativo */
+.dsm-ops-metric-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 6px;
+	font-size: 12px;
+}
+
+.dsm-ops-metric-name {
+	font-weight: 600;
+	color: #334155;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.dsm-ops-metric-val {
+	font-weight: 700;
+	color: #0f172a;
+}
+
+.dsm-ops-progress-bar {
+	width: 100%;
+	height: 7px;
+	background: #f1f5f9;
+	border-radius: 999px;
+	overflow: hidden;
+	margin-bottom: 14px;
+}
+
+.dsm-ops-progress-fill {
+	height: 100%;
+	border-radius: 999px;
+	transition: width 0.4s ease;
+}
+
+.dsm-ops-progress-fill.is-green {
+	background: linear-gradient(90deg, #10b981, #059669);
+}
+
+.dsm-ops-progress-fill.is-amber {
+	background: linear-gradient(90deg, #fbbf24, #f59e0b);
+}
+
+.dsm-ops-progress-fill.is-red {
+	background: linear-gradient(90deg, #f87171, #ef4444);
+}

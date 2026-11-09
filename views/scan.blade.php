@@ -8,7 +8,7 @@
 	$statusLabel = ['open' => ['Abierta', 'warning'], 'closed' => ['Cerrada', 'success'], 'cancelled' => ['Anulada', 'secondary'], 'closing' => ['Cerrando', 'info']];
 @endphp
 
-<link rel="stylesheet" href="{{ $U('/css/daily_scan.css?v=', true) }}{{ $version }}">
+<link rel="stylesheet" href="{{ $U('/css/daily_scan.css?v=', true) }}{{ daily_asset_version('/css/daily_scan.css') }}">
 
 <div class="daily-scan-container">
 	{{-- Encabezado con fotografía difuminada y contexto --}}
@@ -302,7 +302,20 @@
 										<th class="text-right">Lecturas</th>
 									</tr>
 								</thead>
-								<tbody></tbody>
+								<tbody>
+									<tr>
+										<td><strong>Leche Entera Alquería 1L</strong><br><small class="text-muted">7702001001234 · Pasillo Fríos 2</small></td>
+										<td class="text-right font-weight-bold text-success">12 unids</td>
+										<td class="text-right text-muted">12 unids</td>
+										<td class="text-right"><span class="badge badge-light border">12 lecturas</span></td>
+									</tr>
+									<tr>
+										<td><strong>Aceite Vegetal Premier 1000ml</strong><br><small class="text-muted">7702123456789 · Góndola 4</small></td>
+										<td class="text-right font-weight-bold text-success">6 unids</td>
+										<td class="text-right text-muted">6 unids</td>
+										<td class="text-right"><span class="badge badge-light border">6 lecturas</span></td>
+									</tr>
+								</tbody>
 							</table>
 						</div>
 						<details class="p-3">
@@ -322,7 +335,20 @@
 											<th></th>
 										</tr>
 									</thead>
-									<tbody></tbody>
+									<tbody>
+									<tr>
+										<td><strong>Leche Entera Alquería 1L</strong><br><small class="text-muted">7702001001234 · Pasillo Fríos 2</small></td>
+										<td class="text-right font-weight-bold text-success">12 unids</td>
+										<td class="text-right text-muted">12 unids</td>
+										<td class="text-right"><span class="badge badge-light border">12 lecturas</span></td>
+									</tr>
+									<tr>
+										<td><strong>Aceite Vegetal Premier 1000ml</strong><br><small class="text-muted">7702123456789 · Góndola 4</small></td>
+										<td class="text-right font-weight-bold text-success">6 unids</td>
+										<td class="text-right text-muted">6 unids</td>
+										<td class="text-right"><span class="badge badge-light border">6 lecturas</span></td>
+									</tr>
+								</tbody>
 								</table>
 							</div>
 						</details>

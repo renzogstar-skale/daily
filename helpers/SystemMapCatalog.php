@@ -12,16 +12,16 @@ class SystemMapCatalog
 {
 	// Las categorías del menú lateral se leen de helpers/DairyNavigation.php; estas se agregan
 	const CATEGORIES = [
-		'inicio' => ['Inicio y Supervisión', 'fa-house', '#2563eb'],
+		'inicio' => ['Supervisión y Control', 'fa-house', '#2563eb'],
 		'ventas' => ['Ventas y Rentabilidad', 'fa-cash-register', '#10b981'],
-		'planeacion' => ['Planeación y Compras', 'fa-cart-flatbed', '#1d4ed8'],
 		'inventario' => ['Inventario y Almacenes', 'fa-boxes-stacked', '#475569'],
-		'operaciones' => ['Operaciones y Personal', 'fa-people-group', '#d97706'],
+		'despachos' => ['Despachos y Devoluciones', 'fa-truck-ramp-box', '#0369a1'],
 		'mermas' => ['Mermas y Prevención', 'fa-shield-halved', '#dc2626'],
-		'calidad' => ['Calidad y Trazabilidad', 'fa-award', '#0891b2'],
-		'analisis' => ['Inteligencia y Análisis', 'fa-chart-pie', '#7c3aed'],
+		'operaciones' => ['Operaciones y Personal', 'fa-people-group', '#d97706'],
 		'sistema' => ['Administración y Sistema', 'fa-gear', '#334155'],
-		'movil' => ['DAIRY Mobile', 'fa-mobile-screen', '#0f766e'],
+		'planeacion' => ['Planeación y Compras', 'fa-cart-flatbed', '#1d4ed8'],
+		'analisis' => ['Indicadores Financieros', 'fa-chart-pie', '#7c3aed'],
+		'movil' => ['DAILY Móvil', 'fa-mobile-screen', '#0f766e'],
 		'maestros' => ['Datos maestros', 'fa-database', '#64748b'],
 		'admin' => ['Administración', 'fa-user-shield', '#334155'],
 		'heredado' => ['Núcleo Grocy heredado', 'fa-box-archive', '#94a3b8'],
@@ -37,15 +37,14 @@ class SystemMapCatalog
 		'inventario' => 'inventario',
 		'operaciones' => 'operaciones',
 		'mermas' => 'mermas',
-		'calidad' => 'calidad',
+		'despachos' => 'despachos',
 		'analisis' => 'analisis',
 		'sistema' => 'admin',
 	];
 
 	const NAV_ITEM_CATEGORY = [
-		'quality' => 'calidad',
-		'recalls' => 'calidad',
-		'traceability' => 'calidad',
+		'recalls' => 'despachos',
+		'traceability' => 'inventario',
 	];
 
 	// Módulos que no están en el menú lateral (se descubren por ruta). [categoría, nombre, ruta, descripción, rutas adicionales]
@@ -80,9 +79,6 @@ class SystemMapCatalog
 	const CONNECTIONS = [
 		['pos', 'sales', 'La venta del POS se guarda en sales / sale_items', 'services/SalesService.php', 'DB->sales\(\)->createRow'],
 		['sales', 'stockoverview', 'Cada venta descuenta stock lote a lote en orden FEFO', 'services/SalesService.php', '\$stockService->ConsumeProduct\('],
-		['quality', 'pos', 'El POS aplica la rebaja FEFO activa del lote', 'services/SalesService.php', 'MarkdownService'],
-		['stockoverview', 'quality', 'Lotes con fecha de vencimiento alimentan el semáforo FEFO', 'services/QualityExpiryService.php', 'best_before_date'],
-		['quality', 'waste', 'Rebajas por vencimiento (prevención antes de la merma)', 'services/MarkdownService.php', 'best_before_date'],
 		['waste_report', 'waste_approvals', 'La merma queda pendiente de aprobación según política', 'services/WasteService.php', "requires_approval"],
 		['waste_approvals', 'stockoverview', 'Aprobar descuenta stock (transacción de consumo)', 'services/WasteService.php', '\$stockService->ConsumeProduct\('],
 		['stockoverview', 'kardex', 'Kardex valoriza cada movimiento de stock_log', 'services/KardexService.php', 'FROM stock_log'],
@@ -101,10 +97,7 @@ class SystemMapCatalog
 		['waste', 'kpis', 'Merma en el Panel Ejecutivo', 'services/KpiService.php', 'waste_records'],
 		['sales', 'cost_centers', 'Margen por sucursal y categoría', 'services/CostCenterService.php', 'FROM sale_items'],
 		['waste', 'cost_centers', 'Merma por centro de costo', 'services/CostCenterService.php', 'FROM waste_records'],
-		['kpis', 'ai_advisor', 'Arturito responde con los KPIs reales', 'services/AdvisorQaService.php', 'KpiService::GetInstance'],
-		['mrp', 'ai_advisor', 'Arturito consulta el MRP', 'services/AdvisorQaService.php', 'MrpService'],
-		['cost_centers', 'ai_advisor', 'Arturito consulta centros de costo', 'services/AdvisorQaService.php', 'CostCenterService'],
-		['recalls', 'quality', 'Retiro de lote pasa por cuarentena', 'services/RecallService.php', 'QualityExpiryService::GetInstance'],
+		['recalls', 'stockoverview', 'Retiro de lote bloquea stock en cuarentena', 'services/RecallService.php', 'RecallService'],
 		['transfers', 'stockoverview', 'Traslados mueven stock entre sucursales', 'services/StockTransferService.php', 'StockService::GetInstance'],
 		['orders', 'sales', 'Despacho del pedido se registra como venta', 'services/CustomerOrderService.php', 'SalesService'],
 		['orders', 'scan', 'Picking por escáner con FEFO', 'services/CustomerOrderService.php', 'ScanService'],
@@ -118,7 +111,6 @@ class SystemMapCatalog
 		['mobile', 'schedule', 'Mi horario, fichaje y ausencias en móvil', 'services/MobileWorkService.php', 'WorkforceScheduleService'],
 		['mobile', 'waste_report', 'Merma desde móvil (escáner y foto)', 'public/js/dairy_m.js', "waste/report"],
 		// Etapa 30: conexiones que ya existían en el código y no estaban catalogadas (alimentan también «Módulos conectados»)
-		['quality', 'alerts', 'Lotes por vencer abren alerta con responsable, plazo y cierre', 'services/AlertCenterService.php', "case 'expiring_lots'"],
 		['inventory', 'kardex', 'El conteo físico ajusta stock con transacción de inventario', 'controllers/Api/StockApiController.php', 'StockService::GetInstance\(\)->InventoryProduct'],
 		['sales', 'reports', 'Ventas y margen por sucursal en Reportes', 'controllers/KpiController.php', 'GetBranchScorecards'],
 		['waste', 'reports', 'Desglose de merma (censo) en Reportes', 'controllers/KpiController.php', 'GetCensoShrinkBreakdown'],
@@ -132,7 +124,6 @@ class SystemMapCatalog
 	 */
 	const PROPOSALS = [
 		['p_forecast_mrp', 'schedule', 'mrp', 'Usar el pronóstico de ventas (no solo la VMD) en la sugerencia de compra', 'Prompt del mapa: «Ventas → Pronóstico → MRP»; MrpService usa vmd_daily_sales', 'services/MrpService.php', 'LaborForecastService'],
-		['p_ai_actions', 'ai_advisor', 'workforce', 'Arturito crea tareas u órdenes desde sus recomendaciones (hoy solo responde)', 'AdvisorQaService::Ask devuelve texto y fuentes', 'services/AiActionService.php', 'INSERT INTO dairy_ai_actions'],
 		['p_push', 'alerts', 'mobile', 'Notificaciones push con la app cerrada (Web Push + VAPID)', 'DAIRY_AUDIT.md: matriz «Notificaciones push — Bloqueado»', 'public/js/dairy_m.js', 'pushManager\.subscribe'],
 		['p_backup', 'users', 'stockoverview', 'Respaldo y restauración desde la aplicación', 'DAIRY_AUDIT.md: matriz «Respaldo y restauración — Bloqueado»', 'controllers/SystemController.php', 'function Backup'],
 		['p_payroll', 'schedule', 'cost_centers', 'Sincronizar horas con nómina PAYCOM', 'DAIRY_AUDIT.md Etapa 29: conector inactivo sin credenciales', 'services/LaborForecastService.php', 'curl_exec'],

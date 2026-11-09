@@ -14,7 +14,7 @@ $allFlows = [
 		'steps' => [
 			['num' => 1, 'title' => 'Analizar demanda', 'desc' => 'Evaluar consumo histórico, picos de venta y estacionalidad proyectada.', 'resp' => 'Analista de Demanda / MRP', 'action' => 'Consultar Planificación MRP', 'url' => '/mrp', 'val' => 'Cálculo de histórico 30/60 días actualizado'],
 			['num' => 2, 'title' => 'Revisar inventario disponible', 'desc' => 'Comprobar stock en mano, pedidos en tránsito y stock de seguridad.', 'resp' => 'Supervisor de Inventarios', 'action' => 'Ver Existencias de Red', 'url' => '/stockoverview', 'val' => 'Stock físico sincronizado sin faltantes fantasma'],
-			['num' => 3, 'title' => 'Simular escenarios', 'desc' => 'Calcular impacto financiero de quiebres de stock vs. sobre-almacenamiento.', 'resp' => 'Director Comercial / Compras', 'action' => 'Abrir Simulador What-If', 'url' => '/ai-advisor#tab-simulator', 'val' => 'Proyección de margen y costos de acarreo'],
+			['num' => 3, 'title' => 'Verificar puntos de reorden', 'desc' => 'Comprobar niveles de reposición sugerida frente a stock de seguridad.', 'resp' => 'Analista de Demanda / MRP', 'action' => 'Revisar Sugeridos MRP', 'url' => '/mrp', 'val' => 'Cálculo de ROP y lead time verificado'],
 			['num' => 4, 'title' => 'Generar propuesta de compra', 'desc' => 'Consolidar necesidades por sucursal y generar borrador de orden.', 'resp' => 'Comprador / Abastecimiento', 'action' => 'Generar Orden en Proveedores', 'url' => '/suppliers', 'val' => 'Asignación de proveedor preferente y precio pactado'],
 			['num' => 5, 'title' => 'Aprobar pedido', 'desc' => 'Validar presupuesto y aplicar doble firma si supera el umbral corporativo.', 'resp' => 'Gerencia de Compras / Finanzas', 'action' => 'Revisar Aprobaciones', 'url' => '/suppliers#tab-orders', 'val' => 'Órdenes > $5,000 exigen visto bueno financiero'],
 			['num' => 6, 'title' => 'Enviar al proveedor', 'desc' => 'Emitir orden formal en PDF/EDI con fecha de entrega comprometida (OTIF).', 'resp' => 'Coordinador de Compras', 'action' => 'Emitir y Notificar Orden', 'url' => '/suppliers', 'val' => 'Acuse de recibo y confirmación de despacho del proveedor'],
@@ -72,24 +72,8 @@ $allFlows = [
 			['num' => 8, 'title' => 'Gestionar devolución o incidencia', 'desc' => 'Inspección técnica, clasificación sanitaria en 7 destinos y resolución inmediata.', 'resp' => 'Supervisor de Calidad y Devoluciones', 'action' => 'Gestionar Devoluciones', 'url' => '/returns', 'val' => 'Causal de devolución AKCAL tipificada']
 		]
 	],
-	'calidad' => [
-		'code' => '5',
-		'name' => 'Calidad y Vencimientos',
-		'icon' => 'fa-award',
-		'match_views' => ['quality_expiry', 'traceability', 'recalls'],
-		'match_paths' => ['/quality', '/traceability', '/recalls'],
-		'steps' => [
-			['num' => 1, 'title' => 'Inspeccionar mercancía', 'desc' => 'Control visual, organoléptico e integridad de empaque en recepción o góndola.', 'resp' => 'Inspector de Calidad', 'action' => 'Centro de Calidad', 'url' => '/quality', 'val' => 'Checklist de recepción conforme'],
-			['num' => 2, 'title' => 'Revisar lotes y vencimientos', 'desc' => 'Identificación de lotes críticos con semáforo preventivo (Rojo/Amarillo/Verde).', 'resp' => 'Coordinador FEFO', 'action' => 'Revisar Vencimientos Críticos', 'url' => '/quality#tab-fefo', 'val' => 'Fecha de caducidad registrada'],
-			['num' => 3, 'title' => 'Validar condiciones de almacenamiento', 'desc' => 'Medición de temperatura y humedad en cámaras frigoríficas (-18°C a 4°C).', 'resp' => 'Técnico de Frío', 'action' => 'Monitoreo Cadena de Frío', 'url' => '/quality#tab-frio', 'val' => 'Sensores en rango térmico normativo'],
-			['num' => 4, 'title' => 'Identificar riesgos', 'desc' => 'Detección temprana de no conformidades sanitarias o desvíos térmicos.', 'resp' => 'Supervisor Sanitario', 'action' => 'Consultar Centro de Alertas', 'url' => '/alerts', 'val' => 'Notificación automática emitida'],
-			['num' => 5, 'title' => 'Bloquear productos cuando corresponda', 'desc' => 'Aislamiento inmediato en área de cuarentena para evitar contaminación o venta.', 'resp' => 'Jefe de Calidad', 'action' => 'Enviar a Cuarentena', 'url' => '/quality#tab-cuarentena', 'val' => 'Bloqueo en terminales POS activado'],
-			['num' => 6, 'title' => 'Gestionar retiros', 'desc' => 'Ejecución de protocolos de recall masivo ante alertas sanitarias de fabricantes.', 'resp' => 'Gerencia de Calidad / Legal', 'action' => 'Retiros de Producto (Recalls)', 'url' => '/recalls', 'val' => 'Trazabilidad 360° de sucursales afectadas'],
-			['num' => 7, 'title' => 'Registrar resolución', 'desc' => 'Dictamen final: devolución a proveedor, reacondicionamiento o baja formal.', 'resp' => 'Comité de Calidad', 'action' => 'Trazabilidad de Lotes', 'url' => '/traceability', 'val' => 'Acta de resolución y cierre de lote']
-		]
-	],
 	'mermas' => [
-		'code' => '6',
+		'code' => '5',
 		'name' => 'Mermas y Prevención',
 		'icon' => 'fa-trash-can',
 		'match_views' => ['waste_overview', 'waste_report', 'waste_approvals', 'waste_reasons'],
@@ -108,7 +92,7 @@ $allFlows = [
 		]
 	],
 	'prevencion' => [
-		'code' => '7',
+		'code' => '6',
 		'name' => 'Prevención de Pérdidas',
 		'icon' => 'fa-shield-halved',
 		'match_views' => ['loss_prevention', 'loss_case', 'loss_counts', 'devices', 'device_detail', 'loss_executive_report'],
@@ -127,7 +111,7 @@ $allFlows = [
 		]
 	],
 	'operaciones' => [
-		'code' => '8',
+		'code' => '7',
 		'name' => 'Operaciones y Personal',
 		'icon' => 'fa-people-group',
 		'match_views' => ['schedule', 'attendance', 'workforce', 'equipment', 'choresoverview', 'tasks', 'calendar'],
@@ -144,23 +128,23 @@ $allFlows = [
 		]
 	],
 	'analisis' => [
-		'code' => '9',
+		'code' => '8',
 		'name' => 'Reportes y Analítica',
 		'icon' => 'fa-chart-pie',
-		'match_views' => ['reports_hub', 'cost_centers', 'ai_advisor', 'stockreportspendings', 'stockjournalsummary'],
-		'match_paths' => ['/reports', '/cost-centers', '/ai-advisor'],
+		'match_views' => ['reports_hub', 'cost_centers', 'stockreportspendings', 'stockjournalsummary'],
+		'match_paths' => ['/reports', '/cost-centers'],
 		'steps' => [
 			['num' => 1, 'title' => 'Seleccionar período', 'desc' => 'Definir ventana de análisis (hoy, semana en curso, mes cerrado o comparativo anual).', 'resp' => 'Analista de Negocio / BI', 'action' => 'Abrir Reportes & Analítica', 'url' => '/reports', 'val' => 'Rango de fechas validado con datos consolidados'],
 			['num' => 2, 'title' => 'Seleccionar sucursal', 'desc' => 'Filtrar por tienda individual, zona geográfica o consolidado corporativo total.', 'resp' => 'Usuario Ejecutivo', 'action' => 'Filtrar Centros de Costo', 'url' => '/cost-centers', 'val' => 'Contexto de tienda seleccionado'],
 			['num' => 3, 'title' => 'Consultar indicadores', 'desc' => 'Revisar ventas netas, margen bruto, porcentaje de merma y rotación de stock.', 'resp' => 'Director Ejecutivo', 'action' => 'Ver Panel Ejecutivo', 'url' => '/kpis', 'val' => 'Indicadores calculados contra presupuesto'],
 			['num' => 4, 'title' => 'Comparar resultados', 'desc' => 'Benchmarking entre sucursales para detectar brechas de rendimiento.', 'resp' => 'Gerente de Operaciones', 'action' => 'Comparativa Comercial', 'url' => '/sales', 'val' => 'Clasificación de tiendas por quintiles'],
-			['num' => 5, 'title' => 'Identificar desviaciones', 'desc' => 'Consultar análisis inteligente de anomalías asistido por Arturito IA.', 'resp' => 'Asesor Ejecutivo IA', 'action' => 'Consultar Arturito IA', 'url' => '/ai-advisor', 'val' => 'Detección automática de anomalías comerciales'],
+			['num' => 5, 'title' => 'Identificar desviaciones', 'desc' => 'Consultar análisis financiero de centros de costo e incidencias.', 'resp' => 'Analista de Costos / Control', 'action' => 'Consultar Centros de Costo', 'url' => '/cost-centers', 'val' => 'Detección de desviaciones presupuestales'],
 			['num' => 6, 'title' => 'Generar reporte', 'desc' => 'Consolidar balance comercial y operativo en informe ejecutivo unificado.', 'resp' => 'Analista Financiero', 'action' => 'Generar Informe Ejecutivo', 'url' => '/reports', 'val' => 'Conciliación contable 100% consistente'],
 			['num' => 7, 'title' => 'Exportar o compartir', 'desc' => 'Descarga en Excel/PDF cifrado o programación de envío automático a directores.', 'resp' => 'Control de Gestión', 'action' => 'Exportar Datos Oficiales', 'url' => '/reports', 'val' => 'Exportación segura completada']
 		]
 	],
 	'sistema' => [
-		'code' => '10',
+		'code' => '9',
 		'name' => 'Administración y Sistema',
 		'icon' => 'fa-gear',
 		'match_views' => ['admin_settings', 'users', 'userform', 'userpermissions', 'data_import', 'location_labels', 'admin_audit_log', 'system_map', 'admin_economics', 'products', 'locations', 'shoppinglocations', 'quantityunits', 'productgroups', 'chores', 'batteries', 'taskcategories', 'userfields', 'userentities'],

@@ -1,0 +1,12 @@
+{
+    "Cero colaboradores con conflicto de programación simultánea entre sucursales en la semana.": "Zero team members with simultaneous scheduling conflicts between branches this week.",
+    "Cobertura de demanda:": "Demand coverage:",
+    "Costo proyectado:": "Projected cost:",
+    "Escenario de ejemplo ({0})": "Sample scenario ({0})",
+    "Monitoreo comparativo de dotación, horas asignadas, productividad (SPLH), cobertura y detección de doble programación entre sedes.": "Comparative monitoring of staffing, assigned hours, productivity (SPLH), coverage and detection of double scheduling between sites.",
+    "SPLH (Venta/hora):": "SPLH (Sales/hour):",
+    "el día": "on",
+    "programado simultáneamente en Sucursal #": "scheduled simultaneously at Branch #",
+    "{0} Sucursales en Red": "{0} Network Branches",
+    "¡Alerta de doble programación entre sucursales detectada!": "Double scheduling between branches detected!"
+}

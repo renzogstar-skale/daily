@@ -1,0 +1,15 @@
+{
+    "), pendiente de aprobación": "), pending approval",
+    "Ajuste de inventario contabilizado": "Inventory adjustment posted",
+    "Ajuste por conteo cíclico CC-": "Adjustment from cyclical count CC-",
+    "Automático ABC: clase": "Automatic ABC: class",
+    "Conteo coincide con el sistema": "Count matches the system",
+    "Conteo cíclico no encontrado": "Cyclical count not found",
+    "Diferencia de": "Difference of",
+    "El ajuste de este conteo ya fue registrado": "The adjustment for this count was already recorded",
+    "Este conteo ya fue registrado por otro usuario": "This count was already recorded by another user",
+    "Ingrese la cantidad física contada (cero o mayor)": "Enter the physical quantity counted (zero or greater)",
+    "Segregación de funciones: quien ejecutó el conteo no puede aprobar el ajuste": "Segregation of duties: whoever performed the count cannot approve the adjustment",
+    "Seleccione sucursal y productos": "Select branch and products",
+    "Solo se ajustan conteos con diferencia pendiente": "Only counts with a pending difference are adjusted"
+}

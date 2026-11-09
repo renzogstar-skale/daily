@@ -113,6 +113,7 @@ if (!empty(GROCY_BASE_PATH))
 	$app->setBasePath(GROCY_BASE_PATH);
 }
 
+$app->add(new \Grocy\Middleware\DailyI18nExportMiddleware($container, $app->getResponseFactory()));
 $app->add(new \Grocy\Middleware\DairyIdempotencyMiddleware($container, $app->getResponseFactory()));
 $app->add(new \Grocy\Middleware\DairyPermissionMiddleware($container, $app->getResponseFactory()));
 $app->add(new LocaleMiddleware($container, $app->getResponseFactory()));

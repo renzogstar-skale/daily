@@ -2,7 +2,8 @@
    DAIRY ENTERPRISE — MASTER DESIGN SYSTEM (SAP FIORI / MODERN ERP STANDARD)
    ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+/* Inter se carga con <link> en views/layout/default.blade.php (un @import aquí se descubría tarde y con
+   display=swap el texto se re-maquetaba al llegar la fuente en cada navegación). */
 
 :root {
 	/* Paleta única DAIRY: cada tono tiene color, -dark (texto sobre fondo claro), -bg y -border */

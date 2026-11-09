@@ -1,0 +1,11 @@
+{
+    "(la fusión de productos o la división de lotes también lo hacen)": "(product merges or lot splits do it too)",
+    "): verificar el conteo que la respalda": "): verify the count that supports it",
+    "Consumo marcado como vencido/dañado fuera de Registrar merma: no tiene causal, aprobación ni evidencia": "Consumption marked as expired/damaged outside Record shrink: it has no cause, approval or evidence",
+    "Corrección de inventario de $": "Inventory correction of $",
+    "El sello no coincide: el libro fue editado fuera de DAIRY a partir de este movimiento": "The seal does not match: the ledger was edited outside DAIRY from this movement onward",
+    "Mismo producto, tipo y cantidad registrado dos veces en menos de {0} minutos: confirmar que no sea un doble registro": "Same product, type and quantity recorded twice in less than {0} minutes: confirm it is not a double entry",
+    "Modificado después de registrarse:": "Modified after being recorded:",
+    "Movimiento que no pasó por el libro (captura desactivada o inserción directa)": "Movement that did not go through the ledger (capture disabled or direct insert)",
+    "Registrado a las": "Recorded at"
+}

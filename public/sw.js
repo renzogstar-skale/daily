@@ -28,8 +28,11 @@ self.addEventListener('fetch', function(e) {
 	if (isStatic(url)) {
 		e.respondWith(caches.open(CACHE).then(function(cache) {
 			return cache.match(req).then(function(hit) {
-				var net = fetch(req).then(function(res) { if (res.ok) { cache.put(req, res.clone()); } return res; }).catch(function() { return hit; });
-				return hit || net;
+				if (hit) return hit;
+				return fetch(req).then(function(res) {
+					if (res.ok) cache.put(req, res.clone());
+					return res;
+				});
 			});
 		}));
 		return;

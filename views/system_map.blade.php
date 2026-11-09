@@ -3,7 +3,7 @@
 @section('title', 'Mapa del Sistema')
 
 @push('pageStyles')
-<link href="{{ $U('/css/dairy_system_map.css?v=', true) }}{{ $version }}" rel="stylesheet">
+<link href="{{ $U('/css/dairy_system_map.css?v=', true) }}{{ daily_asset_version('/css/dairy_system_map.css') }}" rel="stylesheet">
 @endpush
 
 @section('content')

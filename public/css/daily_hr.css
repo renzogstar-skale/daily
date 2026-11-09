@@ -1,0 +1,520 @@
+/* DAILY — Recursos Humanos (HCM) Modern Stylesheet */
+
+.hr-container {
+	padding: 0.5rem 0 2rem 0;
+}
+
+/* Header & Filter Bar */
+.hr-header-box {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 1rem;
+	margin-bottom: 1.25rem;
+	padding-bottom: 0.75rem;
+	border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.hr-title-wrap h1 {
+	font-size: 1.45rem;
+	font-weight: 800;
+	color: #0f172a;
+	margin: 0;
+	display: flex;
+	align-items: center;
+	gap: 0.6rem;
+}
+
+.hr-title-wrap p {
+	font-size: 0.82rem;
+	color: #64748b;
+	margin: 0.2rem 0 0 0;
+}
+
+.hr-badge-live {
+	background: #ecfdf5;
+	color: #059669;
+	border: 1px solid #a7f3d0;
+	font-size: 0.72rem;
+	font-weight: 700;
+	padding: 0.2rem 0.55rem;
+	border-radius: 9999px;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.3rem;
+}
+
+.hr-badge-dot {
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: #10b981;
+	display: inline-block;
+	animation: pulseGreen 2s infinite;
+}
+
+@keyframes pulseGreen {
+	0% { transform: scale(0.95); opacity: 0.8; }
+	50% { transform: scale(1.3); opacity: 1; }
+	100% { transform: scale(0.95); opacity: 0.8; }
+}
+
+/* HCM 8-Step Interactive Cycle */
+.hr-cycle-card {
+	background: #ffffff;
+	border: 1px solid #e2e8f0;
+	border-radius: 12px;
+	padding: 0.85rem 1rem;
+	margin-bottom: 1.25rem;
+	box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
+
+.hr-cycle-title {
+	font-size: 0.78rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: #475569;
+	margin-bottom: 0.75rem;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.hr-cycle-stepper {
+	display: grid;
+	grid-template-columns: repeat(8, 1fr);
+	gap: 0.5rem;
+}
+
+.hr-cycle-step {
+	background: #f8fafc;
+	border: 1px solid #e2e8f0;
+	border-radius: 8px;
+	padding: 0.5rem 0.4rem;
+	text-align: center;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+.hr-cycle-step:hover, .hr-cycle-step.active {
+	background: #eff6ff;
+	border-color: #3b82f6;
+	transform: translateY(-2px);
+}
+
+.hr-step-num {
+	width: 22px;
+	height: 22px;
+	border-radius: 50%;
+	background: #e2e8f0;
+	color: #475569;
+	font-size: 0.72rem;
+	font-weight: 700;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin-bottom: 0.25rem;
+}
+
+.hr-cycle-step.active .hr-step-num {
+	background: #2563eb;
+	color: #ffffff;
+}
+
+.hr-step-name {
+	font-size: 0.76rem;
+	font-weight: 700;
+	color: #1e293b;
+	line-height: 1.1;
+}
+
+.hr-step-desc {
+	font-size: 0.65rem;
+	color: #64748b;
+	margin-top: 0.15rem;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	width: 100%;
+}
+
+/* KPI Grid (8 Cards) */
+.hr-kpi-grid {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 0.85rem;
+	margin-bottom: 1.25rem;
+}
+
+.hr-kpi-card {
+	background: #ffffff;
+	border: 1px solid #e2e8f0;
+	border-radius: 12px;
+	padding: 0.9rem 1rem;
+	box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+	display: flex;
+	flex-direction: column;
+	transition: all 0.2s ease;
+}
+
+.hr-kpi-card:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 6px 16px rgba(0,0,0,0.05);
+	border-color: #cbd5e1;
+}
+
+.hr-kpi-head {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 0.35rem;
+}
+
+.hr-kpi-label {
+	font-size: 0.75rem;
+	font-weight: 700;
+	color: #64748b;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+}
+
+.hr-kpi-icon {
+	width: 32px;
+	height: 32px;
+	border-radius: 8px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 0.85rem;
+}
+
+.hr-kpi-icon-blue { background: #eff6ff; color: #2563eb; }
+.hr-kpi-icon-green { background: #ecfdf5; color: #059669; }
+.hr-kpi-icon-amber { background: #fffbeb; color: #d97706; }
+.hr-kpi-icon-purple { background: #faf5ff; color: #7c3aed; }
+.hr-kpi-icon-teal { background: #f0fdfa; color: #0d9488; }
+.hr-kpi-icon-rose { background: #fff1f2; color: #e11d48; }
+
+.hr-kpi-value {
+	font-size: 1.55rem;
+	font-weight: 800;
+	color: #0f172a;
+	line-height: 1.1;
+	margin-bottom: 0.25rem;
+}
+
+.hr-kpi-footer {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	font-size: 0.72rem;
+	color: #64748b;
+	margin-top: auto;
+}
+
+.hr-kpi-trend {
+	font-weight: 700;
+	color: #059669;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.2rem;
+}
+
+/* Nav Tabs */
+.hr-nav-tabs {
+	display: flex;
+	align-items: center;
+	gap: 0.4rem;
+	overflow-x: auto;
+	padding-bottom: 0.5rem;
+	margin-bottom: 1.25rem;
+	border-bottom: 2px solid #e2e8f0;
+}
+
+.hr-tab-btn {
+	background: transparent;
+	border: none;
+	padding: 0.55rem 0.95rem;
+	font-size: 0.84rem;
+	font-weight: 600;
+	color: #64748b;
+	border-radius: 8px;
+	cursor: pointer;
+	white-space: nowrap;
+	transition: all 0.15s ease;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.45rem;
+}
+
+.hr-tab-btn:hover {
+	color: #0f172a;
+	background: #f1f5f9;
+}
+
+.hr-tab-btn.active {
+	color: #2563eb;
+	background: #eff6ff;
+	font-weight: 700;
+}
+
+.hr-tab-badge {
+	font-size: 0.68rem;
+	padding: 0.15rem 0.45rem;
+	border-radius: 9999px;
+	background: #e2e8f0;
+	color: #475569;
+	font-weight: 700;
+}
+
+.hr-tab-btn.active .hr-tab-badge {
+	background: #2563eb;
+	color: #ffffff;
+}
+
+/* Tab Panels */
+.hr-tab-panel {
+	display: none;
+}
+
+.hr-tab-panel.active {
+	display: block;
+	animation: fadeIn 0.2s ease-in;
+}
+
+@keyframes fadeIn {
+	from { opacity: 0; transform: translateY(4px); }
+	to { opacity: 1; transform: translateY(0); }
+}
+
+/* Table Cards */
+.hr-card {
+	background: #ffffff;
+	border: 1px solid #e2e8f0;
+	border-radius: 12px;
+	padding: 1.15rem 1.25rem;
+	margin-bottom: 1.25rem;
+	box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
+
+.hr-card-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 1rem;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
+.hr-card-title {
+	font-size: 1.05rem;
+	font-weight: 700;
+	color: #0f172a;
+	margin: 0;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.hr-table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 0.86rem;
+}
+
+.hr-table th {
+	background: #f8fafc;
+	color: #64748b;
+	font-weight: 700;
+	font-size: 0.72rem;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	padding: 0.7rem 0.85rem;
+	border-bottom: 1px solid #e2e8f0;
+	text-align: left;
+}
+
+.hr-table td {
+	padding: 0.75rem 0.85rem;
+	border-bottom: 1px solid #f1f5f9;
+	color: #334155;
+	vertical-align: middle;
+}
+
+.hr-table tbody tr:hover {
+	background: #f8fafc;
+}
+
+/* Candidate Kanban */
+.hr-kanban-board {
+	display: grid;
+	grid-template-columns: repeat(5, 1fr);
+	gap: 0.75rem;
+	overflow-x: auto;
+	padding-bottom: 0.5rem;
+}
+
+.hr-kanban-col {
+	background: #f8fafc;
+	border: 1px solid #e2e8f0;
+	border-radius: 10px;
+	padding: 0.75rem;
+	display: flex;
+	flex-direction: column;
+	min-height: 380px;
+}
+
+.hr-kanban-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 0.75rem;
+	padding-bottom: 0.4rem;
+	border-bottom: 2px solid;
+}
+
+.hr-kanban-title {
+	font-size: 0.8rem;
+	font-weight: 700;
+	color: #0f172a;
+}
+
+.hr-candidate-card {
+	background: #ffffff;
+	border: 1px solid #e2e8f0;
+	border-radius: 8px;
+	padding: 0.65rem 0.75rem;
+	margin-bottom: 0.6rem;
+	box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+	cursor: pointer;
+	transition: all 0.15s ease;
+}
+
+.hr-candidate-card:hover {
+	transform: translateY(-2px);
+	border-color: #3b82f6;
+	box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+}
+
+.hr-candidate-name {
+	font-size: 0.84rem;
+	font-weight: 700;
+	color: #0f172a;
+	margin-bottom: 0.15rem;
+}
+
+.hr-candidate-role {
+	font-size: 0.74rem;
+	color: #64748b;
+	margin-bottom: 0.35rem;
+}
+
+.hr-candidate-meta {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	font-size: 0.7rem;
+	color: #94a3b8;
+}
+
+/* Onboarding checklist */
+.hr-onboarding-item {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0.65rem 0.85rem;
+	background: #f8fafc;
+	border: 1px solid #f1f5f9;
+	border-radius: 8px;
+	margin-bottom: 0.5rem;
+}
+
+.hr-onboarding-left {
+	display: flex;
+	align-items: center;
+	gap: 0.65rem;
+}
+
+.hr-onboarding-left input[type="checkbox"] {
+	width: 17px;
+	height: 17px;
+	cursor: pointer;
+}
+
+/* Modal and Drawer Styles */
+.hr-modal-overlay {
+	display: none;
+	position: fixed;
+	top: 0; left: 0; right: 0; bottom: 0;
+	background: rgba(15, 23, 42, 0.55);
+	backdrop-filter: blur(4px);
+	z-index: 1050;
+	align-items: center;
+	justify-content: center;
+	padding: 1rem;
+}
+
+.hr-modal-overlay.active {
+	display: flex;
+}
+
+.hr-modal-box {
+	background: #ffffff;
+	border-radius: 14px;
+	max-width: 680px;
+	width: 100%;
+	max-height: 90vh;
+	overflow-y: auto;
+	box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+	padding: 1.5rem;
+}
+
+.hr-modal-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 1rem;
+	padding-bottom: 0.75rem;
+	border-bottom: 1px solid #e2e8f0;
+}
+
+.hr-modal-close {
+	background: transparent;
+	border: none;
+	font-size: 1.25rem;
+	color: #94a3b8;
+	cursor: pointer;
+}
+
+.hr-modal-close:hover {
+	color: #0f172a;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+	.hr-kpi-grid {
+		grid-template-columns: repeat(2, 1fr);
+	}
+	.hr-cycle-stepper {
+		grid-template-columns: repeat(4, 1fr);
+		gap: 0.5rem;
+	}
+	.hr-kanban-board {
+		grid-template-columns: repeat(5, 240px);
+	}
+}
+
+@media (max-width: 640px) {
+	.hr-kpi-grid {
+		grid-template-columns: 1fr;
+	}
+	.hr-cycle-stepper {
+		grid-template-columns: repeat(2, 1fr);
+	}
+}
+

@@ -1,0 +1,370 @@
+[
+ {
+  "f": "01_ejecutivo/today",
+  "u": "/today",
+  "h": 2824,
+  "leaks": [],
+  "noisy": 2
+ },
+ {
+  "f": "01_ejecutivo/kpis",
+  "u": "/kpis",
+  "h": 1674,
+  "leaks": [],
+  "noisy": 0
+ },
+ {
+  "f": "02_mermas/waste_centro-control",
+  "u": "/waste",
+  "h": 2006,
+  "leaks": [],
+  "noisy": 3
+ },
+ {
+  "f": "02_mermas/waste_causales",
+  "u": "/waste",
+  "h": 2316,
+  "leaks": [],
+  "noisy": 1
+ },
+ {
+  "f": "02_mermas/waste_investigaciones",
+  "u": "/waste",
+  "h": 2403,
+  "leaks": [],
+  "noisy": 1
+ },
+ {
+  "f": "02_mermas/waste_fefo",
+  "u": "/waste",
+  "h": 2930,
+  "leaks": [],
+  "noisy": 1
+ },
+ {
+  "f": "02_mermas/waste_conteos",
+  "u": "/waste",
+  "h": 5403,
+  "leaks": [],
+  "noisy": 1
+ },
+ {
+  "f": "02_mermas/waste_robo",
+  "u": "/waste",
+  "h": 2207,
+  "leaks": [],
+  "noisy": 1
+ },
+ {
+  "f": "02_mermas/waste_approvals",
+  "u": "/waste/approvals",
+  "h": 18846,
+  "leaks": [],
+  "noisy": 4
+ },
+ {
+  "f": "02_mermas/waste_report",
+  "u": "/waste/report",
+  "h": 1879,
+  "leaks": [],
+  "noisy": 4
+ },
+ {
+  "f": "02_mermas/loss_executive",
+  "u": "/reports/loss-executive",
+  "h": 11193,
+  "leaks": [],
+  "noisy": 3
+ },
+ {
+  "f": "03_inventario/stockoverview",
+  "u": "/stockoverview",
+  "h": 5005,
+  "leaks": [],
+  "noisy": 0
+ },
+ {
+  "f": "03_inventario/kardex",
+  "u": "/kardex",
+  "h": 2116,
+  "leaks": [],
+  "noisy": 0
+ },
+ {
+  "f": "03_inventario/kardex_producto",
+  "u": "/kardex?product_id=9001",
+  "h": 3134,
+  "leaks": [],
+  "noisy": 0
+ },
+ {
+  "f": "03_inventario/conciliacion",
+  "u": "/reconciliation?product_id=9001",
+  "h": 2056,
+  "leaks": [],
+  "noisy": 0
+ },
+ {
+  "f": "03_inventario/conciliacion_ficha",
+  "u": "/reconciliation?product_id=9001",
+  "h": 2056,
+  "leaks": [],
+  "noisy": 0
+ },
+ {
+  "f": "03_inventario/location_map",
+  "u": "/locations/map",
+  "h": 2741,
+  "leaks": [],
+  "noisy": 0
+ },
+ {
+  "f": "03_inventario/transfers",
+  "u": "/transfers",
+  "h": 2295,
+  "leaks": [],
+  "noisy": 0
+ },
+ {
+  "f": "03_inventario/scan",
+  "u": "/scan",
+  "h": 1787,
+  "leaks": [],
+  "noisy": 2
+ },
+ {
+  "f": "03_inventario/inventory",
+  "u": "/inventory",
+  "h": 1500,
+  "leaks": [],
+  "noisy": 0
+ },
+ {
+  "f": "03_inventario/inventory_control",
+  "u": "/inventory-control",
+  "h": 1917,
+  "leaks": [],
+  "noisy": 0
+ },
+ {
+  "f": "03_inventario/traceability",
+  "u": "/traceability",
+  "h": 1080,
+  "leaks": [],
+  "noisy": 0
+ },
+ {
+  "f": "04_calidad/quality",
+  "u": "/quality",
+  "h": 3393,
+  "leaks": [],
+  "noisy": 0
+ },
+ {
+  "f": "04_calidad/quality_cold",
+  "u": "/quality",
+  "h": 5146,
+  "leaks": [],
+  "noisy": 0
+ },
+ {
+  "f": "04_calidad/recalls",
+  "u": "/recalls",
+  "h": 1177,
+  "leaks": [],
+  "noisy": 0
+ },
+ {
+  "f": "05_ventas/sales",
+  "u": "/sales",
+  "h": 3317,
+  "leaks": [],
+  "noisy": 0
+ },
+ {
+  "f": "sales_analisis",
+  "fail": "page.click: Timeout 8000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#pill-analisis')\u001b[22m\n"
+ },
+ {
+  "f": "05_ventas/pos",
+  "u": "/pos",
+  "h": 1112,
+  "leaks": [],
+  "noisy": 0
+ },
+ {
+  "f": "05_ventas/reports",
+  "u": "/reports",
+  "h": 1895,
+  "leaks": [],
+  "noisy": 0
+ },
+ {
+  "f": "06_personal/scheduling",
+  "u": "/operations/scheduling",
+  "h": 2889,
+  "leaks": [],
+  "noisy": 0
+ },
+ {
+  "f": "06_personal/scheduling_mensual",
+  "u": "/operations/scheduling",
+  "h": 4029,
+  "leaks": [],
+  "noisy": 1
+ },
+ {
+  "f": "06_personal/attendance",
+  "u": "/operations/attendance",
+  "h": 1397,
+  "leaks": [],
+  "noisy": 0
+ },
+ {
+  "f": "06_personal/workforce",
+  "u": "/workforce",
+  "h": 12698,
+  "leaks": [],
+  "noisy": 4
+ },
+ {
+  "f": "07_multisucursal/branches",
+  "u": "/branches",
+  "h": 8497,
+  "leaks": [],
+  "noisy": 3
+ },
+ {
+  "f": "08_alertas/alerts",
+  "u": "/alerts",
+  "h": 1976,
+  "leaks": [],
+  "noisy": 0
+ },
+ {
+  "f": "09_compras/mrp",
+  "u": "/mrp",
+  "h": 50816,
+  "leaks": [],
+  "noisy": 1
+ },
+ {
+  "f": "09_compras/suppliers",
+  "u": "/suppliers",
+  "h": 4144,
+  "leaks": [],
+  "noisy": 0
+ },
+ {
+  "f": "09_compras/ai_advisor",
+  "u": "/ai-advisor",
+  "h": 2393,
+  "leaks": [],
+  "noisy": 0
+ },
+ {
+  "f": "11_prevencion/lp",
+  "u": "/loss-prevention",
+  "h": 2056,
+  "leaks": [],
+  "noisy": 1
+ },
+ {
+  "f": "11_prevencion/lp_anomalias",
+  "u": "/loss-prevention",
+  "h": 2186,
+  "leaks": [],
+  "noisy": 1
+ },
+ {
+  "f": "11_prevencion/lp_custodia",
+  "u": "/loss-prevention",
+  "h": 2602,
+  "leaks": [],
+  "noisy": 1
+ },
+ {
+  "f": "11_prevencion/lp_counts",
+  "u": "/loss-prevention/counts",
+  "h": 1080,
+  "leaks": [],
+  "noisy": 0
+ },
+ {
+  "f": "11_prevencion/lp_devices",
+  "u": "/loss-prevention/devices",
+  "h": 11697,
+  "leaks": [],
+  "noisy": 0
+ },
+ {
+  "f": "12_procesos/process_flow",
+  "u": "/process-flow",
+  "h": 9466,
+  "leaks": [],
+  "noisy": 0
+ },
+ {
+  "f": "10_movil/m_home",
+  "u": "/m#/home",
+  "h": 2698,
+  "leaks": [],
+  "noisy": 0
+ },
+ {
+  "f": "10_movil/m_tasks",
+  "u": "/m#/tasks",
+  "h": 5824,
+  "leaks": [],
+  "noisy": 0
+ },
+ {
+  "f": "10_movil/m_scan",
+  "u": "/m#/scan",
+  "h": 844,
+  "leaks": [],
+  "noisy": 0
+ },
+ {
+  "f": "10_movil/m_control",
+  "u": "/m#/control",
+  "h": 104507,
+  "leaks": [],
+  "noisy": 1
+ },
+ {
+  "f": "10_movil/m_notifications",
+  "u": "/m#/notifications",
+  "h": 7678,
+  "leaks": [],
+  "noisy": 0
+ },
+ {
+  "f": "10_movil/m_inv",
+  "u": "/m#/inv",
+  "h": 1927,
+  "leaks": [],
+  "noisy": 0
+ },
+ {
+  "f": "10_movil/m_waste",
+  "u": "/m#/waste",
+  "h": 2251,
+  "leaks": [],
+  "noisy": 1
+ },
+ {
+  "f": "10_movil/m_team",
+  "u": "/m#/team",
+  "h": 2121,
+  "leaks": [],
+  "noisy": 0
+ },
+ {
+  "f": "10_movil/m_sales",
+  "u": "/m#/sales",
+  "h": 2521,
+  "leaks": [],
+  "noisy": 0
+ }
+]

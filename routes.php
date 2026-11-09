@@ -1,6 +1,8 @@
 <?php
 
 use Grocy\Controllers\Api\AlertCenterApiController;
+use Grocy\Controllers\Api\SubscriptionApiController;
+use Grocy\Controllers\SubscriptionController;
 use Grocy\Controllers\Api\BatteriesApiController;
 use Grocy\Controllers\Api\CalendarApiController;
 use Grocy\Controllers\Api\ChoresApiController;
@@ -23,6 +25,7 @@ use Grocy\Controllers\LoginController;
 use Grocy\Controllers\RecipesController;
 use Grocy\Controllers\StockController;
 use Grocy\Controllers\StockReportsController;
+use Grocy\Controllers\SiteController;
 use Grocy\Controllers\SystemController;
 use Grocy\Controllers\TasksController;
 use Grocy\Controllers\UsersController;
@@ -30,16 +33,17 @@ use Grocy\Controllers\WasteController;
 use Grocy\Controllers\SalesController;
 use Grocy\Controllers\KpiController;
 use Grocy\Controllers\BranchController;
-use Grocy\Controllers\AiController;
 use Grocy\Controllers\SupplierProcurementController;
-use Grocy\Controllers\QualityExpiryController;
 use Grocy\Controllers\Api\WasteApiController;
 use Grocy\Controllers\Api\SalesApiController;
 use Grocy\Controllers\Api\KpiApiController;
 use Grocy\Controllers\Api\SupplierProcurementApiController;
-use Grocy\Controllers\Api\QualityExpiryApiController;
 use Grocy\Controllers\WorkforceController;
 use Grocy\Controllers\ScheduleController;
+use Grocy\Controllers\HrController;
+use Grocy\Controllers\Api\HrApiController;
+use Grocy\Controllers\WarehouseController;
+use Grocy\Controllers\Api\WarehouseApiController;
 use Grocy\Controllers\MrpController;
 use Grocy\Controllers\StockTransferController;
 use Grocy\Controllers\DocumentController;
@@ -52,7 +56,6 @@ use Grocy\Controllers\Api\ScheduleApiController;
 use Grocy\Controllers\AttendanceController;
 use Grocy\Controllers\Api\AttendanceApiController;
 use Grocy\Controllers\Api\BranchApiController;
-use Grocy\Controllers\Api\SimulatorApiController;
 use Grocy\Controllers\Api\MarkdownApiController;
 use Grocy\Controllers\Api\LossPreventionApiController;
 use Grocy\Controllers\Api\LossIntelligenceApiController;
@@ -81,7 +84,21 @@ $app->group('', function (RouteCollectorProxy $group)
 {
 	// System routes
 	$group->get('/', [SystemController::class, 'Root'])->setName('root');
+	$group->get('/app', [SystemController::class, 'AppEntry']);
 	$group->get('/about', [SystemController::class, 'About']);
+
+	// Sitio comercial público (rutas con nombre site.* = sin autenticación)
+	$group->get('/features', [SiteController::class, 'Features'])->setName('site.features');
+	$group->get('/features/{slug}', [SiteController::class, 'Feature'])->setName('site.feature');
+	$group->get('/solutions', [SiteController::class, 'Solutions'])->setName('site.solutions');
+	$group->get('/industries', [SiteController::class, 'Industries'])->setName('site.industries');
+	$group->get('/industries/{slug}', [SiteController::class, 'Industry'])->setName('site.industry');
+	$group->get('/pricing', [SiteController::class, 'Pricing'])->setName('site.pricing');
+	$group->get('/demo', [SiteController::class, 'Demo'])->setName('site.demo');
+	$group->get('/contact', [SiteController::class, 'Contact'])->setName('site.contact');
+	$group->get('/privacy', [SiteController::class, 'Legal'])->setName('site.privacy');
+	$group->get('/terms', [SiteController::class, 'Legal'])->setName('site.terms');
+	$group->post('/site/lead', [SiteController::class, 'SubmitLead'])->setName('site.lead');
 	$group->get('/manifest', [SystemController::class, 'Manifest']);
 	$group->get('/barcodescannertesting', [SystemController::class, 'BarcodeScannerTesting']);
 
@@ -122,6 +139,7 @@ $app->group('', function (RouteCollectorProxy $group)
 	$group->get('/consume', [StockController::class, 'Consume']);
 	$group->get('/transfer', [StockController::class, 'Transfer']);
 	$group->get('/inventory', [StockController::class, 'Inventory']);
+	$group->get('/inventory/stockouts', [StockController::class, 'Stockouts']);
 	$group->get('/stockentry/{entryId}', [StockController::class, 'StockEntryEditForm']);
 	$group->get('/stocksettings', [StockController::class, 'StockSettings']);
 	$group->get('/locations', [StockController::class, 'LocationsList']);
@@ -205,6 +223,7 @@ $app->group('', function (RouteCollectorProxy $group)
 
 	// Sales & POS
 	$group->get('/pos', [SalesController::class, 'Pos']);
+	$group->get('/pos/returns', [SalesController::class, 'PosReturns']);
 	$group->get('/sales', [SalesController::class, 'SalesHistory']);
 	$group->get('/customers', [SalesController::class, 'CustomersList']);
 
@@ -221,23 +240,16 @@ $app->group('', function (RouteCollectorProxy $group)
 	$group->get('/branches', [BranchController::class, 'BranchesList']);
 	$group->get('/branch/{branchId}/stock', [BranchController::class, 'BranchStock']);
 
-	// AI Operational Advisor
-	$group->get('/ai-advisor', [AiController::class, 'AdvisorView']);
-
 	// Suppliers & Procurement
 	$group->get('/suppliers', [SupplierProcurementController::class, 'Overview']);
 	$group->get('/procurement', function (Request $request, Response $response) {
 		return $response->withRedirect($this->get('UrlManager')->ConstructUrl('/suppliers' . ($request->getUri()->getQuery() !== '' ? '?' . $request->getUri()->getQuery() : '')), 301);
 	});
 
-	// Quality & Expiry (Cold Chain)
-	$group->get('/quality', [QualityExpiryController::class, 'Overview']);
-	$group->get('/quality-expiry', function (Request $request, Response $response) {
-		return $response->withRedirect($this->get('UrlManager')->ConstructUrl('/quality' . ($request->getUri()->getQuery() !== '' ? '?' . $request->getUri()->getQuery() : '')), 301);
-	});
-
 	// Workforce Floor Operations (Mobile)
 	$group->get('/workforce', [WorkforceController::class, 'StoreFloorView']);
+	$group->get('/hr', [HrController::class, 'Dashboard']);
+	$group->get('/hr/payroll/export', [HrController::class, 'ExportPayrollCsv']);
 	$group->get('/schedule', [ScheduleController::class, 'Overview']);
 	$group->get('/operations/scheduling', [ScheduleController::class, 'Overview']);
 	$group->get('/attendance', [AttendanceController::class, 'Overview']);
@@ -253,6 +265,7 @@ $app->group('', function (RouteCollectorProxy $group)
 	$group->get('/locations/map', [OperationsController::class, 'LocationMap']);
 	$group->get('/traceability', [OperationsController::class, 'Traceability']);
 	$group->get('/orders', [OperationsController::class, 'Orders']);
+	$group->get('/dispatches', [RetailPreventionController::class, 'Dispatch']);
 	$group->get('/dispatch', [RetailPreventionController::class, 'Dispatch']);
 	$group->get('/returns', [RetailPreventionController::class, 'Returns']);
 	$group->get('/recalls', [LossPreventionController::class, 'Recalls']);
@@ -263,6 +276,7 @@ $app->group('', function (RouteCollectorProxy $group)
 	$group->get('/reconciliation', [ReconciliationController::class, 'Overview']);
 	$group->get('/loss-prevention', [\Grocy\Controllers\LossCaseController::class, 'Dashboard']);
 	$group->get('/merchandise', [\Grocy\Controllers\LossCaseController::class, 'Merchandise']);
+	$group->get('/warehouse', [WarehouseController::class, 'Dashboard']);
 	$group->get('/loss-prevention/counts', [\Grocy\Controllers\LossCaseController::class, 'Counts']);
 	$group->get('/loss-prevention/devices', [\Grocy\Controllers\LossCaseController::class, 'Devices']);
 	$group->get('/loss-prevention/devices/{id}', [\Grocy\Controllers\LossCaseController::class, 'Device']);
@@ -277,6 +291,10 @@ $app->group('', function (RouteCollectorProxy $group)
 	$group->get('/settings', [\Grocy\Controllers\SystemAdminController::class, 'Settings']);
 	$group->get('/audit-log', [\Grocy\Controllers\SystemAdminController::class, 'AuditLog']);
 	$group->get('/daily/set-role', [SystemController::class, 'SetSimulatedRole']);
+
+	// Suscripción y planes DAILY
+	$group->get('/subscription', [SubscriptionController::class, 'Overview']);
+	$group->get('/daily/set-plan', [SubscriptionController::class, 'SetPreviewPlan']);
 });
 
 $app->group('/api', function (RouteCollectorProxy $group)
@@ -285,11 +303,19 @@ $app->group('/api', function (RouteCollectorProxy $group)
 	$group->get('/openapi/specification', [OpenApiController::class, 'DocumentationSpec']);
 
 	// System
+	// Suscripción y planes DAILY
+	$group->get('/subscription', [SubscriptionApiController::class, 'Get']);
+	$group->get('/subscription/capabilities', [SubscriptionApiController::class, 'Capabilities']);
+	$group->post('/subscription/request', [SubscriptionApiController::class, 'RequestUpgrade']);
+	$group->post('/subscription/change', [SubscriptionApiController::class, 'Change']);
+	$group->post('/subscription/requests/{id:[0-9]+}/decide', [SubscriptionApiController::class, 'DecideRequest']);
+
 	$group->get('/system/info', [SystemApiController::class, 'GetSystemInfo']);
 	$group->get('/system/time', [SystemApiController::class, 'GetSystemTime']);
 	$group->get('/system/db-changed-time', [SystemApiController::class, 'GetDbChangedTime']);
 	$group->get('/system/config', [SystemApiController::class, 'GetConfig']);
 	$group->post('/system/log-missing-localization', [SystemApiController::class, 'LogMissingLocalization']);
+	$group->post('/system/client-error', [SystemApiController::class, 'LogClientError']);
 	$group->get('/system/localization-strings', [SystemApiController::class, 'GetLocalizationStrings']);
 
 	// Generic entity interaction
@@ -425,6 +451,9 @@ $app->group('/api', function (RouteCollectorProxy $group)
 
 	// Sales API
 	$group->get('/sales', [SalesApiController::class, 'GetSales']);
+	$group->get('/sales/department-performance', [SalesApiController::class, 'GetDepartmentPerformance']);
+	$group->get('/sales/ty-ly', [SalesApiController::class, 'GetTyLyComparison']);
+	$group->get('/sales/department-performance/category/{groupId}', [SalesApiController::class, 'GetDepartmentCategoryProducts']);
 	$group->get('/sales/{saleId}', [SalesApiController::class, 'GetSale']);
 	$group->post('/sales', [SalesApiController::class, 'CreateSale']);
 	$group->post('/sales/{saleId}/cancel', [SalesApiController::class, 'CancelSale']);
@@ -437,9 +466,7 @@ $app->group('/api', function (RouteCollectorProxy $group)
 	// Executive KPI & AI Advisor API
 	$group->get('/kpi/executive', [KpiApiController::class, 'GetExecutiveDashboard']);
 	$group->get('/today/sales-executive', [KpiApiController::class, 'GetTodayExecutiveSales']);
-	$group->get('/ai/alerts', [KpiApiController::class, 'GetSmartAlerts']);
 	$group->get('/budgets', [KpiApiController::class, 'GetBudgets']);
-	$group->post('/ai/ask', [KpiApiController::class, 'Ask']);
 
 	// Reportes personalizables y programados (Etapa 34)
 	$group->get('/reports/catalog', [\Grocy\Controllers\Api\ReportBuilderApiController::class, 'Catalog']);
@@ -456,9 +483,6 @@ $app->group('/api', function (RouteCollectorProxy $group)
 	$group->get('/reports/loss-executive/{id}', [\Grocy\Controllers\Api\LossExecutiveReportApiController::class, 'Get']);
 	$group->get('/reports/loss-executive/{id}/xlsx', [\Grocy\Controllers\Api\LossExecutiveReportApiController::class, 'ExportXlsx']);
 	$group->post('/reports/loss-executive/schedule/{type}', [\Grocy\Controllers\Api\LossExecutiveReportApiController::class, 'SaveSchedule']);
-	$group->post('/ai/actions/preview', [KpiApiController::class, 'AiActionPreview']);
-	$group->post('/ai/actions/execute', [KpiApiController::class, 'AiActionExecute']);
-	$group->get('/ai/actions', [KpiApiController::class, 'AiActionHistory']);
 	$group->get('/branches/user-access', [BranchApiController::class, 'GetUserAccess']);
 	$group->post('/branches/user-access/{userId}', [BranchApiController::class, 'SetUserAccess']);
 	$group->post('/budgets', [KpiApiController::class, 'SaveBudget']);
@@ -474,16 +498,9 @@ $app->group('/api', function (RouteCollectorProxy $group)
 	$group->post('/procurement/incidents', [SupplierProcurementApiController::class, 'SaveIncident']);
 	$group->get('/procurement/recommendations', [SupplierProcurementApiController::class, 'GetRecommendations']);
 
-	// Quality & Expiry API
-	$group->get('/quality/batches', [QualityExpiryApiController::class, 'GetBatchExpiry']);
-	$group->get('/quality/cold-chain', [QualityExpiryApiController::class, 'GetColdChain']);
-	$group->get('/quality/temperatures', [QualityExpiryApiController::class, 'GetTemperatures']);
-	$group->post('/quality/temperatures', [QualityExpiryApiController::class, 'RecordTemperature']);
-	$group->post('/quality/inspections', [QualityExpiryApiController::class, 'RecordInspection']);
-	$group->get('/quality/quarantine', [QualityExpiryApiController::class, 'GetQuarantine']);
-	$group->post('/quality/quarantine', [QualityExpiryApiController::class, 'MoveToQuarantine']);
-	$group->post('/quality/quarantine/{quarantineId}/resolve', [QualityExpiryApiController::class, 'ResolveQuarantine']);
-	$group->get('/quality/traceability/{identifier}', [QualityExpiryApiController::class, 'GetTraceability']);
+	// Quarantine API (Waste / Stock)
+	$group->post('/waste/quarantine', [WasteApiController::class, 'MoveToQuarantine']);
+	$group->post('/stock/quarantine', [WasteApiController::class, 'MoveToQuarantine']);
 
 	// MRP & Materials Planning API
 	$group->get('/mrp/calculate', [MrpApiController::class, 'GetMrpCalculations']);
@@ -531,6 +548,17 @@ $app->group('/api', function (RouteCollectorProxy $group)
 	$group->post('/schedule/coverage', [ScheduleApiController::class, 'SaveCoverage']);
 	$group->get('/schedule/coverage/suggest', [ScheduleApiController::class, 'SuggestCoverage']);
 	$group->post('/schedule/certifications', [ScheduleApiController::class, 'SaveCertification']);
+
+	// DAILY — Recursos Humanos (HCM) API
+	$group->post('/hr/candidate/{id}/stage', [HrApiController::class, 'UpdateCandidateStage']);
+	$group->post('/hr/onboarding/{id}/toggle', [HrApiController::class, 'ToggleOnboardingTask']);
+	$group->post('/hr/request/{id}/decide', [HrApiController::class, 'DecideRequest']);
+	$group->post('/hr/communication', [HrApiController::class, 'PostCommunication']);
+
+	// DAILY — Almacén y Bodega (WMS) API
+	$group->post('/warehouse/putaway/{id}/confirm', [WarehouseApiController::class, 'ConfirmPutaway']);
+	$group->post('/warehouse/inspection', [WarehouseApiController::class, 'RecordInspection']);
+	$group->post('/warehouse/dock/{id}/status', [WarehouseApiController::class, 'UpdateDockStatus']);
 	$group->post('/schedule/certifications/{id}/delete', [ScheduleApiController::class, 'DeleteCertification']);
 	$group->post('/schedule/role-requirements', [ScheduleApiController::class, 'SaveRoleRequirements']);
 	$group->post('/schedule/shifts/bulk', [ScheduleApiController::class, 'BulkShifts']);
@@ -631,6 +659,10 @@ $app->group('/api', function (RouteCollectorProxy $group)
 	$group->post('/retail/dispatch/record-delivery', [RetailPreventionApiController::class, 'RecordDelivery']);
 	$group->post('/retail/dispatch/scan-upc', [RetailPreventionApiController::class, 'FastScanUPC']);
 	$group->post('/retail/dispatch/resolve-variance', [RetailPreventionApiController::class, 'ResolveVariance']);
+	$group->post('/retail/dispatch/assign-picking', [RetailPreventionApiController::class, 'AssignPicking']);
+	$group->post('/retail/dispatch/schedule-transport', [RetailPreventionApiController::class, 'ScheduleTransport']);
+	$group->post('/retail/dispatch/confirm-exit', [RetailPreventionApiController::class, 'ConfirmExit']);
+	$group->post('/retail/dispatch/cancel-order', [RetailPreventionApiController::class, 'CancelOrder']);
 	$group->get('/retail/dispatch/analytics', [RetailPreventionApiController::class, 'GetDispatchAnalytics']);
 	$group->get('/retail/returns', [RetailPreventionApiController::class, 'GetReturns']);
 	$group->post('/retail/returns', [RetailPreventionApiController::class, 'CreateReturn']);
@@ -865,9 +897,6 @@ $app->group('/api', function (RouteCollectorProxy $group)
 	// Buscador global del header
 	$group->get('/dairy/search', [GlobalSearchApiController::class, 'Search']);
 
-	// What-If Simulator API
-	$group->post('/simulator/evaluate', [SimulatorApiController::class, 'EvaluateSimulation']);
-
 	// Rebaja automática FEFO (markdown)
 	$group->get('/markdown/active', [MarkdownApiController::class, 'GetActiveMarkdowns']);
 	$group->get('/markdown/rules', [MarkdownApiController::class, 'GetRules']);
@@ -982,6 +1011,11 @@ $app->group('/api', function (RouteCollectorProxy $group)
 	$group->post('/pos/hold', [SalesApiController::class, 'HoldSale']);
 	$group->delete('/pos/hold/{holdId}', [SalesApiController::class, 'DeleteHeldSale']);
 	$group->post('/pos/hold/{holdId}/delete', [SalesApiController::class, 'DeleteHeldSale']);
+
+	// DAILY: Devoluciones del POS API
+	$group->get('/pos/returns/lookup', [SalesApiController::class, 'LookupSaleForReturn']);
+	$group->post('/pos/returns/validate', [SalesApiController::class, 'ValidatePosReturn']);
+	$group->post('/pos/returns/process', [SalesApiController::class, 'ProcessPosReturn']);
 
 	// DAILY: Directorio de Clientes API
 	$group->get('/customers', [SalesApiController::class, 'GetCustomers']);

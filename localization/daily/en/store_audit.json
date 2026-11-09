@@ -1,0 +1,11 @@
+{
+    "Auditoría no encontrada": "Audit not found",
+    "Describa el hallazgo de:": "Describe the finding of:",
+    "La auditoría ya está cerrada": "The audit is already closed",
+    "La plantilla necesita nombre y al menos un punto a evaluar": "The template needs a name and at least one item to evaluate",
+    "Seleccione la sucursal a auditar": "Select the branch to audit",
+    "Seleccione una plantilla activa": "Select an active template",
+    "punto(s) por evaluar": "item(s) to evaluate",
+    "tarea(s) correctiva(s) asignada(s)": "corrective task(s) assigned",
+    "· sin hallazgos": "· no findings"
+}

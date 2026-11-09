@@ -214,7 +214,7 @@
 							$processLink = $U('/equipment');
 						} elseif ($task->task_type === 'fefo_sweep') {
 							$processName = 'Rotación FEFO';
-							$processLink = $U('/quality');
+							$processLink = $U('/traceability');
 						} elseif (($task->source_type ?? null) === 'agreement') {
 							$processName = 'Acuerdo de Reunión #' . $task->source_id;
 						} elseif ($task->task_type === 'stock_count') {

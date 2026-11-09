@@ -1022,16 +1022,16 @@
 		<div class="daily-rc-connected-bg"></div>
 		<div class="daily-rc-connected-left">
 			<div class="daily-rc-connected-icon">
-				<i class="fa-solid fa-snowflake"></i>
+				<i class="fa-solid fa-route"></i>
 			</div>
 			<div>
 				<div class="daily-rc-connected-tag">Módulo conectado</div>
-				<h3 class="daily-rc-connected-title">Calidad & Vencimientos</h3>
-				<p class="daily-rc-connected-desc">Consulta la cuarentena de los lotes afectados.</p>
+				<h3 class="daily-rc-connected-title">Trazabilidad de Lotes</h3>
+				<p class="daily-rc-connected-desc">Seguimiento 360° de lotes, almacenes y movimientos afectados.</p>
 			</div>
 		</div>
 		<div class="daily-rc-connected-right">
-			<a href="{{ $U('/quality') }}" class="btn-daily-open-module">
+			<a href="{{ $U('/traceability') }}" class="btn-daily-open-module">
 				<span>Abrir módulo</span>
 				<i class="fa-solid fa-arrow-right"></i>
 			</a>

@@ -1,0 +1,10 @@
+{
+    "Aviso": "Notice",
+    "Conversación no encontrada": "Conversation not found",
+    "El grupo necesita entre {0} y {1} integrantes además de usted": "The group needs between {0} and {1} members besides you",
+    "El mensaje supera": "The message exceeds",
+    "Este aviso no admite respuestas": "This notice does not accept replies",
+    "Indique un nombre de grupo (máx. {0} caracteres)": "Enter a group name (max. {0} characters)",
+    "No puede escribirle a ese usuario": "You cannot write to that user",
+    "leído por": "read by"
+}

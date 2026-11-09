@@ -105,6 +105,42 @@ class SystemApiController extends BaseApiController
 		}
 	}
 
+	/**
+	 * Errores de JavaScript del navegador (public/js/daily_errors.js): una línea JSON por error en data/logs/client_errors.jsonl.
+	 * El archivo se rota al pasar de 2 MB para que un error repetido no llene el disco.
+	 */
+	public function LogClientError(Request $request, Response $response, array $args)
+	{
+		$body = json_decode((string) $request->getBody(), true);
+		if (!is_array($body))
+		{
+			return $this->GenericErrorResponse($response, 'Invalid body', 400);
+		}
+		$clip = fn ($v, int $n) => mb_substr(is_scalar($v) ? (string) $v : json_encode($v), 0, $n);
+		$entry = [
+			'at' => date('Y-m-d H:i:s'),
+			'user' => defined('GROCY_USER_ID') ? GROCY_USER_ID : null,
+			'kind' => $clip($body['kind'] ?? 'error', 20),
+			'page' => $clip($body['page'] ?? '', 300),
+			'msg' => $clip($body['msg'] ?? '', 500),
+			'src' => $clip($body['src'] ?? '', 300),
+			'stack' => $clip($body['stack'] ?? '', 2000),
+			'ua' => $clip($request->getHeaderLine('User-Agent'), 200),
+		];
+		$dir = GROCY_DATAPATH . '/logs';
+		if (!is_dir($dir))
+		{
+			@mkdir($dir, 0777, true);
+		}
+		$file = $dir . '/client_errors.jsonl';
+		if (is_file($file) && filesize($file) > 2 * 1024 * 1024)
+		{
+			@rename($file, $file . '.1');
+		}
+		file_put_contents($file, json_encode($entry, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n", FILE_APPEND | LOCK_EX);
+		return $this->EmptyApiResponse($response);
+	}
+
 	public function GetLocalizationStrings(Request $request, Response $response, array $args)
 	{
 		return $this->ApiResponse($response, json_decode(LocalizationService::GetInstance()->GetPoAsJsonString()), true);

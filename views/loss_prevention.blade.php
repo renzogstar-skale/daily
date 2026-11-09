@@ -157,8 +157,8 @@
 	     1. HERO BANNER PRINCIPAL (CENTRO DE CONTROL)
 	     ==================================================================== -->
 	<header class="lp-hero-card">
-		<div class="lp-hero-left">
-			<span class="lp-hero-kicker">PREVENCIÓN DE PÉRDIDAS 360°</span>
+		<div class="lp-hero-left daily-head">
+			<div class="dairy-page-icon is-primary"><i class="fa-solid fa-gauge-high"></i></div>
 			<h1 class="lp-hero-title">Centro de Control de Prevención de Pérdidas</h1>
 			<p class="lp-hero-subtitle">Incidentes · Activos · Custodia IMEI · Investigaciones · Resolución y Recuperación</p>
 		</div>
@@ -205,6 +205,9 @@
 		<button type="button" class="lp-btn-action-primary" onclick="openNewIncidentModal()">
 			<i class="fa-solid fa-bolt"></i> Registrar Incidencia
 		</button>
+		<a href="{{ $ctxUrl('/waste') }}" class="lp-btn-action-outline font-weight-bold" style="border-color: #fca5a5;">
+			<i class="fa-solid fa-trash-can text-danger"></i> Cuadro de Mermas
+		</a>
 		<a href="{{ $ctxUrl('/loss-prevention/counts') }}" class="lp-btn-action-outline">
 			<i class="fa-solid fa-barcode"></i> Conteos Sensibles
 		</a>
@@ -219,6 +222,8 @@
 				<i class="fa-solid fa-ellipsis"></i>
 			</button>
 			<div class="dropdown-menu dropdown-menu-right shadow-sm border-0" style="border-radius:10px; font-size:0.81rem;">
+				<a class="dropdown-item py-2" href="{{ $ctxUrl('/waste') }}"><i class="fa-solid fa-trash-can mr-2 text-danger"></i>Cuadro de Control de Mermas</a>
+				<a class="dropdown-item py-2" href="{{ $ctxUrl('/waste/approvals') }}"><i class="fa-solid fa-check-double mr-2 text-warning"></i>Aprobaciones de Mermas</a>
 				<a class="dropdown-item py-2" href="{{ $ctxUrl('/merchandise') }}"><i class="fa-solid fa-warehouse mr-2 text-success"></i>Control de Activos</a>
 				<a class="dropdown-item py-2" href="{{ $ctxUrl('/reports/loss-executive') }}"><i class="fa-solid fa-file-invoice-dollar mr-2 text-primary"></i>Reporte Ejecutivo de Pérdidas</a>
 				<a class="dropdown-item py-2" href="#" onclick="openCallModal(1, 'DEMO-001', 1, 'General'); return false;"><i class="fa-solid fa-phone mr-2 text-info"></i>Centro de Llamadas</a>
@@ -238,7 +243,7 @@
 		<div class="lp-filter-pill">
 			<select name="scope" onchange="this.form.submit()">
 				<option value="all" selected>Toda la red</option>
-				<option value="colombia">Red Alkosto Colombia</option>
+				<option value="colombia">Red de ejemplo</option>
 				<option value="us">Red Estados Unidos</option>
 			</select>
 		</div>
@@ -469,7 +474,7 @@
 					<tbody>
 						@foreach($casesList as $c)
 							<tr id="case-row-{{ $c['id'] }}">
-								<td class="lp-case-code"><a href="{{ $U('/loss-prevention/case/' . $c['id']) }}" class="font-weight-bold" style="color:#0f172a; text-decoration:none;" title="Abrir expediente 360°" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">{{ $c['case_code'] }} <i class="fa-solid fa-arrow-up-right-from-square ml-1" style="font-size:0.68rem; color:#64748b;"></i></a></td>
+								<td class="lp-case-code"><a href="{{ $U('/loss-prevention/case/' . $c['id']) }}" class="font-weight-bold" style="color:#0f172a; text-decoration:none;" title="Abrir expediente 360°" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">{{ $c['case_code'] }} <i class="fa-solid fa-arrow-up-right-from-square ml-1" style="font-size:0.6875rem; color:#64748b;"></i></a></td>
 								<td>
 									<div class="lp-product-cell">
 										<img src="{{ $U($c['product_thumb']) }}" class="lp-product-thumb" alt="" onerror="this.src='{{ $U('/img/control_center/prod_galaxy_s24.svg') }}'">
@@ -691,16 +696,16 @@
 			<div class="row">
 				@php
 				$branchDetails = [
-					['name' => 'Alkosto Calle 80', 'city' => 'Bogotá, D.C.', 'status' => 'Operativa', 'badge' => 'badge-success', 'shrink' => '1.18%', 'target' => '1.50%', 'cases' => 1, 'risk_val' => '$1,299.00', 'guard' => 'Enrique Peña (Líder)', 'phone' => '+57 311 405 9812', 'cctv' => '98.5% uptime'],
-					['name' => 'Alkosto Envigado', 'city' => 'Medellín, Antioquia', 'status' => 'Atención', 'badge' => 'badge-warning text-dark', 'shrink' => '1.62%', 'target' => '1.50%', 'cases' => 2, 'risk_val' => '$3,420.00', 'guard' => 'Jorge Valencia (Muelle)', 'phone' => '+57 314 821 7701', 'cctv' => '94.0% uptime'],
-					['name' => 'Alkosto Cali Sur', 'city' => 'Cali, Valle del Cauca', 'status' => 'Crítica', 'badge' => 'badge-danger', 'shrink' => '2.15%', 'target' => '1.50%', 'cases' => 3, 'risk_val' => '$4,850.00', 'guard' => 'Mario Ospina (CCTV)', 'phone' => '+57 310 933 1184', 'cctv' => '91.2% uptime'],
-					['name' => 'Alkosto Barranquilla', 'city' => 'Barranquilla, Atlántico', 'status' => 'Operativa', 'badge' => 'badge-success', 'shrink' => '1.05%', 'target' => '1.50%', 'cases' => 0, 'risk_val' => '$0.00', 'guard' => 'Andrea Torres (Supervisor)', 'phone' => '+57 318 644 2090', 'cctv' => '99.1% uptime'],
-					['name' => 'Alkosto Bucaramanga', 'city' => 'Bucaramanga, Santander', 'status' => 'Operativa', 'badge' => 'badge-success', 'shrink' => '1.24%', 'target' => '1.50%', 'cases' => 1, 'risk_val' => '$450.00', 'guard' => 'Camilo Duarte (Piso)', 'phone' => '+57 312 550 4918', 'cctv' => '97.8% uptime'],
-					['name' => 'Alkosto Tintal', 'city' => 'Bogotá, D.C.', 'status' => 'Operativa', 'badge' => 'badge-success', 'shrink' => '1.30%', 'target' => '1.50%', 'cases' => 0, 'risk_val' => '$0.00', 'guard' => 'Diana Pineda (Bóveda)', 'phone' => '+57 315 771 8832', 'cctv' => '98.0% uptime'],
-					['name' => 'Alkosto Villas', 'city' => 'Bogotá, D.C.', 'status' => 'Atención', 'badge' => 'badge-warning text-dark', 'shrink' => '1.58%', 'target' => '1.50%', 'cases' => 1, 'risk_val' => '$890.00', 'guard' => 'Felipe Gómez (Cajas)', 'phone' => '+57 317 220 5410', 'cctv' => '95.5% uptime'],
-					['name' => 'Alkosto 170', 'city' => 'Bogotá, D.C.', 'status' => 'Operativa', 'badge' => 'badge-success', 'shrink' => '0.98%', 'target' => '1.50%', 'cases' => 0, 'risk_val' => '$0.00', 'guard' => 'Claudia Morales (Seguridad)', 'phone' => '+57 313 449 0182', 'cctv' => '99.5% uptime'],
-					['name' => 'Alkosto Suba', 'city' => 'Bogotá, D.C.', 'status' => 'Operativa', 'badge' => 'badge-success', 'shrink' => '1.10%', 'target' => '1.50%', 'cases' => 0, 'risk_val' => '$0.00', 'guard' => 'Sandra Milena (CCTV)', 'phone' => '+57 316 880 7741', 'cctv' => '98.8% uptime'],
-					['name' => 'Alkosto Cali Norte', 'city' => 'Cali, Valle del Cauca', 'status' => 'Operativa', 'badge' => 'badge-success', 'shrink' => '1.35%', 'target' => '1.50%', 'cases' => 0, 'risk_val' => '$0.00', 'guard' => 'Mauricio Vélez (Control)', 'phone' => '+57 319 332 5599', 'cctv' => '97.0% uptime']
+					['name' => 'Tienda Calle 80', 'city' => 'Bogotá, D.C.', 'status' => 'Operativa', 'badge' => 'badge-success', 'shrink' => '1.18%', 'target' => '1.50%', 'cases' => 1, 'risk_val' => '$1,299.00', 'guard' => 'Enrique Peña (Líder)', 'phone' => '+57 311 405 9812', 'cctv' => '98.5% uptime'],
+					['name' => 'Tienda Envigado', 'city' => 'Medellín, Antioquia', 'status' => 'Atención', 'badge' => 'badge-warning text-dark', 'shrink' => '1.62%', 'target' => '1.50%', 'cases' => 2, 'risk_val' => '$3,420.00', 'guard' => 'Jorge Valencia (Muelle)', 'phone' => '+57 314 821 7701', 'cctv' => '94.0% uptime'],
+					['name' => 'Tienda Cali Sur', 'city' => 'Cali, Valle del Cauca', 'status' => 'Crítica', 'badge' => 'badge-danger', 'shrink' => '2.15%', 'target' => '1.50%', 'cases' => 3, 'risk_val' => '$4,850.00', 'guard' => 'Mario Ospina (CCTV)', 'phone' => '+57 310 933 1184', 'cctv' => '91.2% uptime'],
+					['name' => 'Tienda Barranquilla', 'city' => 'Barranquilla, Atlántico', 'status' => 'Operativa', 'badge' => 'badge-success', 'shrink' => '1.05%', 'target' => '1.50%', 'cases' => 0, 'risk_val' => '$0.00', 'guard' => 'Andrea Torres (Supervisor)', 'phone' => '+57 318 644 2090', 'cctv' => '99.1% uptime'],
+					['name' => 'Tienda Bucaramanga', 'city' => 'Bucaramanga, Santander', 'status' => 'Operativa', 'badge' => 'badge-success', 'shrink' => '1.24%', 'target' => '1.50%', 'cases' => 1, 'risk_val' => '$450.00', 'guard' => 'Camilo Duarte (Piso)', 'phone' => '+57 312 550 4918', 'cctv' => '97.8% uptime'],
+					['name' => 'Tienda Tintal', 'city' => 'Bogotá, D.C.', 'status' => 'Operativa', 'badge' => 'badge-success', 'shrink' => '1.30%', 'target' => '1.50%', 'cases' => 0, 'risk_val' => '$0.00', 'guard' => 'Diana Pineda (Bóveda)', 'phone' => '+57 315 771 8832', 'cctv' => '98.0% uptime'],
+					['name' => 'Tienda Villas', 'city' => 'Bogotá, D.C.', 'status' => 'Atención', 'badge' => 'badge-warning text-dark', 'shrink' => '1.58%', 'target' => '1.50%', 'cases' => 1, 'risk_val' => '$890.00', 'guard' => 'Felipe Gómez (Cajas)', 'phone' => '+57 317 220 5410', 'cctv' => '95.5% uptime'],
+					['name' => 'Tienda 170', 'city' => 'Bogotá, D.C.', 'status' => 'Operativa', 'badge' => 'badge-success', 'shrink' => '0.98%', 'target' => '1.50%', 'cases' => 0, 'risk_val' => '$0.00', 'guard' => 'Claudia Morales (Seguridad)', 'phone' => '+57 313 449 0182', 'cctv' => '99.5% uptime'],
+					['name' => 'Tienda Suba', 'city' => 'Bogotá, D.C.', 'status' => 'Operativa', 'badge' => 'badge-success', 'shrink' => '1.10%', 'target' => '1.50%', 'cases' => 0, 'risk_val' => '$0.00', 'guard' => 'Sandra Milena (CCTV)', 'phone' => '+57 316 880 7741', 'cctv' => '98.8% uptime'],
+					['name' => 'Tienda Cali Norte', 'city' => 'Cali, Valle del Cauca', 'status' => 'Operativa', 'badge' => 'badge-success', 'shrink' => '1.35%', 'target' => '1.50%', 'cases' => 0, 'risk_val' => '$0.00', 'guard' => 'Mauricio Vélez (Control)', 'phone' => '+57 319 332 5599', 'cctv' => '97.0% uptime']
 				];
 				@endphp
 
@@ -814,17 +819,17 @@
 						@php
 						$staffRoster = [
 							['name' => 'Renzo Giovine', 'role' => 'Gerente de Prevención 360°', 'dept' => 'Dirección de Pérdidas', 'branch' => 'Corporativo · Calle 80', 'shift' => '08:00 – 18:00', 'status' => 'En turno activo', 'badge' => 'badge-success', 'phone' => '+57 311 000 1122'],
-							['name' => 'Carlos Mendoza', 'role' => 'Custodio de Bóveda y Tecnología', 'dept' => 'Bóveda de Seguridad', 'branch' => 'Alkosto Calle 80', 'shift' => '07:00 – 16:00', 'status' => 'En turno activo', 'badge' => 'badge-success', 'phone' => '+57 311 405 9812'],
-							['name' => 'Lucía Restrepo', 'role' => 'Jefe de Cajas y Arqueos', 'dept' => 'Cajas y Facturación', 'branch' => 'Alkosto Calle 80', 'shift' => '09:00 – 19:00', 'status' => 'En turno activo', 'badge' => 'badge-success', 'phone' => '+57 312 901 3344'],
-							['name' => 'Jorge Valencia', 'role' => 'Supervisor de Recepción WMS', 'dept' => 'Muelle de Carga', 'branch' => 'Alkosto Envigado', 'shift' => '06:00 – 15:00', 'status' => 'En turno activo', 'badge' => 'badge-success', 'phone' => '+57 314 821 7701'],
-							['name' => 'Mario Ospina', 'role' => 'Analista Central CCTV', 'dept' => 'Monitoreo y Alarmas', 'branch' => 'Alkosto Cali Sur', 'shift' => '14:00 – 22:00', 'status' => 'En turno activo', 'badge' => 'badge-success', 'phone' => '+57 310 933 1184'],
-							['name' => 'Andrea Torres', 'role' => 'Auditora de Calidad y Devoluciones', 'dept' => 'Servicio al Cliente', 'branch' => 'Alkosto Barranquilla', 'shift' => '08:00 – 17:00', 'status' => 'En turno activo', 'badge' => 'badge-success', 'phone' => '+57 318 644 2090'],
-							['name' => 'Camilo Duarte', 'role' => 'Oficial de Seguridad en Piso', 'dept' => 'Pasillos de Alta Gama', 'branch' => 'Alkosto Bucaramanga', 'shift' => '10:00 – 20:00', 'status' => 'En turno activo', 'badge' => 'badge-success', 'phone' => '+57 312 550 4918'],
-							['name' => 'Diana Pineda', 'role' => 'Líder de Control FEFO', 'dept' => 'Cámaras de Frío / Carnes', 'branch' => 'Alkosto Tintal', 'shift' => '06:00 – 15:00', 'status' => 'En turno activo', 'badge' => 'badge-success', 'phone' => '+57 315 771 8832'],
-							['name' => 'Felipe Gómez', 'role' => 'Supervisor de Cajas', 'dept' => 'POS y Descuentos', 'branch' => 'Alkosto Villas', 'shift' => '12:00 – 21:00', 'status' => 'En turno activo', 'badge' => 'badge-success', 'phone' => '+57 317 220 5410'],
-							['name' => 'Claudia Morales', 'role' => 'Guardia de Muelle y Acceso', 'dept' => 'Control de Despachos', 'branch' => 'Alkosto 170', 'shift' => '07:00 – 16:00', 'status' => 'En turno activo', 'badge' => 'badge-success', 'phone' => '+57 313 449 0182'],
-							['name' => 'Sandra Milena', 'role' => 'Operadora CCTV y Antenas EAS', 'dept' => 'Seguridad Electrónica', 'branch' => 'Alkosto Suba', 'shift' => '08:00 – 18:00', 'status' => 'En turno activo', 'badge' => 'badge-success', 'phone' => '+57 316 880 7741'],
-							['name' => 'Mauricio Vélez', 'role' => 'Coordinador de Inventario Cíclico', 'dept' => 'Conteos Físicos', 'branch' => 'Alkosto Cali Norte', 'shift' => '07:00 – 16:30', 'status' => 'En turno activo', 'badge' => 'badge-success', 'phone' => '+57 319 332 5599']
+							['name' => 'Carlos Mendoza', 'role' => 'Custodio de Bóveda y Tecnología', 'dept' => 'Bóveda de Seguridad', 'branch' => 'Tienda Calle 80', 'shift' => '07:00 – 16:00', 'status' => 'En turno activo', 'badge' => 'badge-success', 'phone' => '+57 311 405 9812'],
+							['name' => 'Lucía Restrepo', 'role' => 'Jefe de Cajas y Arqueos', 'dept' => 'Cajas y Facturación', 'branch' => 'Tienda Calle 80', 'shift' => '09:00 – 19:00', 'status' => 'En turno activo', 'badge' => 'badge-success', 'phone' => '+57 312 901 3344'],
+							['name' => 'Jorge Valencia', 'role' => 'Supervisor de Recepción WMS', 'dept' => 'Muelle de Carga', 'branch' => 'Tienda Envigado', 'shift' => '06:00 – 15:00', 'status' => 'En turno activo', 'badge' => 'badge-success', 'phone' => '+57 314 821 7701'],
+							['name' => 'Mario Ospina', 'role' => 'Analista Central CCTV', 'dept' => 'Monitoreo y Alarmas', 'branch' => 'Tienda Cali Sur', 'shift' => '14:00 – 22:00', 'status' => 'En turno activo', 'badge' => 'badge-success', 'phone' => '+57 310 933 1184'],
+							['name' => 'Andrea Torres', 'role' => 'Auditora de Calidad y Devoluciones', 'dept' => 'Servicio al Cliente', 'branch' => 'Tienda Barranquilla', 'shift' => '08:00 – 17:00', 'status' => 'En turno activo', 'badge' => 'badge-success', 'phone' => '+57 318 644 2090'],
+							['name' => 'Camilo Duarte', 'role' => 'Oficial de Seguridad en Piso', 'dept' => 'Pasillos de Alta Gama', 'branch' => 'Tienda Bucaramanga', 'shift' => '10:00 – 20:00', 'status' => 'En turno activo', 'badge' => 'badge-success', 'phone' => '+57 312 550 4918'],
+							['name' => 'Diana Pineda', 'role' => 'Líder de Control FEFO', 'dept' => 'Cámaras de Frío / Carnes', 'branch' => 'Tienda Tintal', 'shift' => '06:00 – 15:00', 'status' => 'En turno activo', 'badge' => 'badge-success', 'phone' => '+57 315 771 8832'],
+							['name' => 'Felipe Gómez', 'role' => 'Supervisor de Cajas', 'dept' => 'POS y Descuentos', 'branch' => 'Tienda Villas', 'shift' => '12:00 – 21:00', 'status' => 'En turno activo', 'badge' => 'badge-success', 'phone' => '+57 317 220 5410'],
+							['name' => 'Claudia Morales', 'role' => 'Guardia de Muelle y Acceso', 'dept' => 'Control de Despachos', 'branch' => 'Tienda 170', 'shift' => '07:00 – 16:00', 'status' => 'En turno activo', 'badge' => 'badge-success', 'phone' => '+57 313 449 0182'],
+							['name' => 'Sandra Milena', 'role' => 'Operadora CCTV y Antenas EAS', 'dept' => 'Seguridad Electrónica', 'branch' => 'Tienda Suba', 'shift' => '08:00 – 18:00', 'status' => 'En turno activo', 'badge' => 'badge-success', 'phone' => '+57 316 880 7741'],
+							['name' => 'Mauricio Vélez', 'role' => 'Coordinador de Inventario Cíclico', 'dept' => 'Conteos Físicos', 'branch' => 'Tienda Cali Norte', 'shift' => '07:00 – 16:30', 'status' => 'En turno activo', 'badge' => 'badge-success', 'phone' => '+57 319 332 5599']
 						];
 						@endphp
 
@@ -904,14 +909,14 @@
 					<tbody>
 						@php
 						$lpTasks = [
-							['code' => 'TAR-SEC-0104', 'title' => 'Reconteo ciego de Smartphones en Bóveda', 'sub' => 'Cotejo físico de 28 equipos iPhone 15 vs. ledger serial', 'area' => 'Tecnología · Bóveda', 'branch' => 'Alkosto Calle 80', 'resp' => 'Carlos Mendoza', 'due' => 'Hoy 18:00', 'prio' => 'Urgente', 'prio_badge' => 'badge-danger', 'status' => 'En Curso', 'status_badge' => 'badge-primary'],
-							['code' => 'TAR-SEC-0105', 'title' => 'Auditoría de Precintos en Muelle de Descarga', 'sub' => 'Validación de candados satelitales en camión T-8821', 'area' => 'Logística WMS', 'branch' => 'Alkosto Envigado', 'resp' => 'Jorge Valencia', 'due' => 'Hoy 20:00', 'prio' => 'Alta', 'prio_badge' => 'badge-warning text-dark', 'status' => 'Pendiente', 'status_badge' => 'badge-secondary'],
-							['code' => 'TAR-SEC-0106', 'title' => 'Calibración y Prueba de Antenas EAS Sensormatic', 'sub' => 'Prueba con tag de prueba en acceso principal y cajas', 'area' => 'Seguridad Física', 'branch' => 'Alkosto Cali Sur', 'resp' => 'Mario Ospina', 'due' => 'Mañana 10:00', 'prio' => 'Alta', 'prio_badge' => 'badge-warning text-dark', 'status' => 'En Curso', 'status_badge' => 'badge-primary'],
-							['code' => 'TAR-SEC-0107', 'title' => 'Inspección de Jaula de Licores Importados', 'sub' => 'Verificación de collarines magnéticos y stock físico', 'area' => 'Bebidas Premium', 'branch' => 'Alkosto Tintal', 'resp' => 'Diana Pineda', 'due' => 'Hoy 19:30', 'prio' => 'Media', 'prio_badge' => 'badge-info', 'status' => 'Pendiente', 'status_badge' => 'badge-secondary'],
-							['code' => 'TAR-SEC-0108', 'title' => 'Peritaje Técnico de Devoluciones de TV 65"', 'sub' => 'Comprobación de accesorios, pantalla y número de serie', 'area' => 'Servicio al Cliente', 'branch' => 'Alkosto Barranquilla', 'resp' => 'Andrea Torres', 'due' => 'Mañana 12:00', 'prio' => 'Alta', 'prio_badge' => 'badge-warning text-dark', 'status' => 'En Curso', 'status_badge' => 'badge-primary'],
-							['code' => 'TAR-SEC-0109', 'title' => 'Arqueo Sorpresivo de Líneas de Cajas 01 a 08', 'sub' => 'Validación de efectivo, transferencias y notas de crédito', 'area' => 'Cajas y POS', 'branch' => 'Alkosto Bucaramanga', 'resp' => 'Camilo Duarte', 'due' => 'Hoy 17:00', 'prio' => 'Urgente', 'prio_badge' => 'badge-danger', 'status' => 'Verificada', 'status_badge' => 'badge-success'],
-							['code' => 'TAR-SEC-0110', 'title' => 'Ajuste de Ángulo en Cámaras Domo Pasillo 4', 'sub' => 'Eliminar punto ciego en góndola de perfumes de lujo', 'area' => 'CCTV Electrónico', 'branch' => 'Alkosto Suba', 'resp' => 'Sandra Milena', 'due' => '05 Nov 14:00', 'prio' => 'Media', 'prio_badge' => 'badge-info', 'status' => 'Pendiente', 'status_badge' => 'badge-secondary'],
-							['code' => 'TAR-SEC-0111', 'title' => 'Verificación de Registro Termógrafo Cámaras', 'sub' => 'Cotejo de temperatura continua (2.8 °C) en lácteos y carnes', 'area' => 'Cadena de Frío', 'branch' => 'Alkosto Villas', 'resp' => 'Felipe Gómez', 'due' => 'Hoy 16:30', 'prio' => 'Alta', 'prio_badge' => 'badge-warning text-dark', 'status' => 'Verificada', 'status_badge' => 'badge-success']
+							['code' => 'TAR-SEC-0104', 'title' => 'Reconteo ciego de Smartphones en Bóveda', 'sub' => 'Cotejo físico de 28 equipos iPhone 15 vs. ledger serial', 'area' => 'Tecnología · Bóveda', 'branch' => 'Tienda Calle 80', 'resp' => 'Carlos Mendoza', 'due' => 'Hoy 18:00', 'prio' => 'Urgente', 'prio_badge' => 'badge-danger', 'status' => 'En Curso', 'status_badge' => 'badge-primary'],
+							['code' => 'TAR-SEC-0105', 'title' => 'Auditoría de Precintos en Muelle de Descarga', 'sub' => 'Validación de candados satelitales en camión T-8821', 'area' => 'Logística WMS', 'branch' => 'Tienda Envigado', 'resp' => 'Jorge Valencia', 'due' => 'Hoy 20:00', 'prio' => 'Alta', 'prio_badge' => 'badge-warning text-dark', 'status' => 'Pendiente', 'status_badge' => 'badge-secondary'],
+							['code' => 'TAR-SEC-0106', 'title' => 'Calibración y Prueba de Antenas EAS Sensormatic', 'sub' => 'Prueba con tag de prueba en acceso principal y cajas', 'area' => 'Seguridad Física', 'branch' => 'Tienda Cali Sur', 'resp' => 'Mario Ospina', 'due' => 'Mañana 10:00', 'prio' => 'Alta', 'prio_badge' => 'badge-warning text-dark', 'status' => 'En Curso', 'status_badge' => 'badge-primary'],
+							['code' => 'TAR-SEC-0107', 'title' => 'Inspección de Jaula de Licores Importados', 'sub' => 'Verificación de collarines magnéticos y stock físico', 'area' => 'Bebidas Premium', 'branch' => 'Tienda Tintal', 'resp' => 'Diana Pineda', 'due' => 'Hoy 19:30', 'prio' => 'Media', 'prio_badge' => 'badge-info', 'status' => 'Pendiente', 'status_badge' => 'badge-secondary'],
+							['code' => 'TAR-SEC-0108', 'title' => 'Peritaje Técnico de Devoluciones de TV 65"', 'sub' => 'Comprobación de accesorios, pantalla y número de serie', 'area' => 'Servicio al Cliente', 'branch' => 'Tienda Barranquilla', 'resp' => 'Andrea Torres', 'due' => 'Mañana 12:00', 'prio' => 'Alta', 'prio_badge' => 'badge-warning text-dark', 'status' => 'En Curso', 'status_badge' => 'badge-primary'],
+							['code' => 'TAR-SEC-0109', 'title' => 'Arqueo Sorpresivo de Líneas de Cajas 01 a 08', 'sub' => 'Validación de efectivo, transferencias y notas de crédito', 'area' => 'Cajas y POS', 'branch' => 'Tienda Bucaramanga', 'resp' => 'Camilo Duarte', 'due' => 'Hoy 17:00', 'prio' => 'Urgente', 'prio_badge' => 'badge-danger', 'status' => 'Verificada', 'status_badge' => 'badge-success'],
+							['code' => 'TAR-SEC-0110', 'title' => 'Ajuste de Ángulo en Cámaras Domo Pasillo 4', 'sub' => 'Eliminar punto ciego en góndola de perfumes de lujo', 'area' => 'CCTV Electrónico', 'branch' => 'Tienda Suba', 'resp' => 'Sandra Milena', 'due' => '05 Nov 14:00', 'prio' => 'Media', 'prio_badge' => 'badge-info', 'status' => 'Pendiente', 'status_badge' => 'badge-secondary'],
+							['code' => 'TAR-SEC-0111', 'title' => 'Verificación de Registro Termógrafo Cámaras', 'sub' => 'Cotejo de temperatura continua (2.8 °C) en lácteos y carnes', 'area' => 'Cadena de Frío', 'branch' => 'Tienda Villas', 'resp' => 'Felipe Gómez', 'due' => 'Hoy 16:30', 'prio' => 'Alta', 'prio_badge' => 'badge-warning text-dark', 'status' => 'Verificada', 'status_badge' => 'badge-success']
 						];
 						@endphp
 
@@ -1357,7 +1362,7 @@
 						<tr class="table-danger">
 							<td><span class="badge badge-danger font-weight-bold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Ajuste Inusual</span></td>
 							<td><strong>AJU-004118</strong><br><small class="text-muted">Ajuste de inventario negativo (-12 unids)</small></td>
-							<td>Alkosto Calle 80 · Bodega</td>
+							<td>Tienda Calle 80 · Bodega</td>
 							<td>Frecuencia 4x superior al promedio semanal</td>
 							<td class="text-right font-weight-bold text-danger">$1,040.00</td>
 							<td><span class="badge badge-danger">CRÍTICO</span></td>
@@ -1371,7 +1376,7 @@
 						<tr class="table-danger">
 							<td><span class="badge badge-danger font-weight-bold"><i class="fa-solid fa-barcode mr-1"></i> Serial Duplicado en Venta</span></td>
 							<td><strong>POS-TKT-9042</strong><br><small class="text-muted">IMEI 354892019948210</small></td>
-							<td>Alkosto Cali Sur · Cajas</td>
+							<td>Tienda Cali Sur · Cajas</td>
 							<td>Mismo IMEI vendido simultáneamente en 2 sucursales distintas</td>
 							<td class="text-right font-weight-bold text-danger">$1,299.00</td>
 							<td><span class="badge badge-danger">CRÍTICO</span></td>
@@ -1427,7 +1432,7 @@
 						<tr class="table-warning">
 							<td><span class="badge badge-warning text-dark font-weight-bold"><i class="fa-solid fa-box-open mr-1"></i> Devolución Sin Accesorios</span></td>
 							<td><strong>DEV-2026-104</strong><br><small class="text-muted">AirPods Pro 2da Gen</small></td>
-							<td>Alkosto Envigado · Post-Venta</td>
+							<td>Tienda Envigado · Post-Venta</td>
 							<td>Devolución aceptada con estuche vacío sin almohadillas</td>
 							<td class="text-right font-weight-bold text-warning">$249.00</td>
 							<td><span class="badge badge-warning text-dark">ALTO</span></td>

@@ -10,6 +10,14 @@ class LoginController extends BaseController
 {
 	public function LoginPage(Request $request, Response $response, array $args)
 	{
+		// Mientras el usuario escribe sus credenciales se calcula el tablero de entrada (carga inmediata tras el login)
+		try
+		{
+			\Grocy\Services\StockExecutiveOverviewService::WarmInBackground();
+		}
+		catch (\Throwable)
+		{
+		}
 		return $this->RenderPage($response, 'login');
 	}
 

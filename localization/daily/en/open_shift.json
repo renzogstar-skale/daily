@@ -1,0 +1,19 @@
+{
+    "Aprobación automática del turno abierto": "Automatic approval of the open shift",
+    "El turno ya fue cubierto": "The shift was already covered",
+    "El turno ya no está disponible": "The shift is no longer available",
+    "Este turno es de otra sucursal": "This shift belongs to another branch",
+    "La solicitud ya no está pendiente": "The request is no longer pending",
+    "No puede aprobar su propia solicitud": "You cannot approve your own request",
+    "No puede tomar este turno:": "You cannot take this shift:",
+    "Solicitud de turno abierto": "Open shift request",
+    "Turno abierto #": "Open shift #",
+    "Turno abierto aprobado": "Open shift approved",
+    "Turno abierto no asignado": "Open shift not assigned",
+    "Turno abierto no encontrado": "Open shift not found",
+    "Turno abierto tomado por el empleado": "Open shift taken by the employee",
+    "Turno asignado": "Shift assigned",
+    "Turno disponible": "Shift available",
+    "Ya tiene este turno asignado": "You already have this shift assigned",
+    "· revise y confirme en Mi horario": "· review and confirm in My schedule"
+}

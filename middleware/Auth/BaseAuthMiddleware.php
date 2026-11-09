@@ -14,7 +14,7 @@ abstract class BaseAuthMiddleware extends BaseMiddleware
 	public function __invoke(Request $request, RequestHandler $handler): Response
 	{
 		$routeName = $this->GetRouteName($request);
-		if ($routeName === 'root' || $routeName === 'login')
+		if ($routeName === 'root' || $routeName === 'login' || str_starts_with((string)$routeName, 'site.'))
 		{
 			// Root and Login routes are public/unauthenticated
 

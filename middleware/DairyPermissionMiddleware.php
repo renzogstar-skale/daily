@@ -3,7 +3,9 @@
 namespace Grocy\Middleware;
 
 use Grocy\Controllers\Users\PermissionMissingException;
+use Grocy\Helpers\DailySubscription;
 use Grocy\Helpers\DairyAccess;
+use Grocy\Helpers\PlanRequiredException;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
@@ -28,6 +30,25 @@ class DairyPermissionMiddleware extends BaseMiddleware
 			if (DairyAccess::IsHiddenInDemo($route->getPattern()))
 			{
 				return $this->ResponseFactory->createResponse(302)->withHeader('Location', $this->AppContainer->get('UrlManager')->ConstructUrl('/sales'));
+			}
+
+			// Plan contratado primero (qué ofrece DAILY), luego rol (qué puede hacer el usuario) y sucursales
+			$method = $request->getMethod();
+			$planMissing = DailySubscription::MissingForRoute($route->getPattern(), $method);
+			if ($planMissing !== null)
+			{
+				throw new PlanRequiredException($request, $planMissing);
+			}
+			if (DailySubscription::WriteBlockedByStatus($route->getPattern(), $method))
+			{
+				throw new PlanRequiredException($request, 'subscription', 'subscription_inactive');
+			}
+
+			// Rol operativo (Supervisor / Empleado): las páginas DAILY que su rol no abre se bloquean también por URL directa
+			$simRole = DairyAccess::GetSimulatedRole();
+			if (in_array($simRole, ['empleado', 'supervisor'], true) && isset(DairyAccess::PAGES[$route->getPattern()]) && !DairyAccess::CanOpen($route->getPattern()))
+			{
+				throw new PermissionMissingException($request, 'ROLE ' . $simRole);
 			}
 
 			$missing = DairyAccess::MissingFor($route->getPattern());

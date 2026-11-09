@@ -1,0 +1,15 @@
+{
+    "% (objetivo: ≥{0}%). Revise la asignación de cómputo o tarifas de planes bajos.": "% (target: ≥{0}%). Review compute allocation or low-tier plan pricing.",
+    "% debido al alto consumo de almacenamiento o soporte contratado.": "% due to high storage consumption or contracted support.",
+    "Acceso restringido: Se requiere rol de Administrador para acceder a la Economía de DAILY": "Restricted access: the Administrator role is required to access DAILY Economics",
+    "Base de Datos HA": "HA Database",
+    "Cliente con Margen Subóptimo:": "Client with Suboptimal Margin:",
+    "El margen bruto para este cliente es de": "The gross margin for this client is",
+    "El margen consolidado es de": "The consolidated margin is",
+    "Gasto de infraestructura registrado": "Infrastructure expense recorded",
+    "Gastos del Periodo Proyectados": "Projected Period Expenses",
+    "Indique categoría, proveedor y un monto válido en USD": "State the category, supplier and a valid amount in USD",
+    "Margen Bruto General Bajo Objetivo": "Overall Gross Margin Below Target",
+    "No se han registrado facturas reales de proveedores cloud para este mes. Las cifras mostradas corresponden al modelo estimado por tienda ($": "No actual cloud provider invoices have been recorded for this month. The figures shown correspond to the estimated per-store model ($",
+    "Registrar Gasto Real": "Record Actual Expense"
+}

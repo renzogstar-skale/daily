@@ -3,7 +3,7 @@
 @section('title', 'Pedidos de clientes')
 
 @push('pageStyles')
-<link href="{{ $U('/css/daily_orders.css?v=', true) }}{{ $version }}" rel="stylesheet">
+<link href="{{ $U('/css/daily_orders.css?v=', true) }}{{ daily_asset_version('/css/daily_orders.css') }}" rel="stylesheet">
 @endpush
 
 @section('content')

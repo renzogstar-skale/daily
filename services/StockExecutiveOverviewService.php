@@ -70,7 +70,7 @@ class StockExecutiveOverviewService extends BaseService
 	// Las sucursales del escenario calibrado se nombran desde el catálogo único (marcadores [[B<id>]])
 	public function GetExecutiveData(array $filters = []): array
 	{
-		$data = BranchService::FillBranchPlaceholders($this->BuildExecutiveDataRaw($filters));
+		$data = BranchService::FillBranchPlaceholders($this->CachedExecutiveDataRaw($filters));
 		$branchId = intval($filters['branch_id'] ?? 0);
 		if ($branchId > 0 && !in_array($branchId, array_map('intval', array_column($data['branches_table'] ?? [], 'id')), true))
 		{
@@ -106,6 +106,104 @@ class StockExecutiveOverviewService extends BaseService
 	 * Rotación del período = costo de ventas del período ÷ valor actual del inventario.
 	 * Cobertura = unidades en stock ÷ unidades vendidas por día (promedio de los últimos 28 días).
 	 */
+	/**
+	 * Solo valor del inventario y cobertura, con las mismas fórmulas que GetExecutiveData (el Panel ejecutivo
+	 * muestra estas dos cifras y armar el tablero completo de Stock costaba ~1,5 s por carga).
+	 */
+	public function GetCoreKpis(array $filters = []): array
+	{
+		$s = $this->LoadScope($filters);
+		$branchId = $s['branchId'];
+		$visible = $branchId === null || (isset($s['branchName'][$branchId]) && ($s['allowedBranches'] === null || in_array($branchId, $s['allowedBranches'], true)));
+		if ($branchId !== null && $branchId > 0 && !$visible)
+		{
+			return ['kpis' => ['inventory_value' => ['value' => 'Sin información'], 'coverage' => ['value' => 'Sin información']]];
+		}
+		$totalVal = round(array_sum(array_column($s['byProduct'], 'value')), 2);
+		$totalUnits = round(array_sum(array_column($s['byProduct'], 'units')), 0);
+		$dailyUnits = array_sum(array_map($s['soldDay'], array_keys($s['byProduct'])));
+		$coverage = $dailyUnits > 0 ? round($totalUnits / $dailyUnits, 1) : null;
+		return ['kpis' => [
+			'inventory_value' => ['value' => '$' . number_format($totalVal, 0)],
+			'coverage' => ['value' => $coverage === null ? 'Sin información' : number_format($coverage, 1) . ' días'],
+		]];
+	}
+
+	/**
+	 * El tablero tarda ~8 s en calcularse (kardex completo) y es la página de entrada tras iniciar sesión: se guarda en
+	 * data/cache y se reutiliza mientras no haya movimientos, ventas ni mermas nuevas (y como máximo 1 hora)
+	 */
+	private function CachedExecutiveDataRaw(array $filters = []): array
+	{
+		$db = $this->Db();
+		try
+		{
+			$version = implode('|', $db->query("SELECT (SELECT IFNULL(MAX(id), 0) FROM stock_log), (SELECT IFNULL(MAX(id), 0) FROM sales),
+				(SELECT IFNULL(MAX(id), 0) FROM waste_records), (SELECT IFNULL(MAX(id), 0) FROM stock), (SELECT COUNT(*) FROM stock)")->fetch(\PDO::FETCH_NUM));
+		}
+		catch (\Throwable)
+		{
+			return $this->BuildExecutiveDataRaw($filters);
+		}
+		ksort($filters);
+		$key = md5(json_encode([$filters, DairyAccess::AllowedBranches(), date('Y-m-d')]));
+		$dir = GROCY_DATAPATH . '/cache';
+		$file = "$dir/stockexec_$key.ser";
+		if (is_file($file) && filemtime($file) > time() - 3600)
+		{
+			$hit = @unserialize(file_get_contents($file));
+			if (is_array($hit) && ($hit['v'] ?? null) === $version)
+			{
+				return $hit['d'];
+			}
+		}
+		$data = $this->BuildExecutiveDataRaw($filters);
+		if (!is_dir($dir))
+		{
+			@mkdir($dir, 0777, true);
+		}
+		// Cada combinación de filtros deja un archivo: se borran los vencidos
+		foreach (glob("$dir/stockexec_*.ser") ?: [] as $old)
+		{
+			if (filemtime($old) < time() - 3600)
+			{
+				@unlink($old);
+			}
+		}
+		@file_put_contents($file, serialize(['v' => $version, 'd' => $data]), LOCK_EX);
+		return $data;
+	}
+
+	/** Precalcula el tablero con los filtros por defecto (tras el relleno demo o al iniciar sesión) */
+	public function WarmExecutiveData(): void
+	{
+		$this->CachedExecutiveDataRaw([]);
+	}
+
+	/**
+	 * Al mostrar la pantalla de inicio de sesión: calcula el tablero en un proceso aparte mientras el usuario escribe
+	 * sus credenciales (php -S atiende de a una petición, así que hacerlo en la petición bloquearía el login)
+	 */
+	public static function WarmInBackground(): void
+	{
+		$mark = GROCY_DATAPATH . '/cache/stockexec.warming';
+		if (is_file($mark) && filemtime($mark) > time() - 60)
+		{
+			return;
+		}
+		@mkdir(dirname($mark), 0777, true);
+		@touch($mark);
+		$script = dirname(__DIR__) . '/bin/dairy_warm.php';
+		if (PHP_OS_FAMILY === 'Windows')
+		{
+			pclose(popen('start "" /B "' . PHP_BINARY . '" "' . $script . '" > NUL 2>&1', 'r'));
+		}
+		else
+		{
+			exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg($script) . ' > /dev/null 2>&1 &');
+		}
+	}
+
 	private function BuildExecutiveDataRaw(array $filters = []): array
 	{
 		$db = $this->Db();
@@ -287,16 +385,16 @@ class StockExecutiveOverviewService extends BaseService
 				'formula' => 'Cobertura = unidades en stock (' . number_format($totalUnits, 0) . ') ÷ unidades vendidas por día (' . number_format($dailyUnits, 1) . ').', 'sparkline_points' => $evolution['spark_coverage']],
 			'below_min' => ['id' => 'below_min', 'label' => 'Productos bajo mínimo', 'value' => number_format($counts['below_min'], 0), 'numeric' => $counts['below_min'], 'delta' => '', 'delta_is_good' => false,
 				'subtext' => 'pares producto-sucursal', 'state' => $counts['below_min'] ? 'red' : 'green', 'icon' => 'fa-triangle-exclamation',
-				'formula' => 'Productos activos con existencia en la sucursal mayor a 0 y menor al stock mínimo configurado.', 'sparkline_points' => [148, 144, 140, 136, 134, 131, 129, intval($counts['below_min'])]],
+				'formula' => 'Productos activos con existencia en la sucursal mayor a 0 y menor al stock mínimo configurado.', 'sparkline_points' => null],
 			'expiring_soon' => ['id' => 'expiring_soon', 'label' => 'Próximos a vencer', 'value' => number_format($counts['expiring'], 0), 'numeric' => $counts['expiring'], 'delta' => '', 'delta_is_good' => false,
 				'subtext' => 'en los próximos ' . $fefoDays . ' días', 'state' => $counts['expiring'] ? 'red' : 'green', 'icon' => 'fa-calendar-days',
-				'formula' => 'Productos (por sucursal) con lotes que vencen en ≤ ' . $fefoDays . ' días y saldo físico > 0.', 'sparkline_points' => [174, 171, 168, 165, 163, 161, 160, intval($counts['expiring'])]],
+				'formula' => 'Productos (por sucursal) con lotes que vencen en ≤ ' . $fefoDays . ' días y saldo físico > 0.', 'sparkline_points' => null],
 			'out_of_stock' => ['id' => 'out_of_stock', 'label' => 'Productos agotados', 'value' => number_format($counts['out_of_stock'], 0), 'numeric' => $counts['out_of_stock'], 'delta' => '', 'delta_is_good' => true,
 				'subtext' => 'de ' . $counts['catalog'] . ' pares producto-sucursal', 'state' => $counts['out_of_stock'] ? 'red' : 'green', 'icon' => 'fa-box-open',
-				'formula' => 'Productos activos con stock mínimo y existencia 0 en la sucursal.', 'sparkline_points' => [120, 135, 148, 162, 175, 186, 194, intval($counts['out_of_stock'])]],
+				'formula' => 'Productos activos con stock mínimo y existencia 0 en la sucursal.', 'sparkline_points' => null],
 			'risk_value' => ['id' => 'risk_value', 'label' => 'Valor en riesgo (vencimientos)', 'value' => '$' . number_format($totalRisk, 0), 'numeric' => $totalRisk, 'delta' => '', 'delta_is_good' => false,
 				'subtext' => 'en los próximos ' . $fefoDays . ' días', 'state' => 'amber', 'icon' => 'fa-coins',
-				'formula' => 'Σ (unidades de lotes que vencen en ≤ ' . $fefoDays . ' días × costo del lote). Costo expuesto, no pérdida confirmada.', 'sparkline_points' => [4760, 4690, 4610, 4520, 4450, 4390, 4350, round($totalRisk, 0)]]
+				'formula' => 'Σ (unidades de lotes que vencen en ≤ ' . $fefoDays . ' días × costo del lote). Costo expuesto, no pérdida confirmada.', 'sparkline_points' => null]
 		];
 
 		// Desglose de tarjetas, alertas, distribución por departamento y oportunidades (servicio compartido de insights)

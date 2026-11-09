@@ -1,0 +1,23 @@
+{
+    "(propuesto por Arturito, confirmado por el usuario)": "(proposed by Arturito, confirmed by the user)",
+    "Abrir plan de acción de merma": "Open shrink action plan",
+    "Acción no reconocida": "Unrecognized action",
+    "Actividad: Reducir merma por": "Activity: Reduce shrink by",
+    "Crear tarea FEFO en piso de tienda": "Create FEFO task on the store floor",
+    "El ahorro estimado queda en {0}: lo declara el responsable al cerrar (no lo inventa la IA).": "Estimated savings stay at {0}: declared by the owner on closing (not invented by the AI).",
+    "Generar órdenes de compra en borrador": "Generate draft purchase orders",
+    "La acción requiere confirmación explícita": "The action requires explicit confirmation",
+    "Las órdenes quedan en borrador: un usuario de compras debe aprobarlas y enviarlas en /mrp.": "Orders remain as drafts: a purchasing user must approve and send them in /mrp.",
+    "Nada que ejecutar:": "Nothing to execute:",
+    "Plan de acción #": "Action plan #",
+    "Plazo: {0} días · prioridad alta · responsable: usted": "Deadline: {0} days · high priority · owner: you",
+    "Rotación FEFO:": "FEFO rotation:",
+    "Sin merma aprobada este mes en la sucursal: no hay causal para el plan.": "No approved shrink this month at the branch: there is no cause for the plan.",
+    "Tarea TAR-": "Task TAR-",
+    "creada en Piso de Tienda": "created on Store Floor",
+    "lote(s) por vencer": "lot(s) about to expire",
+    "lote(s) vencen en ≤ {0} días: tarea de rotación FEFO (al frente, rebaja o traslado)": "lot(s) expire in ≤ {0} days: FEFO rotation task (front, markdown or transfer)",
+    "orden(es) en borrador · costo estimado $": "draft order(s) · estimated cost $",
+    "por definir": "to be defined",
+    "producto(s) en": "product(s) in"
+}

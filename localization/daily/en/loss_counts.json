@@ -1,0 +1,13 @@
+{
+    "Abra una tarea, escanee el producto y cuente. DAILY compara con el stock esperado.": "Open a task, scan the product and count. DAILY compares with the expected stock.",
+    "Cantidad contada": "Counted quantity",
+    "Confirmar conteo": "Confirm count",
+    "Cuente de nuevo sin mirar el conteo anterior": "Count again without looking at the previous count",
+    "Escanee cada serie o IMEI": "Scan each serial or IMEI",
+    "Escanee el UPC": "Scan the UPC",
+    "No se pudo registrar": "Could not record",
+    "No tiene conteos pendientes.": "You have no pending counts.",
+    "Observación (opcional)": "Observation (optional)",
+    "Todas mis sucursales": "All my branches",
+    "· antes de": "· before"
+}

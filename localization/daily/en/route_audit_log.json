@@ -1,0 +1,23 @@
+{
+    "Agregado": "Added",
+    "Aislamiento Multi-Tenant": "Multi-Tenant Isolation",
+    "Cambios en Base de Datos": "Database Changes",
+    "Carga Útil del Evento": "Event Payload",
+    "Creación": "Creation",
+    "Cualquier Operación": "Any Operation",
+    "Detalle de Modificación": "Change Detail",
+    "Eliminación": "Deletion",
+    "Entidad Afectada": "Affected Entity",
+    "Estado Anterior": "Previous State",
+    "Eventos de Dominio Empresarial": "Enterprise Domain Events",
+    "Hash SHA{0} inalterable": "Immutable SHA{0} hash",
+    "Inspeccionar Diferencia": "Inspect Difference",
+    "Inspección de Registro de Auditoría": "Audit Record Inspection",
+    "Modificación": "Modification",
+    "Registro ID": "Record ID",
+    "Registro histórico e inmutable de operaciones": "Immutable historical record of operations",
+    "Todas las Entidades": "All Entities",
+    "Todos los Usuarios": "All Users",
+    "Trazabilidad SHA{0} Verificada": "SHA{0} Traceability Verified",
+    "cambios de datos y eventos de dominio.": "data changes and domain events."
+}

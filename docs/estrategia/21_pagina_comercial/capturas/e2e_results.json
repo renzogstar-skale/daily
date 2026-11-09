@@ -1,0 +1,1102 @@
+[
+ {
+  "name": "desktop / carga",
+  "pass": true,
+  "info": "HTTP 200"
+ },
+ {
+  "name": "desktop / sin errores de consola/red",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "desktop / sin scroll horizontal",
+  "pass": true,
+  "info": "exceso 0px"
+ },
+ {
+  "name": "desktop / CLS < 0.1",
+  "pass": true,
+  "info": "0.000"
+ },
+ {
+  "name": "desktop /features carga",
+  "pass": true,
+  "info": "HTTP 200"
+ },
+ {
+  "name": "desktop /features sin errores de consola/red",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "desktop /features sin scroll horizontal",
+  "pass": true,
+  "info": "exceso 0px"
+ },
+ {
+  "name": "desktop /features CLS < 0.1",
+  "pass": true,
+  "info": "0.000"
+ },
+ {
+  "name": "desktop /features/sales carga",
+  "pass": true,
+  "info": "HTTP 200"
+ },
+ {
+  "name": "desktop /features/sales sin errores de consola/red",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "desktop /features/sales sin scroll horizontal",
+  "pass": true,
+  "info": "exceso 0px"
+ },
+ {
+  "name": "desktop /features/sales CLS < 0.1",
+  "pass": true,
+  "info": "0.000"
+ },
+ {
+  "name": "desktop /features/inventory carga",
+  "pass": true,
+  "info": "HTTP 200"
+ },
+ {
+  "name": "desktop /features/inventory sin errores de consola/red",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "desktop /features/inventory sin scroll horizontal",
+  "pass": true,
+  "info": "exceso 0px"
+ },
+ {
+  "name": "desktop /features/inventory CLS < 0.1",
+  "pass": true,
+  "info": "0.000"
+ },
+ {
+  "name": "desktop /features/shrink carga",
+  "pass": true,
+  "info": "HTTP 200"
+ },
+ {
+  "name": "desktop /features/shrink sin errores de consola/red",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "desktop /features/shrink sin scroll horizontal",
+  "pass": true,
+  "info": "exceso 0px"
+ },
+ {
+  "name": "desktop /features/shrink CLS < 0.1",
+  "pass": true,
+  "info": "0.000"
+ },
+ {
+  "name": "desktop /features/loss-prevention carga",
+  "pass": true,
+  "info": "HTTP 200"
+ },
+ {
+  "name": "desktop /features/loss-prevention sin errores de consola/red",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "desktop /features/loss-prevention sin scroll horizontal",
+  "pass": true,
+  "info": "exceso 0px"
+ },
+ {
+  "name": "desktop /features/loss-prevention CLS < 0.1",
+  "pass": true,
+  "info": "0.000"
+ },
+ {
+  "name": "desktop /features/dispatch carga",
+  "pass": true,
+  "info": "HTTP 200"
+ },
+ {
+  "name": "desktop /features/dispatch sin errores de consola/red",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "desktop /features/dispatch sin scroll horizontal",
+  "pass": true,
+  "info": "exceso 0px"
+ },
+ {
+  "name": "desktop /features/dispatch CLS < 0.1",
+  "pass": true,
+  "info": "0.000"
+ },
+ {
+  "name": "desktop /features/workforce carga",
+  "pass": true,
+  "info": "HTTP 200"
+ },
+ {
+  "name": "desktop /features/workforce sin errores de consola/red",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "desktop /features/workforce sin scroll horizontal",
+  "pass": true,
+  "info": "exceso 0px"
+ },
+ {
+  "name": "desktop /features/workforce CLS < 0.1",
+  "pass": true,
+  "info": "0.000"
+ },
+ {
+  "name": "desktop /features/planning carga",
+  "pass": true,
+  "info": "HTTP 200"
+ },
+ {
+  "name": "desktop /features/planning sin errores de consola/red",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "desktop /features/planning sin scroll horizontal",
+  "pass": true,
+  "info": "exceso 0px"
+ },
+ {
+  "name": "desktop /features/planning CLS < 0.1",
+  "pass": true,
+  "info": "0.000"
+ },
+ {
+  "name": "desktop /features/analytics carga",
+  "pass": true,
+  "info": "HTTP 200"
+ },
+ {
+  "name": "desktop /features/analytics sin errores de consola/red",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "desktop /features/analytics sin scroll horizontal",
+  "pass": true,
+  "info": "exceso 0px"
+ },
+ {
+  "name": "desktop /features/analytics CLS < 0.1",
+  "pass": true,
+  "info": "0.000"
+ },
+ {
+  "name": "desktop /solutions carga",
+  "pass": true,
+  "info": "HTTP 200"
+ },
+ {
+  "name": "desktop /solutions sin errores de consola/red",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "desktop /solutions sin scroll horizontal",
+  "pass": true,
+  "info": "exceso 0px"
+ },
+ {
+  "name": "desktop /solutions CLS < 0.1",
+  "pass": true,
+  "info": "0.000"
+ },
+ {
+  "name": "desktop /industries carga",
+  "pass": true,
+  "info": "HTTP 200"
+ },
+ {
+  "name": "desktop /industries sin errores de consola/red",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "desktop /industries sin scroll horizontal",
+  "pass": true,
+  "info": "exceso 0px"
+ },
+ {
+  "name": "desktop /industries CLS < 0.1",
+  "pass": true,
+  "info": "0.000"
+ },
+ {
+  "name": "desktop /industries/supermarkets carga",
+  "pass": true,
+  "info": "HTTP 200"
+ },
+ {
+  "name": "desktop /industries/supermarkets sin errores de consola/red",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "desktop /industries/supermarkets sin scroll horizontal",
+  "pass": true,
+  "info": "exceso 0px"
+ },
+ {
+  "name": "desktop /industries/supermarkets CLS < 0.1",
+  "pass": true,
+  "info": "0.000"
+ },
+ {
+  "name": "desktop /industries/retail carga",
+  "pass": true,
+  "info": "HTTP 200"
+ },
+ {
+  "name": "desktop /industries/retail sin errores de consola/red",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "desktop /industries/retail sin scroll horizontal",
+  "pass": true,
+  "info": "exceso 0px"
+ },
+ {
+  "name": "desktop /industries/retail CLS < 0.1",
+  "pass": true,
+  "info": "0.000"
+ },
+ {
+  "name": "desktop /industries/electronics carga",
+  "pass": true,
+  "info": "HTTP 200"
+ },
+ {
+  "name": "desktop /industries/electronics sin errores de consola/red",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "desktop /industries/electronics sin scroll horizontal",
+  "pass": true,
+  "info": "exceso 0px"
+ },
+ {
+  "name": "desktop /industries/electronics CLS < 0.1",
+  "pass": true,
+  "info": "0.000"
+ },
+ {
+  "name": "desktop /industries/distribution carga",
+  "pass": true,
+  "info": "HTTP 200"
+ },
+ {
+  "name": "desktop /industries/distribution sin errores de consola/red",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "desktop /industries/distribution sin scroll horizontal",
+  "pass": true,
+  "info": "exceso 0px"
+ },
+ {
+  "name": "desktop /industries/distribution CLS < 0.1",
+  "pass": true,
+  "info": "0.000"
+ },
+ {
+  "name": "desktop /industries/distribution-centers carga",
+  "pass": true,
+  "info": "HTTP 200"
+ },
+ {
+  "name": "desktop /industries/distribution-centers sin errores de consola/red",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "desktop /industries/distribution-centers sin scroll horizontal",
+  "pass": true,
+  "info": "exceso 0px"
+ },
+ {
+  "name": "desktop /industries/distribution-centers CLS < 0.1",
+  "pass": true,
+  "info": "0.000"
+ },
+ {
+  "name": "desktop /industries/multi-branch carga",
+  "pass": true,
+  "info": "HTTP 200"
+ },
+ {
+  "name": "desktop /industries/multi-branch sin errores de consola/red",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "desktop /industries/multi-branch sin scroll horizontal",
+  "pass": true,
+  "info": "exceso 0px"
+ },
+ {
+  "name": "desktop /industries/multi-branch CLS < 0.1",
+  "pass": true,
+  "info": "0.000"
+ },
+ {
+  "name": "desktop /pricing carga",
+  "pass": true,
+  "info": "HTTP 200"
+ },
+ {
+  "name": "desktop /pricing sin errores de consola/red",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "desktop /pricing sin scroll horizontal",
+  "pass": true,
+  "info": "exceso 0px"
+ },
+ {
+  "name": "desktop /pricing CLS < 0.1",
+  "pass": true,
+  "info": "0.000"
+ },
+ {
+  "name": "desktop /demo carga",
+  "pass": true,
+  "info": "HTTP 200"
+ },
+ {
+  "name": "desktop /demo sin errores de consola/red",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "desktop /demo sin scroll horizontal",
+  "pass": true,
+  "info": "exceso 0px"
+ },
+ {
+  "name": "desktop /demo CLS < 0.1",
+  "pass": true,
+  "info": "0.000"
+ },
+ {
+  "name": "desktop /contact carga",
+  "pass": true,
+  "info": "HTTP 200"
+ },
+ {
+  "name": "desktop /contact sin errores de consola/red",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "desktop /contact sin scroll horizontal",
+  "pass": true,
+  "info": "exceso 0px"
+ },
+ {
+  "name": "desktop /contact CLS < 0.1",
+  "pass": true,
+  "info": "0.000"
+ },
+ {
+  "name": "desktop /privacy carga",
+  "pass": true,
+  "info": "HTTP 200"
+ },
+ {
+  "name": "desktop /privacy sin errores de consola/red",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "desktop /privacy sin scroll horizontal",
+  "pass": true,
+  "info": "exceso 0px"
+ },
+ {
+  "name": "desktop /privacy CLS < 0.1",
+  "pass": true,
+  "info": "0.000"
+ },
+ {
+  "name": "desktop /terms carga",
+  "pass": true,
+  "info": "HTTP 200"
+ },
+ {
+  "name": "desktop /terms sin errores de consola/red",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "desktop /terms sin scroll horizontal",
+  "pass": true,
+  "info": "exceso 0px"
+ },
+ {
+  "name": "desktop /terms CLS < 0.1",
+  "pass": true,
+  "info": "0.000"
+ },
+ {
+  "name": "enlaces internos (51) responden",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "mega menú Plataforma se abre (hover)",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "menú Industrias se abre (clic)",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "navegación desde menú Industrias",
+  "pass": true,
+  "info": "http://localhost:8080/industries/electronics"
+ },
+ {
+  "name": "recorrido: pestaña Mermas",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "recorrido: flecha derecha",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "selector por necesidad",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "calculadora recalcula",
+  "pass": true,
+  "info": "$65,700 -> $88,200"
+ },
+ {
+  "name": "calculadora muestra retorno con inversión",
+  "pass": true,
+  "info": "Estimated return on the annual investment ($12,000): 635 %"
+ },
+ {
+  "name": "calculadora acepta cero sin NaN",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "idioma EN",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "idioma EN persiste (cookie)",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "plan precargado en mensaje",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "validación bloquea envío vacío",
+  "pass": true,
+  "info": "7 campos marcados"
+ },
+ {
+  "name": "no muestra confirmación sin enviar",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "valida formato de correo",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "error del servidor: sin confirmación y botón reactivado",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "envío real guarda y confirma",
+  "pass": true,
+  "info": "Recibimos tu solicitud. El equipo comercial te contactará al correo indicado."
+ },
+ {
+  "name": "mobile / carga",
+  "pass": true,
+  "info": "HTTP 200"
+ },
+ {
+  "name": "mobile / sin errores de consola/red",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "mobile / sin scroll horizontal",
+  "pass": true,
+  "info": "exceso 0px"
+ },
+ {
+  "name": "mobile / CLS < 0.1",
+  "pass": true,
+  "info": "0.000"
+ },
+ {
+  "name": "mobile /features carga",
+  "pass": true,
+  "info": "HTTP 200"
+ },
+ {
+  "name": "mobile /features sin errores de consola/red",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "mobile /features sin scroll horizontal",
+  "pass": true,
+  "info": "exceso 0px"
+ },
+ {
+  "name": "mobile /features CLS < 0.1",
+  "pass": true,
+  "info": "0.000"
+ },
+ {
+  "name": "mobile /features/sales carga",
+  "pass": true,
+  "info": "HTTP 200"
+ },
+ {
+  "name": "mobile /features/sales sin errores de consola/red",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "mobile /features/sales sin scroll horizontal",
+  "pass": true,
+  "info": "exceso 0px"
+ },
+ {
+  "name": "mobile /features/sales CLS < 0.1",
+  "pass": true,
+  "info": "0.000"
+ },
+ {
+  "name": "mobile /features/inventory carga",
+  "pass": true,
+  "info": "HTTP 200"
+ },
+ {
+  "name": "mobile /features/inventory sin errores de consola/red",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "mobile /features/inventory sin scroll horizontal",
+  "pass": true,
+  "info": "exceso 0px"
+ },
+ {
+  "name": "mobile /features/inventory CLS < 0.1",
+  "pass": true,
+  "info": "0.000"
+ },
+ {
+  "name": "mobile /features/shrink carga",
+  "pass": true,
+  "info": "HTTP 200"
+ },
+ {
+  "name": "mobile /features/shrink sin errores de consola/red",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "mobile /features/shrink sin scroll horizontal",
+  "pass": true,
+  "info": "exceso 0px"
+ },
+ {
+  "name": "mobile /features/shrink CLS < 0.1",
+  "pass": true,
+  "info": "0.000"
+ },
+ {
+  "name": "mobile /features/loss-prevention carga",
+  "pass": true,
+  "info": "HTTP 200"
+ },
+ {
+  "name": "mobile /features/loss-prevention sin errores de consola/red",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "mobile /features/loss-prevention sin scroll horizontal",
+  "pass": true,
+  "info": "exceso 0px"
+ },
+ {
+  "name": "mobile /features/loss-prevention CLS < 0.1",
+  "pass": true,
+  "info": "0.000"
+ },
+ {
+  "name": "mobile /features/dispatch carga",
+  "pass": true,
+  "info": "HTTP 200"
+ },
+ {
+  "name": "mobile /features/dispatch sin errores de consola/red",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "mobile /features/dispatch sin scroll horizontal",
+  "pass": true,
+  "info": "exceso 0px"
+ },
+ {
+  "name": "mobile /features/dispatch CLS < 0.1",
+  "pass": true,
+  "info": "0.000"
+ },
+ {
+  "name": "mobile /features/workforce carga",
+  "pass": true,
+  "info": "HTTP 200"
+ },
+ {
+  "name": "mobile /features/workforce sin errores de consola/red",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "mobile /features/workforce sin scroll horizontal",
+  "pass": true,
+  "info": "exceso 0px"
+ },
+ {
+  "name": "mobile /features/workforce CLS < 0.1",
+  "pass": true,
+  "info": "0.000"
+ },
+ {
+  "name": "mobile /features/planning carga",
+  "pass": true,
+  "info": "HTTP 200"
+ },
+ {
+  "name": "mobile /features/planning sin errores de consola/red",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "mobile /features/planning sin scroll horizontal",
+  "pass": true,
+  "info": "exceso 0px"
+ },
+ {
+  "name": "mobile /features/planning CLS < 0.1",
+  "pass": true,
+  "info": "0.000"
+ },
+ {
+  "name": "mobile /features/analytics carga",
+  "pass": true,
+  "info": "HTTP 200"
+ },
+ {
+  "name": "mobile /features/analytics sin errores de consola/red",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "mobile /features/analytics sin scroll horizontal",
+  "pass": true,
+  "info": "exceso 0px"
+ },
+ {
+  "name": "mobile /features/analytics CLS < 0.1",
+  "pass": true,
+  "info": "0.000"
+ },
+ {
+  "name": "mobile /solutions carga",
+  "pass": true,
+  "info": "HTTP 200"
+ },
+ {
+  "name": "mobile /solutions sin errores de consola/red",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "mobile /solutions sin scroll horizontal",
+  "pass": true,
+  "info": "exceso 0px"
+ },
+ {
+  "name": "mobile /solutions CLS < 0.1",
+  "pass": true,
+  "info": "0.000"
+ },
+ {
+  "name": "mobile /industries carga",
+  "pass": true,
+  "info": "HTTP 200"
+ },
+ {
+  "name": "mobile /industries sin errores de consola/red",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "mobile /industries sin scroll horizontal",
+  "pass": true,
+  "info": "exceso 0px"
+ },
+ {
+  "name": "mobile /industries CLS < 0.1",
+  "pass": true,
+  "info": "0.000"
+ },
+ {
+  "name": "mobile /industries/supermarkets carga",
+  "pass": true,
+  "info": "HTTP 200"
+ },
+ {
+  "name": "mobile /industries/supermarkets sin errores de consola/red",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "mobile /industries/supermarkets sin scroll horizontal",
+  "pass": true,
+  "info": "exceso 0px"
+ },
+ {
+  "name": "mobile /industries/supermarkets CLS < 0.1",
+  "pass": true,
+  "info": "0.000"
+ },
+ {
+  "name": "mobile /industries/retail carga",
+  "pass": true,
+  "info": "HTTP 200"
+ },
+ {
+  "name": "mobile /industries/retail sin errores de consola/red",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "mobile /industries/retail sin scroll horizontal",
+  "pass": true,
+  "info": "exceso 0px"
+ },
+ {
+  "name": "mobile /industries/retail CLS < 0.1",
+  "pass": true,
+  "info": "0.000"
+ },
+ {
+  "name": "mobile /industries/electronics carga",
+  "pass": true,
+  "info": "HTTP 200"
+ },
+ {
+  "name": "mobile /industries/electronics sin errores de consola/red",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "mobile /industries/electronics sin scroll horizontal",
+  "pass": true,
+  "info": "exceso 0px"
+ },
+ {
+  "name": "mobile /industries/electronics CLS < 0.1",
+  "pass": true,
+  "info": "0.000"
+ },
+ {
+  "name": "mobile /industries/distribution carga",
+  "pass": true,
+  "info": "HTTP 200"
+ },
+ {
+  "name": "mobile /industries/distribution sin errores de consola/red",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "mobile /industries/distribution sin scroll horizontal",
+  "pass": true,
+  "info": "exceso 0px"
+ },
+ {
+  "name": "mobile /industries/distribution CLS < 0.1",
+  "pass": true,
+  "info": "0.000"
+ },
+ {
+  "name": "mobile /industries/distribution-centers carga",
+  "pass": true,
+  "info": "HTTP 200"
+ },
+ {
+  "name": "mobile /industries/distribution-centers sin errores de consola/red",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "mobile /industries/distribution-centers sin scroll horizontal",
+  "pass": true,
+  "info": "exceso 0px"
+ },
+ {
+  "name": "mobile /industries/distribution-centers CLS < 0.1",
+  "pass": true,
+  "info": "0.000"
+ },
+ {
+  "name": "mobile /industries/multi-branch carga",
+  "pass": true,
+  "info": "HTTP 200"
+ },
+ {
+  "name": "mobile /industries/multi-branch sin errores de consola/red",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "mobile /industries/multi-branch sin scroll horizontal",
+  "pass": true,
+  "info": "exceso 0px"
+ },
+ {
+  "name": "mobile /industries/multi-branch CLS < 0.1",
+  "pass": true,
+  "info": "0.000"
+ },
+ {
+  "name": "mobile /pricing carga",
+  "pass": true,
+  "info": "HTTP 200"
+ },
+ {
+  "name": "mobile /pricing sin errores de consola/red",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "mobile /pricing sin scroll horizontal",
+  "pass": true,
+  "info": "exceso 0px"
+ },
+ {
+  "name": "mobile /pricing CLS < 0.1",
+  "pass": true,
+  "info": "0.000"
+ },
+ {
+  "name": "mobile /demo carga",
+  "pass": true,
+  "info": "HTTP 200"
+ },
+ {
+  "name": "mobile /demo sin errores de consola/red",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "mobile /demo sin scroll horizontal",
+  "pass": true,
+  "info": "exceso 0px"
+ },
+ {
+  "name": "mobile /demo CLS < 0.1",
+  "pass": true,
+  "info": "0.000"
+ },
+ {
+  "name": "mobile /contact carga",
+  "pass": true,
+  "info": "HTTP 200"
+ },
+ {
+  "name": "mobile /contact sin errores de consola/red",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "mobile /contact sin scroll horizontal",
+  "pass": true,
+  "info": "exceso 0px"
+ },
+ {
+  "name": "mobile /contact CLS < 0.1",
+  "pass": true,
+  "info": "0.000"
+ },
+ {
+  "name": "mobile /privacy carga",
+  "pass": true,
+  "info": "HTTP 200"
+ },
+ {
+  "name": "mobile /privacy sin errores de consola/red",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "mobile /privacy sin scroll horizontal",
+  "pass": true,
+  "info": "exceso 0px"
+ },
+ {
+  "name": "mobile /privacy CLS < 0.1",
+  "pass": true,
+  "info": "0.000"
+ },
+ {
+  "name": "mobile /terms carga",
+  "pass": true,
+  "info": "HTTP 200"
+ },
+ {
+  "name": "mobile /terms sin errores de consola/red",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "mobile /terms sin scroll horizontal",
+  "pass": true,
+  "info": "exceso 0px"
+ },
+ {
+  "name": "mobile /terms CLS < 0.1",
+  "pass": true,
+  "info": "0.000"
+ },
+ {
+  "name": "menú móvil se abre",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "submenú Plataforma en móvil",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "menú móvil se cierra",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "recorrido: pestaña Mermas",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "recorrido: flecha derecha",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "selector por necesidad",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "calculadora recalcula",
+  "pass": true,
+  "info": "$65.700 -> $88.200"
+ },
+ {
+  "name": "calculadora muestra retorno con inversión",
+  "pass": true,
+  "info": "Retorno estimado sobre la inversión anual ($12.000): 635 %"
+ },
+ {
+  "name": "calculadora acepta cero sin NaN",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "idioma EN",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "idioma EN persiste (cookie)",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "plan precargado en mensaje",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "validación bloquea envío vacío",
+  "pass": true,
+  "info": "7 campos marcados"
+ },
+ {
+  "name": "no muestra confirmación sin enviar",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "valida formato de correo",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "error del servidor: sin confirmación y botón reactivado",
+  "pass": true,
+  "info": ""
+ },
+ {
+  "name": "servidor rechaza datos inválidos (422)",
+  "pass": true,
+  "info": "{\"ok\":false,\"errors\":[\"name\",\"email\",\"company\",\"phone\",\"country\",\"industry\",\"branches\"]}"
+ },
+ {
+  "name": "campo trampa no guarda",
+  "pass": true,
+  "info": ""
+ }
+]

@@ -1,0 +1,16 @@
+{
+    "% del lote": "% of the lot",
+    "(sin fecha en stock: valor ingresado o {0} por defecto)": "(no date in stock: entered value or {0} by default)",
+    "(valor ingresado)": "(entered value)",
+    "Cantidad del lote fuera de rango": "Lot quantity out of range",
+    "Con la rebaja se vende el": "With the markdown, the following is sold:",
+    "Descuento fuera de rango ({0}–{1} %)": "Discount out of range ({0}–{1} %)",
+    "El % de venta esperado con rebaja debe estar entre {0} y {1}": "The expected % sold with markdown must be between {0} and {1}",
+    "Escenario A: sin intervención (vende a su ritmo, el resto vence)": "Scenario A: no intervention (sells at its pace, the rest expires)",
+    "No rebajar con este descuento: el resultado empeora $": "Do not mark down with this discount: the result worsens by $",
+    "No rebajar: al ritmo de venta actual el lote se vende completo antes de vencer.": "Do not mark down: at the current sales pace the lot sells out before expiring.",
+    "Seleccione un producto": "Select a product",
+    "sale_items (costo de las últimas ventas)": "sale_items (cost of the latest sales)",
+    "stock (costo promedio de los lotes actuales)": "stock (average cost of the current lots)",
+    "stock_log (última compra)": "stock_log (last purchase)"
+}

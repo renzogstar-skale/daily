@@ -20,11 +20,12 @@ class KpiController extends BaseController
 			$branchId = null;
 		}
 		$period = $params['period'] ?? 'month'; // 'day', 'week', 'month', 'quarter', 'year', 'custom'
+		$department = $params['department'] ?? 'todos';
 		$customStart = !empty($params['start_date']) ? trim($params['start_date']) : null;
 		$customEnd = !empty($params['end_date']) ? trim($params['end_date']) : null;
 		// Misma fecha de referencia que HOY (?date=AAAA-MM-DD): el período se arma alrededor de ella
 		$anchorDate = \Grocy\Services\DailyMetricsService::AnchorDate($params['date'] ?? null);
-		\Grocy\Services\DailyCompanySeedService::DemoCatchUp();
+		\Grocy\Services\DailyCompanySeedService::DemoCatchUpInBackground();
 
 		$kpiService = KpiService::GetInstance();
 		$branchService = BranchService::GetInstance();
@@ -229,8 +230,11 @@ class KpiController extends BaseController
 		return $this->RenderPage($response, 'executive_dashboard', [
 			'kpiData' => $kpiData,
 			'akcalData' => $akcalData,
+			// La vista solo usa valor del inventario y cobertura: no armar el tablero completo de Stock
+			'stockExec' => \Grocy\Services\StockExecutiveOverviewService::GetInstance()->GetCoreKpis(['branch_id' => $branchId]),
 			'branches' => $branches,
 			'selectedBranchId' => $branchId,
+			'selectedDepartment' => $department,
 			'departmentBudgets' => $departmentBudgets,
 			'sellersPerformance' => $sellersPerformance,
 			'profitabilityLossByDept' => $profitabilityLossByDept,
@@ -352,7 +356,8 @@ class KpiController extends BaseController
 	public function Today(Request $request, Response $response, array $args)
 	{
 		$q = $request->getQueryParams();
-		\Grocy\Services\DailyCompanySeedService::DemoCatchUp();
+		// Empresa demo: completa las horas que falten en segundo plano, sin demorar la respuesta
+		\Grocy\Services\DailyCompanySeedService::DemoCatchUpInBackground();
 		$branchId = !empty($q['branch_id']) ? intval($q['branch_id']) : null;
 		$A = \Grocy\Helpers\DairyAccess::class;
 		$U = \Grocy\Controllers\Users\User::class;

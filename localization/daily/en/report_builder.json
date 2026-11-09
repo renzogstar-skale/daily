@@ -1,0 +1,19 @@
+{
+    "Conjunto de datos no válido": "Invalid dataset",
+    "Ejecución no encontrada": "Execution not found",
+    "Elija al menos una columna": "Choose at least one column",
+    "Fallas críticas": "Critical failures",
+    "Inventario valorizado por lote (actual)": "Inventory valued by lot (current)",
+    "La ejecución falló:": "The execution failed:",
+    "Medio de pago": "Payment method",
+    "Mensual (día {0})": "Monthly (day {0})",
+    "Movimientos de inventario (kardex)": "Inventory movements (kardex)",
+    "Reporte no encontrado": "Report not found",
+    "Sin acceso a la sucursal #": "No access to branch #",
+    "Sin permiso para el conjunto elegido": "No permission for the chosen dataset",
+    "Sin permiso para el conjunto «": "No permission for the dataset «",
+    "Sin programar": "Not scheduled",
+    "Ventas por producto": "Sales by product",
+    "Ventas por ticket": "Sales by ticket",
+    "Órdenes de compra": "Purchase orders"
+}

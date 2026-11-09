@@ -1,0 +1,1048 @@
+/**
+ * DAILY — PANTALLA DE INICIO DE SESIÓN (RÉPLICA FOTOGRÁFICA)
+ * Sistema Liquid Glass, Card Translúcida y Diseño Responsive
+ */
+
+/* ==========================================================================
+   RESET & CONTENEDOR GLOBAL
+   ========================================================================== */
+body.daily-login-body {
+	margin: 0 !important;
+	padding: 0 !important;
+	min-height: 100vh !important;
+	width: 100% !important;
+	font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+	background: #f8fbf9 !important;
+	overflow-x: hidden !important;
+	display: flex !important;
+	flex-direction: column !important;
+	justify-content: space-between !important;
+	box-sizing: border-box !important;
+}
+
+body.daily-login-body #mainNav,
+body.daily-login-body .dairy-mobile-nav,
+body.daily-login-body .content-wrapper,
+body.daily-login-body .dashboard-container {
+	margin-left: 0 !important;
+	margin-right: 0 !important;
+	padding: 0 !important;
+}
+
+/* ==========================================================================
+   FONDO LIQUID GLASS CON ONDAS VERDES SUAVES
+   ========================================================================== */
+.daily-login-canvas {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100vw;
+	height: 100vh;
+	pointer-events: none;
+	z-index: 0;
+	overflow: hidden;
+	background: #f8fbf9;
+}
+
+.daily-login-canvas::before {
+	content: '';
+	position: absolute;
+	top: -15%;
+	left: -10%;
+	width: 60vw;
+	height: 65vh;
+	max-width: 720px;
+	background: radial-gradient(ellipse at 25% 35%, rgba(16, 185, 129, 0.22) 0%, rgba(52, 211, 153, 0.12) 40%, rgba(110, 231, 183, 0.03) 70%, transparent 85%);
+	filter: blur(50px);
+	border-radius: 50%;
+	pointer-events: none;
+}
+
+.daily-login-canvas::after {
+	content: '';
+	position: absolute;
+	bottom: -18%;
+	right: -12%;
+	width: 65vw;
+	height: 70vh;
+	max-width: 850px;
+	background: radial-gradient(ellipse at 75% 75%, rgba(16, 185, 129, 0.28) 0%, rgba(52, 211, 153, 0.15) 45%, rgba(110, 231, 183, 0.04) 75%, transparent 90%);
+	filter: blur(55px);
+	border-radius: 50%;
+	pointer-events: none;
+}
+
+.daily-wave-svg {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	pointer-events: none;
+	opacity: 0.92;
+}
+
+/* ==========================================================================
+   ESTRUCTURA DE PÁGINA (HEADER, MAIN, FOOTER)
+   ========================================================================== */
+.daily-login-layout {
+	position: relative;
+	z-index: 1;
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	padding: 22px 42px 18px 42px;
+	box-sizing: border-box;
+}
+
+/* 1. Header superior */
+.daily-login-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	width: 100%;
+	max-width: 1260px;
+	margin: 0 auto;
+	padding: 0 10px;
+}
+
+.daily-login-brand-link {
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+	text-decoration: none;
+	color: #0f172a;
+	transition: transform 0.2s ease;
+}
+
+.daily-login-brand-link:hover {
+	text-decoration: none;
+	transform: scale(1.02);
+}
+
+.daily-brand-badge {
+	width: 32px;
+	height: 32px;
+	border-radius: 8px;
+	background: #008736;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: #ffffff;
+	font-weight: 800;
+	font-size: 19px;
+	box-shadow: 0 4px 10px rgba(0, 135, 54, 0.25);
+}
+
+.daily-brand-text {
+	font-size: 21px;
+	font-weight: 800;
+	letter-spacing: -0.01em;
+	color: #008736;
+	display: flex;
+	align-items: center;
+}
+
+.daily-brand-reg {
+	font-size: 11px;
+	font-weight: 700;
+	margin-left: 2px;
+	vertical-align: super;
+}
+
+/* Controles superiores derechos */
+.daily-login-header-tools {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+/* Selector de idioma píldora */
+.daily-pill-lang {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	background: rgba(255, 255, 255, 0.9);
+	backdrop-filter: blur(12px);
+	border: 1px solid rgba(226, 232, 240, 0.85);
+	border-radius: 20px;
+	padding: 6px 14px;
+	font-size: 12.5px;
+	font-weight: 600;
+	color: #334155;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+	transition: all 0.2s ease;
+}
+
+.daily-pill-lang:hover {
+	background: #ffffff;
+	border-color: #cbd5e1;
+	transform: translateY(-1px);
+}
+
+.daily-pill-lang .globe-icon {
+	width: 15px;
+	height: 15px;
+	color: #0f172a;
+}
+
+.daily-pill-lang .lang-btn {
+	background: transparent;
+	border: none;
+	padding: 0 2px;
+	font-size: 12px;
+	font-weight: 600;
+	color: #64748b;
+	cursor: pointer;
+	transition: color 0.15s ease;
+}
+
+.daily-pill-lang .lang-btn.is-active {
+	color: #0f172a;
+	font-weight: 800;
+}
+
+.daily-pill-lang .lang-sep {
+	color: #cbd5e1;
+	font-weight: 400;
+	font-size: 11px;
+}
+
+/* Selector de tema claro/oscuro píldora deslizante */
+.daily-pill-theme {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	justify-content: space-between;
+	background: #e2e8f0;
+	border-radius: 20px;
+	padding: 2px;
+	width: 60px;
+	height: 30px;
+	cursor: pointer;
+	border: none;
+	box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+	transition: background 0.3s ease;
+	outline: none;
+}
+
+.daily-pill-theme-thumb {
+	position: absolute;
+	left: 2px;
+	top: 2px;
+	width: 26px;
+	height: 26px;
+	border-radius: 50%;
+	background: #ffffff;
+	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+	transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+	z-index: 1;
+}
+
+.daily-pill-theme.is-dark .daily-pill-theme-thumb {
+	transform: translateX(30px);
+}
+
+.daily-pill-theme .theme-btn-icon {
+	width: 28px;
+	height: 26px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 2;
+	color: #64748b;
+	transition: color 0.2s ease;
+}
+
+.daily-pill-theme .theme-btn-icon svg {
+	width: 14px;
+	height: 14px;
+}
+
+.daily-pill-theme:not(.is-dark) .theme-btn-icon.sun {
+	color: #008736;
+}
+
+.daily-pill-theme.is-dark .theme-btn-icon.moon {
+	color: #f59e0b;
+}
+
+/* ==========================================================================
+   2. TARJETA CENTRAL LIQUID GLASS
+   ========================================================================== */
+.daily-login-main {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	padding: 8px 0;
+	flex: 1;
+}
+
+.daily-glass-card {
+	position: relative;
+	display: grid;
+	grid-template-columns: 0.95fr 1.05fr;
+	width: 100%;
+	max-width: 1040px;
+	height: 520px;
+	background: rgba(255, 255, 255, 0.92) !important;
+	background-image: none !important;
+	backdrop-filter: blur(28px) saturate(190%);
+	-webkit-backdrop-filter: blur(28px) saturate(190%);
+	border-radius: 28px;
+	border: 1.5px solid rgba(255, 255, 255, 0.95);
+	box-shadow:
+		0 25px 60px -15px rgba(16, 185, 129, 0.14),
+		0 12px 30px -8px rgba(0, 0, 0, 0.04),
+		0 0 0 1px rgba(255, 255, 255, 0.85) inset;
+	overflow: hidden;
+	transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+/* Panel izquierdo: Visual de Supermercado 4K Ultra HD con Glass Badges */
+.daily-card-left {
+	position: relative;
+	overflow: hidden;
+	background: #0f172a;
+	display: flex;
+	align-items: stretch;
+	border-top-left-radius: 28px;
+	border-bottom-left-radius: 28px;
+	height: 100%;
+}
+
+.daily-supermarket-picture {
+	width: 100%;
+	height: 100%;
+	display: block;
+	position: relative;
+}
+
+.daily-supermarket-img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	object-position: 25% center;
+	display: block;
+	border-top-left-radius: 28px;
+	border-bottom-left-radius: 28px;
+	transform: scale(1.005);
+	transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+	aspect-ratio: 768 / 1376;
+}
+
+.daily-glass-card:hover .daily-supermarket-img {
+	transform: scale(1.035);
+}
+
+/* 4 Insignias Flotantes Liquid Glass (Glassmorphism Nativo 4K Vectorial) */
+.daily-hero-badge {
+	position: absolute;
+	width: 52px;
+	height: 52px;
+	border-radius: 16px;
+	background: rgba(255, 255, 255, 0.32);
+	backdrop-filter: blur(14px) saturate(180%);
+	-webkit-backdrop-filter: blur(14px) saturate(180%);
+	border: 1.5px solid rgba(255, 255, 255, 0.8);
+	box-shadow: 0 12px 28px -4px rgba(16, 124, 65, 0.26),
+	            0 4px 10px rgba(0, 0, 0, 0.08),
+	            inset 0 1px 2px rgba(255, 255, 255, 0.95);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: #ffffff;
+	z-index: 3;
+	cursor: default;
+	pointer-events: auto;
+	transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+	            box-shadow 0.4s ease,
+	            background 0.3s ease;
+	animation: dailyHeroBadgeFloat 4.5s ease-in-out infinite alternate;
+}
+
+.daily-hero-badge svg {
+	width: 25px;
+	height: 25px;
+	stroke-width: 2.3;
+	stroke: #ffffff;
+	filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.35));
+	transition: transform 0.3s ease;
+}
+
+.daily-hero-badge:hover {
+	transform: translateY(-4px) scale(1.08) !important;
+	background: rgba(255, 255, 255, 0.48);
+	box-shadow: 0 16px 36px -4px rgba(16, 124, 65, 0.35),
+	            0 6px 14px rgba(0, 0, 0, 0.12),
+	            inset 0 1px 2px rgba(255, 255, 255, 1);
+}
+
+.daily-hero-badge:hover svg {
+	transform: scale(1.1);
+}
+
+/* Posiciones exactas replicando la referencia visual */
+.daily-badge-indicators {
+	top: 30%;
+	right: 25%;
+	animation-delay: 0s;
+}
+
+.daily-badge-inventory {
+	top: 42%;
+	right: 12%;
+	animation-delay: 1.2s;
+}
+
+.daily-badge-staff {
+	top: 53%;
+	right: 36%;
+	animation-delay: 2.4s;
+}
+
+.daily-badge-prevention {
+	top: 63%;
+	right: 18%;
+	animation-delay: 1.6s;
+}
+
+@keyframes dailyHeroBadgeFloat {
+	0% {
+		transform: translateY(0px);
+	}
+	50% {
+		transform: translateY(-6px);
+	}
+	100% {
+		transform: translateY(2px);
+	}
+}
+
+/* Degradado de transición suave entre panel izquierdo y derecho */
+.daily-card-left::after {
+	content: '';
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	width: 50px;
+	background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.95) 100%);
+	pointer-events: none;
+	z-index: 2;
+}
+
+/* Panel derecho: Formulario de inicio de sesión */
+.daily-card-right {
+	padding: 28px 46px;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	background: transparent;
+	position: relative;
+	z-index: 2;
+	height: 100%;
+	box-sizing: border-box;
+}
+
+/* Encabezado del Formulario */
+.daily-form-header {
+	text-align: center;
+	margin-bottom: 14px;
+}
+
+.daily-form-logo-box {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 2px;
+}
+
+.daily-form-badge {
+	width: 28px;
+	height: 28px;
+	border-radius: 7px;
+	background: #008736;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: #ffffff;
+	font-weight: 800;
+	font-size: 17px;
+	box-shadow: 0 3px 8px rgba(0, 135, 54, 0.28);
+}
+
+.daily-form-logo-text {
+	font-size: 21px;
+	font-weight: 800;
+	color: #008736;
+	letter-spacing: -0.01em;
+}
+
+.daily-form-subtitle-top {
+	font-size: 11px;
+	font-weight: 600;
+	color: #475569;
+	margin-top: 1px;
+	margin-bottom: 6px;
+	letter-spacing: 0.01em;
+}
+
+.daily-form-title {
+	font-size: 24px;
+	font-weight: 800;
+	color: #0f172a;
+	margin: 0 0 2px 0;
+	letter-spacing: -0.02em;
+}
+
+.daily-form-tagline {
+	font-size: 12px;
+	color: #64748b;
+	margin: 0;
+	font-weight: 500;
+}
+
+/* ==========================================================================
+   FORMULARIO Y CONTROLES DE ENTRADA
+   ========================================================================== */
+.daily-auth-form {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	width: 100%;
+}
+
+.daily-input-group {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	text-align: left;
+}
+
+.daily-input-label {
+	font-size: 12px;
+	font-weight: 600;
+	color: #334155;
+	margin: 0;
+	padding-left: 2px;
+}
+
+.daily-input-wrap {
+	position: relative;
+	display: flex;
+	align-items: center;
+	width: 100%;
+}
+
+.daily-input-icon {
+	position: absolute;
+	left: 13px;
+	width: 16px;
+	height: 16px;
+	color: #94a3b8;
+	pointer-events: none;
+	transition: color 0.15s ease;
+}
+
+.daily-text-input {
+	width: 100%;
+	height: 40px;
+	padding: 0 38px 0 40px;
+	font-size: 13px;
+	font-family: inherit;
+	color: #0f172a;
+	background: #ffffff;
+	border: 1px solid #e2e8f0;
+	border-radius: 9px;
+	outline: none;
+	transition: all 0.2s ease;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.daily-text-input::placeholder {
+	color: #94a3b8;
+	font-weight: 400;
+	font-size: 12px;
+}
+
+.daily-text-input:focus {
+	border-color: #10b981;
+	box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15), 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.daily-input-wrap:focus-within .daily-input-icon {
+	color: #10b981;
+}
+
+/* Botón de mostrar/ocultar contraseña */
+.daily-btn-toggle-pwd {
+	position: absolute;
+	right: 10px;
+	background: transparent;
+	border: none;
+	padding: 4px;
+	color: #94a3b8;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 6px;
+	transition: color 0.15s ease, background 0.15s ease;
+}
+
+.daily-btn-toggle-pwd:hover {
+	color: #334155;
+	background: #f1f5f9;
+}
+
+.daily-btn-toggle-pwd svg {
+	width: 16px;
+	height: 16px;
+}
+
+/* Fila de opciones: Recordarme y ¿Olvidaste tu contraseña? */
+.daily-form-options-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-top: 1px;
+	font-size: 11.5px;
+}
+
+.daily-checkbox-label {
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	cursor: pointer;
+	user-select: none;
+	color: #334155;
+	font-weight: 600;
+	margin: 0;
+}
+
+.daily-custom-checkbox {
+	appearance: none;
+	-webkit-appearance: none;
+	width: 16px;
+	height: 16px;
+	border: 1.5px solid #cbd5e1;
+	border-radius: 4px;
+	outline: none;
+	background: #ffffff;
+	cursor: pointer;
+	display: inline-grid;
+	place-content: center;
+	transition: all 0.15s ease;
+	margin: 0;
+}
+
+.daily-custom-checkbox::before {
+	content: '';
+	width: 8px;
+	height: 5px;
+	border-left: 2px solid #ffffff;
+	border-bottom: 2px solid #ffffff;
+	transform: rotate(-45deg) translate(1px, -1px);
+	opacity: 0;
+	transition: opacity 0.15s ease;
+}
+
+.daily-custom-checkbox:checked {
+	background: #008736;
+	border-color: #008736;
+	box-shadow: 0 2px 4px rgba(0, 135, 54, 0.25);
+}
+
+.daily-custom-checkbox:checked::before {
+	opacity: 1;
+}
+
+.daily-link-forgot {
+	color: #008736;
+	font-weight: 600;
+	text-decoration: none;
+	transition: color 0.15s ease, text-decoration 0.15s ease;
+}
+
+.daily-link-forgot:hover {
+	color: #047857;
+	text-decoration: underline;
+}
+
+/* Botón principal Iniciar sesión */
+.daily-btn-submit {
+	width: 100%;
+	height: 40px;
+	margin-top: 2px;
+	border: none;
+	border-radius: 9px;
+	background: linear-gradient(135deg, #008736 0%, #10b981 100%);
+	color: #ffffff;
+	font-size: 13.5px;
+	font-weight: 700;
+	font-family: inherit;
+	cursor: pointer;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 7px;
+	box-shadow: 0 4px 14px rgba(0, 135, 54, 0.28);
+	transition: all 0.22s ease;
+}
+
+.daily-btn-submit:hover:not(:disabled) {
+	background: linear-gradient(135deg, #047857 0%, #059669 100%);
+	box-shadow: 0 6px 18px rgba(0, 135, 54, 0.36);
+	transform: translateY(-1px);
+}
+
+.daily-btn-submit:active:not(:disabled) {
+	transform: translateY(0);
+	box-shadow: 0 2px 6px rgba(0, 135, 54, 0.2);
+}
+
+.daily-btn-submit:disabled {
+	opacity: 0.75;
+	cursor: not-allowed;
+}
+
+.daily-btn-submit svg {
+	width: 15px;
+	height: 15px;
+	transition: transform 0.2s ease;
+}
+
+.daily-btn-submit:hover:not(:disabled) svg {
+	transform: translateX(3px);
+}
+
+/* Divisor "o inicia con" */
+.daily-login-divider {
+	position: relative;
+	text-align: center;
+	margin: 8px 0 4px 0;
+}
+
+.daily-login-divider::before {
+	content: '';
+	position: absolute;
+	top: 50%;
+	left: 0;
+	right: 0;
+	height: 1px;
+	background: #e2e8f0;
+	z-index: 1;
+}
+
+.daily-login-divider span {
+	position: relative;
+	z-index: 2;
+	background: rgba(255, 255, 255, 0.95);
+	padding: 0 10px;
+	font-size: 11px;
+	color: #94a3b8;
+	font-weight: 500;
+}
+
+/* Botones SSO: Microsoft, Google, Apple */
+.daily-sso-grid {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 10px;
+	margin-top: 3px;
+}
+
+.daily-btn-sso {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	height: 36px;
+	background: #ffffff;
+	border: 1px solid #e2e8f0;
+	border-radius: 8px;
+	font-size: 11.5px;
+	font-weight: 600;
+	color: #334155;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+	font-family: inherit;
+}
+
+.daily-btn-sso:hover {
+	background: #f8fafc;
+	border-color: #cbd5e1;
+	transform: translateY(-1px);
+	box-shadow: 0 3px 6px rgba(0, 0, 0, 0.04);
+}
+
+.daily-sso-icon {
+	width: 14px;
+	height: 14px;
+	flex-shrink: 0;
+	display: inline-block;
+}
+
+/* ==========================================================================
+   3. BARRA INFERIOR DE CARACTERÍSTICAS (PILARES RETAIL)
+   ========================================================================== */
+.daily-login-footer {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 20px;
+	width: 100%;
+	max-width: 900px;
+	margin: 0 auto;
+	padding: 6px 16px;
+}
+
+.daily-footer-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	font-size: 12px;
+	font-weight: 600;
+	color: #334155;
+	text-decoration: none;
+	cursor: default;
+	transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.daily-footer-pill svg {
+	width: 16px;
+	height: 16px;
+	color: #008736;
+}
+
+.daily-footer-sep {
+	width: 1px;
+	height: 14px;
+	background: #cbd5e1;
+}
+
+/* ==========================================================================
+   MODALES (RECUPERACIÓN Y SSO)
+   ========================================================================== */
+.daily-modal-glass .modal-content {
+	border-radius: 20px;
+	border: 1.5px solid rgba(255, 255, 255, 0.9);
+	background: rgba(255, 255, 255, 0.95);
+	backdrop-filter: blur(20px);
+	box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+}
+
+.daily-modal-glass .modal-header {
+	border-bottom: 1px solid #f1f5f9;
+	padding: 18px 24px 14px 24px;
+}
+
+.daily-modal-glass .modal-body {
+	padding: 20px 24px;
+}
+
+.daily-modal-glass .modal-footer {
+	border-top: 1px solid #f1f5f9;
+	padding: 14px 24px;
+}
+
+/* ==========================================================================
+   TEMA OSCURO (NIGHT MODE)
+   ========================================================================== */
+html.daily-night body.daily-login-body,
+body.night-mode.daily-login-body {
+	background: #0f172a !important;
+	color: #f8fafc !important;
+}
+
+html.daily-night .daily-login-canvas,
+body.night-mode .daily-login-canvas {
+	background: #090d16;
+}
+
+html.daily-night .daily-login-canvas::before,
+body.night-mode .daily-login-canvas::before {
+	background: radial-gradient(ellipse at 25% 35%, rgba(16, 185, 129, 0.22) 0%, rgba(5, 150, 105, 0.1) 45%, transparent 75%);
+}
+
+html.daily-night .daily-login-canvas::after,
+body.night-mode .daily-login-canvas::after {
+	background: radial-gradient(ellipse at 75% 75%, rgba(16, 185, 129, 0.25) 0%, rgba(5, 150, 105, 0.12) 50%, transparent 80%);
+}
+
+html.daily-night .daily-pill-lang,
+body.night-mode .daily-pill-lang {
+	background: rgba(30, 41, 59, 0.85);
+	border-color: rgba(51, 65, 85, 0.8);
+	color: #e2e8f0;
+}
+
+html.daily-night .daily-pill-lang .globe-icon,
+body.night-mode .daily-pill-lang .globe-icon {
+	color: #e2e8f0;
+}
+
+html.daily-night .daily-pill-lang .lang-btn.is-active,
+body.night-mode .daily-pill-lang .lang-btn.is-active {
+	color: #10b981;
+}
+
+html.daily-night .daily-pill-theme,
+body.night-mode .daily-pill-theme {
+	background: #334155;
+}
+
+html.daily-night .daily-pill-theme-thumb,
+body.night-mode .daily-pill-theme-thumb {
+	background: #1e293b;
+}
+
+html.daily-night .daily-glass-card,
+body.night-mode .daily-glass-card {
+	background: rgba(30, 41, 59, 0.88) !important;
+	background-image: none !important;
+	border-color: rgba(51, 65, 85, 0.7);
+	box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+}
+
+html.daily-night .daily-card-left::after,
+body.night-mode .daily-card-left::after {
+	background: linear-gradient(to right, rgba(30, 41, 59, 0) 0%, rgba(30, 41, 59, 0.95) 100%);
+}
+
+html.daily-night .daily-hero-badge,
+body.night-mode .daily-hero-badge {
+	background: rgba(15, 23, 42, 0.45);
+	border-color: rgba(255, 255, 255, 0.35);
+	box-shadow: 0 12px 28px -4px rgba(0, 0, 0, 0.5),
+	            0 4px 10px rgba(0, 0, 0, 0.2),
+	            inset 0 1px 2px rgba(255, 255, 255, 0.25);
+}
+
+html.daily-night .daily-hero-badge:hover,
+body.night-mode .daily-hero-badge:hover {
+	background: rgba(15, 23, 42, 0.65);
+	border-color: rgba(52, 211, 153, 0.6);
+	box-shadow: 0 16px 36px -4px rgba(16, 185, 129, 0.3),
+	            0 6px 14px rgba(0, 0, 0, 0.4),
+	            inset 0 1px 2px rgba(255, 255, 255, 0.4);
+}
+
+html.daily-night .daily-form-subtitle-top,
+body.night-mode .daily-form-subtitle-top {
+	color: #94a3b8;
+}
+
+html.daily-night .daily-form-title,
+body.night-mode .daily-form-title {
+	color: #f8fafc !important;
+}
+
+html.daily-night .daily-form-tagline,
+body.night-mode .daily-form-tagline {
+	color: #94a3b8 !important;
+}
+
+html.daily-night .daily-input-label,
+body.night-mode .daily-input-label {
+	color: #cbd5e1;
+}
+
+html.daily-night .daily-text-input,
+body.night-mode .daily-text-input {
+	background: #1e293b;
+	border-color: #334155;
+	color: #f8fafc;
+}
+
+html.daily-night .daily-text-input:focus,
+body.night-mode .daily-text-input:focus {
+	border-color: #10b981;
+	box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25);
+}
+
+html.daily-night .daily-checkbox-label,
+body.night-mode .daily-checkbox-label {
+	color: #cbd5e1;
+}
+
+html.daily-night .daily-login-divider span,
+body.night-mode .daily-login-divider span {
+	background: #1e293b;
+	color: #64748b;
+}
+
+html.daily-night .daily-login-divider::before,
+body.night-mode .daily-login-divider::before {
+	background: #334155;
+}
+
+html.daily-night .daily-btn-sso,
+body.night-mode .daily-btn-sso {
+	background: #1e293b;
+	border-color: #334155;
+	color: #e2e8f0;
+}
+
+html.daily-night .daily-btn-sso:hover,
+body.night-mode .daily-btn-sso:hover {
+	background: #334155;
+}
+
+html.daily-night .daily-footer-pill,
+body.night-mode .daily-footer-pill {
+	color: #cbd5e1;
+}
+
+html.daily-night .daily-footer-sep,
+body.night-mode .daily-footer-sep {
+	background: #334155;
+}
+
+/* ==========================================================================
+   4. ADAPTABILIDAD RESPONSIVA (DESKTOP, TABLET, MOBILE)
+   ========================================================================== */
+@media (max-width: 991px) {
+	.daily-login-layout {
+		padding: 20px 24px;
+	}
+	.daily-glass-card {
+		grid-template-columns: 0.8fr 1.2fr;
+		max-width: 760px;
+	}
+	.daily-card-right {
+		padding: 30px 32px;
+	}
+}
+
+@media (max-width: 767px) {
+	.daily-login-layout {
+		padding: 16px;
+	}
+	.daily-glass-card {
+		grid-template-columns: 1fr;
+		max-width: 440px;
+		border-radius: 22px;
+	}
+	.daily-card-left {
+		display: none;
+	}
+	.daily-card-right {
+		padding: 28px 24px;
+	}
+	.daily-form-title {
+		font-size: 22px;
+	}
+	.daily-login-footer {
+		gap: 10px;
+		flex-wrap: wrap;
+		padding: 10px 0;
+	}
+	.daily-footer-pill span {
+		font-size: 11px;
+	}
+}

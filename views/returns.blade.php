@@ -47,6 +47,11 @@
 				</select>
 			</form>
 
+			<a href="{{ $U('/pos/returns') }}" class="ret-btn-secondary" style="background: #ecfdf5; border-color: #a7f3d0; color: #059669; font-weight: 700;" title="Módulo especializado para devoluciones de mostrador POS">
+				<i class="fa-solid fa-cash-register mr-1"></i>
+				<span>Devoluciones POS</span>
+			</a>
+
 			<button type="button" class="ret-btn-primary" data-toggle="modal" data-target="#modalNewReturn" id="btnOpenNewReturn">
 				<i class="fa-solid fa-plus"></i>
 				<span>Registrar devolución / cambio</span>

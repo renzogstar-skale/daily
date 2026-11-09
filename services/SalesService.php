@@ -348,9 +348,12 @@ class SalesService extends BaseService
 
 			return $saleRow;
 		}
-		catch (\Exception $ex)
+		catch (\Throwable $ex)
 		{
-			$dbRaw->rollBack();
+			if ($dbRaw->inTransaction())
+			{
+				$dbRaw->rollBack();
+			}
 			throw $ex;
 		}
 	}
@@ -954,70 +957,80 @@ class SalesService extends BaseService
 		{
 			if (!in_array($colName, $cols, true))
 			{
-				$dbRaw->exec($sql);
+				try
+				{
+					$dbRaw->exec($sql);
+				}
+				catch (\Throwable $e)
+				{
+				}
 			}
 		}
 
-		// Reemplazar cualquier nombre de persona real en clientes demo por razón social genérica
-		$dbRaw->exec("UPDATE customers SET name = 'Restaurante Central del Valle', email = 'compras@centraldelvalle.com' WHERE name LIKE '%Don Pedro%'");
-
 		// Inicializar metadatos comerciales en los 5 clientes existentes solo la primera vez
-		$unseeded = intval($dbRaw->query("SELECT COUNT(*) FROM customers WHERE IFNULL(seeded_directory_v1, 0) = 0")->fetchColumn());
-		if ($unseeded > 0)
+		try
 		{
-			$dbRaw->exec("
-				UPDATE customers SET
-					customer_type = 'Minorista',
-					branch_id = 1,
-					tags = 'Mostrador, Contado',
-					notes = 'Cuenta genérica para ventas rápidas de mostrador sin facturación nominal.',
-					credit_limit = NULL,
-					seeded_directory_v1 = 1
-				WHERE id = 1 AND IFNULL(seeded_directory_v1, 0) = 0
-			");
-			$dbRaw->exec("
-				UPDATE customers SET
-					customer_type = 'Comercial',
-					branch_id = 1,
-					tags = 'HORECA, Crédito',
-					notes = 'Cliente gastronómico recurrente. Entregas antes de las 11:00 am en recepción de cocina.',
-					credit_limit = 5000.00,
-					seeded_directory_v1 = 1
-				WHERE id = 2 AND IFNULL(seeded_directory_v1, 0) = 0
-			");
-			$dbRaw->exec("
-				UPDATE customers SET
-					customer_type = 'Comercial',
-					branch_id = 1,
-					tags = 'Mayorista, Crédito, Barista',
-					notes = 'Cliente habitual de lácteos y cremas. Atención preferente en temporada alta.',
-					credit_limit = 10000.00,
-					seeded_directory_v1 = 1
-				WHERE id = 3 AND IFNULL(seeded_directory_v1, 0) = 0
-			");
-			$dbRaw->exec("
-				UPDATE customers SET
-					customer_type = 'Corporativo',
-					branch_id = 2,
-					tags = 'Mayorista, Cadena Frío, Crédito',
-					notes = ' Cadena regional autoservicio. Requiere cajas térmicas selladas con precinto.',
-					credit_limit = 15000.00,
-					seeded_directory_v1 = 1
-				WHERE id = 4 AND IFNULL(seeded_directory_v1, 0) = 0
-			");
-			$dbRaw->exec("
-				UPDATE customers SET
-					customer_type = 'Institucional',
-					branch_id = 1,
-					tags = 'Institucional, Comedor',
-					notes = 'Menú desayuno institucional. Pendiente confirmar correo de facturación electrónica y dirección fiscal completa.',
-					email = '',
-					address = '',
-					credit_limit = 3500.00,
-					seeded_directory_v1 = 1
-				WHERE id = 5 AND IFNULL(seeded_directory_v1, 0) = 0
-			");
-			$dbRaw->exec("UPDATE customers SET seeded_directory_v1 = 1 WHERE IFNULL(seeded_directory_v1, 0) = 0");
+			$unseeded = intval($dbRaw->query("SELECT COUNT(*) FROM customers WHERE IFNULL(seeded_directory_v1, 0) = 0")->fetchColumn());
+			if ($unseeded > 0)
+			{
+				$dbRaw->exec("UPDATE customers SET name = 'Restaurante Central del Valle', email = 'compras@centraldelvalle.com' WHERE name LIKE '%Don Pedro%'");
+				$dbRaw->exec("
+					UPDATE customers SET
+						customer_type = 'Minorista',
+						branch_id = 1,
+						tags = 'Mostrador, Contado',
+						notes = 'Cuenta genérica para ventas rápidas de mostrador sin facturación nominal.',
+						credit_limit = NULL,
+						seeded_directory_v1 = 1
+					WHERE id = 1 AND IFNULL(seeded_directory_v1, 0) = 0
+				");
+				$dbRaw->exec("
+					UPDATE customers SET
+						customer_type = 'Comercial',
+						branch_id = 1,
+						tags = 'HORECA, Crédito',
+						notes = 'Cliente gastronómico recurrente. Entregas antes de las 11:00 am en recepción de cocina.',
+						credit_limit = 5000.00,
+						seeded_directory_v1 = 1
+					WHERE id = 2 AND IFNULL(seeded_directory_v1, 0) = 0
+				");
+				$dbRaw->exec("
+					UPDATE customers SET
+						customer_type = 'Comercial',
+						branch_id = 1,
+						tags = 'Mayorista, Crédito, Barista',
+						notes = 'Cliente habitual de lácteos y cremas. Atención preferente en temporada alta.',
+						credit_limit = 10000.00,
+						seeded_directory_v1 = 1
+					WHERE id = 3 AND IFNULL(seeded_directory_v1, 0) = 0
+				");
+				$dbRaw->exec("
+					UPDATE customers SET
+						customer_type = 'Corporativo',
+						branch_id = 2,
+						tags = 'Mayorista, Cadena Frío, Crédito',
+						notes = ' Cadena regional autoservicio. Requiere cajas térmicas selladas con precinto.',
+						credit_limit = 15000.00,
+						seeded_directory_v1 = 1
+					WHERE id = 4 AND IFNULL(seeded_directory_v1, 0) = 0
+				");
+				$dbRaw->exec("
+					UPDATE customers SET
+						customer_type = 'Institucional',
+						branch_id = 1,
+						tags = 'Institucional, Comedor',
+						notes = 'Menú desayuno institucional. Pendiente confirmar correo de facturación electrónica y dirección fiscal completa.',
+						email = '',
+						address = '',
+						credit_limit = 3500.00,
+						seeded_directory_v1 = 1
+					WHERE id = 5 AND IFNULL(seeded_directory_v1, 0) = 0
+				");
+				$dbRaw->exec("UPDATE customers SET seeded_directory_v1 = 1 WHERE IFNULL(seeded_directory_v1, 0) = 0");
+			}
+		}
+		catch (\Throwable $e)
+		{
 		}
 	}
 

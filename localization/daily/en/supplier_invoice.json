@@ -1,0 +1,12 @@
+{
+    "Cantidades y precios no pueden ser negativos": "Quantities and prices cannot be negative",
+    "Indique el motivo de la decisión": "State the reason for the decision",
+    "Indique número y fecha de la factura": "State the invoice number and date",
+    "La factura no tiene líneas con cantidad": "The invoice has no lines with quantity",
+    "La orden pertenece a otra sucursal": "The order belongs to another branch",
+    "Línea de factura que no pertenece a la orden": "Invoice line that does not belong to the order",
+    "Orden de compra no encontrada": "Purchase order not found",
+    "Segregación de funciones: quien registró la factura no puede aprobarla ni rechazarla": "Segregation of duties: whoever recorded the invoice cannot approve or reject it",
+    "Solo se deciden facturas con diferencias pendientes": "Only invoices with pending differences are decided",
+    "Solo se registran facturas de órdenes con recepción": "Only invoices of orders with a receipt are recorded"
+}

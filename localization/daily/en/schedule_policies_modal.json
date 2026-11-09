@@ -1,0 +1,22 @@
+{
+    "Configuración universal multiempresa, ciclos dominicales ({0}x{1}x{2}), rotación y descansos": "Universal multi-company configuration, Sunday cycles ({0}x{1}x{2}), rotation and rest",
+    "Cálculo matemático modular continuo por colaborador sin reseteo mensual.": "Continuous modular calculation per team member without monthly reset.",
+    "Descanso mínimo de seguridad entre salida y entrada.": "Minimum safety rest between clock-out and clock-in.",
+    "Equidad acumulada y alternancia automática entre meses y años.": "Accumulated fairness and automatic alternation across months and years.",
+    "Fecha de vigencia:": "Effective date:",
+    "Jornada semanal máxima:": "Maximum weekly hours:",
+    "Los turnos de domingo laborados generan un compensatorio automático programado de lunes a viernes, excluyendo festivos oficiales de Colombia y sin solapar períodos de vacaciones.": "Sunday shifts worked generate an automatic compensatory day scheduled Monday to Friday, excluding official Colombian holidays and without overlapping vacation periods.",
+    "Límite legal colombiano Ley {0} ({1}h vigentes).": "Colombian legal limit Law {0} ({1}h in force).",
+    "Límite nocturno diario:": "Daily night limit:",
+    "Máximo colaboradores nocturnos por jornada ({0} en cliente actual).": "Maximum night team members per workday ({0} at current customer).",
+    "Nombre o referencia de la política:": "Policy name or reference:",
+    "Política Oficial Colombia Ley {0} / Ley {1} ({2}x{3})": "Official Colombia Policy Law {0} / Law {1} ({2}x{3})",
+    "Política Oficial Colombia — Ley {0} / Ley {1} ({2}x{3})": "Official Colombia Policy — Law {0} / Law {1} ({2}x{3})",
+    "Regla de compensatorios:": "Comp time rule:",
+    "Regla de rotación dominical:": "Sunday rotation rule:",
+    "Rotación apertura / cierre:": "Opening / closing rotation:",
+    "{0} domingo trabajado y {1} libre (Alternado {2})": "{0} Sunday worked and {1} off (Alternating {2})",
+    "{0} domingos trabajados y {1} libre (Ciclo {2}x{3})": "{0} Sundays worked and {1} off (Cycle {2}x{3})",
+    "{0} domingos trabajados y {1} libre (Ley Colombia {2}x{3})": "{0} Sundays worked and {1} off (Colombia Law {2}x{3})",
+    "{0} semana Apertura / {1} semana Cierre (Secuencia continua)": "{0} Opening week / {1} Closing week (Continuous sequence)"
+}

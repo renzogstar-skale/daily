@@ -1,0 +1,15 @@
+{
+    ": diferencia de $": ": difference of $",
+    "Agregue al menos un producto con cantidad": "Add at least one product with a quantity",
+    "La ubicación de tránsito no puede ser origen ni destino": "The transit location cannot be origin or destination",
+    "No existe la causal de merma de traslado (código M{0})": "The transfer shrink cause does not exist (code M{0})",
+    "No existe la ubicación de tránsito (migración {0})": "The transit location does not exist (migration {0})",
+    "Origen y destino deben pertenecer a una sucursal": "Origin and destination must belong to a branch",
+    "Origen y destino son de la misma sucursal: use Transferir de Grocy (movimiento interno)": "Origin and destination are in the same branch: use Grocy Transfer (internal movement)",
+    "Solo la sucursal de destino puede recibir el traslado": "Only the destination branch can receive the transfer",
+    "Solo puede enviar desde sus sucursales asignadas": "You can only send from your assigned branches",
+    "Traslado anulado: el stock volvió al origen": "Transfer canceled: stock returned to the origin",
+    "Ubicación inválida": "Invalid location",
+    "en tránsito hacia": "in transit to",
+    "registrada como merma de traslado": "recorded as transfer shrink"
+}

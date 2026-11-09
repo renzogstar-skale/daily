@@ -55,6 +55,55 @@ class CustomerOrderService extends BaseService
 		return round(floatval($a['physical']) - floatval($a['quarantine']) - floatval($a['expired']) - floatval($a['committed_waste']) - $this->Reserved($productId, $branchId, $excludeOrderId), 4);
 	}
 
+	/** Free() de todos los productos en las sucursales dadas con consultas agrupadas (misma fórmula): [product_id][branch_id] => libre */
+	public function FreeMap(array $branchIds): array
+	{
+		$branchIds = array_values(array_filter(array_map('intval', $branchIds)));
+		if (empty($branchIds))
+		{
+			return [];
+		}
+		$in = implode(',', $branchIds);
+		$today = date('Y-m-d');
+		$parts = [
+			// físico − vencido (ubicaciones no de tránsito)
+			"SELECT s.product_id AS p, l.branch_id AS b, SUM(s.amount) - SUM(CASE WHEN s.best_before_date < '$today' AND s.best_before_date <> '2999-12-31' THEN s.amount ELSE 0 END) AS v
+				FROM stock s JOIN locations l ON l.id = s.location_id WHERE IFNULL(l.is_transit, 0) = 0 AND l.branch_id IN ($in) GROUP BY s.product_id, l.branch_id",
+			"SELECT q.product_id, q.branch_id, -SUM(q.amount) FROM quarantine_items q WHERE q.status = 'in_quarantine' AND q.branch_id IN ($in) GROUP BY q.product_id, q.branch_id",
+			"SELECT w.product_id, w.branch_id, -SUM(w.amount) FROM waste_records w WHERE w.status = 'pending_approval' AND IFNULL(w.inventory_deducted, 0) = 0 AND w.branch_id IN ($in) GROUP BY w.product_id, w.branch_id",
+			"SELECT i.product_id, o.branch_id, -SUM(CASE WHEN o.status IN ('picked', 'packed', 'dispatching') THEN i.picked_amount ELSE i.amount END)
+				FROM customer_order_items i JOIN customer_orders o ON o.id = i.order_id WHERE o.status IN ('" . implode("', '", self::RESERVING) . "') AND o.branch_id IN ($in) GROUP BY i.product_id, o.branch_id",
+		];
+		$map = [];
+		foreach ($parts as $sql)
+		{
+			foreach ($this->Db()->query($sql)->fetchAll(\PDO::FETCH_NUM) as [$p, $b, $v])
+			{
+				$map[intval($p)][intval($b)] = ($map[intval($p)][intval($b)] ?? 0) + floatval($v);
+			}
+		}
+		return $map;
+	}
+
+	/** ListPrice() de todos los productos activos en una consulta: [product_id] => precio de lista */
+	public function ListPriceMap(): array
+	{
+		$rows = $this->Db()->query('
+			SELECT p.id, p.sale_price,
+				COALESCE(NULLIF(c.price, 0), m.max_price, 0) AS last_price
+			FROM products p
+			LEFT JOIN cache__products_last_purchased c ON c.product_id = p.id
+			LEFT JOIN (SELECT product_id, MAX(price) AS max_price FROM stock WHERE IFNULL(price, 0) > 0 GROUP BY product_id) m ON m.product_id = p.id
+			WHERE p.active = 1
+		')->fetchAll(\PDO::FETCH_ASSOC);
+		$out = [];
+		foreach ($rows as $p)
+		{
+			$out[intval($p['id'])] = floatval($p['sale_price']) > 0 ? floatval($p['sale_price']) : round(floatval($p['last_price']) * (1 + GROCY_SALE_PRICE_DEFAULT_MARKUP_PCT / 100), 2);
+		}
+		return $out;
+	}
+
 	public function ListPrice(int $productId): float
 	{
 		$p = $this->Row('
@@ -438,8 +487,8 @@ class CustomerOrderService extends BaseService
 		if (strpos($n, 'yogur') !== false || strpos($n, 'kefir') !== false || strpos($n, 'probi') !== false) return '/img/control_center/prod_yogur_tub.svg';
 		if (strpos($n, 'mozzarella') !== false) return '/img/control_center/queso_mozzarella.jpg';
 		if (strpos($n, 'cheddar') !== false) return '/img/control_center/queso_cheddar.jpg';
-		if (strpos($n, 'parmesano') !== false) return '/img/control_center/queso_parmesano.jpg';
-		if (strpos($n, 'cottage') !== false || strpos($n, 'untable') !== false || strpos($n, 'queso') !== false) return '/img/control_center/queso_cottage.jpg';
+		if (strpos($n, 'parmesano') !== false) return '/img/control_center/queso_cheddar.jpg';
+		if (strpos($n, 'cottage') !== false || strpos($n, 'untable') !== false || strpos($n, 'queso') !== false) return '/img/control_center/queso_cheddar.jpg';
 		if (strpos($n, 'huevo') !== false) return '/img/control_center/huevos_grandes.jpg';
 		if (strpos($n, 'mantequilla') !== false) return '/img/control_center/mantequilla_cremas.jpg';
 		if (strpos($n, 'crema') !== false) return '/img/control_center/crema_de_leche.jpg';

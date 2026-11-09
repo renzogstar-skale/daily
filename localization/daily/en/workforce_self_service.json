@@ -1,0 +1,7 @@
+{
+    "Coordenadas inválidas": "Invalid coordinates",
+    "No tiene permiso para administrar horarios": "You do not have permission to manage schedules",
+    "No tiene permiso para configurar sucursales": "You do not have permission to configure branches",
+    "Para exigir ubicación, registre primero las coordenadas de la sucursal": "To require location, first record the branch coordinates",
+    "Solo se registra un punto de ubicación al marcar entrada o salida. DAILY no rastrea su ubicación durante el turno.": "Only one location point is recorded when clocking in or out. DAILY does not track your location during the shift."
+}

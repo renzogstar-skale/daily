@@ -1,0 +1,17 @@
+{
+    "% s/ventas (tope {0}% · sector {1}%)": "% of sales (cap {0}% · sector {1}%)",
+    "% s/ventas (tope {0}%)": "% of sales (cap {0}%)",
+    ") vence en": ") expires in",
+    "Ajustes Inventario": "Inventory Adjustments",
+    "Ajustes de Inventario": "Inventory Adjustments",
+    "Averías de Mercancía": "Merchandise Damage",
+    "Merma dentro del tope corporativo": "Shrink within corporate cap",
+    "Merma sobre el tope corporativo": "Shrink above corporate cap",
+    "Mes Actual (": "Current Month (",
+    "Mes Anterior (": "Previous Month (",
+    "casos de merma sin cerrar": "open shrink cases",
+    "de riesgo alto o crítico": "high or critical risk",
+    "kéfir": "kefir",
+    "por recuperar": "to recover",
+    "reclamos abiertos a proveedores": "open supplier claims"
+}

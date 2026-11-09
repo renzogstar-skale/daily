@@ -1,0 +1,10 @@
+{
+    "Calendario de Festivos Oficiales (Colombia)": "Official Holiday Calendar (Colombia)",
+    "Fecha de Fin (Inclusive):": "End Date (Inclusive):",
+    "Festivos Colombianos (Ley Emiliani) & Gestión de Vacaciones": "Colombian Holidays (Emiliani Law) & Vacation Management",
+    "Motivo / Observaciones:": "Reason / Observations:",
+    "Motor normativo conforme a la Ley {0} de {1}. Los días festivos bloquean automáticamente la asignación de compensatorios dominicales. Las vacaciones bloquean asignación de turnos sin descontar al colaborador del catálogo.": "Regulatory engine compliant with Law {0} of {1}. Holidays automatically block the assignment of Sunday comp days. Vacations block shift assignment without removing the team member from the catalog.",
+    "No hay vacaciones registradas": "There are no vacations recorded",
+    "Seleccione el colaborador...": "Select the team member...",
+    "Vacaciones Aprobadas (Noviembre {0} en adelante)": "Approved Vacations (November {0} onward)"
+}

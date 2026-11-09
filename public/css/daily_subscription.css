@@ -1,0 +1,77 @@
+/* Suscripción DAILY: sección «Ampliar plan», pantalla de plan requerido y panel de suscripción.
+   Reutiliza los tokens Crystal (verde corporativo, superficies blancas cristalinas). */
+
+:root {
+	--dsub-green: var(--crystal-green-3, #008e48);
+	--dsub-green-soft: rgba(0, 142, 72, 0.08);
+	--dsub-ink: #0f172a;
+	--dsub-muted: #475569;
+	--dsub-line: rgba(15, 23, 42, 0.10);
+	--dsub-surface: rgba(255, 255, 255, 0.82);
+	--dsub-radius: var(--crystal-radius, 14px);
+}
+
+/* Sidebar: sección separada, atenuada para no competir con el trabajo diario */
+.dnav .dnav-upgrade { margin-top: 10px; border-top: 1px solid var(--dsub-line); padding-top: 6px; }
+.dnav .dnav-upgrade > .dnav-cat-btn { color: var(--dsub-muted); }
+.dnav .dnav-upgrade-plan { list-style: none; padding: 8px 14px 2px 44px; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--dsub-muted); }
+.dnav .dnav-locked > .dnav-link { color: var(--dsub-muted) !important; }
+.dnav .dnav-locked > .dnav-link:hover { color: var(--dsub-ink) !important; }
+.dnav .dnav-lock { margin-left: auto; font-size: 11px; opacity: 0.7; }
+.dnav .dnav-upgrade-cta { color: var(--dsub-green) !important; font-weight: 600; }
+body.sidenav-toggled .dnav .dnav-upgrade-plan { display: none; }
+
+/* Encabezado: plan efectivo */
+.daily-plan-switch .dairy-hbtn i { color: var(--dsub-green); }
+.daily-plan-preview-badge { background: #fef3c7; color: #92400e; font-size: 11px; font-weight: 600; }
+
+/* Pantalla «requiere un plan superior» */
+.dsub-lock { max-width: 760px; margin: 4vh auto 40px; padding: 0 4px; animation: dsub-in 220ms var(--crystal-ease, ease-out) both; }
+.dsub-lock-card { background: var(--dsub-surface); border: 1px solid var(--dsub-line); border-radius: var(--crystal-radius-lg, 18px); box-shadow: var(--crystal-shadow, 0 8px 24px -12px rgba(15, 23, 42, 0.2)); padding: 32px; backdrop-filter: var(--crystal-blur-sm, none); }
+.dsub-lock-icon { width: 56px; height: 56px; border-radius: 16px; display: flex; align-items: center; justify-content: center; background: var(--dsub-green-soft); color: var(--dsub-green); font-size: 22px; margin-bottom: 18px; }
+.dsub-lock h1 { font-size: 1.45rem; font-weight: 700; color: var(--dsub-ink); margin-bottom: 8px; }
+.dsub-lock p.lead { font-size: 0.98rem; color: var(--dsub-muted); margin-bottom: 20px; }
+.dsub-lock-meta { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 22px; }
+.dsub-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--dsub-line); font-size: 0.82rem; color: var(--dsub-ink); background: #fff; }
+.dsub-chip.is-required { border-color: rgba(0, 142, 72, 0.35); background: var(--dsub-green-soft); color: var(--dsub-green); font-weight: 600; }
+.dsub-lock-list { list-style: none; padding: 0; margin: 0 0 24px; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px 18px; }
+.dsub-lock-list li { font-size: 0.88rem; color: var(--dsub-ink); display: flex; gap: 8px; align-items: baseline; }
+.dsub-lock-list li i { color: var(--dsub-green); font-size: 0.8rem; }
+.dsub-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.dsub-btn-primary { background: var(--dsub-green) !important; border-color: var(--dsub-green) !important; color: #fff !important; font-weight: 600; }
+.dsub-btn-primary:hover { filter: brightness(1.06); }
+
+/* Panel de suscripción */
+.dsub-status { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+.dsub-stat { background: var(--dsub-surface); border: 1px solid var(--dsub-line); border-radius: var(--dsub-radius); padding: 14px 16px; }
+.dsub-stat .k { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--dsub-muted); font-weight: 600; }
+.dsub-stat .v { font-size: 1.15rem; font-weight: 700; color: var(--dsub-ink); margin-top: 4px; }
+.dsub-state { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
+.dsub-state::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.dsub-state.is-on { color: var(--dsub-green); }
+.dsub-state.is-off { color: #b91c1c; }
+.dsub-plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+.dsub-plan { background: var(--dsub-surface); border: 1px solid var(--dsub-line); border-radius: var(--dsub-radius); padding: 18px; display: flex; flex-direction: column; transition: box-shadow var(--crystal-dur, 180ms), transform var(--crystal-dur, 180ms); }
+.dsub-plan:hover { box-shadow: var(--crystal-shadow-hover, none); }
+.dsub-plan.is-current { border-color: rgba(0, 142, 72, 0.45); box-shadow: 0 0 0 1px rgba(0, 142, 72, 0.25), var(--crystal-shadow, none); }
+.dsub-plan h3 { font-size: 1.05rem; font-weight: 700; margin: 8px 0 4px; color: var(--dsub-ink); }
+.dsub-plan .tag { font-size: 0.84rem; color: var(--dsub-muted); min-height: 2.6em; }
+.dsub-plan ul { list-style: none; padding: 0; margin: 10px 0 14px; flex: 1; }
+.dsub-plan li { font-size: 0.84rem; padding: 3px 0; display: flex; gap: 8px; color: var(--dsub-ink); }
+.dsub-plan li i { color: var(--dsub-green); margin-top: 3px; font-size: 0.75rem; }
+.dsub-plan .inherits { font-size: 0.78rem; color: var(--dsub-muted); font-style: italic; }
+.dsub-plan .quote { font-size: 0.8rem; color: var(--dsub-muted); margin-bottom: 10px; }
+.dsub-plan-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: var(--dsub-green-soft); color: var(--dsub-green); }
+.dsub-current-pill { font-size: 0.7rem; font-weight: 700; color: var(--dsub-green); background: var(--dsub-green-soft); border-radius: 999px; padding: 2px 10px; margin-left: auto; }
+.dsub-matrix th, .dsub-matrix td { vertical-align: middle; font-size: 0.86rem; }
+.dsub-matrix td.ok { color: var(--dsub-green); text-align: center; }
+.dsub-matrix td.no { color: #94a3b8; text-align: center; }
+.dsub-matrix tr.dsub-group td { background: rgba(15, 23, 42, 0.03); font-weight: 700; font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--dsub-muted); }
+.dsub-matrix tr.is-mine td:first-child { box-shadow: inset 3px 0 0 var(--dsub-green); }
+
+@keyframes dsub-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .dsub-lock { animation: none; } }
+@media (max-width: 575.98px) {
+	.dsub-lock-card { padding: 22px 18px; }
+	.dsub-actions .btn { flex: 1 1 100%; }
+}

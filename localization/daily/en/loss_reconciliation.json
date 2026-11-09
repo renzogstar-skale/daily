@@ -1,0 +1,18 @@
+{
+    "Despachos y Devoluciones": "Dispatches and Returns",
+    "Despachos y otras salidas": "Dispatches and other outbound",
+    "Devolución sin validar": "Unvalidated return",
+    "Diferencia sin movimiento que la justifique": "Difference without a movement to justify it",
+    "Dimensión no válida": "Invalid dimension",
+    "Error de registro o de conteo (recepción, UPC o cantidad)": "Recording or count error (receipt, UPC or quantity)",
+    "Existencia registrada en otra ubicación de la sucursal": "Stock recorded in another location of the branch",
+    "Merma reportada pendiente de aprobación": "Reported shrink pending approval",
+    "Ningún documento la explica": "No document explains it",
+    "Operaciones pendientes de sincronización": "Operations pending sync",
+    "Quien registró un movimiento no es responsable de una diferencia. Es un dato de trazabilidad, no una conclusión.": "Whoever recorded a movement is not responsible for a difference. It is traceability data, not a conclusion.",
+    "Requiere reconteo y revisión de documentos": "Requires recount and document review",
+    "Traslado entrante sin confirmar: pudo contarse aunque aún no se recibió": "Unconfirmed incoming transfer: it may have been counted though not yet received",
+    "Unidades en cuarentena, fuera del área contada": "Units in quarantine, outside the counted area",
+    "Unidades preparadas para pedido o pickup, fuera del área contada": "Units prepared for order or pickup, outside the counted area",
+    "Unidades vencidas: pudieron retirarse sin registrar la baja": "Expired units: they may have been removed without recording the write-off"
+}

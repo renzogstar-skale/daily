@@ -1,0 +1,855 @@
+{
+ "exact": {
+  "Sin información": "No data",
+  "NOTAS Y HALLAZGOS": "NOTES AND FINDINGS",
+  "TIPO DE NOVEDAD": "EVENT TYPE",
+  "EN MANTENIMIENTO": "UNDER MAINTENANCE",
+  "Y VARIABLE": "XYZ CLASS",
+  "Y variable": "XYZ class",
+  "PERSONAL EN TURNO": "STAFF ON SHIFT",
+  "CAJAS Y SERVICIO": "REGISTERS AND SERVICE",
+  "Merma por clasificar": "Shrink to classify",
+  "Orden de compra aprobada sin enviar": "Approved purchase order not sent",
+  "de": "of",
+  "Verónica Bustos": "Employee",
+  "Restaurante Central del Valle": "Central Valley Restaurant",
+  "Av. Central de Abastos Bodega E-42": "Central Wholesale Market, Unit E-42",
+  "Granja San Juan, Ejido Los Fresnos": "San Juan Farm, Homestead FL",
+  "Cali, Valle del Cauca": "Miami, Florida",
+  "Liquidación final": "Final clearance",
+  "Urgencia máxima": "Maximum urgency",
+  "Atención media": "Medium attention",
+  "Pendiente de producto": "Product pending",
+  "Filtros detallados": "Detailed filters",
+  "Principal causal": "Main cause",
+  "Matriz Frecuencia vs. Impacto": "Frequency vs. Impact Matrix",
+  "Supervisor aprueba; > umbral requiere gerente": "Supervisor approves; above threshold requires manager",
+  "Tratamiento": "Treatment",
+  "REGISTROS": "RECORDS",
+  "Registros": "Records",
+  "Cambiar": "Change",
+  "Investigaciones Activas": "Active Investigations",
+  "Planes Vencidos": "Overdue Plans",
+  "Planes Cerrados": "Closed Plans",
+  "Planes finalizados": "Completed plans",
+  "Investigador:": "Investigator:",
+  "Hechos": "Facts",
+  "Validar causa": "Validate cause",
+  "Ejecutar plan": "Execute plan",
+  "Verificar eficacia": "Verify effectiveness",
+  "Excursiones": "Excursions",
+  "(minutos-equipo)": "(equipment-minutes)",
+  "Exactitud FEFO": "FEFO accuracy",
+  "Excursiones registradas": "Recorded excursions",
+  "Quesos": "Cheeses",
+  "Otros lotes": "Other lots",
+  "Prioridad FEFO": "FEFO priority",
+  "No apto (Expired)": "Unfit (Expired)",
+  "Contener": "Contain",
+  "Evaluar": "Evaluate",
+  "INCIDENCIA": "INCIDENT",
+  "Progreso": "Progress",
+  "Paso actual": "Current step",
+  "Despacho desde origen": "Dispatch from origin",
+  "Saldo Inicial": "Opening Balance",
+  "Saldo Final": "Closing Balance",
+  "Saldo inicial": "Opening balance",
+  "Bodega principal": "Main warehouse",
+  "Vitrina de exhibición": "Display case",
+  "Supervisor Turno Mañana": "Morning Shift Supervisor",
+  "Supervisor de Calidad": "Quality Supervisor",
+  "Simular What-If": "Run What-If",
+  "E.ACCESORIOS": "T.ACCESSORIES",
+  "Accesorios": "Accessories",
+  "Bodega Digital": "Digital Warehouse",
+  "Despachos": "Dispatches",
+  "Ventas": "Sales",
+  "Operaciones": "Operations",
+  "Asociado": "Associate",
+  "VMD": "ADS",
+  "Cotización de Abastecimiento Retail": "Retail Supply Quote",
+  "Desde Hallandale Beach": "From Hallandale Beach",
+  "Vencen": "Expiring",
+  "fichajes": "clock-ins",
+  "Faltantes ajustados": "Adjusted shortages",
+  "Sobrantes ajustados": "Adjusted overages",
+  "Quedan": "Remaining",
+  "Kardex": "Ledger",
+  "KARDEX": "LEDGER",
+  "Kardex Valorizado": "Valuated Inventory Ledger",
+  "Valle": "Low",
+  "Valle:": "Low:"
+ },
+ "sub": [
+  [
+   "Cada una enlaza al producto o registro que la originó.",
+   "Each one links to the product or record that triggered it."
+  ],
+  [
+   " sin cerrar.",
+   " still open."
+  ],
+  [
+   "ajustes por aprobar",
+   "adjustments to approve"
+  ],
+  [
+   "su stock aún no se descontó.",
+   "stock not yet deducted."
+  ],
+  [
+   "el stock aún no se descontó.",
+   "stock not yet deducted."
+  ],
+  [
+   "casos registrados en sistema",
+   "cases recorded in the system"
+  ],
+  [
+   "Registrar con foto, revisar exhibición y manipulación",
+   "Record with photo; review display and handling"
+  ],
+  [
+   "Motivos de registro",
+   "Recording reasons"
+  ],
+  [
+   "NOMBRE DE CAUSAL",
+   "CAUSE NAME"
+  ],
+  [
+   "Limitación de Altura de Estiba en Cámara de Quesos",
+   "Stacking Height Limit in Cheese Cooler"
+  ],
+  [
+   "Instalación de Cortinas Nocturnas y Calibración Termostatos",
+   "Night Curtain Installation and Thermostat Calibration"
+  ],
+  [
+   "Auditoría Diaria FEFO en Góndola de Yogures y Leche",
+   "Daily FEFO Audit on Yogurt and Milk Aisle"
+  ],
+  [
+   "Rango de refrigeración",
+   "Refrigeration range"
+  ],
+  [
+   "lecturas.",
+   "readings."
+  ],
+  [
+   "Un producto expuesto nunca se libera automáticamente:",
+   "An exposed product is never released automatically:"
+  ],
+  [
+   "evaluación de calidad",
+   "quality evaluation"
+  ],
+  [
+   "decisión autorizada",
+   "authorized decision"
+  ],
+  [
+   "Ver todos los",
+   "View all"
+  ],
+  [
+   "registros",
+   "records"
+  ],
+  [
+   "Mostrando",
+   "Showing"
+  ],
+  [
+   "Distribución de riesgo",
+   "Risk distribution"
+  ],
+  [
+   "Diferencia de conteo no implica merma física; ajustes requieren aprobación.",
+   "A count difference does not imply physical shrink; adjustments require approval."
+  ],
+  [
+   "valida existencias y evita doble descuento.",
+   "validates stock and prevents double deduction."
+  ],
+  [
+   "[A01] Producto dañado",
+   "[A01] Damaged product"
+  ],
+  [
+   "[D01] Ruptura de cadena de frío",
+   "[D01] Cold chain break"
+  ],
+  [
+   "[D02] Temperatura fuera de rango en cámara / sensor",
+   "[D02] Out-of-range temperature in cooler / sensor"
+  ],
+  [
+   "[D03] Vencimiento de lácteos por rotación deficiente",
+   "[D03] Dairy expiration due to poor rotation"
+  ],
+  [
+   "[D04] Producto deteriorado",
+   "[D04] Deteriorated product"
+  ],
+  [
+   "corte al día anterior a la publicación.",
+   "snapshot as of the day before publication."
+  ],
+  [
+   "Alerta crítica sin resolver",
+   "Unresolved critical alert"
+  ],
+  [
+   "cadena de sellos íntegra",
+   "seal chain intact"
+  ],
+  [
+   " y, as a fallback,",
+   " and, as a fallback,"
+  ],
+  [
+   "el informe no se genera.",
+   "the report is not generated."
+  ],
+  [
+   "venta diaria × días restantes. Lo que sobra se considera expuesto.",
+   "daily sales × days remaining. The surplus is considered exposed."
+  ],
+  [
+   "Lote ",
+   "Lot "
+  ],
+  [
+   " en el período",
+   " in the period"
+  ],
+  [
+   "Recepción de compra ini",
+   "Initial purchase receipt"
+  ],
+  [
+   "Audit interval: 2026-11-02 al 2026-11-02",
+   "Audit interval: 2026-11-02 to 2026-11-02"
+  ],
+  [
+   " al 2026-",
+   " to 2026-"
+  ],
+  [
+   "requiere reconteo y validación de reservas.",
+   "requires a recount and reservation validation."
+  ],
+  [
+   " sin jerarquía",
+   " without hierarchy"
+  ],
+  [
+   "Unidades en Riesgo = máx(0, Stock Lote − Demanda Estimada antes de vencer)",
+   "Units at Risk = max(0, Lot Stock − Estimated Demand before expiry)"
+  ],
+  [
+   "Se preservan turnos indispensables de apertura y cierre.",
+   "Essential opening and closing shifts are preserved."
+  ],
+  [
+   "Se preservan turnos indispensables de apertura.",
+   "Essential opening shifts are preserved."
+  ],
+  [
+   "Se preservan turnos indispensables de apertura",
+   "Essential opening shifts are preserved"
+  ],
+  [
+   "Seguimiento de compromisos.",
+   "Commitment follow-up."
+  ],
+  [
+   "análisis de desviación",
+   "variance analysis"
+  ],
+  [
+   "En espera de llegada de sonda térmica de repuesto por parte del servicio técnico Frío Industrial.",
+   "Waiting for a replacement temperature probe from the refrigeration service provider."
+  ],
+  [
+   "Vence en ",
+   "Due in "
+  ],
+  [
+   "OC aprobada sin enviar:",
+   "Approved PO not sent:"
+  ],
+  [
+   "OC PO-",
+   "PO "
+  ],
+  [
+   "Send email to ventas@",
+   "Send email to sales@"
+  ],
+  [
+   "En investigación. No presume sustracción ni señala a ninguna persona.",
+   "Under investigation. Does not presume theft or point to any person."
+  ],
+  [
+   "Ordenado por urgencia, plazo vencido e impacto",
+   "Sorted by urgency, overdue deadline and impact"
+  ],
+  [
+   " en juego",
+   " at stake"
+  ],
+  [
+   " · ventas $0.00 sin arqueo.",
+   " · sales $0.00 with no cash count."
+  ],
+  [
+   " salió del inventario sin aprobación registrada.",
+   " left inventory with no recorded approval."
+  ],
+  [
+   "el destino recibiría mercadería que no salió.",
+   "the destination would receive goods that never left."
+  ],
+  [
+   "trasladar o reubicar al frente.",
+   "transfer or move to the front."
+  ],
+  [
+   " u. en ",
+   " u. in "
+  ],
+  [
+   "Bodega Seca",
+   "Dry Storage"
+  ],
+  [
+   "Cámara Fría",
+   "Cold Room"
+  ],
+  [
+   "Refrigerador",
+   "Refrigerator"
+  ],
+  [
+   "Despensa",
+   "Pantry"
+  ],
+  [
+   "Falla de refrigeración",
+   "Refrigeration failure"
+  ],
+  [
+   " SKU con stock",
+   " SKUs in stock"
+  ],
+  [
+   " de 699 SKU",
+   " of 699 SKUs"
+  ],
+  [
+   "Mismas cifras y fórmulas que el Centro de Control web (ventas netas sin impuesto; solo eventos confirmados).",
+   "Same figures and formulas as the web Control Center (net sales before tax; confirmed events only)."
+  ],
+  [
+   "solo suman mermas aprobadas y diferencias netas de inventario ya ajustadas. No hay mermas por aprobar.",
+   "only approved shrink and already-adjusted net inventory differences are added. No shrink pending approval."
+  ],
+  [
+   "Capacitación externa de producto",
+   "External product training"
+  ],
+  [
+   "Sin impuestos",
+   "Before tax"
+  ],
+  [
+   "antes de ",
+   "before "
+  ],
+  [
+   "Sensible",
+   "Sensitive"
+  ],
+  [
+   "Abarrotes Unidos de Miami LLC",
+   "United Grocers of Miami LLC"
+  ],
+  [
+   "Aceites Puros del Caribe",
+   "Caribbean Pure Oils"
+  ],
+  [
+   "Bebidas & Probióticos del Centro",
+   "Central Beverages & Probiotics"
+  ],
+  [
+   "Bebidas Tropicales del Atlántico",
+   "Atlantic Tropical Beverages"
+  ],
+  [
+   "BrilloMax Artículos de Aseo",
+   "BrilloMax Cleaning Supplies"
+  ],
+  [
+   "Congelados del Litoral",
+   "Coastal Frozen Foods"
+  ],
+  [
+   "Conservas & Especias La Criolla",
+   "La Criolla Preserves & Spices"
+  ],
+  [
+   "Detergentes Industriales del Caribe",
+   "Caribbean Industrial Detergents"
+  ],
+  [
+   "Distribuidora de Abarrotes Costa Sur",
+   "South Coast Grocery Distributors"
+  ],
+  [
+   "Distribuidora Láctea La Holandesa",
+   "Holland Dairy Distributors"
+  ],
+  [
+   "Granos del Valle Florida Inc",
+   "Valley Grains Florida Inc"
+  ],
+  [
+   "Jugos Cítricos del Sur S.A.",
+   "Southern Citrus Juices Inc."
+  ],
+  [
+   "Lácteos del Valle Central S.A.",
+   "Central Valley Dairy Inc."
+  ],
+  [
+   "Lácteos del Valle S.A.",
+   "Valley Dairy Inc."
+  ],
+  [
+   "Manantiales de Florida Springs",
+   "Florida Springs Water Co."
+  ],
+  [
+   "Molinos & Cereales del Sol",
+   "Sun Mills & Cereals"
+  ],
+  [
+   "Panificadora del Puerto S.A.",
+   "Harbor Bakery Inc."
+  ],
+  [
+   "Panificadora del Puerto",
+   "Harbor Bakery"
+  ],
+  [
+   "Tecnológica del Atlántico",
+   "Atlantic Technology"
+  ],
+  [
+   "MOTIVO DE ORIGEN",
+   "SOURCE REASON"
+  ],
+  [
+   " a 0 de 0 registros",
+   " to 0 of 0 records"
+  ],
+  [
+   " a 4 de 7411 registros",
+   " to 4 of 7,411 records"
+  ],
+  [
+   "Conteo CNT-",
+   "Count CNT-"
+  ],
+  [
+   "0,00 US$ de 100,00 US$",
+   "$0.00 of $100.00"
+  ],
+  [
+   "Usuario Demo",
+   "Demo User"
+  ],
+  [
+   "Colaborador",
+   "Employee"
+  ],
+  [
+   "puntos clave",
+   "key checkpoints"
+  ],
+  [
+   "Gerente de tienda",
+   "Store Manager"
+  ],
+  [
+   "(Variante ",
+   "(Variant "
+  ],
+  [
+   "Pedido PED-",
+   "Order PED-"
+  ],
+  [
+   "Describe qué ocurrió y los hechos observados...",
+   "Describe what happened and the facts observed..."
+  ],
+  [
+   "Muestra / Commercial tasting",
+   "Sample / Commercial tasting"
+  ],
+  [
+   "Deterioro físico / Breakage",
+   "Physical deterioration / Breakage"
+  ],
+  [
+   " lotes expuestos",
+   " exposed lots"
+  ],
+  [
+   "Lotes expuestos (",
+   "Exposed lots ("
+  ],
+  [
+   "causal CFR confirmada",
+   "CFR cause confirmed"
+  ],
+  [
+   "Observaciones de inspección o motivo de cuarentena preventiva...",
+   "Inspection notes or reason for preventive quarantine..."
+  ],
+  [
+   "Agrega un motivo en caso de rechazo...",
+   "Add a reason if rejected..."
+  ],
+  [
+   " sucursales sincronizadas al corte)",
+   " branches synced at snapshot time)"
+  ],
+  [
+   "Distribuidora Frigorífica Nacional",
+   "National Cold Storage Distributors"
+  ],
+  [
+   "Granja Avícola San Juan",
+   "San Juan Poultry Farm"
+  ],
+  [
+   "Traslado TRA-",
+   "Transfer TRA-"
+  ],
+  [
+   "Devolución DEV-",
+   "Return DEV-"
+  ],
+  [
+   "devolucion_cliente",
+   "customer_return"
+  ],
+  [
+   "rechazo_recepcion",
+   "receiving_rejection"
+  ],
+  [
+   "Ajuste ADJ-",
+   "Adjustment ADJ-"
+  ],
+  [
+   "÷ inventario",
+   "÷ inventory"
+  ],
+  [
+   "Surplus = valor ×",
+   "Surplus = value ×"
+  ],
+  [
+   "It is a suggestion: no mueve inventario.",
+   "It is a suggestion: it does not move inventory."
+  ],
+  [
+   "Adelantar lote al frente de góndola y verificar temperatura de cámara.",
+   "Move the lot to the front of the shelf and check the cooler temperature."
+  ],
+  [
+   "un movimiento puede tener varias señales.",
+   "a movement can carry several signals."
+  ],
+  [
+   "Indique causal, folio o motivo de la resolución...",
+   "State the cause, document number or reason for the resolution..."
+  ],
+  [
+   " valorizado",
+   " valued"
+  ],
+  [
+   "Saldo inicial (",
+   "Opening balance ("
+  ],
+  [
+   "Saldo final (",
+   "Closing balance ("
+  ],
+  [
+   " preliminares · ",
+   " preliminary · "
+  ],
+  [
+   "Se revisaron estanterías y casilleros...",
+   "Shelves and lockers were checked..."
+  ],
+  [
+   "Recepción con verificación de precintos y embalajes conforme.",
+   "Received with seals and packaging verified as compliant."
+  ],
+  [
+   "Inspección técnica de estado y verificación de sellos de seguridad.",
+   "Technical condition inspection and security seal verification."
+  ],
+  [
+   "Detalles de la verificación física...",
+   "Physical verification details..."
+  ],
+  [
+   " Almacenes / ",
+   " Warehouses / "
+  ],
+  [
+   "Aceite Vegetal Premium 1L",
+   "Premium Vegetable Oil 1L"
+  ],
+  [
+   "Indicar pasillos, niveles o familias a auditar...",
+   "Specify aisles, levels or product families to audit..."
+  ],
+  [
+   "Detalles de la comprobación en góndola o almacén...",
+   "Details of the shelf or warehouse check..."
+  ],
+  [
+   "Olor, textura, viscosidad, acidez o estado del sellado...",
+   "Odor, texture, viscosity, acidity or seal condition..."
+  ],
+  [
+   "Describe por qué se retira de piso de venta (sospecha térmica, prueba pendiente, etc.)...",
+   "Describe why it is pulled from the sales floor (temperature concern, pending test, etc.)..."
+  ],
+  [
+   "(-) Taxes (IVA/Taxes):",
+   "(-) Taxes:"
+  ],
+  [
+   "Ej: Caída de afluencia, quiebre de stock en lácteos, rotación de personal...",
+   "e.g., lower foot traffic, dairy stockout, staff turnover..."
+  ],
+  [
+   "Detalles de la ejecución en tienda...",
+   "In-store execution details..."
+  ],
+  [
+   "Alta rotación, riesgo de quiebre inminente en percha...",
+   "High turnover, imminent shelf stockout risk..."
+  ],
+  [
+   "Alta rotación in the period con riesgo de quiebre.",
+   "High turnover in the period with stockout risk."
+  ],
+  [
+   "Indicar hallazgos o instrucciones específicas para control interno...",
+   "Note findings or specific instructions for internal control..."
+  ],
+  [
+   "Accessories · E.ACCESORIOS",
+   "Accessories · T.ACCESSORIES"
+  ],
+  [
+   "Dispatches · E.DESPACHOS",
+   "Dispatches · T.DISPATCHES"
+  ],
+  [
+   "Política Oficial Colombia Ley 2101 / Ley 51 (3x1)",
+   "Official Policy: Colombia Law 2101 / Law 51 (3x1)"
+  ],
+  [
+   "Describa el motivo o justificación...",
+   "Describe the reason or justification..."
+  ],
+  [
+   "Explique la causa de la discrepancia (olvido de marcación, fallo de sensor, etc.)...",
+   "Explain the cause of the discrepancy (missed clock-in, sensor failure, etc.)..."
+  ],
+  [
+   "→ tarea FEFO",
+   "→ FEFO task"
+  ],
+  [
+   "RESTRINGIDO: Requires recertification",
+   "RESTRICTED: Requires recertification"
+  ],
+  [
+   "Quesería Artesanal Florida Cheese",
+   "Florida Artisan Cheese Co."
+  ],
+  [
+   "Higiene & Salud Personal Miami",
+   "Miami Personal Care & Hygiene"
+  ],
+  [
+   "Cervecería & Refrescos Sunshine",
+   "Sunshine Brewing & Soft Drinks"
+  ],
+  [
+   "Químicos & Limpieza EcoClean LLC",
+   "EcoClean Chemicals & Cleaning LLC"
+  ],
+  [
+   "Indicar condiciones comerciales, empaque, volumen requerido...",
+   "Specify commercial terms, packaging, required volume..."
+  ],
+  [
+   "Acuerdo alcanzado: reposición física, nota de crédito aplicada, compensación...",
+   "Agreement reached: physical replacement, credit note applied, compensation..."
+  ],
+  [
+   "Open Expediente Central 360°",
+   "Open Central Case File 360°"
+  ],
+  [
+   "Describa la verificación física, evidencia analizada y decisión...",
+   "Describe the physical verification, evidence reviewed and decision..."
+  ],
+  [
+   "Detalle ubicación, turno o discrepancia detectada...",
+   "Detail location, shift or discrepancy detected..."
+  ],
+  [
+   "Escriba los detalles de la acción...",
+   "Enter the action details..."
+  ],
+  [
+   " · Reconteo. No presume sustracción ni señala a ninguna persona.",
+   " · Recount. Does not presume theft or point to any person."
+  ],
+  [
+   "Simulador What-If",
+   "What-If Simulator"
+  ],
+  [
+   "se verifica a pedido.",
+   "verified on demand."
+  ],
+  [
+   "Alta rotación in the period con riesgo de quiebre.",
+   "High turnover in the period with stockout risk."
+  ],
+  [
+   "Alta rotación",
+   "High turnover"
+  ],
+  [
+   " con riesgo de quiebre.",
+   " with stockout risk."
+  ],
+  [
+   "/2026 a ",
+   "/2026 to "
+  ],
+  [
+   " en el kardex centralizado",
+   " in the centralized inventory ledger"
+  ],
+  [
+   "centralized kardex",
+   "centralized inventory ledger"
+  ],
+  [
+   "the kardex",
+   "the inventory ledger"
+  ],
+  [
+   " hechas · ",
+   " done · "
+  ],
+  [
+   " agot. · ",
+   " out · "
+  ],
+  [
+   "SKUss",
+   "SKUs"
+  ],
+  [
+   "Laboratorios Dermocare USA",
+   "Dermocare Laboratories USA"
+  ],
+  [
+   "Kardex by product",
+   "Ledger by product"
+  ],
+  [
+   "Distribuidora Tecnológica Atlántico",
+   "Atlantic Technology Distributors"
+  ],
+  [
+   "Stock and Kardex entry",
+   "Stock and ledger entry"
+  ],
+  [
+   "Kardex entry",
+   "ledger entry"
+  ],
+  [
+   "Kardex",
+   "Ledger"
+  ],
+  [
+   "Valle: $",
+   "Low: $"
+  ]
+ ],
+ "scoped": {
+  "02_mermas/": {
+   "exact": {
+    "Settings": "Adjustments",
+    "a": "to"
+   },
+   "sub": [
+    [
+     "Bonuses / Settings",
+     "Bonuses / Adjustments"
+    ]
+   ]
+  },
+  "03_inventario/stockoverview": {
+   "exact": {
+    "Settings": "Adjustments"
+   },
+   "sub": [
+    [
+     "Bonuses / Settings",
+     "Bonuses / Adjustments"
+    ]
+   ]
+  },
+  "06_personal/scheduling": {
+   "exact": {
+    "Settings": "Adjustments"
+   },
+   "sub": [
+    [
+     "Bonuses / Settings",
+     "Bonuses / Adjustments"
+    ]
+   ],
+   "rx": [
+    [
+     "^(\\d{2})/(\\d{2})$",
+     "$2/$1"
+    ]
+   ]
+  }
+ }
+}

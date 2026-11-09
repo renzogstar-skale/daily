@@ -3,7 +3,7 @@
 @section('title', $__t('Consume'))
 
 @push('pageScripts')
-<script src="{{ $U('/js/grocy_uisound.js?v=', true) }}{{ $version }}"></script>
+<script src="{{ $U('/js/grocy_uisound.js?v=', true) }}{{ daily_asset_version('/js/grocy_uisound.js') }}"></script>
 @endpush
 
 @section('content')

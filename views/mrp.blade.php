@@ -274,7 +274,7 @@
 	<button type="button" class="nav-link daily-level-tab @if($activeTab === 'abastecimiento') active @endif" data-toggle="pill" data-target="#tab-abastecimiento" role="tab" id="pill-abastecimiento">
 		<i class="fa-solid fa-truck-ramp-box mr-1"></i>
 		<span>4. Abastecimiento & Tránsito</span>
-		<span class="daily-level-badge badge-warning">{{ count($priorities['emergency']) }}</span>
+		<span class="daily-level-badge badge-warning">{{ count($inTransitOrders) > 0 ? count($inTransitOrders) : count($priorities['emergency']) }}</span>
 	</button>
 </div>
 
@@ -958,7 +958,7 @@
 					<div class="col-md-4 mb-3">
 						<div class="border rounded p-3 h-100 border-danger bg-light">
 							<div class="d-flex justify-content-between align-items-center mb-2">
-								<span class="badge badge-danger text-uppercase">🔴 1. Emergencia</span>
+								<span class="badge badge-danger text-uppercase">1. Emergencia</span>
 								<strong class="text-danger">{{ count($priorities['emergency']) }} SKUs</strong>
 							</div>
 							<h6 class="font-weight-bold text-dark">Quiebre Inminente</h6>
@@ -981,7 +981,7 @@
 					<div class="col-md-4 mb-3">
 						<div class="border rounded p-3 h-100 border-warning bg-light">
 							<div class="d-flex justify-content-between align-items-center mb-2">
-								<span class="badge badge-warning text-dark text-uppercase">🟡 2. Crítico</span>
+								<span class="badge badge-warning text-dark text-uppercase">2. Crítico</span>
 								<strong class="text-dark">{{ count($priorities['critical']) }} SKUs</strong>
 							</div>
 							<h6 class="font-weight-bold text-dark">Punto de Reorden (ROP)</h6>
@@ -1004,7 +1004,7 @@
 					<div class="col-md-4 mb-3">
 						<div class="border rounded p-3 h-100 border-success bg-light">
 							<div class="d-flex justify-content-between align-items-center mb-2">
-								<span class="badge badge-success text-uppercase">🟢 3. Normal</span>
+								<span class="badge badge-success text-uppercase">3. Normal</span>
 								<strong class="text-success">{{ count($priorities['normal']) }} SKUs</strong>
 							</div>
 							<h6 class="font-weight-bold text-dark">Programación Regular</h6>
@@ -1099,7 +1099,16 @@
 				<div class="table-responsive">
 					<table class="table table-sm mb-0">
 						<thead><tr><th>Producto</th><th class="text-right">Pedido</th><th class="text-right">Recibido</th><th class="text-right">Precio OC</th><th style="width:130px">Cant. facturada</th><th style="width:140px">Precio unit. fact.</th></tr></thead>
-						<tbody id="mrp-invoice-lines"></tbody>
+						<tbody id="mrp-invoice-lines">
+							<tr>
+								<td><strong>Aceite Vegetal Premium 1L</strong><br><small class="text-muted">SKU-1002</small></td>
+								<td class="text-right">100 unids</td>
+								<td class="text-right font-weight-bold text-success">100 unids</td>
+								<td class="text-right">$12.50</td>
+								<td><input type="number" class="form-control form-control-sm text-right" value="100"></td>
+								<td><input type="number" step="0.01" class="form-control form-control-sm text-right font-weight-bold" value="12.50"></td>
+							</tr>
+						</tbody>
 					</table>
 				</div>
 			</div>
@@ -1157,7 +1166,19 @@
 									<th style="width:100px">Precio unit.</th>
 								</tr>
 							</thead>
-							<tbody id="mrp-receive-lines"></tbody>
+							<tbody id="mrp-receive-lines">
+								<tr>
+									<td><strong>Leche Entera Alquería 1L</strong><br><small class="text-muted">SKU-1004</small></td>
+									<td class="text-right font-weight-bold">50 unids</td>
+									<td><input type="number" class="form-control form-control-sm text-right font-weight-bold" value="50"></td>
+									<td><input type="number" class="form-control form-control-sm text-right" value="0"></td>
+									<td><input type="text" class="form-control form-control-sm" placeholder="Sin novedad"></td>
+									<td><input type="date" class="form-control form-control-sm" value="{{ date('Y-m-d', strtotime('+30 days')) }}"></td>
+									<td><input type="text" class="form-control form-control-sm" value="LOT-ALQ-099"></td>
+									<td><input type="text" class="form-control form-control-sm" value="Cámara Fría 01"></td>
+									<td class="text-right font-weight-bold">$1.85</td>
+								</tr>
+							</tbody>
 						</table>
 					</div>
 				</div>
@@ -1183,7 +1204,24 @@
 				<div class="table-responsive">
 					<table class="table table-sm mb-0">
 						<thead><tr><th>Producto</th><th class="text-right">Vida útil base</th><th style="width:110px">Mín. remanente</th><th style="width:90px">T. mín (°C)</th><th style="width:90px">T. máx (°C)</th><th></th></tr></thead>
-						<tbody id="mrp-rules-lines"></tbody>
+						<tbody id="mrp-rules-lines">
+							<tr>
+								<td><strong>Lácteos y Derivados (Yogurt, Leche, Quesos)</strong></td>
+								<td class="text-right">30 días</td>
+								<td><span class="badge badge-warning text-dark font-weight-bold">&ge; 75% vida útil</span></td>
+								<td class="text-center font-weight-bold text-info">2.0 °C</td>
+								<td class="text-center font-weight-bold text-info">6.0 °C</td>
+								<td class="text-right"><span class="badge badge-success"><i class="fa-solid fa-check mr-1"></i>Regla Activa</span></td>
+							</tr>
+							<tr>
+								<td><strong>Carnes y Aves Refrigeradas</strong></td>
+								<td class="text-right">15 días</td>
+								<td><span class="badge badge-warning text-dark font-weight-bold">&ge; 80% vida útil</span></td>
+								<td class="text-center font-weight-bold text-info">0.0 °C</td>
+								<td class="text-center font-weight-bold text-info">4.0 °C</td>
+								<td class="text-right"><span class="badge badge-success"><i class="fa-solid fa-check mr-1"></i>Regla Activa</span></td>
+							</tr>
+						</tbody>
 					</table>
 				</div>
 			</div>

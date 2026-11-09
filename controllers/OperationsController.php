@@ -101,11 +101,14 @@ class OperationsController extends BaseController
 			ORDER BY p.name
 		")->fetchAll(\PDO::FETCH_ASSOC);
 
+		// En lote: antes eran ListPrice + Free por producto y sucursal (miles de consultas, ~8 s)
+		$priceMap = $svc->ListPriceMap();
+		$freeMap = $svc->FreeMap(array_column($branches, 'id'));
 		$products = [];
 		foreach ($rawProducts as $rp)
 		{
 			$pid = intval($rp['id']);
-			$listPrice = $svc->ListPrice($pid);
+			$listPrice = $priceMap[$pid] ?? 0;
 			if ($listPrice <= 0)
 			{
 				continue;
@@ -114,7 +117,7 @@ class OperationsController extends BaseController
 			foreach ($branches as $b)
 			{
 				$bid = intval($b['id']);
-				$freeByBranch[$bid] = max(0.0, round($svc->Free($pid, $bid), 2));
+				$freeByBranch[$bid] = max(0.0, round(round($freeMap[$pid][$bid] ?? 0, 4), 2));
 			}
 			$rp['list_price'] = $listPrice;
 			$rp['free_by_branch'] = $freeByBranch;

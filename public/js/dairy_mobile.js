@@ -263,9 +263,18 @@
 
 	/* ---------- PWA: service worker e instalación ---------- */
 	var swReg = null;
-	if ('serviceWorker' in navigator && window.isSecureContext && cfg.swUrl) {
-		navigator.serviceWorker.register(cfg.swUrl, { scope: Grocy.BaseUrl.replace(/\/?$/, '/') })
-			.then(function(r) { swReg = r; }).catch(function() { });
+	if ('serviceWorker' in navigator) {
+		if (cfg.swUrl && window.isSecureContext) {
+			navigator.serviceWorker.register(cfg.swUrl, { scope: Grocy.BaseUrl.replace(/\/?$/, '/') })
+				.then(function(r) { swReg = r; }).catch(function() { });
+		} else {
+			// En entorno de escritorio/desarrollo, desregistrar para no saturar peticiones
+			navigator.serviceWorker.getRegistrations().then(function(regs) {
+				for (var i = 0; i < regs.length; i++) {
+					regs[i].unregister();
+				}
+			}).catch(function() { });
+		}
 	}
 	var installEvt = null;
 	window.addEventListener('beforeinstallprompt', function(e) {

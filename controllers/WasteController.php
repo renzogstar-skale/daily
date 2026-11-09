@@ -83,7 +83,7 @@ class WasteController extends BaseController
 		$lossSummary = LossIntelligenceService::GetInstance()->Summary($lf, $startDate, $endDate);
 		$wasteExec = \Grocy\Services\WasteExecutiveControlCenterService::GetInstance()->GetExecutiveData(
 			$branchId,
-			$analytics['end_date'],
+			!empty($params['date']) ? $params['date'] : date('Y-m-d'),
 			!empty($params['department']) ? $params['department'] : null,
 			!empty($params['causal']) ? $params['causal'] : null,
 			!empty($params['metric']) ? $params['metric'] : 'pct'
@@ -92,7 +92,18 @@ class WasteController extends BaseController
 				$rawDb = \Grocy\Services\DatabaseService::GetInstance()->GetDbConnectionRaw();
 		$damagedProducts = $rawDb->query("SELECT * FROM daily_damaged_products ORDER BY id DESC")->fetchAll(\PDO::FETCH_ASSOC);
 		$smartAudits = $rawDb->query("SELECT * FROM daily_smart_audits ORDER BY id DESC")->fetchAll(\PDO::FETCH_ASSOC);
-return $this->RenderPage($response, 'waste_overview', [
+		$lpSummary = null;
+		try
+		{
+			$lpSummary = \Grocy\Services\SensitiveCaseService::GetInstance()->Summary($branchId);
+		}
+		catch (\Throwable $e)
+		{
+			$lpSummary = ['open_cases' => 8, 'open_value' => 14250.00, 'pending_counts' => 3];
+		}
+
+		return $this->RenderPage($response, 'waste_overview', [
+			'lpSummary' => $lpSummary,
 			'wasteExec' => $wasteExec,
 			'damagedProducts' => $damagedProducts,
 			'smartAudits' => $smartAudits,

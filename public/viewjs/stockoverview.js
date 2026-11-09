@@ -148,8 +148,12 @@
 	function sparkSvg(points, color, options) {
 		options = options || {};
 		var pts = (points || []).filter(function (v) { return v !== null && v !== undefined && v !== ''; }).map(Number);
-		if (pts.length < 2) pts = [10, 12, 11, 14, 13, 15, 14];
 		var w = 260, h = 42, padTop = 6, padBtm = 6;
+		// Sin historia real no se inventa una curva: se reserva el mismo alto para no mover la tarjeta
+		if (pts.length < 2) {
+			return '<div class="dsm-kpi-spark-wrap">' + (options.targetBadge ? '<span class="dsm-kpi-pill-target">' + esc(options.targetBadge) + '</span>' : '') +
+				'<svg class="dsm-kpi-spark-svg" viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none" aria-hidden="true"></svg></div>';
+		}
 		var min = Math.min.apply(null, pts), max = Math.max.apply(null, pts);
 		var span = (max - min) || 1;
 		var gradId = 'kpi_grad_' + Math.random().toString(36).substr(2, 8);
@@ -201,7 +205,7 @@
 
 		// 1. VALOR DEL INVENTARIO
 		if (key === 'inventory_value') {
-			var pts1 = (k.sparkline_points && k.sparkline_points.length >= 2) ? k.sparkline_points : [20935, 20400, 19800, 19500, 19200, 18500, 18817];
+			var pts1 = (k.sparkline_points && k.sparkline_points.length >= 2) ? k.sparkline_points : [];
 			var startVal = k.start_value || '$20,935';
 			var curVal = k.current_value || k.value || '$18,817';
 			var isMetaGood = !!k.meta_good;
@@ -241,7 +245,7 @@
 
 		// 3. ROTACIÓN DE INVENTARIO
 		if (key === 'turnover') {
-			var pts3 = (k.sparkline_points && k.sparkline_points.length >= 2) ? k.sparkline_points : [1.23, 1.25, 1.30, 1.45, 1.42, 1.48, 1.49];
+			var pts3 = (k.sparkline_points && k.sparkline_points.length >= 2) ? k.sparkline_points : [];
 			var targetRot = k.target_value || 'Objetivo: 2.0×';
 			var prevRot = k.prev_rotation || '1.23';
 
@@ -251,7 +255,7 @@
 
 		// 4. COBERTURA PROMEDIO
 		if (key === 'coverage') {
-			var pts4 = (k.sparkline_points && k.sparkline_points.length >= 2) ? k.sparkline_points : [7.1, 7.0, 6.9, 6.8, 6.7, 6.6];
+			var pts4 = (k.sparkline_points && k.sparkline_points.length >= 2) ? k.sparkline_points : [];
 			var targetCov = k.target_text || 'Objetivo: 10–15 días';
 			var salesText = k.days_sales_text || 'Inventario alcanzará para 6.6 días de venta';
 
@@ -953,7 +957,7 @@
 			'<a href="' + url('/stocktransfers?' + qsCombined) + '" class="dsm-action-btn-pro"><i class="fa-solid fa-right-left text-secondary"></i><div><strong>Crear traslado</strong><small>Transferir stock entre sucursales</small></div></a>' +
 			'<a href="' + url('/suppliers?' + qsProduct) + '" class="dsm-action-btn-pro"><i class="fa-solid fa-truck-field text-dark"></i><div><strong>Consultar proveedores</strong><small>Tiempos de entrega y catálogo</small></div></a>' +
 			'<a href="' + url('/inventory-control?' + qsCombined) + '" class="dsm-action-btn-pro"><i class="fa-solid fa-shield-halved text-danger"></i><div><strong>Investigar diferencia</strong><small>Control de mermas e investigación</small></div></a>' +
-			'<a href="' + url('/quality-expiry?' + qsCombined) + '" class="dsm-action-btn-pro"><i class="fa-solid fa-calendar-check" style="color: #7c3aed;"></i><div><strong>Ver trazabilidad</strong><small>Lotes, vencimiento y rotación FEFO</small></div></a>' +
+			'<a href="' + url('/traceability?' + qsCombined) + '" class="dsm-action-btn-pro"><i class="fa-solid fa-route" style="color: #7c3aed;"></i><div><strong>Ver trazabilidad</strong><small>Lotes, vencimiento y rotación FEFO</small></div></a>' +
 			'</div>';
 
 		currentAlertRow = r;
@@ -1262,7 +1266,7 @@
 
 			return '<tr class="' + (sel === d.id ? 'is-selected' : '') + '" data-dept-id="' + esc(d.id) + '" tabindex="0" title="' + (d.filterable ? 'Filtrar el panel por ' + esc(d.name) : 'Corregir el departamento de estos productos') + '">' +
 				'<td style="text-align: center; color: #64748b; font-weight: 600;">' + (idx + 1) + '</td>' +
-				'<td class="text-nowrap"><span class="dsm-dept-name-cell"><span class="dsm-dept-emoji">' + meta.emoji + '</span> ' + esc(d.name) + '</span></td>' +
+				'<td class="text-nowrap"><span class="dsm-dept-name-cell">' + faIcon(meta.icon, 'dsm-dept-emoji') + ' ' + esc(d.name) + '</span></td>' +
 				'<td class="text-right font-weight-bold">' + fmtMoney(d.value) + '</td>' +
 				'<td><div class="dsm-share-container"><div class="dsm-share-bar-bg"><div class="dsm-share-bar-fill" style="width:' + Math.min(100, d.share_pct) + '%;background-color:' + esc(d.color) + ';"></div></div><span class="dsm-share-pct-label">' + Number(d.share_pct).toFixed(1) + '%</span></div></td>' +
 				'<td class="text-right">' + fmtNum(d.units) + '</td>' +
@@ -1300,7 +1304,7 @@
 		$('#dsm-drill-content').html('<div class="dsm-drill-cats">' + cats + '</div><div class="dsm-drill-prods">' + (prods || '<span class="text-muted">Sin productos con existencias</span>') + '</div>');
 	}
 
-	var HREF_PERM = { '/quality': 'quality', '/mrp': 'replenish', '/transfers': 'transfer', '/inventory-control': 'investigate' };
+	var HREF_PERM = { '/mrp': 'replenish', '/transfers': 'transfer', '/inventory-control': 'investigate' };
 
 	function moduleLink(href, label) {
 		return HREF_PERM[href] && !perm(HREF_PERM[href]) ? '' : '<a class="dsm-rc-link" href="' + url(href) + '">' + esc(label) + ' &rarr;</a>';
@@ -1320,8 +1324,8 @@
 			return '<article class="dsm-risk-card-pro is-' + d.risk_key + (sel === d.id ? ' is-selected' : '') + '" data-dept-id="' + esc(d.id) + '">' +
 				'<header class="dsm-rc-header">' +
 				'<div class="dsm-rc-header-left">' +
-				'<div class="dsm-rc-icon-circle" style="background:' + meta.bg + ';">' +
-				'<span class="dsm-rc-emoji">' + meta.emoji + '</span>' +
+				'<div class="dsm-rc-icon-circle">' +
+				faIcon(meta.icon, 'dsm-rc-emoji') +
 				'</div>' +
 				'<span class="dsm-rc-title">' + esc(d.name) + '</span>' +
 				'</div>' +
@@ -1340,7 +1344,7 @@
 				'<div class="dsm-rc-metric"><span class="dsm-rc-label">Cobertura</span><b class="dsm-rc-val ' + covClass + '">' + fmtCoverage(d.coverage_days) + '</b></div>' +
 				'</div>' +
 				'<div class="dsm-rc-action-row">' +
-				'<span class="dsm-rc-target-icon">🎯</span>' +
+				'<i class="fa-solid fa-bullseye dsm-rc-target-icon" aria-hidden="true"></i>' +
 				'<span class="dsm-rc-action-text">' + esc(d.recommendation) + '</span>' +
 				'</div>' +
 				'<div class="dsm-rc-footer">' +
@@ -1351,22 +1355,27 @@
 		$('#dsm-risk-grid').html(html || '<p class="text-muted mb-0">Sin departamentos para los filtros actuales</p>');
 	}
 
-	var OPP_EMOJIS = {
-		'Electrónica': '🎧',
-		'Carnes': '🥩',
-		'Panadería': '🥐',
-		'Frutas y verduras': '🍎',
-		'Lácteos y huevos': '🥛',
-		'Congelados': '❄️',
-		'Abarrotes': '🛒',
-		'Bebidas': '🥤',
-		'Mantequilla con sal': '🧈',
-		'Crema para café': '☕',
-		'Jugo de naranja refrigerado': '🧃',
-		'Mantequilla sin sal': '🧈',
-		'Queso mozzarella': '🧀',
-		'Pechuga de pollo fresca': '🍗'
+	// Iconos Font Awesome (antes emoji: cada sistema los dibujaba distinto y no seguían la paleta)
+	var OPP_ICONS = {
+		'Electrónica': 'fa-headphones',
+		'Carnes': 'fa-drumstick-bite',
+		'Panadería': 'fa-bread-slice',
+		'Frutas y verduras': 'fa-apple-whole',
+		'Lácteos y huevos': 'fa-bottle-water',
+		'Congelados': 'fa-snowflake',
+		'Abarrotes': 'fa-cart-shopping',
+		'Bebidas': 'fa-cup-straw',
+		'Mantequilla con sal': 'fa-cheese',
+		'Crema para café': 'fa-mug-hot',
+		'Jugo de naranja refrigerado': 'fa-wine-bottle',
+		'Mantequilla sin sal': 'fa-cheese',
+		'Queso mozzarella': 'fa-cheese',
+		'Pechuga de pollo fresca': 'fa-drumstick-bite'
 	};
+
+	function faIcon(name, cls) {
+		return '<i class="fa-solid ' + (name || 'fa-box') + ' ' + cls + '" aria-hidden="true"></i>';
+	}
 
 	function renderOpportunities() {
 		var opps = dsmState.opportunities || [];
@@ -1391,7 +1400,7 @@
 
 			// Lista de items
 			var itemsHtml = (o.items || []).map(function (i) {
-				var emoji = OPP_EMOJIS[i.label] || '📦';
+				var emoji = faIcon(OPP_ICONS[i.label], '');
 				var rightBadge = '';
 				var subText = esc(i.detail || '');
 

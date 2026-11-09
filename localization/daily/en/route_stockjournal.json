@@ -1,0 +1,19 @@
+{
+    "Abrir producto": "Open product",
+    "Cantidadorden ascendente": "Amount ascending order",
+    "Corrección de inventario": "Inventory correction",
+    "Fecha de transacciónorden ascendente": "Transaction date ascending order",
+    "Hecho pororden ascendente": "Done by ascending order",
+    "Modificar existencias": "Change stock",
+    "Notaorden ascendente": "Note ascending order",
+    "Productoorden ascendente": "Product ascending order",
+    "Recepción de compra inicial en bodega": "Initial purchase receipt in warehouse",
+    "Se muestran hasta {0} movimientos": "Up to {0} movements are shown",
+    "Tipo de transacciónorden ascendente": "Transaction type ascending order",
+    "Trasladar a": "Transfer to",
+    "Trasladar desde": "Transfer from",
+    "del más reciente al más antiguo": "from newest to oldest",
+    "del período elegido. El historial completo por producto y sucursal está en Kardex.": "of the chosen period. The full history by product and branch is in Kardex.",
+    "valores antiguos": "old values",
+    "valores nuevos": "new values"
+}

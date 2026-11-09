@@ -1,0 +1,19 @@
+{
+    "Busque por cualquier punto de la cadena": "Search by any point in the chain",
+    "Desde que el producto entra": "From the moment the product enters",
+    "Recepción REC- o traslado TRA": "Receipt REC- or transfer TRA",
+    "TRA- o id de entrada": "TRA- or entry id",
+    "Venta VTA-": "Sale VTA-",
+    "con documento": "with document",
+    "de qué lote": "from which lot",
+    "hacia atrás": "backward",
+    "hasta que se vende": "until it is sold",
+    "o escanee la etiqueta GS{0} con el lector": "or scan the GS{0} label with the reader",
+    "pedido PED-": "order PED-",
+    "proveedor y recepción salió lo vendido.": "supplier and receipt the sold items came from.",
+    "qué pasó después con todo lo recibido o enviado": "what happened afterwards with everything received or sent",
+    "recorrido completo hacia adelante y clientes que lo recibieron.": "full forward journey and customers who received it.",
+    "se traslada": "is transferred",
+    "usuario y saldo conciliado.": "user and reconciled balance.",
+    "vence o se pierde": "expires or is lost"
+}

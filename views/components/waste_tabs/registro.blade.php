@@ -535,7 +535,7 @@
 									<div class="daily-cat-btn" onclick="dlxFilterCategory('lacteos', this)" title="Filtrar lácteos">
 										<img src="{{ $U('/img/control_center/cat_lacteos.jpg') }}" class="daily-cat-img" alt="Lácteos">
 										<div class="daily-cat-label">
-											<i class="fa-solid fa-cow" style="color: #8b5cf6;"></i> Lácteos
+											<i class="fa-solid fa-cheese" style="color: #8b5cf6;"></i> Lácteos
 										</div>
 									</div>
 								</div>

@@ -1,0 +1,814 @@
+<!doctype html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DAILY · Presentación comercial</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ===== Tokens DAILY ===== */
+:root{
+  --g:#16A34A; --g-d:#0B6B33; --g-l:#DCFCE7; --g-m:#22C55E;
+  --y:#F2B300; --y-d:#9A6B00; --y-l:#FEF6D8;
+  --r:#E5484D; --r-d:#A8262B; --r-l:#FDE8E8;
+  --ink:#0E1A14; --muted:#5A6A62; --faint:#8A9890;
+  --page:#FAFBFA;
+  --glass-radius:22px;
+  --glass-tint-top:rgba(255,255,255,.58); --glass-tint-bottom:rgba(246,248,247,.38);
+  --glass-rim-top:rgba(255,255,255,.95); --glass-rim-hairline:rgba(255,255,255,.55); --glass-rim-bottom:rgba(255,255,255,.35);
+  --glass-border:rgba(14,26,20,.09);
+  --glass-shadow:0 1px 2px rgba(14,26,20,.04),0 12px 34px rgba(14,26,20,.08),0 30px 60px -30px rgba(14,26,20,.18);
+  --ease:cubic-bezier(.16,1,.3,1);
+  color-scheme:light;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--page);overflow:hidden}
+body{font-family:Inter,"Segoe UI",system-ui,sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased}
+
+/* ===== Backdrop: lo que el cristal refracta ===== */
+.backdrop{position:absolute;inset:0;overflow:hidden;z-index:0;pointer-events:none;background:var(--page)}
+.blob{position:absolute;border-radius:50%;filter:blur(70px);opacity:.75;animation:drift 22s ease-in-out infinite alternate}
+.blob.b1{width:760px;height:760px;left:-160px;top:-220px;background:radial-gradient(circle,rgba(34,197,94,.42),rgba(34,197,94,0) 68%)}
+.blob.b2{width:640px;height:640px;right:-120px;top:-120px;background:radial-gradient(circle,rgba(242,179,0,.34),rgba(242,179,0,0) 68%);animation-delay:-6s}
+.blob.b3{width:700px;height:700px;right:180px;bottom:-330px;background:radial-gradient(circle,rgba(229,72,77,.22),rgba(229,72,77,0) 68%);animation-delay:-11s}
+.blob.b4{width:560px;height:560px;left:520px;bottom:-260px;background:radial-gradient(circle,rgba(22,163,74,.26),rgba(22,163,74,0) 68%);animation-delay:-3s}
+.grid-lines{position:absolute;inset:0;background-image:linear-gradient(rgba(14,26,20,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(14,26,20,.035) 1px,transparent 1px);background-size:64px 64px;mask-image:radial-gradient(ellipse at 50% 40%,#000 20%,transparent 75%)}
+@keyframes drift{to{transform:translate(60px,40px) scale(1.08)}}
+
+/* ===== Cristal (receta Liquid Glass) ===== */
+.lg{position:relative;border:1px solid var(--glass-border);border-radius:var(--glass-radius);
+  background:linear-gradient(180deg,var(--glass-tint-top),var(--glass-tint-bottom));
+  box-shadow:var(--glass-shadow),inset 0 1px 0 var(--glass-rim-top),inset 0 0 0 1px var(--glass-rim-hairline),inset 0 -1px 0 var(--glass-rim-bottom);
+  backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%)}
+.lg::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:linear-gradient(125deg,rgba(255,255,255,.55) 0%,rgba(255,255,255,0) 32%,rgba(255,255,255,0) 70%,rgba(255,255,255,.22) 100%);mix-blend-mode:soft-light}
+.chip{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:999px;font-size:17px;font-weight:600;
+  border:1px solid var(--glass-border);background:linear-gradient(180deg,rgba(255,255,255,.7),rgba(255,255,255,.4));
+  box-shadow:inset 0 1px 0 #fff,0 4px 14px rgba(14,26,20,.06);backdrop-filter:blur(8px) saturate(140%);-webkit-backdrop-filter:blur(8px) saturate(140%)}
+.chip svg{width:16px;height:16px;fill:currentColor}
+.chip.g{color:var(--g-d)} .chip.y{color:var(--y-d)} .chip.r{color:var(--r-d)}
+.dot{width:9px;height:9px;border-radius:50%;background:currentColor;box-shadow:0 0 0 4px color-mix(in srgb,currentColor 18%,transparent)}
+
+/* ===== Escenario 1920×1080 ===== */
+#viewport{position:fixed;inset:0;display:grid;place-items:center}
+#stage{position:absolute;left:50%;top:50%;width:1920px;height:1080px;transform-origin:0 0;overflow:hidden;border-radius:2px}
+.slide{position:absolute;inset:0;padding:84px 104px 96px;opacity:0;visibility:hidden;transition:opacity .7s var(--ease),visibility 0s .7s;z-index:1}
+.slide.active{opacity:1;visibility:visible;transition:opacity .7s var(--ease),visibility 0s}
+.kicker{display:inline-flex;align-items:center;gap:12px;font-size:18px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--g-d)}
+.kicker .num{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:10px;font-size:15px;letter-spacing:0;color:#fff;background:linear-gradient(160deg,var(--g-m),var(--g-d));box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 6px 14px rgba(22,163,74,.3)}
+h1{font-size:120px;line-height:.95;font-weight:800;letter-spacing:-.045em}
+h2{font-size:60px;line-height:1.04;font-weight:700;letter-spacing:-.03em;margin-top:18px;max-width:1500px;text-wrap:balance}
+.lead{font-size:24px;line-height:1.45;color:var(--muted);margin-top:16px;max-width:1240px}
+.grad{background:linear-gradient(100deg,var(--g-d),var(--g-m) 55%,#7BC043);-webkit-background-clip:text;background-clip:text;color:transparent}
+.foot{position:absolute;left:104px;right:104px;bottom:34px;display:flex;justify-content:space-between;align-items:center;font-size:15px;color:var(--faint);z-index:3}
+.foot b{color:var(--ink);font-weight:700;letter-spacing:.12em}
+.brand{display:flex;align-items:center;gap:10px}
+.brand img{width:26px;height:26px;border-radius:7px}
+.real{display:inline-flex;align-items:center;gap:8px}
+.real i{width:8px;height:8px;border-radius:50%;background:var(--g)}
+
+/* ===== Capturas ===== */
+.shot{position:relative;overflow:hidden;border-radius:16px;cursor:zoom-in;background:#fff;
+  box-shadow:0 0 0 1px rgba(14,26,20,.08),0 18px 40px -12px rgba(14,26,20,.28),0 2px 6px rgba(14,26,20,.06)}
+.shot img{display:block;width:100%;height:100%;object-fit:cover;object-position:top left;transition:transform 1.2s var(--ease)}
+.shot:hover img{transform:scale(1.025)}
+.frame{padding:12px;border-radius:26px}
+.frame .shot{border-radius:16px}
+.bar{display:flex;gap:7px;padding:2px 4px 10px}
+.bar i{width:11px;height:11px;border-radius:50%;background:#E5E7EB}
+.bar i:nth-child(1){background:#FF6159}.bar i:nth-child(2){background:#FFBD2E}.bar i:nth-child(3){background:#28C941}
+.cap{font-size:17px;font-weight:600;margin-top:12px;color:var(--ink)}
+.cap span{color:var(--muted);font-weight:500}
+.pin{position:absolute;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:18px;color:#fff;
+  background:linear-gradient(160deg,#FF6B6F,var(--r));box-shadow:0 0 0 6px rgba(229,72,77,.18),0 8px 18px rgba(229,72,77,.35);z-index:2;animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 12px rgba(229,72,77,.06),0 8px 18px rgba(229,72,77,.35)}}
+
+/* ===== Piezas comunes ===== */
+.callouts{display:flex;flex-direction:column;gap:18px}
+.co{display:flex;gap:18px;padding:22px 24px;align-items:flex-start}
+.co .n{flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:18px;color:#fff;background:linear-gradient(160deg,#FF6B6F,var(--r))}
+.co.green .n{background:linear-gradient(160deg,var(--g-m),var(--g-d))}
+.co h4{font-size:22px;font-weight:700;letter-spacing:-.01em}
+.co p{font-size:18px;line-height:1.45;color:var(--muted);margin-top:4px}
+.ico{flex:none;display:grid;place-items:center;border-radius:18px;width:64px;height:64px;
+  background:linear-gradient(160deg,rgba(255,255,255,.95),rgba(255,255,255,.55));box-shadow:inset 0 1px 0 #fff,0 0 0 1px rgba(14,26,20,.06),0 8px 18px rgba(14,26,20,.08)}
+.ico svg{width:30px;height:30px;fill:var(--g-d)}
+.ico.y svg{fill:var(--y-d)} .ico.r svg{fill:var(--r)}
+.ico.solid{background:linear-gradient(160deg,var(--g-m),var(--g-d));box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 10px 22px rgba(22,163,74,.32)}
+.ico.solid svg{fill:#fff}
+.ico.solid.r{background:linear-gradient(160deg,#FF7A7E,var(--r));box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 10px 22px rgba(229,72,77,.32)}
+.ico.solid.y{background:linear-gradient(160deg,#FFD24D,var(--y));box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 10px 22px rgba(242,179,0,.32)}
+.flow{display:flex;align-items:stretch;gap:0}
+.flow .st{flex:1;padding:20px 18px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.flow .st h5{font-size:19px;font-weight:700;line-height:1.2}
+.flow .st p{font-size:15.5px;line-height:1.4;color:var(--muted)}
+.flow .arrow{flex:none;width:34px;display:grid;place-items:center}
+.flow .arrow svg{width:16px;height:16px;fill:var(--g)}
+.flow .ico{width:52px;height:52px;border-radius:15px}
+.flow .ico svg{width:24px;height:24px}
+.tag-proj{display:inline-block;font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--y-d);background:var(--y-l);padding:4px 10px;border-radius:999px}
+
+/* ===== Animación de entrada ===== */
+.slide [data-a]{opacity:0;transform:translateY(26px) scale(.985);filter:blur(6px);transition:opacity .9s var(--ease),transform .9s var(--ease),filter .9s var(--ease)}
+.slide.active [data-a]{opacity:1;transform:none;filter:none}
+.slide[data-instant] [data-a]{transition:none}
+@keyframes float{50%{transform:translateY(-14px)}}
+.floaty{animation:float 7s ease-in-out infinite}
+
+/* ===== Navegación ===== */
+#ui{position:fixed;right:16px;top:14px;display:flex;gap:6px;align-items:center;padding:7px;border-radius:999px;z-index:20;transition:opacity .4s}
+#ui button{all:unset;cursor:pointer;height:38px;min-width:38px;padding:0 12px;border-radius:999px;display:grid;place-items:center;font:600 14px Inter,"Segoe UI",sans-serif;color:var(--ink)}
+#ui button:hover{background:rgba(255,255,255,.75)}
+#ui button svg{width:15px;height:15px;fill:currentColor}
+#ui .count{font:600 14px Inter,"Segoe UI",sans-serif;color:var(--muted);padding:0 8px;min-width:70px;text-align:center}
+body.idle #ui{opacity:0}
+#progress{position:fixed;left:0;top:0;height:4px;background:linear-gradient(90deg,var(--g),var(--y),var(--r));z-index:21;transition:width .6s var(--ease)}
+#overview{position:fixed;inset:0;z-index:30;display:none;padding:56px;overflow:auto;background:rgba(250,251,250,.72);backdrop-filter:blur(24px) saturate(150%);-webkit-backdrop-filter:blur(24px) saturate(150%)}
+#overview.on{display:block}
+#overview h3{font-size:26px;margin-bottom:22px;font-weight:700}
+#overview .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+#overview .it{font:inherit;color:inherit;text-align:left;cursor:pointer;padding:18px 20px;border-radius:18px;display:flex;gap:14px;align-items:baseline;font-size:17px;font-weight:600;line-height:1.3}
+#overview .it b{color:var(--g-d);font-size:15px}
+#overview .it.cur{outline:2px solid var(--g)}
+#lightbox{position:fixed;inset:0;z-index:40;display:none;place-items:center;padding:40px;background:rgba(14,26,20,.42);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);cursor:zoom-out}
+#lightbox.on{display:grid}
+#lightbox img{max-width:94vw;max-height:88vh;border-radius:14px;box-shadow:0 30px 80px rgba(0,0,0,.4);background:#fff}
+#lightbox p{position:absolute;bottom:22px;left:0;right:0;text-align:center;color:#fff;font-weight:600;font-size:15px}
+#hint{position:fixed;top:70px;right:16px;z-index:20;padding:8px 14px;font-size:13px;color:var(--muted);border-radius:999px;transition:opacity .6s}
+
+/* ===== S1 Portada ===== */
+#s1 .left{position:absolute;left:104px;top:150px;width:860px}
+#s1 .logo{display:flex;align-items:center;gap:20px;margin-bottom:56px}
+#s1 .logo img{width:84px;height:84px;border-radius:22px;box-shadow:0 14px 34px rgba(22,163,74,.38)}
+#s1 .logo span{font-size:44px;font-weight:800;letter-spacing:.16em}
+#s1 h1{font-size:104px}
+#s1 .lead{font-size:27px;max-width:780px;margin-top:30px}
+#s1 .chips{display:flex;gap:12px;margin-top:40px;flex-wrap:wrap}
+#s1 .stack{position:absolute;right:70px;top:110px;width:900px;height:820px}
+#s1 .stack .f1{position:absolute;left:0;top:40px;width:820px}
+#s1 .stack .f1 .shot{height:470px}
+#s1 .stack .f2{position:absolute;left:260px;top:470px;width:560px;animation-delay:-2.5s}
+#s1 .stack .f2 .shot{height:300px}
+#s1 .stack .ph{position:absolute;right:0;top:250px;width:250px;animation-delay:-4.5s}
+
+/* Teléfono */
+.phone{padding:10px;border-radius:44px;background:linear-gradient(160deg,#1d2621,#0b100d);box-shadow:0 30px 60px -20px rgba(14,26,20,.55),inset 0 0 0 2px rgba(255,255,255,.08)}
+.phone .shot{border-radius:34px;aspect-ratio:390/844;box-shadow:none}
+.phone .shot img{object-position:top center}
+
+/* ===== S2 Problemas ===== */
+#s2 .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin-top:52px}
+.flip{height:300px;perspective:1400px;cursor:pointer}
+.flip .in{position:relative;width:100%;height:100%;transition:transform .8s var(--ease);transform-style:preserve-3d}
+.flip:hover .in,.flip.on .in{transform:rotateY(180deg)}
+.flip .fa,.flip .fb{position:absolute;inset:0;padding:30px;backface-visibility:hidden;-webkit-backface-visibility:hidden;display:flex;flex-direction:column;gap:14px}
+.flip .fb{transform:rotateY(180deg)}
+.flip h4{font-size:25px;font-weight:700;letter-spacing:-.01em;margin-top:10px;line-height:1.2}
+.flip p{font-size:18px;color:var(--muted);line-height:1.45}
+.flip .fb small{font-size:14px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--g-d)}
+.flip .fb h4{color:var(--g-d)}
+.flip .more{margin-top:auto;font-size:14px;color:var(--faint);font-weight:600}
+.hot{background:linear-gradient(160deg,rgba(255,107,111,.92),rgba(200,40,46,.92))!important;border-color:rgba(229,72,77,.5)!important;color:#fff}
+.hot h4{font-size:30px!important;color:#fff}
+.hot p{color:rgba(255,255,255,.88)!important}
+
+/* ===== S3 Hub ===== */
+#s3 .hub{position:absolute;left:104px;top:300px;width:1080px;height:680px}
+#s3 svg.wires{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+#s3 .wire{stroke:url(#wg);stroke-width:2.5;fill:none;stroke-dasharray:6 10;animation:flowdash 1.6s linear infinite;opacity:.65}
+#s3 .wire.on{stroke-width:4;opacity:1;stroke-dasharray:none}
+@keyframes flowdash{to{stroke-dashoffset:-32}}
+#s3 .core{position:absolute;left:390px;top:200px;width:300px;height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;border-radius:36px;
+  background:linear-gradient(160deg,rgba(34,197,94,.92),rgba(11,107,51,.94));color:#fff;border:1px solid rgba(255,255,255,.4)}
+#s3 .core img{width:58px;height:58px;border-radius:15px;margin-bottom:10px;box-shadow:0 6px 16px rgba(0,0,0,.18)}
+#s3 .core b{font-size:34px;letter-spacing:.16em}
+#s3 .core small{font-size:15px;opacity:.9;margin-top:6px;line-height:1.35;padding:0 18px}
+#s3 .node{font:inherit;color:inherit;position:absolute;width:170px;padding:16px 10px;border-radius:22px;text-align:center;cursor:pointer;transition:transform .5s var(--ease),box-shadow .5s}
+#s3 .node .ico{margin:0 auto 10px;width:56px;height:56px}
+#s3 .node .ico svg{width:26px;height:26px}
+#s3 .node span{display:block;font-size:17px;font-weight:700;line-height:1.2}
+#s3 .node:hover,#s3 .node.on{transform:translateY(-5px) scale(1.04)}
+#s3 .node.on{outline:2.5px solid var(--g);outline-offset:2px}
+#s3 .detail{position:absolute;right:104px;top:300px;width:560px;height:620px;padding:40px}
+#s3 .detail .ico{width:76px;height:76px;border-radius:22px}
+#s3 .detail h3{font-size:38px;font-weight:700;letter-spacing:-.02em;margin-top:24px}
+#s3 .detail p{font-size:20px;line-height:1.5;color:var(--muted);margin-top:14px}
+#s3 .detail ul{list-style:none;margin-top:22px;display:flex;flex-direction:column;gap:10px}
+#s3 .detail li{display:flex;gap:12px;font-size:18px;line-height:1.4}
+#s3 .detail li svg{flex:none;width:18px;height:18px;margin-top:3px;fill:var(--g)}
+#s3 .detail .links{margin-top:22px;display:flex;flex-wrap:wrap;gap:8px}
+#s3 .detail .links .chip{font-size:14px;padding:6px 12px}
+#s3 .tap{position:absolute;left:104px;bottom:96px;font-size:16px;color:var(--faint)}
+
+/* ===== S4 Panel ===== */
+#s4 .kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:18px;margin-top:40px}
+.kpi{padding:22px 22px 18px}
+.kpi small{font-size:15px;font-weight:600;color:var(--muted)}
+.kpi .v{font-size:40px;font-weight:800;letter-spacing:-.03em;margin-top:6px;font-variant-numeric:tabular-nums}
+.kpi .d{font-size:14px;font-weight:700;margin-top:4px}
+.kpi .d.up{color:var(--g-d)} .kpi .d.dn{color:var(--r)}
+.kpi svg.sp{width:100%;height:34px;margin-top:8px}
+#s4 .body{display:grid;grid-template-columns:1150px 1fr;gap:36px;margin-top:30px}
+#s4 .body .shot{height:540px}
+
+/* ===== Layouts genéricos ===== */
+.split{display:grid;gap:36px;margin-top:40px}
+.cols-2{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+
+/* ===== S6 Pestañas ===== */
+.tabs{display:inline-flex;gap:4px;padding:6px;border-radius:999px;margin-top:34px;flex-wrap:wrap}
+.tabs button{all:unset;cursor:pointer;padding:11px 20px;border-radius:999px;font-size:17px;font-weight:600;color:var(--muted);transition:all .35s var(--ease)}
+.tabs button:hover{color:var(--ink)}
+.tabs button.on{color:#fff;background:linear-gradient(160deg,var(--g-m),var(--g-d));box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 6px 16px rgba(22,163,74,.3)}
+.tabview{display:grid;grid-template-columns:1260px 1fr;gap:36px;margin-top:26px}
+.tabview .shot{height:600px}
+.tabview .shot img{transition:opacity .45s var(--ease),transform 1.2s var(--ease)}
+.tabview .info{padding:36px}
+.tabview .info h3{font-size:34px;font-weight:700;letter-spacing:-.02em;margin-top:22px}
+.tabview .info p{font-size:20px;line-height:1.5;color:var(--muted);margin-top:12px}
+.tabview .info ul{list-style:none;margin-top:20px;display:flex;flex-direction:column;gap:12px}
+.tabview .info li{display:flex;gap:12px;font-size:18px;line-height:1.4}
+.tabview .info li svg{flex:none;width:18px;height:18px;margin-top:3px;fill:var(--g)}
+
+/* ===== S7 Prevención ===== */
+#s7 .top{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:34px}
+#s7 .top .shot{height:400px}
+#s7 .life{margin-top:28px;padding:20px 22px}
+#s7 .life .flow .st{padding:8px 10px;cursor:default;border-radius:16px;transition:background .3s}
+#s7 .life .flow .st:hover{background:rgba(255,255,255,.7)}
+#s7 .life h6{font-size:15px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--g-d);margin:0 0 12px 10px}
+
+/* ===== S11 Móvil ===== */
+#s11 .wrap{display:grid;grid-template-columns:1020px 1fr;gap:40px;margin-top:40px}
+#s11 .phones{display:flex;gap:24px;align-items:flex-start}
+#s11 .phones>div{width:236px}
+#s11 .phones>div:nth-child(even){margin-top:50px}
+#s11 .phones .cap{text-align:center}
+#s11 .codes{padding:30px}
+#s11 .codes h3{font-size:28px;font-weight:700}
+#s11 .row{display:flex;gap:16px;align-items:flex-start;margin-top:20px}
+#s11 .row h5{font-size:19px;font-weight:700}
+#s11 .row p{font-size:16.5px;color:var(--muted);line-height:1.45;margin-top:3px}
+#s11 .row .ico{width:52px;height:52px;border-radius:15px}
+#s11 .row .ico svg{width:24px;height:24px}
+.barcode{height:56px;margin-top:22px;border-radius:10px;background:repeating-linear-gradient(90deg,#0E1A14 0 3px,transparent 3px 5px,#0E1A14 5px 6px,transparent 6px 10px,#0E1A14 10px 14px,transparent 14px 16px);position:relative;overflow:hidden;opacity:.85}
+.barcode::after{content:"";position:absolute;top:-10px;bottom:-10px;width:4px;background:var(--r);box-shadow:0 0 18px 6px rgba(229,72,77,.6);animation:scan 2.4s ease-in-out infinite alternate}
+@keyframes scan{from{left:0}to{left:calc(100% - 4px)}}
+
+/* ===== S12 Caso ===== */
+#s12 .steps{display:flex;gap:10px;margin-top:34px}
+#s12 .steps button{font:inherit;color:inherit;text-align:left;cursor:pointer;flex:1;padding:16px 18px;border-radius:18px;display:flex;gap:14px;align-items:center;transition:all .4s var(--ease)}
+#s12 .steps button .k{flex:none;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:17px;background:rgba(14,26,20,.07);color:var(--muted);transition:all .4s}
+#s12 .steps button span{font-size:17px;font-weight:700;line-height:1.2;color:var(--muted)}
+#s12 .steps button.done .k{background:var(--g-l);color:var(--g-d)}
+#s12 .steps button.on{transform:translateY(-3px)}
+#s12 .steps button.on .k{background:linear-gradient(160deg,var(--g-m),var(--g-d));color:#fff;box-shadow:0 6px 14px rgba(22,163,74,.35)}
+#s12 .steps button.on span{color:var(--ink)}
+#s12 .stage2{display:grid;grid-template-columns:540px 1fr;gap:34px;margin-top:26px}
+#s12 .story{padding:36px;display:flex;flex-direction:column}
+#s12 .story .big{font-size:96px;font-weight:800;letter-spacing:-.04em;line-height:1}
+#s12 .story h3{font-size:32px;font-weight:700;letter-spacing:-.02em;margin-top:18px;line-height:1.15}
+#s12 .story p{font-size:19px;line-height:1.5;color:var(--muted);margin-top:14px}
+#s12 .story .nav{margin-top:auto;display:flex;gap:10px}
+#s12 .story .nav button{all:unset;cursor:pointer;padding:12px 20px;border-radius:999px;font-weight:700;font-size:16px}
+#s12 .story .nav .nx{color:#fff;background:linear-gradient(160deg,var(--g-m),var(--g-d));box-shadow:0 8px 18px rgba(22,163,74,.3)}
+#s12 .story .nav .pv{border:1px solid var(--glass-border);background:rgba(255,255,255,.6)}
+#s12 .stage2 .shot{height:600px}
+.fade-swap{animation:swap .6s var(--ease)}
+@keyframes swap{from{opacity:0;transform:translateY(12px)}}
+
+/* ===== S13 Beneficios ===== */
+.seg{display:inline-flex;padding:6px;border-radius:999px;gap:4px}
+.seg button{all:unset;cursor:pointer;padding:12px 26px;border-radius:999px;font-weight:700;font-size:18px;color:var(--muted);transition:all .4s var(--ease)}
+.seg button.on.b{color:#fff;background:linear-gradient(160deg,#FF7A7E,var(--r))}
+.seg button.on.a{color:#fff;background:linear-gradient(160deg,var(--g-m),var(--g-d))}
+#s13 .wrap{display:grid;grid-template-columns:1fr 640px;gap:36px;margin-top:30px}
+#s13 .rows{display:flex;flex-direction:column;gap:18px;margin-top:26px}
+#s13 .rowc{display:grid;grid-template-columns:260px 1fr;gap:20px;align-items:center;padding:26px 30px}
+#s13 .rowc b{font-size:22px}
+#s13 .rowc .txt{font-size:21px;line-height:1.4;display:flex;gap:14px;align-items:center}
+#s13 .rowc .txt svg{flex:none;width:22px;height:22px}
+#s13 .rowc .txt.b svg{fill:var(--r)} #s13 .rowc .txt.a svg{fill:var(--g)}
+#s13 [data-mode=before] .txt.a,#s13 [data-mode=after] .txt.b{display:none}
+#s13 .calc{padding:34px}
+#s13 .calc h3{font-size:26px;font-weight:700}
+#s13 .calc label{display:block;margin-top:20px;font-size:16px;font-weight:600;color:var(--muted)}
+#s13 .calc label output{float:right;color:var(--ink);font-weight:800;font-variant-numeric:tabular-nums}
+#s13 input[type=range]{width:100%;margin-top:10px;accent-color:var(--g)}
+#s13 .res{margin-top:24px;padding:22px;border-radius:18px;background:linear-gradient(160deg,rgba(220,252,231,.85),rgba(220,252,231,.45));border:1px solid rgba(22,163,74,.25)}
+#s13 .res small{font-size:15px;color:var(--g-d);font-weight:700}
+#s13 .res .v{font-size:54px;font-weight:800;letter-spacing:-.03em;color:var(--g-d);font-variant-numeric:tabular-nums}
+#s13 .bars{display:flex;gap:18px;align-items:flex-end;height:120px;margin-top:46px}
+#s13 .bars div{flex:1;border-radius:12px 12px 4px 4px;transition:height .6s var(--ease);position:relative}
+#s13 .bars div span{position:absolute;top:-26px;left:0;right:0;text-align:center;font-weight:700;font-size:15px}
+#s13 .note{font-size:14px;color:var(--y-d);font-weight:600;margin-top:14px}
+
+/* ===== S14 Arquitectura ===== */
+#s14 .arch{display:grid;grid-template-columns:1fr 470px;gap:34px;margin-top:40px}
+#s14 .layer{display:grid;grid-template-columns:210px 1fr;gap:20px;align-items:center;padding:32px 30px;margin-bottom:24px;position:relative}
+#s14 .layer h5{font-size:15px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--g-d)}
+#s14 .layer h4{font-size:25px;font-weight:700;margin-top:4px}
+#s14 .layer .items{display:flex;flex-wrap:wrap;gap:10px}
+#s14 .layer .items .chip{font-size:18px;padding:10px 18px;color:var(--ink)}
+#s14 .layer:not(:last-child)::before{content:"";position:absolute;left:120px;bottom:-17px;width:2px;height:18px;background:linear-gradient(var(--g),transparent)}
+#s14 .stats{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+#s14 .stats .lg{padding:30px 28px}
+#s14 .stats .v{font-size:62px;font-weight:800;letter-spacing:-.03em;color:var(--g-d)}
+#s14 .stats small{font-size:16px;color:var(--muted);font-weight:600;line-height:1.3;display:block}
+#s14 .sec{padding:26px;margin-top:16px}
+#s14 .sec h4{font-size:23px;font-weight:700;margin-bottom:12px}
+#s14 .sec li{list-style:none;display:flex;gap:10px;font-size:19px;line-height:1.4;margin-top:12px}
+#s14 .sec li svg{flex:none;width:17px;height:17px;margin-top:3px;fill:var(--g)}
+
+/* ===== S15 Propuesta ===== */
+#s15 .offers{display:grid;grid-template-columns:repeat(4,1fr);gap:22px;margin-top:40px}
+#s15 .offer{padding:36px 32px;min-height:330px;display:flex;flex-direction:column;gap:12px;transition:transform .5s var(--ease)}
+#s15 .offer:hover{transform:translateY(-6px)}
+#s15 .offer h4{font-size:25px;font-weight:700;margin-top:10px;line-height:1.2}
+#s15 .offer p{font-size:18px;color:var(--muted);line-height:1.45}
+#s15 .offer.star{background:linear-gradient(160deg,rgba(34,197,94,.9),rgba(11,107,51,.92));color:#fff;border-color:rgba(255,255,255,.4)}
+#s15 .offer.star p{color:rgba(255,255,255,.9)}
+#s15 .offer.star .ico{background:rgba(255,255,255,.95)}
+#s15 .road{margin-top:28px;padding:26px 30px}
+#s15 .road h6{font-size:15px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--g-d);margin-bottom:16px}
+#s15 .road ol{list-style:none;display:grid;grid-template-columns:repeat(8,1fr);gap:10px;counter-reset:r}
+#s15 .road li{counter-increment:r;font-size:16.5px;font-weight:600;line-height:1.3;padding-top:44px;position:relative}
+#s15 .road li::before{content:counter(r);position:absolute;top:0;left:0;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:15px;color:var(--g-d);background:var(--g-l)}
+#s15 .road li.pi::before{color:#fff;background:linear-gradient(160deg,var(--g-m),var(--g-d))}
+#s15 .road li:not(:last-child)::after{content:"";position:absolute;top:17px;left:42px;right:6px;height:2px;background:linear-gradient(90deg,rgba(22,163,74,.4),rgba(22,163,74,.1))}
+#s15 .pilot{display:grid;grid-template-columns:260px 1fr;gap:26px;align-items:center;margin-top:20px;padding:22px 30px}
+#s15 .pilot .v{font-size:76px;font-weight:800;color:var(--g-d);letter-spacing:-.04em;line-height:1}
+#s15 .pilot .v small{font-size:22px;letter-spacing:0;color:var(--ink);display:block;margin-top:4px}
+#s15 .pilot .ind{display:flex;flex-wrap:wrap;gap:10px}
+
+/* ===== S16 Cierre ===== */
+#s16{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+#s16 .logo img{width:110px;height:110px;border-radius:28px;box-shadow:0 18px 44px rgba(22,163,74,.4)}
+#s16 h2{font-size:84px;max-width:1500px;margin-top:40px;line-height:1.02}
+#s16 .lead{margin:24px auto 0;font-size:27px;max-width:1100px}
+#s16 .cta{margin-top:50px;display:flex;gap:18px}
+#s16 .cta .lg{padding:22px 34px;font-size:22px;font-weight:700;display:flex;gap:14px;align-items:center}
+#s16 .cta .lg svg{width:22px;height:22px;fill:var(--g-d)}
+#s16 .cta .primary{color:#fff;background:linear-gradient(160deg,rgba(34,197,94,.95),rgba(11,107,51,.95));border-color:rgba(255,255,255,.4)}
+#s16 .cta .primary svg{fill:#fff}
+#s16 .mosaic{position:absolute;inset:0;z-index:-1;opacity:.16;display:grid;grid-template-columns:repeat(4,1fr);gap:26px;padding:40px;transform:rotate(-6deg) scale(1.2);filter:saturate(.7)}
+#s16 .mosaic img{width:100%;height:240px;object-fit:cover;object-position:top left;border-radius:16px}
+#s16 .veil{position:absolute;inset:0;z-index:-1;background:radial-gradient(ellipse at center,rgba(250,251,250,.96) 30%,rgba(250,251,250,.6) 80%)}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media print{#ui,#progress,#hint{display:none}}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<div id="viewport"><div id="stage">
+<div class="backdrop"><div class="grid-lines"></div><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div><div class="blob b4"></div></div>
+
+<!-- 1 · PORTADA -->
+<section class="slide" id="s1" data-title="Portada">
+  <div class="left">
+    <div class="logo" data-a><img src="capturas/logo.png" alt="Logo DAILY"><span>DAILY</span></div>
+    <h1 data-a style="transition-delay:.1s">Plataforma <span class="grad">Inteligente</span> de Gestión Retail</h1>
+    <p class="lead" data-a style="transition-delay:.2s">Ventas, inventario, prevención de pérdidas, compras, calidad y personal, conectados en una sola operación.</p>
+    <div class="chips" data-a style="transition-delay:.3s">
+      <span class="chip g"><i class="dot"></i>Pantallas reales</span>
+      <span class="chip y"><i class="dot"></i>Datos de demostración</span>
+      <span class="chip"><svg viewBox="0 0 512 512" aria-hidden="true"><path d="M64 32C28.7 32 0 60.7 0 96L0 352c0 35.3 28.7 64 64 64l144 0-16 48-72 0c-13.3 0-24 10.7-24 24s10.7 24 24 24l272 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-72 0-16-48 144 0c35.3 0 64-28.7 64-64l0-256c0-35.3-28.7-64-64-64L64 32zM96 96l320 0c17.7 0 32 14.3 32 32l0 160c0 17.7-14.3 32-32 32L96 320c-17.7 0-32-14.3-32-32l0-160c0-17.7 14.3-32 32-32z"/></svg> Web + <svg viewBox="0 0 384 512" aria-hidden="true"><path d="M16 64C16 28.7 44.7 0 80 0L304 0c35.3 0 64 28.7 64 64l0 384c0 35.3-28.7 64-64 64L80 512c-35.3 0-64-28.7-64-64L16 64zM128 440c0 13.3 10.7 24 24 24l80 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-80 0c-13.3 0-24 10.7-24 24zM304 64l-224 0 0 304 224 0 0-304z"/></svg> móvil</span>
+    </div>
+  </div>
+  <div class="stack">
+    <div class="f1 lg frame floaty" data-a style="transition-delay:.25s"><div class="bar"><i></i><i></i><i></i></div><div class="shot" data-cap="Panel Ejecutivo"><img src="capturas/kpis.jpg" alt="Panel Ejecutivo"></div></div>
+    <div class="f2 lg frame floaty" data-a style="transition-delay:.4s"><div class="shot" data-cap="Prevención de Pérdidas"><img src="capturas/loss_prevention.jpg" alt="Prevención de Pérdidas"></div></div>
+    <div class="ph floaty" data-a style="transition-delay:.55s"><div class="phone"><div class="shot" data-cap="Web móvil"><img src="capturas/m_home.jpg" alt="Web móvil"></div></div></div>
+  </div>
+  <div class="foot"><span class="brand"><img src="capturas/logo.png" alt=""><b>DAILY</b></span><span>Presentación comercial · noviembre 2026</span></div>
+</section>
+
+<!-- 2 · PROBLEMAS -->
+<section class="slide" id="s2" data-title="Problemas del retail">
+  <div class="kicker" data-a><span class="num">01</span>El problema</div>
+  <h2 data-a>Lo que hoy le cuesta <span style="color:var(--r)">margen</span> a una cadena retail</h2>
+  <p class="lead" data-a>Pase el cursor sobre cada tarjeta para ver cómo lo aborda DAILY.</p>
+  <div class="cards">
+    <div class="flip" data-a style="transition-delay:0s"><div class="in">
+      <div class="fa lg"><div class="ico r"><svg viewBox="0 0 576 512" aria-hidden="true"><path d="M41-24.9c-9.4-9.4-24.6-9.4-33.9 0S-2.3-.3 7 9.1l528 528c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-96.4-96.4c2.7-2.4 5.4-4.8 8-7.2 46.8-43.5 78.1-95.4 93-131.1 3.3-7.9 3.3-16.7 0-24.6-14.9-35.7-46.2-87.7-93-131.1-47.1-43.7-111.8-80.6-192.6-80.6-56.8 0-105.6 18.2-146 44.2L41-24.9zM204.5 138.7c23.5-16.8 52.4-26.7 83.5-26.7 79.5 0 144 64.5 144 144 0 31.1-9.9 59.9-26.7 83.5l-34.7-34.7c12.7-21.4 17-47.7 10.1-73.7-13.7-51.2-66.4-81.6-117.6-67.9-8.6 2.3-16.7 5.7-24 10l-34.7-34.7zM325.3 395.1c-11.9 3.2-24.4 4.9-37.3 4.9-79.5 0-144-64.5-144-144 0-12.9 1.7-25.4 4.9-37.3L69.4 139.2c-32.6 36.8-55 75.8-66.9 104.5-3.3 7.9-3.3 16.7 0 24.6 14.9 35.7 46.2 87.7 93 131.1 47.1 43.7 111.8 80.6 192.6 80.6 37.3 0 71.2-7.9 101.5-20.6l-64.2-64.2z"/></svg></div><h4>Pérdidas que se detectan tarde</h4><p>Se descubren al cierre, sin margen de acción.</p><span class="more">Con DAILY →</span></div>
+      <div class="fb lg"><div class="ico solid"><svg viewBox="0 0 576 512" aria-hidden="true"><path d="M41-24.9c-9.4-9.4-24.6-9.4-33.9 0S-2.3-.3 7 9.1l528 528c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-96.4-96.4c2.7-2.4 5.4-4.8 8-7.2 46.8-43.5 78.1-95.4 93-131.1 3.3-7.9 3.3-16.7 0-24.6-14.9-35.7-46.2-87.7-93-131.1-47.1-43.7-111.8-80.6-192.6-80.6-56.8 0-105.6 18.2-146 44.2L41-24.9zM204.5 138.7c23.5-16.8 52.4-26.7 83.5-26.7 79.5 0 144 64.5 144 144 0 31.1-9.9 59.9-26.7 83.5l-34.7-34.7c12.7-21.4 17-47.7 10.1-73.7-13.7-51.2-66.4-81.6-117.6-67.9-8.6 2.3-16.7 5.7-24 10l-34.7-34.7zM325.3 395.1c-11.9 3.2-24.4 4.9-37.3 4.9-79.5 0-144-64.5-144-144 0-12.9 1.7-25.4 4.9-37.3L69.4 139.2c-32.6 36.8-55 75.8-66.9 104.5-3.3 7.9-3.3 16.7 0 24.6 14.9 35.7 46.2 87.7 93 131.1 47.1 43.7 111.8 80.6 192.6 80.6 37.3 0 71.2-7.9 101.5-20.6l-64.2-64.2z"/></svg></div><small>Prevención de Pérdidas</small><h4>Alertas con responsable y expedientes desde la primera diferencia.</h4></div></div></div><div class="flip" data-a style="transition-delay:0.05s"><div class="in">
+      <div class="fa lg"><div class="ico r"><svg viewBox="0 0 640 512" aria-hidden="true"><path d="M519.8 62.4c16.8-5.6 25.8-23.7 20.2-40.5S516.3-3.9 499.6 1.6l-113 37.7c-13.9-23.5-39.6-39.3-68.9-39.3-44.2 0-80 35.8-80 80 0 3 .2 5.9 .5 8.8L115.6 129.6c-16.8 5.6-25.8 23.7-20.2 40.5s23.7 25.8 40.5 20.2l135.5-45.2c4.5 3.2 9.3 5.9 14.4 8.2l0 326.7c0 17.7 14.3 32 32 32l192 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-160 0 0-294.7c21-9.2 37.2-27 44.2-49l125.9-42zM437.3 288l72.4-124.2 72.4 124.2-144.9 0zm72.4 96c62.9 0 115.2-34 126-78.9 2.6-11-1-22.3-6.7-32.1L533.8 109.8c-5-8.6-14.2-13.8-24.1-13.8s-19.1 5.3-24.1 13.8L390.4 273.1c-5.7 9.8-9.3 21.1-6.7 32.1 10.8 44.8 63.1 78.9 126 78.9zM126.8 291.8l72.4 124.2-144.9 0 72.4-124.2zM.9 433.1C11.7 478 64 512 126.8 512s115.2-34 126-78.9c2.6-11-1-22.3-6.7-32.1L150.9 237.8c-5-8.6-14.2-13.8-24.1-13.8s-19.1 5.3-24.1 13.8L7.6 401.1c-5.7 9.8-9.3 21.1-6.7 32.1z"/></svg></div><h4>Físico ≠ sistema</h4><p>Quiebres, sobrecompra y ventas perdidas.</p><span class="more">Con DAILY →</span></div>
+      <div class="fb lg"><div class="ico solid"><svg viewBox="0 0 640 512" aria-hidden="true"><path d="M519.8 62.4c16.8-5.6 25.8-23.7 20.2-40.5S516.3-3.9 499.6 1.6l-113 37.7c-13.9-23.5-39.6-39.3-68.9-39.3-44.2 0-80 35.8-80 80 0 3 .2 5.9 .5 8.8L115.6 129.6c-16.8 5.6-25.8 23.7-20.2 40.5s23.7 25.8 40.5 20.2l135.5-45.2c4.5 3.2 9.3 5.9 14.4 8.2l0 326.7c0 17.7 14.3 32 32 32l192 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-160 0 0-294.7c21-9.2 37.2-27 44.2-49l125.9-42zM437.3 288l72.4-124.2 72.4 124.2-144.9 0zm72.4 96c62.9 0 115.2-34 126-78.9 2.6-11-1-22.3-6.7-32.1L533.8 109.8c-5-8.6-14.2-13.8-24.1-13.8s-19.1 5.3-24.1 13.8L390.4 273.1c-5.7 9.8-9.3 21.1-6.7 32.1 10.8 44.8 63.1 78.9 126 78.9zM126.8 291.8l72.4 124.2-144.9 0 72.4-124.2zM.9 433.1C11.7 478 64 512 126.8 512s115.2-34 126-78.9c2.6-11-1-22.3-6.7-32.1L150.9 237.8c-5-8.6-14.2-13.8-24.1-13.8s-19.1 5.3-24.1 13.8L7.6 401.1c-5.7 9.8-9.3 21.1-6.7 32.1z"/></svg></div><small>Conciliación y Kardex</small><h4>Conteos, kardex valorizado y conciliación por producto.</h4></div></div></div><div class="flip" data-a style="transition-delay:0.1s"><div class="in">
+      <div class="fa lg"><div class="ico r"><svg viewBox="0 0 448 512" aria-hidden="true"><path d="M128 0c17.7 0 32 14.3 32 32l0 32 128 0 0-32c0-17.7 14.3-32 32-32s32 14.3 32 32l0 32 32 0c35.3 0 64 28.7 64 64l0 288c0 35.3-28.7 64-64 64L64 480c-35.3 0-64-28.7-64-64L0 128C0 92.7 28.7 64 64 64l32 0 0-32c0-17.7 14.3-32 32-32zM291.9 220.1c-9.4-9.4-24.6-9.4-33.9 0l-33.9 33.9-33.9-33.9c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l33.9 33.9-33.9 33.9c-9.4 9.4-9.4 24.6 0 33.9s24.6 9.4 33.9 0l33.9-33.9 33.9 33.9c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-33.9-33.9 33.9-33.9c9.4-9.4 9.4-24.6 0-33.9z"/></svg></div><h4>Productos vencidos</h4><p>Desperdicio y riesgo para el cliente.</p><span class="more">Con DAILY →</span></div>
+      <div class="fb lg"><div class="ico solid"><svg viewBox="0 0 448 512" aria-hidden="true"><path d="M128 0c17.7 0 32 14.3 32 32l0 32 128 0 0-32c0-17.7 14.3-32 32-32s32 14.3 32 32l0 32 32 0c35.3 0 64 28.7 64 64l0 288c0 35.3-28.7 64-64 64L64 480c-35.3 0-64-28.7-64-64L0 128C0 92.7 28.7 64 64 64l32 0 0-32c0-17.7 14.3-32 32-32zM291.9 220.1c-9.4-9.4-24.6-9.4-33.9 0l-33.9 33.9-33.9-33.9c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l33.9 33.9-33.9 33.9c-9.4 9.4-9.4 24.6 0 33.9s24.6 9.4 33.9 0l33.9-33.9 33.9 33.9c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-33.9-33.9 33.9-33.9c9.4-9.4 9.4-24.6 0-33.9z"/></svg></div><small>Calidad y FEFO</small><h4>Lotes próximos a vencer, cuarentena y retiros.</h4></div></div></div><div class="flip" data-a style="transition-delay:0.15000000000000002s"><div class="in">
+      <div class="fa lg"><div class="ico r"><svg viewBox="0 0 384 512" aria-hidden="true"><path d="M16 64C16 28.7 44.7 0 80 0L304 0c35.3 0 64 28.7 64 64l0 384c0 35.3-28.7 64-64 64L80 512c-35.3 0-64-28.7-64-64L16 64zm64 0l0 304 224 0 0-304-224 0zM192 472c17.7 0 32-14.3 32-32s-14.3-32-32-32-32 14.3-32 32 14.3 32 32 32z"/></svg></div><h4>Equipos de alto valor sin rastro</h4><p>Celulares que nadie sabe dónde están.</p><span class="more">Con DAILY →</span></div>
+      <div class="fb lg"><div class="ico solid"><svg viewBox="0 0 384 512" aria-hidden="true"><path d="M16 64C16 28.7 44.7 0 80 0L304 0c35.3 0 64 28.7 64 64l0 384c0 35.3-28.7 64-64 64L80 512c-35.3 0-64-28.7-64-64L16 64zm64 0l0 304 224 0 0-304-224 0zM192 472c17.7 0 32-14.3 32-32s-14.3-32-32-32-32 14.3-32 32 14.3 32 32 32z"/></svg></div><small>Control de Celulares</small><h4>Cada IMEI con estado, ubicación y custodio.</h4></div></div></div><div class="flip" data-a style="transition-delay:0.2s"><div class="in">
+      <div class="fa lg"><div class="ico r"><svg viewBox="0 0 640 512" aria-hidden="true"><path d="M320 16a104 104 0 1 1 0 208 104 104 0 1 1 0-208zM96 88a72 72 0 1 1 0 144 72 72 0 1 1 0-144zM0 416c0-70.7 57.3-128 128-128 12.8 0 25.2 1.9 36.9 5.4-32.9 36.8-52.9 85.4-52.9 138.6l0 16c0 11.4 2.4 22.2 6.7 32L32 480c-17.7 0-32-14.3-32-32l0-32zm521.3 64c4.3-9.8 6.7-20.6 6.7-32l0-16c0-53.2-20-101.8-52.9-138.6 11.7-3.5 24.1-5.4 36.9-5.4 70.7 0 128 57.3 128 128l0 32c0 17.7-14.3 32-32 32l-86.7 0zM472 160a72 72 0 1 1 144 0 72 72 0 1 1 -144 0zM160 432c0-88.4 71.6-160 160-160s160 71.6 160 160l0 16c0 17.7-14.3 32-32 32l-256 0c-17.7 0-32-14.3-32-32l0-16z"/></svg></div><h4>Personal desajustado</h4><p>Filas en el pico, horas ociosas en el valle.</p><span class="more">Con DAILY →</span></div>
+      <div class="fb lg"><div class="ico solid"><svg viewBox="0 0 640 512" aria-hidden="true"><path d="M320 16a104 104 0 1 1 0 208 104 104 0 1 1 0-208zM96 88a72 72 0 1 1 0 144 72 72 0 1 1 0-144zM0 416c0-70.7 57.3-128 128-128 12.8 0 25.2 1.9 36.9 5.4-32.9 36.8-52.9 85.4-52.9 138.6l0 16c0 11.4 2.4 22.2 6.7 32L32 480c-17.7 0-32-14.3-32-32l0-32zm521.3 64c4.3-9.8 6.7-20.6 6.7-32l0-16c0-53.2-20-101.8-52.9-138.6 11.7-3.5 24.1-5.4 36.9-5.4 70.7 0 128 57.3 128 128l0 32c0 17.7-14.3 32-32 32l-86.7 0zM472 160a72 72 0 1 1 144 0 72 72 0 1 1 -144 0zM160 432c0-88.4 71.6-160 160-160s160 71.6 160 160l0 16c0 17.7-14.3 32-32 32l-256 0c-17.7 0-32-14.3-32-32l0-16z"/></svg></div><small>Horarios y Cobertura</small><h4>Turnos por área frente a la demanda proyectada.</h4></div></div></div><div class="flip" data-a style="transition-delay:0.25s"><div class="in">
+      <div class="fa lg"><div class="ico r"><svg viewBox="0 0 576 512" aria-hidden="true"><path d="M400 32c-44.2 0-80 35.8-80 80l0 248.2-297.2 89.2C5.9 454.4-3.7 472.3 1.4 489.2s22.9 26.5 39.8 21.5l315.5-94.6 43.7 0c-.2 2.6-.4 5.3-.4 8 0 48.6 39.4 88 88 88s88-39.4 88-88l0-392-176 0zM528 424c0 22.1-17.9 40-40 40s-40-17.9-40-40 17.9-40 40-40c22.1 0 39.9 17.9 40 39.9l0 .1zM51.9 149.5C18.1 159.8-.9 195.6 9.4 229.4l28.1 91.8C47.8 355 83.6 374 117.4 363.7l91.8-28.1c33.8-10.3 52.8-46.1 42.5-79.9l-28.1-91.8c-10.3-33.8-46.1-52.8-79.9-42.5L51.9 149.5z"/></svg></div><h4>Compras a ciegas</h4><p>Sobrestock en unos productos, quiebre en otros.</p><span class="more">Con DAILY →</span></div>
+      <div class="fb lg"><div class="ico solid"><svg viewBox="0 0 576 512" aria-hidden="true"><path d="M400 32c-44.2 0-80 35.8-80 80l0 248.2-297.2 89.2C5.9 454.4-3.7 472.3 1.4 489.2s22.9 26.5 39.8 21.5l315.5-94.6 43.7 0c-.2 2.6-.4 5.3-.4 8 0 48.6 39.4 88 88 88s88-39.4 88-88l0-392-176 0zM528 424c0 22.1-17.9 40-40 40s-40-17.9-40-40 17.9-40 40-40c22.1 0 39.9 17.9 40 39.9l0 .1zM51.9 149.5C18.1 159.8-.9 195.6 9.4 229.4l28.1 91.8C47.8 355 83.6 374 117.4 363.7l91.8-28.1c33.8-10.3 52.8-46.1 42.5-79.9l-28.1-91.8c-10.3-33.8-46.1-52.8-79.9-42.5L51.9 149.5z"/></svg></div><small>Planificación MRP</small><h4>Reposición sugerida con stock de seguridad y punto de reorden.</h4></div></div></div><div class="flip" data-a style="transition-delay:0.30000000000000004s"><div class="in">
+      <div class="fa lg"><div class="ico r"><svg viewBox="0 0 512 512" aria-hidden="true"><path d="M224 0c35.3 0 64 21.5 64 48 0 10.4-4.4 20-12 27.9-6.6 6.9-12 15.3-12 24.9 0 15 12.2 27.2 27.2 27.2l44.8 0c26.5 0 48 21.5 48 48l0 44.8c0 15 12.2 27.2 27.2 27.2 9.5 0 18-5.4 24.9-12 7.9-7.5 17.5-12 27.9-12 26.5 0 48 28.7 48 64s-21.5 64-48 64c-10.4 0-20.1-4.4-27.9-12-6.9-6.6-15.3-12-24.9-12-15 0-27.2 12.2-27.2 27.2L384 464c0 26.5-21.5 48-48 48l-56.8 0c-12.8 0-23.2-10.4-23.2-23.2 0-9.2 5.8-17.3 13.2-22.8 11.6-8.7 18.8-20.7 18.8-34 0-26.5-28.7-48-64-48s-64 21.5-64 48c0 13.3 7.2 25.3 18.8 34 7.4 5.5 13.2 13.5 13.2 22.8 0 12.8-10.4 23.2-23.2 23.2L48 512c-26.5 0-48-21.5-48-48L0 343.2c0-12.8 10.4-23.2 23.2-23.2 9.2 0 17.3 5.8 22.8 13.2 8.7 11.6 20.7 18.8 34 18.8 26.5 0 48-28.7 48-64s-21.5-64-48-64c-13.3 0-25.3 7.2-34 18.8-5.5 7.4-13.5 13.2-22.8 13.2-12.8 0-23.2-10.4-23.2-23.2L0 176c0-26.5 21.5-48 48-48l108.8 0c15 0 27.2-12.2 27.2-27.2 0-9.5-5.4-18-12-24.9-7.5-7.9-12-17.5-12-27.9 0-26.5 28.7-48 64-48z"/></svg></div><h4>Información fragmentada</h4><p>Cada área con sus propios números.</p><span class="more">Con DAILY →</span></div>
+      <div class="fb lg"><div class="ico solid"><svg viewBox="0 0 512 512" aria-hidden="true"><path d="M224 0c35.3 0 64 21.5 64 48 0 10.4-4.4 20-12 27.9-6.6 6.9-12 15.3-12 24.9 0 15 12.2 27.2 27.2 27.2l44.8 0c26.5 0 48 21.5 48 48l0 44.8c0 15 12.2 27.2 27.2 27.2 9.5 0 18-5.4 24.9-12 7.9-7.5 17.5-12 27.9-12 26.5 0 48 28.7 48 64s-21.5 64-48 64c-10.4 0-20.1-4.4-27.9-12-6.9-6.6-15.3-12-24.9-12-15 0-27.2 12.2-27.2 27.2L384 464c0 26.5-21.5 48-48 48l-56.8 0c-12.8 0-23.2-10.4-23.2-23.2 0-9.2 5.8-17.3 13.2-22.8 11.6-8.7 18.8-20.7 18.8-34 0-26.5-28.7-48-64-48s-64 21.5-64 48c0 13.3 7.2 25.3 18.8 34 7.4 5.5 13.2 13.5 13.2 22.8 0 12.8-10.4 23.2-23.2 23.2L48 512c-26.5 0-48-21.5-48-48L0 343.2c0-12.8 10.4-23.2 23.2-23.2 9.2 0 17.3 5.8 22.8 13.2 8.7 11.6 20.7 18.8 34 18.8 26.5 0 48-28.7 48-64s-21.5-64-48-64c-13.3 0-25.3 7.2-34 18.8-5.5 7.4-13.5 13.2-22.8 13.2-12.8 0-23.2-10.4-23.2-23.2L0 176c0-26.5 21.5-48 48-48l108.8 0c15 0 27.2-12.2 27.2-27.2 0-9.5-5.4-18-12-24.9-7.5-7.9-12-17.5-12-27.9 0-26.5 28.7-48 64-48z"/></svg></div><small>Panel Ejecutivo</small><h4>Una sola versión de los indicadores para toda la red.</h4></div></div></div><div class="flip" data-a style="transition-delay:.35s"><div class="in"><div class="fa lg hot"><div class="ico solid r"><svg viewBox="0 0 576 512" aria-hidden="true"><path d="M384 352c-17.7 0-32 14.3-32 32s14.3 32 32 32l160 0c17.7 0 32-14.3 32-32l0-160c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 82.7-169.4-169.4c-12.5-12.5-32.8-12.5-45.3 0L192 242.7 54.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0L320 205.3 466.7 352 384 352z"/></svg></div><h4>Margen que se pierde sin saber dónde ni por qué</h4></div><div class="fb lg hot"><div class="ico solid r"><svg viewBox="0 0 576 512" aria-hidden="true"><path d="M384 352c-17.7 0-32 14.3-32 32s14.3 32 32 32l160 0c17.7 0 32-14.3 32-32l0-160c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 82.7-169.4-169.4c-12.5-12.5-32.8-12.5-45.3 0L192 242.7 54.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0L320 205.3 466.7 352 384 352z"/></svg></div><h4>DAILY lo hace visible, con responsable y causa</h4></div></div></div>
+  </div>
+  <div class="foot"><span class="brand"><img src="capturas/logo.png" alt=""><b>DAILY</b></span><span>Diagnóstico operativo</span></div>
+</section>
+
+<!-- 3 · HUB -->
+<section class="slide" id="s3" data-title="DAILY conecta los departamentos">
+  <div class="kicker" data-a><span class="num">02</span>La solución</div>
+  <h2 data-a>Un solo sistema conecta todos los departamentos</h2>
+  <div class="hub" data-a>
+    <svg class="wires" viewBox="0 0 1080 680"><defs><linearGradient id="wg" x1="0" x2="1"><stop offset="0" stop-color="#22C55E"/><stop offset="1" stop-color="#F2B300"/></linearGradient></defs><path class="wire" d="M540,300 Q506.25,187.5 540,75"/><path class="wire" d="M540,300 Q671.6986379959944,173.78143955820127 851.1269837220809,140.90097423302683"/><path class="wire" d="M540,300 Q760,234 980,300"/><path class="wire" d="M540,300 Q719.4283457260865,332.8804653251745 851.1269837220809,459.09902576697317"/><path class="wire" d="M540,300 Q573.75,412.5 540,525"/><path class="wire" d="M540,300 Q408.3013620040055,426.21856044179873 228.87301627791913,459.0990257669732"/><path class="wire" d="M540,300 Q320,366 100,300"/><path class="wire" d="M540,300 Q360.57165427391357,267.11953467482556 228.87301627791902,140.90097423302683"/></svg>
+    <div class="core lg"><img src="capturas/logo.png" alt=""><b>DAILY</b><small>Libro de movimientos único · alertas con responsable · indicadores compartidos</small></div>
+    <button class="node lg" style="left:455px;top:17px"><div class="ico solid"><svg viewBox="0 0 576 512" aria-hidden="true"><path d="M32 0C14.3 0 0 14.3 0 32S14.3 64 32 64l16 0c8.8 0 16 7.2 16 16l0 288c0 39.8 29.1 72.8 67.1 79-2 5.3-3.1 11-3.1 17 0 26.5 21.5 48 48 48s48-21.5 48-48c0-5.6-1-11-2.7-16l197.5 0c-1.8 5-2.7 10.4-2.7 16 0 26.5 21.5 48 48 48s48-21.5 48-48c0-5.6-1-11-2.7-16l34.7 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-400 0c-8.8 0-16-7.2-16-16l0-288C128 35.8 92.2 0 48 0L32 0zM224 64c-26.5 0-48 21.5-48 48l0 176c0 26.5 21.5 48 48 48l240 0c26.5 0 48-21.5 48-48l0-176c0-26.5-21.5-48-48-48L224 64z"/></svg></div><span>Planeación y Compras</span></button><button class="node lg" style="left:766.1269837220809px;top:82.90097423302683px"><div class="ico solid"><svg viewBox="0 0 512 512" aria-hidden="true"><path d="M224 0l0 64c0 8.8 7.2 16 16 16l32 0c8.8 0 16-7.2 16-16l0-64 32 0c35.3 0 64 28.7 64 64l0 128c0 5.5-.7 10.9-2 16l-252 0c-1.3-5.1-2-10.5-2-16l0-128c0-35.3 28.7-64 64-64l32 0zm96 512c-11.2 0-21.8-2.9-31-8 9.5-16.5 15-35.6 15-56l0-128c0-20.4-5.5-39.5-15-56 9.2-5.1 19.7-8 31-8l32 0 0 64c0 8.8 7.2 16 16 16l32 0c8.8 0 16-7.2 16-16l0-64 32 0c35.3 0 64 28.7 64 64l0 128c0 35.3-28.7 64-64 64l-128 0zM0 320c0-35.3 28.7-64 64-64l32 0 0 64c0 8.8 7.2 16 16 16l32 0c8.8 0 16-7.2 16-16l0-64 32 0c35.3 0 64 28.7 64 64l0 128c0 35.3-28.7 64-64 64L64 512c-35.3 0-64-28.7-64-64L0 320z"/></svg></div><span>Inventario y Almacenes</span></button><button class="node lg" style="left:895px;top:242px"><div class="ico solid"><svg viewBox="0 0 512 512" aria-hidden="true"><path d="M96 0C60.7 0 32 28.7 32 64s28.7 64 64 64l48 0 0 32-57 0c-31.6 0-58.5 23.1-63.3 54.4L1.1 364.1C.4 368.8 0 373.6 0 378.4L0 448c0 35.3 28.7 64 64 64l384 0c35.3 0 64-28.7 64-64l0-69.6c0-4.8-.4-9.6-1.1-14.4L488.2 214.4C483.5 183.1 456.6 160 425 160l-217 0 0-32 48 0c35.3 0 64-28.7 64-64S291.3 0 256 0L96 0zm0 48l160 0c8.8 0 16 7.2 16 16s-7.2 16-16 16L96 80c-8.8 0-16-7.2-16-16s7.2-16 16-16zM64 424c0-13.3 10.7-24 24-24l336 0c13.3 0 24 10.7 24 24s-10.7 24-24 24L88 448c-13.3 0-24-10.7-24-24zm48-160a24 24 0 1 1 0-48 24 24 0 1 1 0 48zm120-24a24 24 0 1 1 -48 0 24 24 0 1 1 48 0zM160 344a24 24 0 1 1 0-48 24 24 0 1 1 0 48zM328 240a24 24 0 1 1 -48 0 24 24 0 1 1 48 0zM256 344a24 24 0 1 1 0-48 24 24 0 1 1 0 48zM424 240a24 24 0 1 1 -48 0 24 24 0 1 1 48 0zM352 344a24 24 0 1 1 0-48 24 24 0 1 1 0 48z"/></svg></div><span>Ventas y Rentabilidad</span></button><button class="node lg" style="left:766.1269837220809px;top:401.09902576697317px"><div class="ico solid"><svg viewBox="0 0 640 512" aria-hidden="true"><path d="M64 96c0-35.3 28.7-64 64-64l288 0c35.3 0 64 28.7 64 64l0 32 50.7 0c17 0 33.3 6.7 45.3 18.7L621.3 192c12 12 18.7 28.3 18.7 45.3L640 384c0 35.3-28.7 64-64 64l-3.3 0c-10.4 36.9-44.4 64-84.7 64s-74.2-27.1-84.7-64l-102.6 0c-10.4 36.9-44.4 64-84.7 64s-74.2-27.1-84.7-64l-3.3 0c-35.3 0-64-28.7-64-64l0-48-40 0c-13.3 0-24-10.7-24-24s10.7-24 24-24l112 0c13.3 0 24-10.7 24-24s-10.7-24-24-24L24 240c-13.3 0-24-10.7-24-24s10.7-24 24-24l176 0c13.3 0 24-10.7 24-24s-10.7-24-24-24L24 144c-13.3 0-24-10.7-24-24S10.7 96 24 96l40 0zM576 288l0-50.7-45.3-45.3-50.7 0 0 96 96 0zM256 424a40 40 0 1 0 -80 0 40 40 0 1 0 80 0zm232 40a40 40 0 1 0 0-80 40 40 0 1 0 0 80z"/></svg></div><span>Despachos y Devoluciones</span></button><button class="node lg" style="left:455px;top:467px"><div class="ico solid"><svg viewBox="0 0 512 512" aria-hidden="true"><path d="M269.4 2.9C265.2 1 260.7 0 256 0s-9.2 1-13.4 2.9L54.3 82.8c-22 9.3-38.4 31-38.3 57.2 .5 99.2 41.3 280.7 213.6 363.2 16.7 8 36.1 8 52.8 0 172.4-82.5 213.2-264 213.6-363.2 .1-26.2-16.3-47.9-38.3-57.2L269.4 2.9zM249.6 183.5l6.4 8.5 6.4-8.5c11.1-14.8 28.5-23.5 46.9-23.5 32.4 0 58.7 26.3 58.7 58.7l0 5.3c0 49.1-65.8 98.1-96.5 118.3-9.5 6.2-21.5 6.2-30.9 0-30.7-20.2-96.5-69.3-96.5-118.3l0-5.3c0-32.4 26.3-58.7 58.7-58.7 18.5 0 35.9 8.7 46.9 23.5z"/></svg></div><span>Calidad y Vencimientos</span></button><button class="node lg" style="left:143.87301627791913px;top:401.0990257669732px"><div class="ico solid"><svg viewBox="0 0 448 512" aria-hidden="true"><path d="M136.7 5.9C141.1-7.2 153.3-16 167.1-16l113.9 0c13.8 0 26 8.8 30.4 21.9L320 32 416 32c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 96C14.3 96 0 81.7 0 64S14.3 32 32 32l96 0 8.7-26.1zM32 144l384 0 0 304c0 35.3-28.7 64-64 64L96 512c-35.3 0-64-28.7-64-64l0-304zm88 64c-13.3 0-24 10.7-24 24l0 192c0 13.3 10.7 24 24 24s24-10.7 24-24l0-192c0-13.3-10.7-24-24-24zm104 0c-13.3 0-24 10.7-24 24l0 192c0 13.3 10.7 24 24 24s24-10.7 24-24l0-192c0-13.3-10.7-24-24-24zm104 0c-13.3 0-24 10.7-24 24l0 192c0 13.3 10.7 24 24 24s24-10.7 24-24l0-192c0-13.3-10.7-24-24-24z"/></svg></div><span>Mermas</span></button><button class="node lg" style="left:15px;top:242px"><div class="ico solid"><svg viewBox="0 0 576 512" aria-hidden="true"><path d="M224 248a120 120 0 1 0 0-240 120 120 0 1 0 0 240zm-29.7 56C95.8 304 16 383.8 16 482.3 16 498.7 29.3 512 45.7 512l251.5 0C261 469.4 240 414.5 240 356.4l0-31.1c0-7.3 1-14.5 2.9-21.3l-48.6 0zm251 184.5l-13.3 6.3 0-188.1 96 32 0 19.6c0 55.8-32.2 106.5-82.7 130.3zM421.9 259.5l-112 37.3c-13.1 4.4-21.9 16.6-21.9 30.4l0 31.1c0 74.4 43 142.1 110.2 173.7l18.5 8.7c4.8 2.2 10 3.4 15.2 3.4s10.5-1.2 15.2-3.4l18.5-8.7C533 500.3 576 432.6 576 358.2l0-31.1c0-13.8-8.8-26-21.9-30.4l-112-37.3c-6.6-2.2-13.7-2.2-20.2 0z"/></svg></div><span>Prevención de Pérdidas</span></button><button class="node lg" style="left:143.87301627791902px;top:82.90097423302683px"><div class="ico solid"><svg viewBox="0 0 512 512" aria-hidden="true"><path d="M256 0a64 64 0 1 1 0 128 64 64 0 1 1 0-128zm96 312c0 25-12.7 47-32 59.9l0 92.1c0 26.5-21.5 48-48 48l-32 0c-26.5 0-48-21.5-48-48l0-92.1C172.7 359 160 337 160 312l0-40c0-53 43-96 96-96s96 43 96 96l0 40zM96 32a56 56 0 1 1 0 112 56 56 0 1 1 0-112zm16 240l0 32c0 32.5 12.1 62.1 32 84.7l0 75.3c0 1.2 0 2.5 .1 3.7-8.5 7.6-19.7 12.3-32.1 12.3l-32 0c-26.5 0-48-21.5-48-48l0-56.6C12.9 364.4 0 343.7 0 320l0-32c0-53 43-96 96-96 12.7 0 24.8 2.5 35.9 6.9-12.6 21.4-19.9 46.4-19.9 73.1zM368 464l0-75.3c19.9-22.5 32-52.2 32-84.7l0-32c0-26.7-7.3-51.6-19.9-73.1 11.1-4.5 23.2-6.9 35.9-6.9 53 0 96 43 96 96l0 32c0 23.7-12.9 44.4-32 55.4l0 56.6c0 26.5-21.5 48-48 48l-32 0c-12.3 0-23.6-4.6-32.1-12.3 0-1.2 .1-2.5 .1-3.7zM416 32a56 56 0 1 1 0 112 56 56 0 1 1 0-112z"/></svg></div><span>Operaciones y Personal</span></button>
+  </div>
+  <div class="detail lg" data-a style="transition-delay:.2s" id="hubDetail"></div>
+  <div class="tap">Toque un departamento para ver qué hace y con qué se conecta.</div>
+  <div class="foot"><span class="brand"><img src="capturas/logo.png" alt=""><b>DAILY</b></span><span class="real"><i></i>Módulos disponibles en la plataforma</span></div>
+</section>
+
+<!-- 4 · PANEL EJECUTIVO -->
+<section class="slide" id="s4" data-title="Panel Ejecutivo y KPIs">
+  <div class="kicker" data-a><span class="num">03</span>Panel ejecutivo</div>
+  <h2 data-a>La salud del negocio, en una sola pantalla</h2>
+  <div class="kpis"><div class="kpi lg" data-a style="transition-delay:0s"><small>Ventas</small><div class="v" data-count="128450" data-dec="0" data-pre="$" data-suf="">0</div><div class="d up">▲ 5,2 % vs. ayer</div><svg class="sp" viewBox="0 0 140 34" preserveAspectRatio="none"><path d="M0,30 C30,28 50,20 70,16 S110,6 140,4" fill="none" stroke="#16A34A" stroke-width="3" stroke-linecap="round"/></svg></div><div class="kpi lg" data-a style="transition-delay:0.05s"><small>Margen</small><div class="v" data-count="28.4" data-dec="1" data-pre="" data-suf=" %">0</div><div class="d up">▲ 1,4 pp</div><svg class="sp" viewBox="0 0 140 34" preserveAspectRatio="none"><path d="M0,26 C30,24 60,18 90,14 S120,8 140,6" fill="none" stroke="#16A34A" stroke-width="3" stroke-linecap="round"/></svg></div><div class="kpi lg" data-a style="transition-delay:0.1s"><small>Mermas</small><div class="v" data-count="1.92" data-dec="2" data-pre="" data-suf=" %">0</div><div class="d dn">▲ 0,42 pp</div><svg class="sp" viewBox="0 0 140 34" preserveAspectRatio="none"><path d="M0,28 C40,26 70,22 100,16 S130,6 140,2" fill="none" stroke="#E5484D" stroke-width="3" stroke-linecap="round"/></svg></div><div class="kpi lg" data-a style="transition-delay:0.15000000000000002s"><small>Inventario</small><div class="v" data-count="98.1" data-dec="1" data-pre="" data-suf=" %">0</div><div class="d dn">▼ 0,6 pp · exactitud</div><svg class="sp" viewBox="0 0 140 34" preserveAspectRatio="none"><path d="M0,8 C40,10 70,14 100,20 S130,24 140,26" fill="none" stroke="#F2B300" stroke-width="3" stroke-linecap="round"/></svg></div><div class="kpi lg" data-a style="transition-delay:0.2s"><small>Personal</small><div class="v" data-count="87" data-dec="0" data-pre="" data-suf=" %">0</div><div class="d dn">▼ 6,0 pp · cobertura</div><svg class="sp" viewBox="0 0 140 34" preserveAspectRatio="none"><path d="M0,6 C40,8 70,16 100,22 S130,26 140,28" fill="none" stroke="#F2B300" stroke-width="3" stroke-linecap="round"/></svg></div><div class="kpi lg" data-a style="transition-delay:0.25s"><small>Calidad</small><div class="v" data-count="99.1" data-dec="1" data-pre="" data-suf=" %">0</div><div class="d up">▲ 0,9 pp</div><svg class="sp" viewBox="0 0 140 34" preserveAspectRatio="none"><path d="M0,24 C30,22 60,18 90,12 S120,6 140,4" fill="none" stroke="#16A34A" stroke-width="3" stroke-linecap="round"/></svg></div></div>
+  <div class="body">
+    <div class="lg frame" data-a style="transition-delay:.15s"><div class="shot" style="height:520px" data-cap="Panel Ejecutivo"><img src="capturas/kpis.jpg" alt="Panel Ejecutivo">
+      <span class="pin" style="left:1%;top:31%">1</span><span class="pin" style="left:1%;top:55%">2</span><span class="pin" style="left:79%;top:55%">3</span><span class="pin" style="left:37%;top:55%">4</span></div></div>
+    <div class="callouts" data-a style="transition-delay:.3s">
+      <div class="co lg"><span class="n">1</span><div><h4>KPI con meta y tendencia</h4><p>Ventas, margen, mermas, exactitud de inventario, cobertura de personal y calidad.</p></div></div>
+      <div class="co lg"><span class="n">2</span><div><h4>Estado de sucursales</h4><p>Mapa y semáforo por tienda: operativa, atención o crítica.</p></div></div>
+      <div class="co lg"><span class="n">3</span><div><h4>Alertas y acciones urgentes</h4><p>Lo que hay que atender hoy, con acceso directo al detalle.</p></div></div>
+      <div class="co lg"><span class="n">4</span><div><h4>Tendencia y departamentos</h4><p>Venta acumulada del día y aporte de cada departamento.</p></div></div>
+    </div>
+  </div>
+  <div class="foot"><span class="brand"><img src="capturas/logo.png" alt=""><b>DAILY</b></span><span class="real"><i></i>Pantalla real · datos de demostración</span></div>
+</section>
+
+<!-- 5 · VENTAS -->
+<section class="slide" id="s5" data-title="Ventas y Rentabilidad">
+  <div class="kicker" data-a><span class="num">04</span>Ventas y rentabilidad</div>
+  <h2 data-a>Qué se vende, cuánto deja y qué rinde poco</h2>
+  <div class="split" style="grid-template-columns:1180px 1fr">
+    <div class="lg frame" data-a style="transition-delay:.15s"><div class="shot" style="height:660px" data-cap="Ventas y Rentabilidad"><img src="capturas/sales.jpg" alt="Ventas y Rentabilidad"></div></div>
+    <div class="callouts" data-a style="transition-delay:.3s">
+      <div class="co lg green"><span class="n">1</span><div><h4>Venta y margen</h4><p>Venta neta, utilidad bruta y margen frente al período anterior.</p></div></div><div class="co lg green"><span class="n">2</span><div><h4>Curva y metas</h4><p>Evolución de la venta y cumplimiento de la meta.</p></div></div><div class="co lg green"><span class="n">3</span><div><h4>Sucursales y departamentos</h4><p>Qué tiendas y áreas sostienen el margen.</p></div></div><div class="co lg green"><span class="n">4</span><div><h4>Productos</h4><p>Los de mayor y menor rendimiento, para decidir surtido y precio.</p></div></div>
+    </div>
+  </div>
+  <div class="foot"><span class="brand"><img src="capturas/logo.png" alt=""><b>DAILY</b></span><span class="real"><i></i>Pantalla real · datos de demostración</span></div>
+</section>
+
+<!-- 6 · INVENTARIO -->
+<section class="slide" id="s6" data-title="Inventario y Control de Mercancías">
+  <div class="kicker" data-a><span class="num">05</span>Inventario y mercancías</div>
+  <h2 data-a>Cada unidad, ubicada, valorizada y conciliada</h2>
+  <div class="tabs lg" data-a id="invTabs"></div>
+  <div class="tabview" data-a style="transition-delay:.15s">
+    <div class="lg frame"><div class="shot" id="invShot" data-cap=""><img src="capturas/stockoverview.jpg" alt=""></div></div>
+    <div class="info lg" id="invInfo"></div>
+  </div>
+  <div class="foot"><span class="brand"><img src="capturas/logo.png" alt=""><b>DAILY</b></span><span class="real"><i></i>Pantallas reales · datos de demostración</span></div>
+</section>
+
+<!-- 7 · PREVENCIÓN -->
+<section class="slide" id="s7" data-title="Prevención de Pérdidas y Celulares">
+  <div class="kicker" data-a><span class="num">06</span>Prevención de pérdidas</div>
+  <h2 data-a>Expedientes, activos y celulares controlados por IMEI</h2>
+  <div class="top">
+    <div data-a style="transition-delay:.1s"><div class="lg frame"><div class="shot" data-cap="Centro de Control de Prevención de Pérdidas"><img src="capturas/loss_prevention.jpg" alt=""></div></div><div class="cap">Centro de Control <span>· incidentes, investigaciones, activos, accesos, CCTV, rondas y planes</span></div></div>
+    <div data-a style="transition-delay:.2s"><div class="lg frame"><div class="shot" data-cap="Control de Celulares"><img src="capturas/devices.jpg" alt=""></div></div><div class="cap">Control de Celulares <span>· trazabilidad individual por IMEI, custodia y estado</span></div></div>
+  </div>
+  <div class="life lg" data-a style="transition-delay:.3s">
+    <h6>Ciclo de vida de un celular en DAILY</h6>
+    <div class="flow"><div class="st"><div class="ico solid "><svg viewBox="0 0 576 512" aria-hidden="true"><path d="M400 32c-44.2 0-80 35.8-80 80l0 248.2-297.2 89.2C5.9 454.4-3.7 472.3 1.4 489.2s22.9 26.5 39.8 21.5l315.5-94.6 43.7 0c-.2 2.6-.4 5.3-.4 8 0 48.6 39.4 88 88 88s88-39.4 88-88l0-392-176 0zM528 424c0 22.1-17.9 40-40 40s-40-17.9-40-40 17.9-40 40-40c22.1 0 39.9 17.9 40 39.9l0 .1zM51.9 149.5C18.1 159.8-.9 195.6 9.4 229.4l28.1 91.8C47.8 355 83.6 374 117.4 363.7l91.8-28.1c33.8-10.3 52.8-46.1 42.5-79.9l-28.1-91.8c-10.3-33.8-46.1-52.8-79.9-42.5L51.9 149.5z"/></svg></div><h5>Recepción</h5><p>Escaneo contra manifiesto: conforme, duplicado o adicional.</p></div><div class="arrow"><svg viewBox="0 0 320 512" aria-hidden="true"><path d="M311.1 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L243.2 256 73.9 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"/></svg></div><div class="st"><div class="ico solid "><svg viewBox="0 0 384 512" aria-hidden="true"><path d="M0 188.6C0 84.4 86 0 192 0S384 84.4 384 188.6c0 119.3-120.2 262.3-170.4 316.8-11.8 12.8-31.5 12.8-43.3 0-50.2-54.5-170.4-197.5-170.4-316.8zM192 256a64 64 0 1 0 0-128 64 64 0 1 0 0 128z"/></svg></div><h5>Ubicación</h5><p>Bodega segura, vitrina, piso, pickup, devoluciones, servicio técnico.</p></div><div class="arrow"><svg viewBox="0 0 320 512" aria-hidden="true"><path d="M311.1 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L243.2 256 73.9 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"/></svg></div><div class="st"><div class="ico solid "><svg viewBox="0 0 512 512" aria-hidden="true"><path d="M502.6 150.6l-96 96c-9.2 9.2-22.9 11.9-34.9 6.9S352 236.9 352 224l0-64-320 0c-17.7 0-32-14.3-32-32S14.3 96 32 96l320 0 0-64c0-12.9 7.8-24.6 19.8-29.6s25.7-2.2 34.9 6.9l96 96c12.5 12.5 12.5 32.8 0 45.3zm-397.3 352l-96-96c-12.5-12.5-12.5-32.8 0-45.3l96-96c9.2-9.2 22.9-11.9 34.9-6.9S160 275.1 160 288l0 64 320 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-320 0 0 64c0 12.9-7.8 24.6-19.8 29.6s-25.7 2.2-34.9-6.9z"/></svg></div><h5>Movimiento</h5><p>Solicitud y confirmación de recepción en destino.</p></div><div class="arrow"><svg viewBox="0 0 320 512" aria-hidden="true"><path d="M311.1 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L243.2 256 73.9 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"/></svg></div><div class="st"><div class="ico solid "><svg viewBox="0 0 640 512" aria-hidden="true"><path d="M560.3 237.2c10.4 11.8 28.3 14.4 41.8 5.5 14.7-9.8 18.7-29.7 8.9-44.4l-48-72c-2.8-4.2-6.6-7.7-11.1-10.2L351.4 4.7c-19.3-10.7-42.8-10.7-62.2 0L88.8 116c-5.4 3-9.7 7.4-12.6 12.8L27.7 218.7c-12.6 23.4-3.8 52.5 19.6 65.1l33 17.7 0 53.3c0 23 12.4 44.3 32.4 55.7l176 99.7c19.6 11.1 43.5 11.1 63.1 0l176-99.7c20.1-11.4 32.4-32.6 32.4-55.7l0-117.5zm-240-9.8L170.2 144 320.3 60.6 470.4 144 320.3 227.4zm-41.5 50.2l-21.3 46.2-165.8-88.8 25.4-47.2 161.7 89.8z"/></svg></div><h5>Pedido</h5><p>Reserva, picking, empaque y verificación por IMEI.</p></div><div class="arrow"><svg viewBox="0 0 320 512" aria-hidden="true"><path d="M311.1 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L243.2 256 73.9 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"/></svg></div><div class="st"><div class="ico solid "><svg viewBox="0 0 512 512" aria-hidden="true"><path d="M96 0C60.7 0 32 28.7 32 64s28.7 64 64 64l48 0 0 32-57 0c-31.6 0-58.5 23.1-63.3 54.4L1.1 364.1C.4 368.8 0 373.6 0 378.4L0 448c0 35.3 28.7 64 64 64l384 0c35.3 0 64-28.7 64-64l0-69.6c0-4.8-.4-9.6-1.1-14.4L488.2 214.4C483.5 183.1 456.6 160 425 160l-217 0 0-32 48 0c35.3 0 64-28.7 64-64S291.3 0 256 0L96 0zm0 48l160 0c8.8 0 16 7.2 16 16s-7.2 16-16 16L96 80c-8.8 0-16-7.2-16-16s7.2-16 16-16zM64 424c0-13.3 10.7-24 24-24l336 0c13.3 0 24 10.7 24 24s-10.7 24-24 24L88 448c-13.3 0-24-10.7-24-24zm48-160a24 24 0 1 1 0-48 24 24 0 1 1 0 48zm120-24a24 24 0 1 1 -48 0 24 24 0 1 1 48 0zM160 344a24 24 0 1 1 0-48 24 24 0 1 1 0 48zM328 240a24 24 0 1 1 -48 0 24 24 0 1 1 48 0zM256 344a24 24 0 1 1 0-48 24 24 0 1 1 0 48zM424 240a24 24 0 1 1 -48 0 24 24 0 1 1 48 0zM352 344a24 24 0 1 1 0-48 24 24 0 1 1 0 48z"/></svg></div><h5>Venta</h5><p>Vinculada a la transacción del POS.</p></div><div class="arrow"><svg viewBox="0 0 320 512" aria-hidden="true"><path d="M311.1 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L243.2 256 73.9 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"/></svg></div><div class="st"><div class="ico solid "><svg viewBox="0 0 384 512" aria-hidden="true"><path d="M256 0c23.7 0 44.4 12.9 55.4 32l8.6 0c35.3 0 64 28.7 64 64l0 352c0 35.3-28.7 64-64 64L64 512c-35.3 0-64-28.7-64-64L0 96C0 60.7 28.7 32 64 32l8.6 0C83.6 12.9 104.3 0 128 0L256 0zm26.9 212.6c-10.7-7.8-25.7-5.4-33.5 5.3l-85.6 117.7-26.5-27.4c-9.2-9.5-24.4-9.8-33.9-.6s-9.8 24.4-.6 33.9l46.4 48c4.9 5.1 11.8 7.8 18.9 7.3s13.6-4.1 17.8-9.8L288.2 246.1c7.8-10.7 5.4-25.7-5.3-33.5zM136 64c-13.3 0-24 10.7-24 24s10.7 24 24 24l112 0c13.3 0 24-10.7 24-24s-10.7-24-24-24L136 64z"/></svg></div><h5>Conteos</h5><p>Apertura, cierre, cambio de turno, riesgo o aleatorio.</p></div><div class="arrow"><svg viewBox="0 0 320 512" aria-hidden="true"><path d="M311.1 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L243.2 256 73.9 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"/></svg></div><div class="st"><div class="ico solid r"><svg viewBox="0 0 512 512" aria-hidden="true"><path d="M256 0c14.7 0 28.2 8.1 35.2 21l216 400c6.7 12.4 6.4 27.4-.8 39.5S486.1 480 472 480L40 480c-14.1 0-27.2-7.4-34.4-19.5s-7.5-27.1-.8-39.5l216-400c7-12.9 20.5-21 35.2-21zm0 352a32 32 0 1 0 0 64 32 32 0 1 0 0-64zm0-192c-18.2 0-32.7 15.5-31.4 33.7l7.4 104c.9 12.5 11.4 22.3 23.9 22.3 12.6 0 23-9.7 23.9-22.3l7.4-104c1.3-18.2-13.1-33.7-31.4-33.7z"/></svg></div><h5>Diferencia</h5><p>Alerta de prevención con responsable y plazo.</p></div></div>
+  </div>
+  <div class="foot"><span class="brand"><img src="capturas/logo.png" alt=""><b>DAILY</b></span><span class="real"><i></i>IMEI enmascarado en pantalla · el bloqueo es interno y no afecta la red celular</span></div>
+</section>
+
+<!-- 8 · PLANEACIÓN -->
+<section class="slide" id="s8" data-title="Planeación y Compras">
+  <div class="kicker" data-a><span class="num">07</span>Planeación y compras</div>
+  <h2 data-a>Comprar lo necesario, a tiempo, y medir al proveedor</h2>
+  <div class="lg" data-a style="margin-top:34px;padding:18px 16px"><div class="flow"><div class="st"><div class="ico solid "><svg viewBox="0 0 512 512" aria-hidden="true"><path d="M64 64c0-17.7-14.3-32-32-32S0 46.3 0 64L0 400c0 44.2 35.8 80 80 80l400 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L80 416c-8.8 0-16-7.2-16-16L64 64zm406.6 86.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L320 210.7 262.6 153.4c-12.5-12.5-32.8-12.5-45.3 0l-96 96c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l73.4-73.4 57.4 57.4c12.5 12.5 32.8 12.5 45.3 0l128-128z"/></svg></div><h5>Demanda</h5><p>Consumo y ventas por producto y sucursal.</p></div><div class="arrow"><svg viewBox="0 0 320 512" aria-hidden="true"><path d="M311.1 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L243.2 256 73.9 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"/></svg></div><div class="st"><div class="ico solid "><svg viewBox="0 0 384 512" aria-hidden="true"><path d="M64 0C28.7 0 0 28.7 0 64L0 448c0 35.3 28.7 64 64 64l256 0c35.3 0 64-28.7 64-64l0-384c0-35.3-28.7-64-64-64L64 0zM96 64l192 0c17.7 0 32 14.3 32 32l0 32c0 17.7-14.3 32-32 32L96 160c-17.7 0-32-14.3-32-32l0-32c0-17.7 14.3-32 32-32zm16 168a24 24 0 1 1 -48 0 24 24 0 1 1 48 0zm80 24a24 24 0 1 1 0-48 24 24 0 1 1 0 48zm128-24a24 24 0 1 1 -48 0 24 24 0 1 1 48 0zM88 352a24 24 0 1 1 0-48 24 24 0 1 1 0 48zm128-24a24 24 0 1 1 -48 0 24 24 0 1 1 48 0zm80 24a24 24 0 1 1 0-48 24 24 0 1 1 0 48zM64 424c0-13.3 10.7-24 24-24l112 0c13.3 0 24 10.7 24 24s-10.7 24-24 24L88 448c-13.3 0-24-10.7-24-24zm232-24c13.3 0 24 10.7 24 24s-10.7 24-24 24-24-10.7-24-24 10.7-24 24-24z"/></svg></div><h5>Cálculo MRP</h5><p>Stock de seguridad y punto de reorden, horizonte de 14 días.</p></div><div class="arrow"><svg viewBox="0 0 320 512" aria-hidden="true"><path d="M311.1 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L243.2 256 73.9 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"/></svg></div><div class="st"><div class="ico solid "><svg viewBox="0 0 576 512" aria-hidden="true"><path d="M96 0C60.7 0 32 28.7 32 64l0 384c0 35.3 28.7 64 64 64l180 0c-22.7-31.5-36-70.2-36-112 0-100.6 77.4-183.2 176-191.3l0-38.1c0-17-6.7-33.3-18.7-45.3L290.7 18.7C278.7 6.7 262.5 0 245.5 0L96 0zM357.5 176L264 176c-13.3 0-24-10.7-24-24L240 58.5 357.5 176zM432 544a144 144 0 1 0 0-288 144 144 0 1 0 0 288zm16-208l0 48 48 0c8.8 0 16 7.2 16 16s-7.2 16-16 16l-48 0 0 48c0 8.8-7.2 16-16 16s-16-7.2-16-16l0-48-48 0c-8.8 0-16-7.2-16-16s7.2-16 16-16l48 0 0-48c0-8.8 7.2-16 16-16s16 7.2 16 16z"/></svg></div><h5>Orden sugerida</h5><p>Generada desde el cálculo.</p></div><div class="arrow"><svg viewBox="0 0 320 512" aria-hidden="true"><path d="M311.1 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L243.2 256 73.9 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"/></svg></div><div class="st"><div class="ico solid "><svg viewBox="0 0 640 512" aria-hidden="true"><path d="M286 304c98.5 0 178.3 79.8 178.3 178.3 0 16.4-13.3 29.7-29.7 29.7L78 512c-16.4 0-29.7-13.3-29.7-29.7 0-98.5 79.8-178.3 178.3-178.3l59.4 0zM585.7 105.9c7.8-10.7 22.8-13.1 33.5-5.3s13.1 22.8 5.3 33.5L522.1 274.9c-4.2 5.7-10.7 9.4-17.7 9.8s-14-2.2-18.9-7.3l-46.4-48c-9.2-9.5-9-24.7 .6-33.9 9.5-9.2 24.7-8.9 33.9 .6l26.5 27.4 85.6-117.7zM256.3 248a120 120 0 1 1 0-240 120 120 0 1 1 0 240z"/></svg></div><h5>Aprobación</h5><p>Revisión antes de enviar.</p></div><div class="arrow"><svg viewBox="0 0 320 512" aria-hidden="true"><path d="M311.1 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L243.2 256 73.9 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"/></svg></div><div class="st"><div class="ico solid "><svg viewBox="0 0 576 512" aria-hidden="true"><path d="M536.4-26.3c9.8-3.5 20.6-1 28 6.3s9.8 18.2 6.3 28l-178 496.9c-5 13.9-18.1 23.1-32.8 23.1-14.2 0-27-8.6-32.3-21.7l-64.2-158c-4.5-11-2.5-23.6 5.2-32.6l94.5-112.4c5.1-6.1 4.7-15-.9-20.6s-14.6-6-20.6-.9L229.2 276.1c-9.1 7.6-21.6 9.6-32.6 5.2L38.1 216.8c-13.1-5.3-21.7-18.1-21.7-32.3 0-14.7 9.2-27.8 23.1-32.8l496.9-178z"/></svg></div><h5>Envío</h5><p>Al proveedor, con fecha esperada.</p></div><div class="arrow"><svg viewBox="0 0 320 512" aria-hidden="true"><path d="M311.1 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L243.2 256 73.9 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"/></svg></div><div class="st"><div class="ico solid "><svg viewBox="0 0 576 512" aria-hidden="true"><path d="M400 32c-44.2 0-80 35.8-80 80l0 248.2-297.2 89.2C5.9 454.4-3.7 472.3 1.4 489.2s22.9 26.5 39.8 21.5l315.5-94.6 43.7 0c-.2 2.6-.4 5.3-.4 8 0 48.6 39.4 88 88 88s88-39.4 88-88l0-392-176 0zM528 424c0 22.1-17.9 40-40 40s-40-17.9-40-40 17.9-40 40-40c22.1 0 39.9 17.9 40 39.9l0 .1zM51.9 149.5C18.1 159.8-.9 195.6 9.4 229.4l28.1 91.8C47.8 355 83.6 374 117.4 363.7l91.8-28.1c33.8-10.3 52.8-46.1 42.5-79.9l-28.1-91.8c-10.3-33.8-46.1-52.8-79.9-42.5L51.9 149.5z"/></svg></div><h5>Recepción</h5><p>Contra la orden y con reglas por producto.</p></div><div class="arrow"><svg viewBox="0 0 320 512" aria-hidden="true"><path d="M311.1 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L243.2 256 73.9 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"/></svg></div><div class="st"><div class="ico solid "><svg viewBox="0 0 448 512" aria-hidden="true"><path d="M224.3 128L139.7-12.9c-6.5-10.8-20.1-14.7-31.3-9.1L21.8 21.3C9.9 27.2 5.1 41.6 11 53.5L80.6 192.6c-30.1 33.9-48.3 78.5-48.3 127.4 0 106 86 192 192 192s192-86 192-192c0-48.9-18.3-93.5-48.3-127.4L437.6 53.5c5.9-11.9 1.1-26.3-10.7-32.2L340.2-22.1c-11.2-5.6-24.9-1.6-31.3 9.1L224.3 128zm30.8 142.5c1.4 2.8 4 4.7 7 5.1l50.1 7.3c7.7 1.1 10.7 10.5 5.2 16l-36.3 35.4c-2.2 2.2-3.2 5.2-2.7 8.3l8.6 49.9c1.3 7.6-6.7 13.5-13.6 9.9l-44.8-23.6c-2.7-1.4-6-1.4-8.7 0l-44.8 23.6c-6.9 3.6-14.9-2.2-13.6-9.9l8.6-49.9c.5-3-.5-6.1-2.7-8.3l-36.3-35.4c-5.6-5.4-2.5-14.8 5.2-16l50.1-7.3c3-.4 5.7-2.4 7-5.1l22.4-45.4c3.4-7 13.3-7 16.8 0l22.4 45.4z"/></svg></div><h5>Evaluación</h5><p>Cumplimiento OTIF del proveedor.</p></div></div></div>
+  <div class="cols-2" style="margin-top:26px">
+    <div data-a style="transition-delay:.15s"><div class="lg frame"><div class="shot" style="height:400px" data-cap="Planificación MRP"><img src="capturas/mrp.jpg" alt=""></div></div><div class="cap">Planificación MRP <span>· reposición sugerida, stock de seguridad y punto de reorden</span></div></div>
+    <div data-a style="transition-delay:.25s"><div class="lg frame"><div class="shot" style="height:400px" data-cap="Proveedores y Compras"><img src="capturas/suppliers.jpg" alt=""></div></div><div class="cap">Proveedores y compras <span>· órdenes, recepción y evaluación OTIF</span></div></div>
+  </div>
+  <div class="foot"><span class="brand"><img src="capturas/logo.png" alt=""><b>DAILY</b></span><span class="real"><i></i>Pantallas reales · datos de demostración</span></div>
+</section>
+
+<!-- 9 · PERSONAL -->
+<section class="slide" id="s9" data-title="Operaciones y Personal">
+  <div class="kicker" data-a><span class="num">08</span>Operaciones y personal</div>
+  <h2 data-a>La gente correcta, en el área correcta, a la hora pico</h2>
+  <div class="split" style="grid-template-columns:1080px 1fr">
+    <div data-a style="transition-delay:.1s"><div class="lg frame"><div class="shot" style="height:640px" data-cap="Horarios y Cobertura"><img src="capturas/scheduling.jpg" alt=""></div></div></div>
+    <div style="display:flex;flex-direction:column;gap:22px">
+      <div data-a style="transition-delay:.2s"><div class="lg frame"><div class="shot" style="height:236px" data-cap="Asistencia y Fichajes"><img src="capturas/attendance.jpg" alt=""></div></div><div class="cap">Asistencia y fichajes <span>· entradas, salidas, descansos y novedades</span></div></div>
+      <div data-a style="transition-delay:.3s"><div class="lg frame"><div class="shot" style="height:236px" data-cap="Tareas y Roles"><img src="capturas/workforce.jpg" alt=""></div></div><div class="cap">Tareas y roles <span>· asignación en piso, con responsable</span></div></div>
+    </div>
+  </div>
+  <div class="foot"><span class="brand"><img src="capturas/logo.png" alt=""><b>DAILY</b></span><span>Reglas del generador de turnos configurables; validar con el área jurídica de cada empresa</span></div>
+</section>
+
+<!-- 10 · CALIDAD -->
+<section class="slide" id="s10" data-title="Calidad, Vencimientos y Mermas">
+  <div class="kicker" data-a><span class="num">09</span>Calidad, vencimientos y mermas</div>
+  <h2 data-a>Actuar antes de que el producto se pierda</h2>
+  <div class="lg" data-a style="margin-top:34px;padding:18px 16px"><div class="flow"><div class="st"><div class="ico solid y"><svg viewBox="0 0 384 512" aria-hidden="true"><path d="M32 0C14.3 0 0 14.3 0 32S14.3 64 32 64l0 11c0 42.4 16.9 83.1 46.9 113.1l67.9 67.9-67.9 67.9C48.9 353.9 32 394.6 32 437l0 11c-17.7 0-32 14.3-32 32s14.3 32 32 32l320 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l0-11c0-42.4-16.9-83.1-46.9-113.1l-67.9-67.9 67.9-67.9c30-30 46.9-70.7 46.9-113.1l0-11c17.7 0 32-14.3 32-32S369.7 0 352 0L32 0zM96 75l0-11 192 0 0 11c0 19-5.6 37.4-16 53L112 128c-10.3-15.6-16-34-16-53zm16 309c3.5-5.3 7.6-10.3 12.1-14.9l67.9-67.9 67.9 67.9c4.6 4.6 8.6 9.6 12.2 14.9L112 384z"/></svg></div><h5>Próximo a vencer</h5><p>Lotes identificados por fecha.</p></div><div class="arrow"><svg viewBox="0 0 320 512" aria-hidden="true"><path d="M311.1 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L243.2 256 73.9 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"/></svg></div><div class="st"><div class="ico solid y"><svg viewBox="0 0 576 512" aria-hidden="true"><path d="M150.6 41.4c-12.5-12.5-32.8-12.5-45.3 0l-96 96c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L96 141.3 96 448c0 17.7 14.3 32 32 32s32-14.3 32-32l0-306.7 41.4 41.4c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3l-96-96zM320 480l32 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-32 0c-17.7 0-32 14.3-32 32s14.3 32 32 32zm0-128l96 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-96 0c-17.7 0-32 14.3-32 32s14.3 32 32 32zm0-128l160 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-160 0c-17.7 0-32 14.3-32 32s14.3 32 32 32zm0-128l224 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32z"/></svg></div><h5>Priorización</h5><p>FEFO y riesgo por lote.</p></div><div class="arrow"><svg viewBox="0 0 320 512" aria-hidden="true"><path d="M311.1 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L243.2 256 73.9 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"/></svg></div><div class="st"><div class="ico solid g"><svg viewBox="0 0 576 512" aria-hidden="true"><path d="M401.2 39.1L549.4 189.4c27.7 28.1 27.7 73.1 0 101.2L393 448.9c-9.3 9.4-24.5 9.5-33.9 .2s-9.5-24.5-.2-33.9L515.3 256.8c9.2-9.3 9.2-24.4 0-33.7L367 72.9c-9.3-9.4-9.2-24.6 .2-33.9s24.6-9.2 33.9 .2zM32.1 229.5L32.1 96c0-35.3 28.7-64 64-64l133.5 0c17 0 33.3 6.7 45.3 18.7l144 144c25 25 25 65.5 0 90.5L285.4 418.7c-25 25-65.5 25-90.5 0l-144-144c-12-12-18.7-28.3-18.7-45.3zm144-85.5a32 32 0 1 0 -64 0 32 32 0 1 0 64 0z"/></svg></div><h5>Acción preventiva</h5><p>Rebaja, traslado o cuarentena.</p></div><div class="arrow"><svg viewBox="0 0 320 512" aria-hidden="true"><path d="M311.1 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L243.2 256 73.9 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"/></svg></div><div class="st"><div class="ico solid r"><svg viewBox="0 0 512 512" aria-hidden="true"><path d="M149.1 64.8L138.7 96 64 96C28.7 96 0 124.7 0 160L0 416c0 35.3 28.7 64 64 64l384 0c35.3 0 64-28.7 64-64l0-256c0-35.3-28.7-64-64-64l-74.7 0-10.4-31.2C356.4 45.2 338.1 32 317.4 32L194.6 32c-20.7 0-39 13.2-45.5 32.8zM256 192a96 96 0 1 1 0 192 96 96 0 1 1 0-192z"/></svg></div><h5>Merma con evidencia</h5><p>Registro con fotografía y causa.</p></div><div class="arrow"><svg viewBox="0 0 320 512" aria-hidden="true"><path d="M311.1 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L243.2 256 73.9 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"/></svg></div><div class="st"><div class="ico solid g"><svg viewBox="0 0 640 512" aria-hidden="true"><path d="M286 304c98.5 0 178.3 79.8 178.3 178.3 0 16.4-13.3 29.7-29.7 29.7L78 512c-16.4 0-29.7-13.3-29.7-29.7 0-98.5 79.8-178.3 178.3-178.3l59.4 0zM585.7 105.9c7.8-10.7 22.8-13.1 33.5-5.3s13.1 22.8 5.3 33.5L522.1 274.9c-4.2 5.7-10.7 9.4-17.7 9.8s-14-2.2-18.9-7.3l-46.4-48c-9.2-9.5-9-24.7 .6-33.9 9.5-9.2 24.7-8.9 33.9 .6l26.5 27.4 85.6-117.7zM256.3 248a120 120 0 1 1 0-240 120 120 0 1 1 0 240z"/></svg></div><h5>Aprobación</h5><p>Según el nivel de autorización.</p></div><div class="arrow"><svg viewBox="0 0 320 512" aria-hidden="true"><path d="M311.1 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L243.2 256 73.9 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"/></svg></div><div class="st"><div class="ico solid g"><svg viewBox="0 0 576 512" aria-hidden="true"><path d="M288-16c-13.3 0-24 10.7-24 24l0 12-1.8 0c-36.6 0-66.2 29.7-66.2 66.2 0 33.4 24.9 61.6 58 65.7l61 7.6c5.1 .6 9 5 9 10.2 0 5.7-4.6 10.2-10.2 10.2L240 180c-15.5 0-28 12.5-28 28s12.5 28 28 28l24 0 0 12c0 13.3 10.7 24 24 24s24-10.7 24-24l0-12 1.8 0c36.6 0 66.2-29.7 66.2-66.2 0-33.4-24.9-61.6-58-65.7l-61-7.6c-5.1-.6-9-5-9-10.2 0-5.7 4.6-10.2 10.2-10.2L328 76c15.5 0 28-12.5 28-28s-12.5-28-28-28l-16 0 0-12c0-13.3-10.7-24-24-24zM109.3 341.5L66.7 384 32 384c-17.7 0-32 14.3-32 32l0 64c0 17.7 14.3 32 32 32l320.5 0c29 0 57.3-9.3 80.7-26.5l126.6-93.3c17.8-13.1 21.6-38.1 8.5-55.9s-38.1-21.6-55.9-8.5L392.6 416 280 416c-13.3 0-24-10.7-24-24s10.7-24 24-24l72 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-152.2 0c-33.9 0-66.5 13.5-90.5 37.5z"/></svg></div><h5>Recuperación</h5><p>Reclamo al proveedor cuando aplica.</p></div></div></div>
+  <div class="cols-2" style="margin-top:26px">
+    <div data-a style="transition-delay:.15s"><div class="lg frame"><div class="shot" style="height:400px" data-cap="Calidad y Vencimientos"><img src="capturas/quality.jpg" alt=""></div></div><div class="cap">Calidad y vencimientos <span>· FEFO, cuarentena y cadena de frío</span></div></div>
+    <div data-a style="transition-delay:.25s"><div class="lg frame"><div class="shot" style="height:400px" data-cap="Control de Mermas"><img src="capturas/waste.jpg" alt=""></div></div><div class="cap">Control de mermas <span>· causas, aprobaciones y recuperación</span></div></div>
+  </div>
+  <div class="foot"><span class="brand"><img src="capturas/logo.png" alt=""><b>DAILY</b></span><span class="real"><i></i>Pantallas reales · datos de demostración</span></div>
+</section>
+
+<!-- 11 · MÓVIL -->
+<section class="slide" id="s11" data-title="Aplicación móvil y escáner UPC">
+  <div class="kicker" data-a><span class="num">10</span>Móvil y escáner</div>
+  <h2 data-a>La operación, desde el teléfono del equipo</h2>
+  <div class="wrap">
+    <div class="phones"><div data-a style="transition-delay:0.1s"><div class="phone"><div class="shot" data-cap="Web móvil · Hoy"><img src="capturas/m_home.jpg" alt="Web móvil: Hoy"></div></div><div class="cap">Hoy</div></div><div data-a style="transition-delay:0.18s"><div class="phone"><div class="shot" data-cap="Web móvil · Escáner"><img src="capturas/m_scan.jpg" alt="Web móvil: Escáner"></div></div><div class="cap">Escáner</div></div><div data-a style="transition-delay:0.26s"><div class="phone"><div class="shot" data-cap="Web móvil · Inventario"><img src="capturas/m_inv.jpg" alt="Web móvil: Inventario"></div></div><div class="cap">Inventario</div></div><div data-a style="transition-delay:0.33999999999999997s"><div class="phone"><div class="shot" data-cap="Web móvil · Tareas"><img src="capturas/m_tasks.jpg" alt="Web móvil: Tareas"></div></div><div class="cap">Tareas</div></div></div>
+    <div class="codes lg" data-a style="transition-delay:.35s">
+      <h3>Escáner de códigos</h3>
+      <div class="barcode"></div>
+      <div class="row"><div class="ico solid"><svg viewBox="0 0 448 512" aria-hidden="true"><path d="M32 32C14.3 32 0 46.3 0 64L0 448c0 17.7 14.3 32 32 32s32-14.3 32-32L64 64c0-17.7-14.3-32-32-32zm88 0c-13.3 0-24 10.7-24 24l0 400c0 13.3 10.7 24 24 24s24-10.7 24-24l0-400c0-13.3-10.7-24-24-24zm72 32l0 384c0 17.7 14.3 32 32 32s32-14.3 32-32l0-384c0-17.7-14.3-32-32-32s-32 14.3-32 32zm208-8l0 400c0 13.3 10.7 24 24 24s24-10.7 24-24l0-400c0-13.3-10.7-24-24-24s-24 10.7-24 24zm-96 0l0 400c0 13.3 10.7 24 24 24s24-10.7 24-24l0-400c0-13.3-10.7-24-24-24s-24 10.7-24 24z"/></svg></div><div><h5>EAN-13 / UPC</h5><p>Validación del dígito verificador.</p></div></div><div class="row"><div class="ico solid"><svg viewBox="0 0 448 512" aria-hidden="true"><path d="M64 160l64 0 0-64-64 0 0 64zM0 80C0 53.5 21.5 32 48 32l96 0c26.5 0 48 21.5 48 48l0 96c0 26.5-21.5 48-48 48l-96 0c-26.5 0-48-21.5-48-48L0 80zM64 416l64 0 0-64-64 0 0 64zM0 336c0-26.5 21.5-48 48-48l96 0c26.5 0 48 21.5 48 48l0 96c0 26.5-21.5 48-48 48l-96 0c-26.5 0-48-21.5-48-48l0-96zM320 96l0 64 64 0 0-64-64 0zM304 32l96 0c26.5 0 48 21.5 48 48l0 96c0 26.5-21.5 48-48 48l-96 0c-26.5 0-48-21.5-48-48l0-96c0-26.5 21.5-48 48-48zM288 352a32 32 0 1 1 0-64 32 32 0 1 1 0 64zm0 64c17.7 0 32 14.3 32 32s-14.3 32-32 32-32-14.3-32-32 14.3-32 32-32zm96 32c0-17.7 14.3-32 32-32s32 14.3 32 32-14.3 32-32 32-32-14.3-32-32zm32-96a32 32 0 1 1 0-64 32 32 0 1 1 0 64zm-32 32a32 32 0 1 1 -64 0 32 32 0 1 1 64 0z"/></svg></div><div><h5>GS1-128</h5><p>Lee GTIN, lote y vencimiento del mismo código.</p></div></div><div class="row"><div class="ico solid"><svg viewBox="0 0 512 512" aria-hidden="true"><path d="M0 416l0-208 136.2 0c13.5-20.2 32-36.8 53.7-48L0 160 0 125.7c0-35.3 28.7-64 64-64l.1 0C65.3 45.1 79.1 32 96 32l32 0c16.9 0 30.7 13.1 31.9 29.7l32.1 0 51.2-23.8c8.4-3.9 17.6-6 26.9-6L448 32c35.3 0 64 28.7 64 64l0 64-190 0c21.7 11.2 40.2 27.8 53.7 48l136.2 0 0 208c0 35.3-28.7 64-64 64L64 480c-35.3 0-64-28.7-64-64zM256 192a96.1 96.1 0 1 0 0 192.1 96.1 96.1 0 1 0 0-192.1z"/></svg></div><div><h5>Cámara o lector</h5><p>Cámara del teléfono o lector en modo teclado.</p></div></div><div class="row"><div class="ico solid"><svg viewBox="0 0 512 512" aria-hidden="true"><path d="M133.8 36.3c10.9 7.6 13.5 22.6 5.9 33.4l-56 80c-4.1 5.8-10.5 9.5-17.6 10.1S52 158 47 153L7 113C-2.3 103.6-2.3 88.4 7 79S31.6 69.7 41 79l19.8 19.8 39.6-56.6c7.6-10.9 22.6-13.5 33.4-5.9zm0 160c10.9 7.6 13.5 22.6 5.9 33.4l-56 80c-4.1 5.8-10.5 9.5-17.6 10.1S52 318 47 313L7 273c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l19.8 19.8 39.6-56.6c7.6-10.9 22.6-13.5 33.4-5.9zM224 96c0-17.7 14.3-32 32-32l224 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-224 0c-17.7 0-32-14.3-32-32zm0 160c0-17.7 14.3-32 32-32l224 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-224 0c-17.7 0-32-14.3-32-32zM160 416c0-17.7 14.3-32 32-32l288 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-288 0c-17.7 0-32-14.3-32-32zM64 376a40 40 0 1 1 0 80 40 40 0 1 1 0-80z"/></svg></div><div><h5>Sesiones guiadas</h5><p>Conteo, movimiento, recepción contra OC y preparación de pedido.</p></div></div>
+    </div>
+  </div>
+  <div class="foot"><span class="brand"><img src="capturas/logo.png" alt=""><b>DAILY</b></span><span>Web móvil desde el navegador del teléfono · publicación en tiendas de aplicaciones no incluida</span></div>
+</section>
+
+<!-- 12 · CASO -->
+<section class="slide" id="s12" data-title="Flujo de una operación real">
+  <div class="kicker" data-a><span class="num">11</span>Una operación de principio a fin</div>
+  <h2 data-a>Se reciben 10, se cuentan 8: así responde DAILY</h2>
+  <div class="steps" id="caseSteps" data-a></div>
+  <div class="stage2" data-a style="transition-delay:.15s">
+    <div class="story lg" id="caseStory"></div>
+    <div class="lg frame"><div class="shot" id="caseShot" data-cap=""><img src="capturas/case_producto.jpg" alt=""></div></div>
+  </div>
+  <div class="foot"><span class="brand"><img src="capturas/logo.png" alt=""><b>DAILY</b></span><span>Caso de demostración ejecutado con la lógica real de DAILY sobre datos ficticios</span></div>
+</section>
+
+<!-- 13 · BENEFICIOS -->
+<section class="slide" id="s13" data-title="Beneficios empresariales">
+  <div class="kicker" data-a><span class="num">12</span>Beneficios</div>
+  <h2 data-a>Del registro disperso al control operativo</h2>
+  <div class="wrap">
+    <div data-a style="transition-delay:.1s" id="baWrap" data-mode="after">
+      <div class="seg lg"><button class="b" data-m="before">Antes</button><button class="a on" data-m="after">Con DAILY</button></div>
+      <div class="rows"><div class="rowc lg"><b>Inventario</b><div class="txt b"><svg viewBox="0 0 512 512" aria-hidden="true"><path d="M256 512a256 256 0 1 0 0-512 256 256 0 1 0 0 512zM167 167c9.4-9.4 24.6-9.4 33.9 0l55 55 55-55c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-55 55 55 55c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-55-55-55 55c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l55-55-55-55c-9.4-9.4-9.4-24.6 0-33.9z"/></svg><span>Diferencias que aparecen al cierre del mes</span></div><div class="txt a"><svg viewBox="0 0 512 512" aria-hidden="true"><path d="M256 512a256 256 0 1 1 0-512 256 256 0 1 1 0 512zM374 145.7c-10.7-7.8-25.7-5.4-33.5 5.3L221.1 315.2 169 263.1c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l72 72c5 5 11.8 7.5 18.8 7s13.4-4.1 17.5-9.8L379.3 179.2c7.8-10.7 5.4-25.7-5.3-33.5z"/></svg><span>La diferencia aparece al registrar el conteo</span></div></div><div class="rowc lg"><b>Pérdidas</b><div class="txt b"><svg viewBox="0 0 512 512" aria-hidden="true"><path d="M256 512a256 256 0 1 0 0-512 256 256 0 1 0 0 512zM167 167c9.4-9.4 24.6-9.4 33.9 0l55 55 55-55c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-55 55 55 55c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-55-55-55 55c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l55-55-55-55c-9.4-9.4-9.4-24.6 0-33.9z"/></svg><span>Investigaciones en planillas y correos</span></div><div class="txt a"><svg viewBox="0 0 512 512" aria-hidden="true"><path d="M256 512a256 256 0 1 1 0-512 256 256 0 1 1 0 512zM374 145.7c-10.7-7.8-25.7-5.4-33.5 5.3L221.1 315.2 169 263.1c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l72 72c5 5 11.8 7.5 18.8 7s13.4-4.1 17.5-9.8L379.3 179.2c7.8-10.7 5.4-25.7-5.3-33.5z"/></svg><span>Expediente con evidencia, responsable y plazo</span></div></div><div class="rowc lg"><b>Vencimientos</b><div class="txt b"><svg viewBox="0 0 512 512" aria-hidden="true"><path d="M256 512a256 256 0 1 0 0-512 256 256 0 1 0 0 512zM167 167c9.4-9.4 24.6-9.4 33.9 0l55 55 55-55c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-55 55 55 55c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-55-55-55 55c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l55-55-55-55c-9.4-9.4-9.4-24.6 0-33.9z"/></svg><span>Producto vencido en góndola</span></div><div class="txt a"><svg viewBox="0 0 512 512" aria-hidden="true"><path d="M256 512a256 256 0 1 1 0-512 256 256 0 1 1 0 512zM374 145.7c-10.7-7.8-25.7-5.4-33.5 5.3L221.1 315.2 169 263.1c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l72 72c5 5 11.8 7.5 18.8 7s13.4-4.1 17.5-9.8L379.3 179.2c7.8-10.7 5.4-25.7-5.3-33.5z"/></svg><span>Lotes priorizados antes de vencer</span></div></div><div class="rowc lg"><b>Celulares</b><div class="txt b"><svg viewBox="0 0 512 512" aria-hidden="true"><path d="M256 512a256 256 0 1 0 0-512 256 256 0 1 0 0 512zM167 167c9.4-9.4 24.6-9.4 33.9 0l55 55 55-55c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-55 55 55 55c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-55-55-55 55c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l55-55-55-55c-9.4-9.4-9.4-24.6 0-33.9z"/></svg><span>Equipos de alto valor sin rastro individual</span></div><div class="txt a"><svg viewBox="0 0 512 512" aria-hidden="true"><path d="M256 512a256 256 0 1 1 0-512 256 256 0 1 1 0 512zM374 145.7c-10.7-7.8-25.7-5.4-33.5 5.3L221.1 315.2 169 263.1c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l72 72c5 5 11.8 7.5 18.8 7s13.4-4.1 17.5-9.8L379.3 179.2c7.8-10.7 5.4-25.7-5.3-33.5z"/></svg><span>Cada IMEI con estado, ubicación y custodio</span></div></div><div class="rowc lg"><b>Personal</b><div class="txt b"><svg viewBox="0 0 512 512" aria-hidden="true"><path d="M256 512a256 256 0 1 0 0-512 256 256 0 1 0 0 512zM167 167c9.4-9.4 24.6-9.4 33.9 0l55 55 55-55c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-55 55 55 55c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-55-55-55 55c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l55-55-55-55c-9.4-9.4-9.4-24.6 0-33.9z"/></svg><span>Turnos fijos sin mirar la demanda</span></div><div class="txt a"><svg viewBox="0 0 512 512" aria-hidden="true"><path d="M256 512a256 256 0 1 1 0-512 256 256 0 1 1 0 512zM374 145.7c-10.7-7.8-25.7-5.4-33.5 5.3L221.1 315.2 169 263.1c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l72 72c5 5 11.8 7.5 18.8 7s13.4-4.1 17.5-9.8L379.3 179.2c7.8-10.7 5.4-25.7-5.3-33.5z"/></svg><span>Cobertura por área frente a la venta proyectada</span></div></div><div class="rowc lg"><b>Dirección</b><div class="txt b"><svg viewBox="0 0 512 512" aria-hidden="true"><path d="M256 512a256 256 0 1 0 0-512 256 256 0 1 0 0 512zM167 167c9.4-9.4 24.6-9.4 33.9 0l55 55 55-55c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-55 55 55 55c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-55-55-55 55c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l55-55-55-55c-9.4-9.4-9.4-24.6 0-33.9z"/></svg><span>Cada área con sus propios números</span></div><div class="txt a"><svg viewBox="0 0 512 512" aria-hidden="true"><path d="M256 512a256 256 0 1 1 0-512 256 256 0 1 1 0 512zM374 145.7c-10.7-7.8-25.7-5.4-33.5 5.3L221.1 315.2 169 263.1c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l72 72c5 5 11.8 7.5 18.8 7s13.4-4.1 17.5-9.8L379.3 179.2c7.8-10.7 5.4-25.7-5.3-33.5z"/></svg><span>Un panel con los mismos indicadores para la red</span></div></div></div>
+    </div>
+    <div class="calc lg" data-a style="transition-delay:.25s">
+      <h3>¿Cuánto vale reducir la merma?</h3>
+      <label>Ventas mensuales <output id="cSales"></output><input type="range" id="rSales" min="200000" max="20000000" step="100000" value="1000000"></label>
+      <label>Merma actual <output id="cNow"></output><input type="range" id="rNow" min="0.5" max="5" step="0.1" value="2"></label>
+      <label>Merma objetivo <output id="cGoal"></output><input type="range" id="rGoal" min="0.2" max="5" step="0.1" value="1.5"></label>
+      <div class="bars"><div id="bNow" style="background:linear-gradient(180deg,#FF7A7E,var(--r))"><span id="lNow"></span></div><div id="bGoal" style="background:linear-gradient(180deg,var(--g-m),var(--g-d))"><span id="lGoal"></span></div></div>
+      <div class="res"><small>Diferencia mensual estimada</small><div class="v" id="cRes"></div></div>
+      <p class="note">Ejemplo ilustrativo. No representa resultados reales ni garantiza ahorros.</p>
+    </div>
+  </div>
+  <div class="foot"><span class="brand"><img src="capturas/logo.png" alt=""><b>DAILY</b></span><span>Los resultados se miden en el piloto, con línea base del cliente</span></div>
+</section>
+
+<!-- 14 · ARQUITECTURA -->
+<section class="slide" id="s14" data-title="Arquitectura y tecnologías">
+  <div class="kicker" data-a><span class="num">13</span>Arquitectura</div>
+  <h2 data-a>Construida para operar, auditar e integrarse</h2>
+  <div class="arch">
+    <div><div class="layer lg" data-a style="transition-delay:0s"><div><h5>Canales</h5><h4>Dónde trabaja el equipo</h4></div><div class="items"><span class="chip">Web de escritorio</span><span class="chip">Web móvil</span><span class="chip">Escáner por cámara o lector</span><span class="chip">POS DAILY</span><span class="chip">Importación CSV / Excel</span><span class="chip">API REST</span></div></div><div class="layer lg" data-a style="transition-delay:0.08s"><div><h5>Aplicación</h5><h4>Lógica de negocio</h4></div><div class="items"><span class="chip">PHP 8.5</span><span class="chip">Slim 4</span><span class="chip">Blade</span><span class="chip">PHP-DI</span><span class="chip">Servicios de dominio por módulo</span></div></div><div class="layer lg" data-a style="transition-delay:0.16s"><div><h5>Datos</h5><h4>Una sola fuente de verdad</h4></div><div class="items"><span class="chip">SQLite</span><span class="chip">Migraciones versionadas</span><span class="chip">Libro de movimientos con cadena hash</span><span class="chip">Bitácora de auditoría</span></div></div><div class="layer lg" data-a style="transition-delay:0.24s"><div><h5>Interfaz</h5><h4>Visualización y captura</h4></div><div class="items"><span class="chip">Bootstrap</span><span class="chip">Chart.js</span><span class="chip">DataTables</span><span class="chip">ZXing (lectura de códigos)</span><span class="chip">bwip-js (etiquetas)</span><span class="chip">FullCalendar</span></div></div></div>
+    <div data-a style="transition-delay:.3s">
+      <div class="stats"><div class="lg"><div class="v" data-count="101">101</div><small>servicios de dominio</small></div><div class="lg"><div class="v" data-count="321">321</div><small>migraciones de base de datos</small></div><div class="lg"><div class="v" data-count="128">128</div><small>vistas de la aplicación</small></div><div class="lg"><div class="v" data-count="10">10</div><small>secciones de negocio en el menú</small></div></div>
+      <div class="sec lg"><h4>Control y seguridad</h4><ul><li><svg viewBox="0 0 384 512" aria-hidden="true"><path d="M128 96l0 64 128 0 0-64c0-35.3-28.7-64-64-64s-64 28.7-64 64zM64 160l0-64C64 25.3 121.3-32 192-32S320 25.3 320 96l0 64c35.3 0 64 28.7 64 64l0 224c0 35.3-28.7 64-64 64L64 512c-35.3 0-64-28.7-64-64L0 224c0-35.3 28.7-64 64-64z"/></svg><span>Roles y permisos por módulo</span></li><li><svg viewBox="0 0 384 512" aria-hidden="true"><path d="M128 96l0 64 128 0 0-64c0-35.3-28.7-64-64-64s-64 28.7-64 64zM64 160l0-64C64 25.3 121.3-32 192-32S320 25.3 320 96l0 64c35.3 0 64 28.7 64 64l0 224c0 35.3-28.7 64-64 64L64 512c-35.3 0-64-28.7-64-64L0 224c0-35.3 28.7-64 64-64z"/></svg><span>Doble aprobación en ajustes sensibles</span></li><li><svg viewBox="0 0 384 512" aria-hidden="true"><path d="M128 96l0 64 128 0 0-64c0-35.3-28.7-64-64-64s-64 28.7-64 64zM64 160l0-64C64 25.3 121.3-32 192-32S320 25.3 320 96l0 64c35.3 0 64 28.7 64 64l0 224c0 35.3-28.7 64-64 64L64 512c-35.3 0-64-28.7-64-64L0 224c0-35.3 28.7-64 64-64z"/></svg><span>IMEI enmascarado; revelarlo requiere permiso</span></li><li><svg viewBox="0 0 384 512" aria-hidden="true"><path d="M128 96l0 64 128 0 0-64c0-35.3-28.7-64-64-64s-64 28.7-64 64zM64 160l0-64C64 25.3 121.3-32 192-32S320 25.3 320 96l0 64c35.3 0 64 28.7 64 64l0 224c0 35.3-28.7 64-64 64L64 512c-35.3 0-64-28.7-64-64L0 224c0-35.3 28.7-64 64-64z"/></svg><span>Libro de movimientos con integridad verificable</span></li><li><svg viewBox="0 0 384 512" aria-hidden="true"><path d="M128 96l0 64 128 0 0-64c0-35.3-28.7-64-64-64s-64 28.7-64 64zM64 160l0-64C64 25.3 121.3-32 192-32S320 25.3 320 96l0 64c35.3 0 64 28.7 64 64l0 224c0 35.3-28.7 64-64 64L64 512c-35.3 0-64-28.7-64-64L0 224c0-35.3 28.7-64 64-64z"/></svg><span>Bitácora de auditoría de operaciones</span></li></ul></div>
+    </div>
+  </div>
+  <div class="foot"><span class="brand"><img src="capturas/logo.png" alt=""><b>DAILY</b></span><span>Cifras del código fuente actual de DAILY</span></div>
+</section>
+
+<!-- 15 · PROPUESTA -->
+<section class="slide" id="s15" data-title="Propuesta comercial">
+  <div class="kicker" data-a><span class="num">14</span>Propuesta comercial</div>
+  <h2 data-a>Empezar en pequeño, medir y expandir</h2>
+  <div class="offers"><div class="offer lg " data-a style="transition-delay:0s"><div class="ico solid"><svg viewBox="0 0 576 512" aria-hidden="true"><path d="M0 336c0 79.5 64.5 144 144 144l304 0c70.7 0 128-57.3 128-128 0-51.6-30.5-96.1-74.5-116.3 6.7-13.1 10.5-28 10.5-43.7 0-53-43-96-96-96-17.7 0-34.2 4.8-48.4 13.1-24.1-45.8-72.2-77.1-127.6-77.1-79.5 0-144 64.5-144 144 0 8 .7 15.9 1.9 23.5-56.9 19.2-97.9 73.1-97.9 136.5z"/></svg></div><h4>Licenciamiento SaaS</h4><p>Suscripción según sucursales, usuarios y módulos.</p></div><div class="offer lg star" data-a style="transition-delay:0.06s"><div class="ico "><svg viewBox="0 0 448 512" aria-hidden="true"><path d="M288 0L128 0C110.3 0 96 14.3 96 32s14.3 32 32 32L128 215.5 7.5 426.3C2.6 435 0 444.7 0 454.7 0 486.4 25.6 512 57.3 512l333.4 0c31.6 0 57.3-25.6 57.3-57.3 0-10-2.6-19.8-7.5-28.4L320 215.5 320 64c17.7 0 32-14.3 32-32S337.7 0 320 0L288 0zM192 215.5l0-151.5 64 0 0 151.5c0 11.1 2.9 22.1 8.4 31.8l41.6 72.7-164 0 41.6-72.7c5.5-9.7 8.4-20.6 8.4-31.8z"/></svg></div><h4>Prueba piloto</h4><p>Una o dos tiendas, 30 días, medidos contra línea base.</p></div><div class="offer lg " data-a style="transition-delay:0.12s"><div class="ico solid"><svg viewBox="0 0 512 512" aria-hidden="true"><path d="M30.7 72.3C37.6 48.4 59.5 32 84.4 32l344 0c24.9 0 46.8 16.4 53.8 40.3l23.4 80.2c12.8 43.7-20.1 87.5-65.6 87.5-26.3 0-49.4-14.9-60.8-37.1-11.6 21.9-34.6 37.1-61.4 37.1-26.6 0-49.7-15-61.3-37-11.6 22-34.7 37-61.3 37-26.8 0-49.8-15.1-61.4-37.1-11.4 22.1-34.5 37.1-60.8 37.1-45.6 0-78.4-43.7-65.6-87.5L30.7 72.3zM96.4 352l320 0 0-66.4c7.6 1.6 15.5 2.4 23.5 2.4 14.3 0 28-2.6 40.5-7.2l0 151.2c0 26.5-21.5 48-48 48l-352 0c-26.5 0-48-21.5-48-48l0-151.2c12.5 4.6 26.1 7.2 40.5 7.2 8.1 0 15.9-.8 23.5-2.4l0 66.4z"/></svg></div><h4>Implementación multisucursal</h4><p>Despliegue por etapas en la red.</p></div><div class="offer lg " data-a style="transition-delay:0.18s"><div class="ico solid"><svg viewBox="0 0 576 512" aria-hidden="true"><path d="M268.9 85.2L152.3 214.8c-4.6 5.1-4.4 13 .5 17.9 30.5 30.5 80 30.5 110.5 0l31.8-31.8c4.2-4.2 9.5-6.5 14.9-6.9 6.8-.6 13.8 1.7 19 6.9L505.6 376 576 320 576 32 464 96 440.2 80.1C424.4 69.6 405.9 64 386.9 64l-70.4 0c-1.1 0-2.3 0-3.4 .1-16.9 .9-32.8 8.5-44.2 21.1zM116.6 182.7L223.4 64 183.8 64c-25.5 0-49.9 10.1-67.9 28.1L112 96 0 32 0 320 156.4 450.3c23 19.2 52 29.7 81.9 29.7l15.7 0-7-7c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l41 41 9 0c19.1 0 37.8-4.3 54.8-12.3L359 441c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l32 32 17.5-17.5c8.9-8.9 11.5-21.8 7.6-33.1l-137.9-136.8-14.9 14.9c-49.3 49.3-129.1 49.3-178.4 0-23-23-23.9-59.9-2.2-84z"/></svg></div><h4>Colaboración estratégica</h4><p>Acuerdo a medida para grandes cadenas.</p></div></div>
+  <div class="road lg" data-a style="transition-delay:.3s"><h6>Implementación propuesta</h6><ol><li class="">Diagnóstico operativo</li><li class="">Definición del alcance</li><li class="">Configuración</li><li class="">Carga e integración</li><li class="">Capacitación</li><li class="pi">Prueba piloto</li><li class="">Medición de resultados</li><li class="">Expansión a sucursales</li></ol></div>
+  <div class="pilot lg" data-a style="transition-delay:.4s"><div class="v">30<small>días de piloto</small></div><div><div style="font-size:18px;color:var(--muted);margin-bottom:12px">Línea base, operación acompañada y medición final con seis indicadores:</div><div class="ind"><span class="chip g"><svg viewBox="0 0 512 512" aria-hidden="true"><path d="M448 256a192 192 0 1 0 -384 0 192 192 0 1 0 384 0zM0 256a256 256 0 1 1 512 0 256 256 0 1 1 -512 0zm256 80a80 80 0 1 0 0-160 80 80 0 1 0 0 160zm0-224a144 144 0 1 1 0 288 144 144 0 1 1 0-288zM224 256a32 32 0 1 1 64 0 32 32 0 1 1 -64 0z"/></svg> Exactitud de inventario</span><span class="chip g"><svg viewBox="0 0 640 512" aria-hidden="true"><path d="M519.8 62.4c16.8-5.6 25.8-23.7 20.2-40.5S516.3-3.9 499.6 1.6l-113 37.7c-13.9-23.5-39.6-39.3-68.9-39.3-44.2 0-80 35.8-80 80 0 3 .2 5.9 .5 8.8L115.6 129.6c-16.8 5.6-25.8 23.7-20.2 40.5s23.7 25.8 40.5 20.2l135.5-45.2c4.5 3.2 9.3 5.9 14.4 8.2l0 326.7c0 17.7 14.3 32 32 32l192 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-160 0 0-294.7c21-9.2 37.2-27 44.2-49l125.9-42zM437.3 288l72.4-124.2 72.4 124.2-144.9 0zm72.4 96c62.9 0 115.2-34 126-78.9 2.6-11-1-22.3-6.7-32.1L533.8 109.8c-5-8.6-14.2-13.8-24.1-13.8s-19.1 5.3-24.1 13.8L390.4 273.1c-5.7 9.8-9.3 21.1-6.7 32.1 10.8 44.8 63.1 78.9 126 78.9zM126.8 291.8l72.4 124.2-144.9 0 72.4-124.2zM.9 433.1C11.7 478 64 512 126.8 512s115.2-34 126-78.9c2.6-11-1-22.3-6.7-32.1L150.9 237.8c-5-8.6-14.2-13.8-24.1-13.8s-19.1 5.3-24.1 13.8L7.6 401.1c-5.7 9.8-9.3 21.1-6.7 32.1z"/></svg> Diferencias detectadas</span><span class="chip g"><svg viewBox="0 0 448 512" aria-hidden="true"><path d="M168.5 0c-13.3 0-24 10.7-24 24s10.7 24 24 24l32 0 0 25.3c-108 11.9-192 103.5-192 214.7 0 119.3 96.7 216 216 216s216-96.7 216-216c0-39.8-10.8-77.1-29.6-109.2l28.2-28.2c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-23.4 23.4c-32.9-30.2-75.2-50.3-122-55.5l0-25.3 32 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-112 0zm80 184l0 104c0 13.3-10.7 24-24 24s-24-10.7-24-24l0-104c0-13.3 10.7-24 24-24s24 10.7 24 24z"/></svg> Tiempo de investigación</span><span class="chip g"><svg viewBox="0 0 512 512" aria-hidden="true"><path d="M133.8 36.3c10.9 7.6 13.5 22.6 5.9 33.4l-56 80c-4.1 5.8-10.5 9.5-17.6 10.1S52 158 47 153L7 113C-2.3 103.6-2.3 88.4 7 79S31.6 69.7 41 79l19.8 19.8 39.6-56.6c7.6-10.9 22.6-13.5 33.4-5.9zm0 160c10.9 7.6 13.5 22.6 5.9 33.4l-56 80c-4.1 5.8-10.5 9.5-17.6 10.1S52 318 47 313L7 273c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l19.8 19.8 39.6-56.6c7.6-10.9 22.6-13.5 33.4-5.9zM224 96c0-17.7 14.3-32 32-32l224 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-224 0c-17.7 0-32-14.3-32-32zm0 160c0-17.7 14.3-32 32-32l224 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-224 0c-17.7 0-32-14.3-32-32zM160 416c0-17.7 14.3-32 32-32l288 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-288 0c-17.7 0-32-14.3-32-32zM64 376a40 40 0 1 1 0 80 40 40 0 1 1 0-80z"/></svg> Cumplimiento de tareas</span><span class="chip g"><svg viewBox="0 0 448 512" aria-hidden="true"><path d="M128 0c17.7 0 32 14.3 32 32l0 32 128 0 0-32c0-17.7 14.3-32 32-32s32 14.3 32 32l0 32 32 0c35.3 0 64 28.7 64 64l0 288c0 35.3-28.7 64-64 64L64 480c-35.3 0-64-28.7-64-64L0 128C0 92.7 28.7 64 64 64l32 0 0-32c0-17.7 14.3-32 32-32zM291.9 220.1c-9.4-9.4-24.6-9.4-33.9 0l-33.9 33.9-33.9-33.9c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l33.9 33.9-33.9 33.9c-9.4 9.4-9.4 24.6 0 33.9s24.6 9.4 33.9 0l33.9-33.9 33.9 33.9c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-33.9-33.9 33.9-33.9c9.4-9.4 9.4-24.6 0-33.9z"/></svg> Vencimientos identificados</span><span class="chip g"><svg viewBox="0 0 384 512" aria-hidden="true"><path d="M16 64C16 28.7 44.7 0 80 0L304 0c35.3 0 64 28.7 64 64l0 384c0 35.3-28.7 64-64 64L80 512c-35.3 0-64-28.7-64-64L16 64zM128 440c0 13.3 10.7 24 24 24l80 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-80 0c-13.3 0-24 10.7-24 24zM304 64l-224 0 0 304 224 0 0-304z"/></svg> Uso de la plataforma</span></div></div></div>
+  <div class="foot"><span class="brand"><img src="capturas/logo.png" alt=""><b>DAILY</b></span><span>Condiciones y valores se definen después del diagnóstico · sin implementaciones con clientes a la fecha</span></div>
+</section>
+
+<!-- 16 · CIERRE -->
+<section class="slide" id="s16" data-title="Cierre">
+  <div class="mosaic"><img src="capturas/kpis.jpg" alt=""><img src="capturas/sales.jpg" alt=""><img src="capturas/stockoverview.jpg" alt=""><img src="capturas/loss_prevention.jpg" alt=""><img src="capturas/devices.jpg" alt=""><img src="capturas/mrp.jpg" alt=""><img src="capturas/quality.jpg" alt=""><img src="capturas/scheduling.jpg" alt=""><img src="capturas/waste.jpg" alt=""><img src="capturas/alerts.jpg" alt=""><img src="capturas/location_map.jpg" alt=""><img src="capturas/kardex.jpg" alt=""></div><div class="veil"></div>
+  <div class="logo" data-a><img src="capturas/logo.png" alt="Logo DAILY"></div>
+  <h2 data-a style="transition-delay:.1s">De los datos a las decisiones.<br><span class="grad">De las decisiones a los resultados.</span></h2>
+  <p class="lead" data-a style="transition-delay:.2s">Agendemos un diagnóstico operativo y una demostración guiada con las preguntas de su equipo.</p>
+  <div class="cta" data-a style="transition-delay:.3s"><div class="lg primary"><svg viewBox="0 0 448 512" aria-hidden="true"><path d="M320 0c17.7 0 32 14.3 32 32l0 32 32 0c35.3 0 64 28.7 64 64l0 288c0 35.3-28.7 64-64 64L64 480c-35.3 0-64-28.7-64-64L0 128C0 92.7 28.7 64 64 64l32 0 0-32c0-17.7 14.3-32 32-32s32 14.3 32 32l0 32 128 0 0-32c0-17.7 14.3-32 32-32zm22 161.7c-10.7-7.8-25.7-5.4-33.5 5.3L189.1 331.2 137 279.1c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l72 72c5 5 11.9 7.5 18.8 7s13.4-4.1 17.5-9.8L347.3 195.2c7.8-10.7 5.4-25.7-5.3-33.5z"/></svg> Solicitar demostración</div><div class="lg"><svg viewBox="0 0 448 512" aria-hidden="true"><path d="M288 0L128 0C110.3 0 96 14.3 96 32s14.3 32 32 32L128 215.5 7.5 426.3C2.6 435 0 444.7 0 454.7 0 486.4 25.6 512 57.3 512l333.4 0c31.6 0 57.3-25.6 57.3-57.3 0-10-2.6-19.8-7.5-28.4L320 215.5 320 64c17.7 0 32-14.3 32-32S337.7 0 320 0L288 0zM192 215.5l0-151.5 64 0 0 151.5c0 11.1 2.9 22.1 8.4 31.8l41.6 72.7-164 0 41.6-72.7c5.5-9.7 8.4-20.6 8.4-31.8z"/></svg> Iniciar prueba piloto</div></div>
+  <div class="foot"><span class="brand"><img src="capturas/logo.png" alt=""><b>DAILY</b></span><span>Plataforma Inteligente de Gestión Retail</span></div>
+</section>
+
+</div></div>
+
+<div id="ui" class="lg">
+  <button id="bPrev" aria-label="Anterior"><svg viewBox="0 0 320 512" aria-hidden="true"><path d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l192 192c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256 246.6 86.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-192 192z"/></svg></button>
+  <span class="count" id="count">1 / 16</span>
+  <button id="bNext" aria-label="Siguiente"><svg viewBox="0 0 320 512" aria-hidden="true"><path d="M311.1 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L243.2 256 73.9 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"/></svg></button>
+  <button id="bOver" aria-label="Índice"><svg viewBox="0 0 448 512" aria-hidden="true"><path d="M384 96l-128 0 0 128 128 0 0-128zm64 128l0 192c0 35.3-28.7 64-64 64L64 480c-35.3 0-64-28.7-64-64L0 96C0 60.7 28.7 32 64 32l320 0c35.3 0 64 28.7 64 64l0 128zM64 288l0 128 128 0 0-128-128 0zm128-64l0-128-128 0 0 128 128 0zm64 64l0 128 128 0 0-128-128 0z"/></svg></button>
+  <button id="bFull" aria-label="Pantalla completa"><svg viewBox="0 0 448 512" aria-hidden="true"><path d="M32 32C14.3 32 0 46.3 0 64l0 96c0 17.7 14.3 32 32 32s32-14.3 32-32l0-64 64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 32zM64 352c0-17.7-14.3-32-32-32S0 334.3 0 352l0 96c0 17.7 14.3 32 32 32l96 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0 0-64zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32l64 0 0 64c0 17.7 14.3 32 32 32s32-14.3 32-32l0-96c0-17.7-14.3-32-32-32l-96 0zM448 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l96 0c17.7 0 32-14.3 32-32l0-96z"/></svg></button>
+</div>
+<div id="hint" class="chip">← → navegar · O índice · F pantalla completa</div>
+<div id="overview"><h3>Índice</h3><div class="grid" id="ovGrid"></div></div>
+<div id="lightbox"><img alt=""><p></p></div>
+
+<script>
+const DATA = {"icons":{"faChevronRight":"<svg viewBox=\"0 0 320 512\" aria-hidden=\"true\"><path d=\"M311.1 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L243.2 256 73.9 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z\"/></svg>","faEyeSlash":"<svg viewBox=\"0 0 576 512\" aria-hidden=\"true\"><path d=\"M41-24.9c-9.4-9.4-24.6-9.4-33.9 0S-2.3-.3 7 9.1l528 528c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-96.4-96.4c2.7-2.4 5.4-4.8 8-7.2 46.8-43.5 78.1-95.4 93-131.1 3.3-7.9 3.3-16.7 0-24.6-14.9-35.7-46.2-87.7-93-131.1-47.1-43.7-111.8-80.6-192.6-80.6-56.8 0-105.6 18.2-146 44.2L41-24.9zM204.5 138.7c23.5-16.8 52.4-26.7 83.5-26.7 79.5 0 144 64.5 144 144 0 31.1-9.9 59.9-26.7 83.5l-34.7-34.7c12.7-21.4 17-47.7 10.1-73.7-13.7-51.2-66.4-81.6-117.6-67.9-8.6 2.3-16.7 5.7-24 10l-34.7-34.7zM325.3 395.1c-11.9 3.2-24.4 4.9-37.3 4.9-79.5 0-144-64.5-144-144 0-12.9 1.7-25.4 4.9-37.3L69.4 139.2c-32.6 36.8-55 75.8-66.9 104.5-3.3 7.9-3.3 16.7 0 24.6 14.9 35.7 46.2 87.7 93 131.1 47.1 43.7 111.8 80.6 192.6 80.6 37.3 0 71.2-7.9 101.5-20.6l-64.2-64.2z\"/></svg>","faScaleUnbalanced":"<svg viewBox=\"0 0 640 512\" aria-hidden=\"true\"><path d=\"M519.8 62.4c16.8-5.6 25.8-23.7 20.2-40.5S516.3-3.9 499.6 1.6l-113 37.7c-13.9-23.5-39.6-39.3-68.9-39.3-44.2 0-80 35.8-80 80 0 3 .2 5.9 .5 8.8L115.6 129.6c-16.8 5.6-25.8 23.7-20.2 40.5s23.7 25.8 40.5 20.2l135.5-45.2c4.5 3.2 9.3 5.9 14.4 8.2l0 326.7c0 17.7 14.3 32 32 32l192 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-160 0 0-294.7c21-9.2 37.2-27 44.2-49l125.9-42zM437.3 288l72.4-124.2 72.4 124.2-144.9 0zm72.4 96c62.9 0 115.2-34 126-78.9 2.6-11-1-22.3-6.7-32.1L533.8 109.8c-5-8.6-14.2-13.8-24.1-13.8s-19.1 5.3-24.1 13.8L390.4 273.1c-5.7 9.8-9.3 21.1-6.7 32.1 10.8 44.8 63.1 78.9 126 78.9zM126.8 291.8l72.4 124.2-144.9 0 72.4-124.2zM.9 433.1C11.7 478 64 512 126.8 512s115.2-34 126-78.9c2.6-11-1-22.3-6.7-32.1L150.9 237.8c-5-8.6-14.2-13.8-24.1-13.8s-19.1 5.3-24.1 13.8L7.6 401.1c-5.7 9.8-9.3 21.1-6.7 32.1z\"/></svg>","faCalendarXmark":"<svg viewBox=\"0 0 448 512\" aria-hidden=\"true\"><path d=\"M128 0c17.7 0 32 14.3 32 32l0 32 128 0 0-32c0-17.7 14.3-32 32-32s32 14.3 32 32l0 32 32 0c35.3 0 64 28.7 64 64l0 288c0 35.3-28.7 64-64 64L64 480c-35.3 0-64-28.7-64-64L0 128C0 92.7 28.7 64 64 64l32 0 0-32c0-17.7 14.3-32 32-32zM291.9 220.1c-9.4-9.4-24.6-9.4-33.9 0l-33.9 33.9-33.9-33.9c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l33.9 33.9-33.9 33.9c-9.4 9.4-9.4 24.6 0 33.9s24.6 9.4 33.9 0l33.9-33.9 33.9 33.9c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-33.9-33.9 33.9-33.9c9.4-9.4 9.4-24.6 0-33.9z\"/></svg>","faMobileScreenButton":"<svg viewBox=\"0 0 384 512\" aria-hidden=\"true\"><path d=\"M16 64C16 28.7 44.7 0 80 0L304 0c35.3 0 64 28.7 64 64l0 384c0 35.3-28.7 64-64 64L80 512c-35.3 0-64-28.7-64-64L16 64zm64 0l0 304 224 0 0-304-224 0zM192 472c17.7 0 32-14.3 32-32s-14.3-32-32-32-32 14.3-32 32 14.3 32 32 32z\"/></svg>","faUsers":"<svg viewBox=\"0 0 640 512\" aria-hidden=\"true\"><path d=\"M320 16a104 104 0 1 1 0 208 104 104 0 1 1 0-208zM96 88a72 72 0 1 1 0 144 72 72 0 1 1 0-144zM0 416c0-70.7 57.3-128 128-128 12.8 0 25.2 1.9 36.9 5.4-32.9 36.8-52.9 85.4-52.9 138.6l0 16c0 11.4 2.4 22.2 6.7 32L32 480c-17.7 0-32-14.3-32-32l0-32zm521.3 64c4.3-9.8 6.7-20.6 6.7-32l0-16c0-53.2-20-101.8-52.9-138.6 11.7-3.5 24.1-5.4 36.9-5.4 70.7 0 128 57.3 128 128l0 32c0 17.7-14.3 32-32 32l-86.7 0zM472 160a72 72 0 1 1 144 0 72 72 0 1 1 -144 0zM160 432c0-88.4 71.6-160 160-160s160 71.6 160 160l0 16c0 17.7-14.3 32-32 32l-256 0c-17.7 0-32-14.3-32-32l0-16z\"/></svg>","faTruckRampBox":"<svg viewBox=\"0 0 576 512\" aria-hidden=\"true\"><path d=\"M400 32c-44.2 0-80 35.8-80 80l0 248.2-297.2 89.2C5.9 454.4-3.7 472.3 1.4 489.2s22.9 26.5 39.8 21.5l315.5-94.6 43.7 0c-.2 2.6-.4 5.3-.4 8 0 48.6 39.4 88 88 88s88-39.4 88-88l0-392-176 0zM528 424c0 22.1-17.9 40-40 40s-40-17.9-40-40 17.9-40 40-40c22.1 0 39.9 17.9 40 39.9l0 .1zM51.9 149.5C18.1 159.8-.9 195.6 9.4 229.4l28.1 91.8C47.8 355 83.6 374 117.4 363.7l91.8-28.1c33.8-10.3 52.8-46.1 42.5-79.9l-28.1-91.8c-10.3-33.8-46.1-52.8-79.9-42.5L51.9 149.5z\"/></svg>","faPuzzlePiece":"<svg viewBox=\"0 0 512 512\" aria-hidden=\"true\"><path d=\"M224 0c35.3 0 64 21.5 64 48 0 10.4-4.4 20-12 27.9-6.6 6.9-12 15.3-12 24.9 0 15 12.2 27.2 27.2 27.2l44.8 0c26.5 0 48 21.5 48 48l0 44.8c0 15 12.2 27.2 27.2 27.2 9.5 0 18-5.4 24.9-12 7.9-7.5 17.5-12 27.9-12 26.5 0 48 28.7 48 64s-21.5 64-48 64c-10.4 0-20.1-4.4-27.9-12-6.9-6.6-15.3-12-24.9-12-15 0-27.2 12.2-27.2 27.2L384 464c0 26.5-21.5 48-48 48l-56.8 0c-12.8 0-23.2-10.4-23.2-23.2 0-9.2 5.8-17.3 13.2-22.8 11.6-8.7 18.8-20.7 18.8-34 0-26.5-28.7-48-64-48s-64 21.5-64 48c0 13.3 7.2 25.3 18.8 34 7.4 5.5 13.2 13.5 13.2 22.8 0 12.8-10.4 23.2-23.2 23.2L48 512c-26.5 0-48-21.5-48-48L0 343.2c0-12.8 10.4-23.2 23.2-23.2 9.2 0 17.3 5.8 22.8 13.2 8.7 11.6 20.7 18.8 34 18.8 26.5 0 48-28.7 48-64s-21.5-64-48-64c-13.3 0-25.3 7.2-34 18.8-5.5 7.4-13.5 13.2-22.8 13.2-12.8 0-23.2-10.4-23.2-23.2L0 176c0-26.5 21.5-48 48-48l108.8 0c15 0 27.2-12.2 27.2-27.2 0-9.5-5.4-18-12-24.9-7.5-7.9-12-17.5-12-27.9 0-26.5 28.7-48 64-48z\"/></svg>","faArrowTrendDown":"<svg viewBox=\"0 0 576 512\" aria-hidden=\"true\"><path d=\"M384 352c-17.7 0-32 14.3-32 32s14.3 32 32 32l160 0c17.7 0 32-14.3 32-32l0-160c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 82.7-169.4-169.4c-12.5-12.5-32.8-12.5-45.3 0L192 242.7 54.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0L320 205.3 466.7 352 384 352z\"/></svg>","faCartFlatbed":"<svg viewBox=\"0 0 576 512\" aria-hidden=\"true\"><path d=\"M32 0C14.3 0 0 14.3 0 32S14.3 64 32 64l16 0c8.8 0 16 7.2 16 16l0 288c0 39.8 29.1 72.8 67.1 79-2 5.3-3.1 11-3.1 17 0 26.5 21.5 48 48 48s48-21.5 48-48c0-5.6-1-11-2.7-16l197.5 0c-1.8 5-2.7 10.4-2.7 16 0 26.5 21.5 48 48 48s48-21.5 48-48c0-5.6-1-11-2.7-16l34.7 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-400 0c-8.8 0-16-7.2-16-16l0-288C128 35.8 92.2 0 48 0L32 0zM224 64c-26.5 0-48 21.5-48 48l0 176c0 26.5 21.5 48 48 48l240 0c26.5 0 48-21.5 48-48l0-176c0-26.5-21.5-48-48-48L224 64z\"/></svg>","faBoxesStacked":"<svg viewBox=\"0 0 512 512\" aria-hidden=\"true\"><path d=\"M224 0l0 64c0 8.8 7.2 16 16 16l32 0c8.8 0 16-7.2 16-16l0-64 32 0c35.3 0 64 28.7 64 64l0 128c0 5.5-.7 10.9-2 16l-252 0c-1.3-5.1-2-10.5-2-16l0-128c0-35.3 28.7-64 64-64l32 0zm96 512c-11.2 0-21.8-2.9-31-8 9.5-16.5 15-35.6 15-56l0-128c0-20.4-5.5-39.5-15-56 9.2-5.1 19.7-8 31-8l32 0 0 64c0 8.8 7.2 16 16 16l32 0c8.8 0 16-7.2 16-16l0-64 32 0c35.3 0 64 28.7 64 64l0 128c0 35.3-28.7 64-64 64l-128 0zM0 320c0-35.3 28.7-64 64-64l32 0 0 64c0 8.8 7.2 16 16 16l32 0c8.8 0 16-7.2 16-16l0-64 32 0c35.3 0 64 28.7 64 64l0 128c0 35.3-28.7 64-64 64L64 512c-35.3 0-64-28.7-64-64L0 320z\"/></svg>","faCashRegister":"<svg viewBox=\"0 0 512 512\" aria-hidden=\"true\"><path d=\"M96 0C60.7 0 32 28.7 32 64s28.7 64 64 64l48 0 0 32-57 0c-31.6 0-58.5 23.1-63.3 54.4L1.1 364.1C.4 368.8 0 373.6 0 378.4L0 448c0 35.3 28.7 64 64 64l384 0c35.3 0 64-28.7 64-64l0-69.6c0-4.8-.4-9.6-1.1-14.4L488.2 214.4C483.5 183.1 456.6 160 425 160l-217 0 0-32 48 0c35.3 0 64-28.7 64-64S291.3 0 256 0L96 0zm0 48l160 0c8.8 0 16 7.2 16 16s-7.2 16-16 16L96 80c-8.8 0-16-7.2-16-16s7.2-16 16-16zM64 424c0-13.3 10.7-24 24-24l336 0c13.3 0 24 10.7 24 24s-10.7 24-24 24L88 448c-13.3 0-24-10.7-24-24zm48-160a24 24 0 1 1 0-48 24 24 0 1 1 0 48zm120-24a24 24 0 1 1 -48 0 24 24 0 1 1 48 0zM160 344a24 24 0 1 1 0-48 24 24 0 1 1 0 48zM328 240a24 24 0 1 1 -48 0 24 24 0 1 1 48 0zM256 344a24 24 0 1 1 0-48 24 24 0 1 1 0 48zM424 240a24 24 0 1 1 -48 0 24 24 0 1 1 48 0zM352 344a24 24 0 1 1 0-48 24 24 0 1 1 0 48z\"/></svg>","faTruckFast":"<svg viewBox=\"0 0 640 512\" aria-hidden=\"true\"><path d=\"M64 96c0-35.3 28.7-64 64-64l288 0c35.3 0 64 28.7 64 64l0 32 50.7 0c17 0 33.3 6.7 45.3 18.7L621.3 192c12 12 18.7 28.3 18.7 45.3L640 384c0 35.3-28.7 64-64 64l-3.3 0c-10.4 36.9-44.4 64-84.7 64s-74.2-27.1-84.7-64l-102.6 0c-10.4 36.9-44.4 64-84.7 64s-74.2-27.1-84.7-64l-3.3 0c-35.3 0-64-28.7-64-64l0-48-40 0c-13.3 0-24-10.7-24-24s10.7-24 24-24l112 0c13.3 0 24-10.7 24-24s-10.7-24-24-24L24 240c-13.3 0-24-10.7-24-24s10.7-24 24-24l176 0c13.3 0 24-10.7 24-24s-10.7-24-24-24L24 144c-13.3 0-24-10.7-24-24S10.7 96 24 96l40 0zM576 288l0-50.7-45.3-45.3-50.7 0 0 96 96 0zM256 424a40 40 0 1 0 -80 0 40 40 0 1 0 80 0zm232 40a40 40 0 1 0 0-80 40 40 0 1 0 0 80z\"/></svg>","faShieldHeart":"<svg viewBox=\"0 0 512 512\" aria-hidden=\"true\"><path d=\"M269.4 2.9C265.2 1 260.7 0 256 0s-9.2 1-13.4 2.9L54.3 82.8c-22 9.3-38.4 31-38.3 57.2 .5 99.2 41.3 280.7 213.6 363.2 16.7 8 36.1 8 52.8 0 172.4-82.5 213.2-264 213.6-363.2 .1-26.2-16.3-47.9-38.3-57.2L269.4 2.9zM249.6 183.5l6.4 8.5 6.4-8.5c11.1-14.8 28.5-23.5 46.9-23.5 32.4 0 58.7 26.3 58.7 58.7l0 5.3c0 49.1-65.8 98.1-96.5 118.3-9.5 6.2-21.5 6.2-30.9 0-30.7-20.2-96.5-69.3-96.5-118.3l0-5.3c0-32.4 26.3-58.7 58.7-58.7 18.5 0 35.9 8.7 46.9 23.5z\"/></svg>","faTrashCan":"<svg viewBox=\"0 0 448 512\" aria-hidden=\"true\"><path d=\"M136.7 5.9C141.1-7.2 153.3-16 167.1-16l113.9 0c13.8 0 26 8.8 30.4 21.9L320 32 416 32c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 96C14.3 96 0 81.7 0 64S14.3 32 32 32l96 0 8.7-26.1zM32 144l384 0 0 304c0 35.3-28.7 64-64 64L96 512c-35.3 0-64-28.7-64-64l0-304zm88 64c-13.3 0-24 10.7-24 24l0 192c0 13.3 10.7 24 24 24s24-10.7 24-24l0-192c0-13.3-10.7-24-24-24zm104 0c-13.3 0-24 10.7-24 24l0 192c0 13.3 10.7 24 24 24s24-10.7 24-24l0-192c0-13.3-10.7-24-24-24zm104 0c-13.3 0-24 10.7-24 24l0 192c0 13.3 10.7 24 24 24s24-10.7 24-24l0-192c0-13.3-10.7-24-24-24z\"/></svg>","faUserShield":"<svg viewBox=\"0 0 576 512\" aria-hidden=\"true\"><path d=\"M224 248a120 120 0 1 0 0-240 120 120 0 1 0 0 240zm-29.7 56C95.8 304 16 383.8 16 482.3 16 498.7 29.3 512 45.7 512l251.5 0C261 469.4 240 414.5 240 356.4l0-31.1c0-7.3 1-14.5 2.9-21.3l-48.6 0zm251 184.5l-13.3 6.3 0-188.1 96 32 0 19.6c0 55.8-32.2 106.5-82.7 130.3zM421.9 259.5l-112 37.3c-13.1 4.4-21.9 16.6-21.9 30.4l0 31.1c0 74.4 43 142.1 110.2 173.7l18.5 8.7c4.8 2.2 10 3.4 15.2 3.4s10.5-1.2 15.2-3.4l18.5-8.7C533 500.3 576 432.6 576 358.2l0-31.1c0-13.8-8.8-26-21.9-30.4l-112-37.3c-6.6-2.2-13.7-2.2-20.2 0z\"/></svg>","faPeopleGroup":"<svg viewBox=\"0 0 512 512\" aria-hidden=\"true\"><path d=\"M256 0a64 64 0 1 1 0 128 64 64 0 1 1 0-128zm96 312c0 25-12.7 47-32 59.9l0 92.1c0 26.5-21.5 48-48 48l-32 0c-26.5 0-48-21.5-48-48l0-92.1C172.7 359 160 337 160 312l0-40c0-53 43-96 96-96s96 43 96 96l0 40zM96 32a56 56 0 1 1 0 112 56 56 0 1 1 0-112zm16 240l0 32c0 32.5 12.1 62.1 32 84.7l0 75.3c0 1.2 0 2.5 .1 3.7-8.5 7.6-19.7 12.3-32.1 12.3l-32 0c-26.5 0-48-21.5-48-48l0-56.6C12.9 364.4 0 343.7 0 320l0-32c0-53 43-96 96-96 12.7 0 24.8 2.5 35.9 6.9-12.6 21.4-19.9 46.4-19.9 73.1zM368 464l0-75.3c19.9-22.5 32-52.2 32-84.7l0-32c0-26.7-7.3-51.6-19.9-73.1 11.1-4.5 23.2-6.9 35.9-6.9 53 0 96 43 96 96l0 32c0 23.7-12.9 44.4-32 55.4l0 56.6c0 26.5-21.5 48-48 48l-32 0c-12.3 0-23.6-4.6-32.1-12.3 0-1.2 .1-2.5 .1-3.7zM416 32a56 56 0 1 1 0 112 56 56 0 1 1 0-112z\"/></svg>","faDolly":"<svg viewBox=\"0 0 576 512\" aria-hidden=\"true\"><path d=\"M32 0C14.3 0 0 14.3 0 32S14.3 64 32 64l72.9 0 92.1 276.2c-22.5 17.6-37 45-37 75.8 0 53 43 96 96 96 52.4 0 95.1-42 96-94.3l202.1-67.4c16.8-5.6 25.8-23.7 20.2-40.5s-23.7-25.8-40.5-20.2L331.8 357c-17.2-22.1-43.9-36.5-74-37L165.7 43.8C156.9 17.6 132.5 0 104.9 0L32 0zM208 416a48 48 0 1 1 96 0 48 48 0 1 1 -96 0zM280.5 89.3c-25.2 8.2-39 35.3-30.8 60.5l39.6 121.7c8.2 25.2 35.3 39 60.5 30.8l121.7-39.6c25.2-8.2 39-35.3 30.8-60.5L462.8 80.5c-8.2-25.2-35.3-39-60.5-30.8L280.5 89.3z\"/></svg>","faMagnifyingGlassChart":"<svg viewBox=\"0 0 512 512\" aria-hidden=\"true\"><path d=\"M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376C296.3 401.1 253.9 416 208 416 93.1 416 0 322.9 0 208S93.1 0 208 0 416 93.1 416 208zm-312 8l0 64c0 13.3 10.7 24 24 24s24-10.7 24-24l0-64c0-13.3-10.7-24-24-24s-24 10.7-24 24zm80-96l0 160c0 13.3 10.7 24 24 24s24-10.7 24-24l0-160c0-13.3-10.7-24-24-24s-24 10.7-24 24zm80 64l0 96c0 13.3 10.7 24 24 24s24-10.7 24-24l0-96c0-13.3-10.7-24-24-24s-24 10.7-24 24z\"/></svg>","faBookOpen":"<svg viewBox=\"0 0 512 512\" aria-hidden=\"true\"><path d=\"M256 141.3l0 309.3 .5-.2C311.1 427.7 369.7 416 428.8 416l19.2 0 0-320-19.2 0c-42.2 0-84.1 8.4-123.1 24.6-16.8 7-33.4 13.9-49.7 20.7zM230.9 61.5L256 72 281.1 61.5C327.9 42 378.1 32 428.8 32L464 32c26.5 0 48 21.5 48 48l0 352c0 26.5-21.5 48-48 48l-35.2 0c-50.7 0-100.9 10-147.7 29.5l-12.8 5.3c-7.9 3.3-16.7 3.3-24.6 0l-12.8-5.3C184.1 490 133.9 480 83.2 480L48 480c-26.5 0-48-21.5-48-48L0 80C0 53.5 21.5 32 48 32l35.2 0c50.7 0 100.9 10 147.7 29.5z\"/></svg>","faMapLocationDot":"<svg viewBox=\"0 0 640 512\" aria-hidden=\"true\"><path d=\"M576 48c0-11.1-5.7-21.4-15.2-27.2s-21.2-6.4-31.1-1.4L413.5 77.5 234.1 17.6c-8.1-2.7-16.8-2.1-24.4 1.7l-128 64C70.8 88.8 64 99.9 64 112l0 352c0 11.1 5.7 21.4 15.2 27.2s21.2 6.4 31.1 1.4l116.1-58.1 173.3 57.8c-4.3-6.4-8.5-13.1-12.6-19.9-11-18.3-21.9-39.3-30-61.8l-101.2-33.7 0-284.5 128 42.7 0 99.3c31-35.8 77-58.4 128-58.4 22.6 0 44.2 4.4 64 12.5L576 48zM512 224c-66.3 0-120 52.8-120 117.9 0 68.9 64.1 150.4 98.6 189.3 11.6 13 31.3 13 42.9 0 34.5-38.9 98.6-120.4 98.6-189.3 0-65.1-53.7-117.9-120-117.9zM472 344a40 40 0 1 1 80 0 40 40 0 1 1 -80 0z\"/></svg>","faRightLeft":"<svg viewBox=\"0 0 512 512\" aria-hidden=\"true\"><path d=\"M502.6 150.6l-96 96c-9.2 9.2-22.9 11.9-34.9 6.9S352 236.9 352 224l0-64-320 0c-17.7 0-32-14.3-32-32S14.3 96 32 96l320 0 0-64c0-12.9 7.8-24.6 19.8-29.6s25.7-2.2 34.9 6.9l96 96c12.5 12.5 12.5 32.8 0 45.3zm-397.3 352l-96-96c-12.5-12.5-12.5-32.8 0-45.3l96-96c9.2-9.2 22.9-11.9 34.9-6.9S160 275.1 160 288l0 64 320 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-320 0 0 64c0 12.9-7.8 24.6-19.8 29.6s-25.7 2.2-34.9-6.9z\"/></svg>","faScaleBalanced":"<svg viewBox=\"0 0 640 512\" aria-hidden=\"true\"><path d=\"M384 32l128 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L398.4 96c-5.2 25.8-22.9 47.1-46.4 57.3l0 294.7 160 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-384 0c-17.7 0-32-14.3-32-32s14.3-32 32-32l160 0 0-294.7c-23.5-10.3-41.2-31.6-46.4-57.3L128 96c-17.7 0-32-14.3-32-32s14.3-32 32-32l128 0c14.6-19.4 37.8-32 64-32s49.4 12.6 64 32zm55.6 288L584.4 320 512 195.8 439.6 320zM512 416c-62.9 0-115.2-34-126-78.9-2.6-11 1-22.3 6.7-32.1l95.2-163.2c5-8.6 14.2-13.8 24.1-13.8s19.1 5.3 24.1 13.8l95.2 163.2c5.7 9.8 9.3 21.1 6.7 32.1-10.8 44.8-63.1 78.9-126 78.9zM126.8 195.8L54.4 320 199.3 320 126.8 195.8zM.9 337.1c-2.6-11 1-22.3 6.7-32.1l95.2-163.2c5-8.6 14.2-13.8 24.1-13.8s19.1 5.3 24.1 13.8l95.2 163.2c5.7 9.8 9.3 21.1 6.7 32.1-10.8 44.8-63.1 78.9-126 78.9S11.7 382 .9 337.1z\"/></svg>","faStore":"<svg viewBox=\"0 0 512 512\" aria-hidden=\"true\"><path d=\"M30.7 72.3C37.6 48.4 59.5 32 84.4 32l344 0c24.9 0 46.8 16.4 53.8 40.3l23.4 80.2c12.8 43.7-20.1 87.5-65.6 87.5-26.3 0-49.4-14.9-60.8-37.1-11.6 21.9-34.6 37.1-61.4 37.1-26.6 0-49.7-15-61.3-37-11.6 22-34.7 37-61.3 37-26.8 0-49.8-15.1-61.4-37.1-11.4 22.1-34.5 37.1-60.8 37.1-45.6 0-78.4-43.7-65.6-87.5L30.7 72.3zM96.4 352l320 0 0-66.4c7.6 1.6 15.5 2.4 23.5 2.4 14.3 0 28-2.6 40.5-7.2l0 151.2c0 26.5-21.5 48-48 48l-352 0c-26.5 0-48-21.5-48-48l0-151.2c12.5 4.6 26.1 7.2 40.5 7.2 8.1 0 15.9-.8 23.5-2.4l0 66.4z\"/></svg>","faLocationDot":"<svg viewBox=\"0 0 384 512\" aria-hidden=\"true\"><path d=\"M0 188.6C0 84.4 86 0 192 0S384 84.4 384 188.6c0 119.3-120.2 262.3-170.4 316.8-11.8 12.8-31.5 12.8-43.3 0-50.2-54.5-170.4-197.5-170.4-316.8zM192 256a64 64 0 1 0 0-128 64 64 0 1 0 0 128z\"/></svg>","faBoxOpen":"<svg viewBox=\"0 0 640 512\" aria-hidden=\"true\"><path d=\"M560.3 237.2c10.4 11.8 28.3 14.4 41.8 5.5 14.7-9.8 18.7-29.7 8.9-44.4l-48-72c-2.8-4.2-6.6-7.7-11.1-10.2L351.4 4.7c-19.3-10.7-42.8-10.7-62.2 0L88.8 116c-5.4 3-9.7 7.4-12.6 12.8L27.7 218.7c-12.6 23.4-3.8 52.5 19.6 65.1l33 17.7 0 53.3c0 23 12.4 44.3 32.4 55.7l176 99.7c19.6 11.1 43.5 11.1 63.1 0l176-99.7c20.1-11.4 32.4-32.6 32.4-55.7l0-117.5zm-240-9.8L170.2 144 320.3 60.6 470.4 144 320.3 227.4zm-41.5 50.2l-21.3 46.2-165.8-88.8 25.4-47.2 161.7 89.8z\"/></svg>","faClipboardCheck":"<svg viewBox=\"0 0 384 512\" aria-hidden=\"true\"><path d=\"M256 0c23.7 0 44.4 12.9 55.4 32l8.6 0c35.3 0 64 28.7 64 64l0 352c0 35.3-28.7 64-64 64L64 512c-35.3 0-64-28.7-64-64L0 96C0 60.7 28.7 32 64 32l8.6 0C83.6 12.9 104.3 0 128 0L256 0zm26.9 212.6c-10.7-7.8-25.7-5.4-33.5 5.3l-85.6 117.7-26.5-27.4c-9.2-9.5-24.4-9.8-33.9-.6s-9.8 24.4-.6 33.9l46.4 48c4.9 5.1 11.8 7.8 18.9 7.3s13.6-4.1 17.8-9.8L288.2 246.1c7.8-10.7 5.4-25.7-5.3-33.5zM136 64c-13.3 0-24 10.7-24 24s10.7 24 24 24l112 0c13.3 0 24-10.7 24-24s-10.7-24-24-24L136 64z\"/></svg>","faTriangleExclamation":"<svg viewBox=\"0 0 512 512\" aria-hidden=\"true\"><path d=\"M256 0c14.7 0 28.2 8.1 35.2 21l216 400c6.7 12.4 6.4 27.4-.8 39.5S486.1 480 472 480L40 480c-14.1 0-27.2-7.4-34.4-19.5s-7.5-27.1-.8-39.5l216-400c7-12.9 20.5-21 35.2-21zm0 352a32 32 0 1 0 0 64 32 32 0 1 0 0-64zm0-192c-18.2 0-32.7 15.5-31.4 33.7l7.4 104c.9 12.5 11.4 22.3 23.9 22.3 12.6 0 23-9.7 23.9-22.3l7.4-104c1.3-18.2-13.1-33.7-31.4-33.7z\"/></svg>","faChartLine":"<svg viewBox=\"0 0 512 512\" aria-hidden=\"true\"><path d=\"M64 64c0-17.7-14.3-32-32-32S0 46.3 0 64L0 400c0 44.2 35.8 80 80 80l400 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L80 416c-8.8 0-16-7.2-16-16L64 64zm406.6 86.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L320 210.7 262.6 153.4c-12.5-12.5-32.8-12.5-45.3 0l-96 96c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l73.4-73.4 57.4 57.4c12.5 12.5 32.8 12.5 45.3 0l128-128z\"/></svg>","faCalculator":"<svg viewBox=\"0 0 384 512\" aria-hidden=\"true\"><path d=\"M64 0C28.7 0 0 28.7 0 64L0 448c0 35.3 28.7 64 64 64l256 0c35.3 0 64-28.7 64-64l0-384c0-35.3-28.7-64-64-64L64 0zM96 64l192 0c17.7 0 32 14.3 32 32l0 32c0 17.7-14.3 32-32 32L96 160c-17.7 0-32-14.3-32-32l0-32c0-17.7 14.3-32 32-32zm16 168a24 24 0 1 1 -48 0 24 24 0 1 1 48 0zm80 24a24 24 0 1 1 0-48 24 24 0 1 1 0 48zm128-24a24 24 0 1 1 -48 0 24 24 0 1 1 48 0zM88 352a24 24 0 1 1 0-48 24 24 0 1 1 0 48zm128-24a24 24 0 1 1 -48 0 24 24 0 1 1 48 0zm80 24a24 24 0 1 1 0-48 24 24 0 1 1 0 48zM64 424c0-13.3 10.7-24 24-24l112 0c13.3 0 24 10.7 24 24s-10.7 24-24 24L88 448c-13.3 0-24-10.7-24-24zm232-24c13.3 0 24 10.7 24 24s-10.7 24-24 24-24-10.7-24-24 10.7-24 24-24z\"/></svg>","faFileCirclePlus":"<svg viewBox=\"0 0 576 512\" aria-hidden=\"true\"><path d=\"M96 0C60.7 0 32 28.7 32 64l0 384c0 35.3 28.7 64 64 64l180 0c-22.7-31.5-36-70.2-36-112 0-100.6 77.4-183.2 176-191.3l0-38.1c0-17-6.7-33.3-18.7-45.3L290.7 18.7C278.7 6.7 262.5 0 245.5 0L96 0zM357.5 176L264 176c-13.3 0-24-10.7-24-24L240 58.5 357.5 176zM432 544a144 144 0 1 0 0-288 144 144 0 1 0 0 288zm16-208l0 48 48 0c8.8 0 16 7.2 16 16s-7.2 16-16 16l-48 0 0 48c0 8.8-7.2 16-16 16s-16-7.2-16-16l0-48-48 0c-8.8 0-16-7.2-16-16s7.2-16 16-16l48 0 0-48c0-8.8 7.2-16 16-16s16 7.2 16 16z\"/></svg>","faUserCheck":"<svg viewBox=\"0 0 640 512\" aria-hidden=\"true\"><path d=\"M286 304c98.5 0 178.3 79.8 178.3 178.3 0 16.4-13.3 29.7-29.7 29.7L78 512c-16.4 0-29.7-13.3-29.7-29.7 0-98.5 79.8-178.3 178.3-178.3l59.4 0zM585.7 105.9c7.8-10.7 22.8-13.1 33.5-5.3s13.1 22.8 5.3 33.5L522.1 274.9c-4.2 5.7-10.7 9.4-17.7 9.8s-14-2.2-18.9-7.3l-46.4-48c-9.2-9.5-9-24.7 .6-33.9 9.5-9.2 24.7-8.9 33.9 .6l26.5 27.4 85.6-117.7zM256.3 248a120 120 0 1 1 0-240 120 120 0 1 1 0 240z\"/></svg>","faPaperPlane":"<svg viewBox=\"0 0 576 512\" aria-hidden=\"true\"><path d=\"M536.4-26.3c9.8-3.5 20.6-1 28 6.3s9.8 18.2 6.3 28l-178 496.9c-5 13.9-18.1 23.1-32.8 23.1-14.2 0-27-8.6-32.3-21.7l-64.2-158c-4.5-11-2.5-23.6 5.2-32.6l94.5-112.4c5.1-6.1 4.7-15-.9-20.6s-14.6-6-20.6-.9L229.2 276.1c-9.1 7.6-21.6 9.6-32.6 5.2L38.1 216.8c-13.1-5.3-21.7-18.1-21.7-32.3 0-14.7 9.2-27.8 23.1-32.8l496.9-178z\"/></svg>","faMedal":"<svg viewBox=\"0 0 448 512\" aria-hidden=\"true\"><path d=\"M224.3 128L139.7-12.9c-6.5-10.8-20.1-14.7-31.3-9.1L21.8 21.3C9.9 27.2 5.1 41.6 11 53.5L80.6 192.6c-30.1 33.9-48.3 78.5-48.3 127.4 0 106 86 192 192 192s192-86 192-192c0-48.9-18.3-93.5-48.3-127.4L437.6 53.5c5.9-11.9 1.1-26.3-10.7-32.2L340.2-22.1c-11.2-5.6-24.9-1.6-31.3 9.1L224.3 128zm30.8 142.5c1.4 2.8 4 4.7 7 5.1l50.1 7.3c7.7 1.1 10.7 10.5 5.2 16l-36.3 35.4c-2.2 2.2-3.2 5.2-2.7 8.3l8.6 49.9c1.3 7.6-6.7 13.5-13.6 9.9l-44.8-23.6c-2.7-1.4-6-1.4-8.7 0l-44.8 23.6c-6.9 3.6-14.9-2.2-13.6-9.9l8.6-49.9c.5-3-.5-6.1-2.7-8.3l-36.3-35.4c-5.6-5.4-2.5-14.8 5.2-16l50.1-7.3c3-.4 5.7-2.4 7-5.1l22.4-45.4c3.4-7 13.3-7 16.8 0l22.4 45.4z\"/></svg>","faHourglassHalf":"<svg viewBox=\"0 0 384 512\" aria-hidden=\"true\"><path d=\"M32 0C14.3 0 0 14.3 0 32S14.3 64 32 64l0 11c0 42.4 16.9 83.1 46.9 113.1l67.9 67.9-67.9 67.9C48.9 353.9 32 394.6 32 437l0 11c-17.7 0-32 14.3-32 32s14.3 32 32 32l320 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l0-11c0-42.4-16.9-83.1-46.9-113.1l-67.9-67.9 67.9-67.9c30-30 46.9-70.7 46.9-113.1l0-11c17.7 0 32-14.3 32-32S369.7 0 352 0L32 0zM96 75l0-11 192 0 0 11c0 19-5.6 37.4-16 53L112 128c-10.3-15.6-16-34-16-53zm16 309c3.5-5.3 7.6-10.3 12.1-14.9l67.9-67.9 67.9 67.9c4.6 4.6 8.6 9.6 12.2 14.9L112 384z\"/></svg>","faArrowUpWideShort":"<svg viewBox=\"0 0 576 512\" aria-hidden=\"true\"><path d=\"M150.6 41.4c-12.5-12.5-32.8-12.5-45.3 0l-96 96c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L96 141.3 96 448c0 17.7 14.3 32 32 32s32-14.3 32-32l0-306.7 41.4 41.4c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3l-96-96zM320 480l32 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-32 0c-17.7 0-32 14.3-32 32s14.3 32 32 32zm0-128l96 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-96 0c-17.7 0-32 14.3-32 32s14.3 32 32 32zm0-128l160 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-160 0c-17.7 0-32 14.3-32 32s14.3 32 32 32zm0-128l224 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32z\"/></svg>","faTags":"<svg viewBox=\"0 0 576 512\" aria-hidden=\"true\"><path d=\"M401.2 39.1L549.4 189.4c27.7 28.1 27.7 73.1 0 101.2L393 448.9c-9.3 9.4-24.5 9.5-33.9 .2s-9.5-24.5-.2-33.9L515.3 256.8c9.2-9.3 9.2-24.4 0-33.7L367 72.9c-9.3-9.4-9.2-24.6 .2-33.9s24.6-9.2 33.9 .2zM32.1 229.5L32.1 96c0-35.3 28.7-64 64-64l133.5 0c17 0 33.3 6.7 45.3 18.7l144 144c25 25 25 65.5 0 90.5L285.4 418.7c-25 25-65.5 25-90.5 0l-144-144c-12-12-18.7-28.3-18.7-45.3zm144-85.5a32 32 0 1 0 -64 0 32 32 0 1 0 64 0z\"/></svg>","faCamera":"<svg viewBox=\"0 0 512 512\" aria-hidden=\"true\"><path d=\"M149.1 64.8L138.7 96 64 96C28.7 96 0 124.7 0 160L0 416c0 35.3 28.7 64 64 64l384 0c35.3 0 64-28.7 64-64l0-256c0-35.3-28.7-64-64-64l-74.7 0-10.4-31.2C356.4 45.2 338.1 32 317.4 32L194.6 32c-20.7 0-39 13.2-45.5 32.8zM256 192a96 96 0 1 1 0 192 96 96 0 1 1 0-192z\"/></svg>","faHandHoldingDollar":"<svg viewBox=\"0 0 576 512\" aria-hidden=\"true\"><path d=\"M288-16c-13.3 0-24 10.7-24 24l0 12-1.8 0c-36.6 0-66.2 29.7-66.2 66.2 0 33.4 24.9 61.6 58 65.7l61 7.6c5.1 .6 9 5 9 10.2 0 5.7-4.6 10.2-10.2 10.2L240 180c-15.5 0-28 12.5-28 28s12.5 28 28 28l24 0 0 12c0 13.3 10.7 24 24 24s24-10.7 24-24l0-12 1.8 0c36.6 0 66.2-29.7 66.2-66.2 0-33.4-24.9-61.6-58-65.7l-61-7.6c-5.1-.6-9-5-9-10.2 0-5.7 4.6-10.2 10.2-10.2L328 76c15.5 0 28-12.5 28-28s-12.5-28-28-28l-16 0 0-12c0-13.3-10.7-24-24-24zM109.3 341.5L66.7 384 32 384c-17.7 0-32 14.3-32 32l0 64c0 17.7 14.3 32 32 32l320.5 0c29 0 57.3-9.3 80.7-26.5l126.6-93.3c17.8-13.1 21.6-38.1 8.5-55.9s-38.1-21.6-55.9-8.5L392.6 416 280 416c-13.3 0-24-10.7-24-24s10.7-24 24-24l72 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-152.2 0c-33.9 0-66.5 13.5-90.5 37.5z\"/></svg>","faBarcode":"<svg viewBox=\"0 0 448 512\" aria-hidden=\"true\"><path d=\"M32 32C14.3 32 0 46.3 0 64L0 448c0 17.7 14.3 32 32 32s32-14.3 32-32L64 64c0-17.7-14.3-32-32-32zm88 0c-13.3 0-24 10.7-24 24l0 400c0 13.3 10.7 24 24 24s24-10.7 24-24l0-400c0-13.3-10.7-24-24-24zm72 32l0 384c0 17.7 14.3 32 32 32s32-14.3 32-32l0-384c0-17.7-14.3-32-32-32s-32 14.3-32 32zm208-8l0 400c0 13.3 10.7 24 24 24s24-10.7 24-24l0-400c0-13.3-10.7-24-24-24s-24 10.7-24 24zm-96 0l0 400c0 13.3 10.7 24 24 24s24-10.7 24-24l0-400c0-13.3-10.7-24-24-24s-24 10.7-24 24z\"/></svg>","faQrcode":"<svg viewBox=\"0 0 448 512\" aria-hidden=\"true\"><path d=\"M64 160l64 0 0-64-64 0 0 64zM0 80C0 53.5 21.5 32 48 32l96 0c26.5 0 48 21.5 48 48l0 96c0 26.5-21.5 48-48 48l-96 0c-26.5 0-48-21.5-48-48L0 80zM64 416l64 0 0-64-64 0 0 64zM0 336c0-26.5 21.5-48 48-48l96 0c26.5 0 48 21.5 48 48l0 96c0 26.5-21.5 48-48 48l-96 0c-26.5 0-48-21.5-48-48l0-96zM320 96l0 64 64 0 0-64-64 0zM304 32l96 0c26.5 0 48 21.5 48 48l0 96c0 26.5-21.5 48-48 48l-96 0c-26.5 0-48-21.5-48-48l0-96c0-26.5 21.5-48 48-48zM288 352a32 32 0 1 1 0-64 32 32 0 1 1 0 64zm0 64c17.7 0 32 14.3 32 32s-14.3 32-32 32-32-14.3-32-32 14.3-32 32-32zm96 32c0-17.7 14.3-32 32-32s32 14.3 32 32-14.3 32-32 32-32-14.3-32-32zm32-96a32 32 0 1 1 0-64 32 32 0 1 1 0 64zm-32 32a32 32 0 1 1 -64 0 32 32 0 1 1 64 0z\"/></svg>","faCameraRetro":"<svg viewBox=\"0 0 512 512\" aria-hidden=\"true\"><path d=\"M0 416l0-208 136.2 0c13.5-20.2 32-36.8 53.7-48L0 160 0 125.7c0-35.3 28.7-64 64-64l.1 0C65.3 45.1 79.1 32 96 32l32 0c16.9 0 30.7 13.1 31.9 29.7l32.1 0 51.2-23.8c8.4-3.9 17.6-6 26.9-6L448 32c35.3 0 64 28.7 64 64l0 64-190 0c21.7 11.2 40.2 27.8 53.7 48l136.2 0 0 208c0 35.3-28.7 64-64 64L64 480c-35.3 0-64-28.7-64-64zM256 192a96.1 96.1 0 1 0 0 192.1 96.1 96.1 0 1 0 0-192.1z\"/></svg>","faListCheck":"<svg viewBox=\"0 0 512 512\" aria-hidden=\"true\"><path d=\"M133.8 36.3c10.9 7.6 13.5 22.6 5.9 33.4l-56 80c-4.1 5.8-10.5 9.5-17.6 10.1S52 158 47 153L7 113C-2.3 103.6-2.3 88.4 7 79S31.6 69.7 41 79l19.8 19.8 39.6-56.6c7.6-10.9 22.6-13.5 33.4-5.9zm0 160c10.9 7.6 13.5 22.6 5.9 33.4l-56 80c-4.1 5.8-10.5 9.5-17.6 10.1S52 318 47 313L7 273c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l19.8 19.8 39.6-56.6c7.6-10.9 22.6-13.5 33.4-5.9zM224 96c0-17.7 14.3-32 32-32l224 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-224 0c-17.7 0-32-14.3-32-32zm0 160c0-17.7 14.3-32 32-32l224 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-224 0c-17.7 0-32-14.3-32-32zM160 416c0-17.7 14.3-32 32-32l288 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-288 0c-17.7 0-32-14.3-32-32zM64 376a40 40 0 1 1 0 80 40 40 0 1 1 0-80z\"/></svg>","faCircleXmark":"<svg viewBox=\"0 0 512 512\" aria-hidden=\"true\"><path d=\"M256 512a256 256 0 1 0 0-512 256 256 0 1 0 0 512zM167 167c9.4-9.4 24.6-9.4 33.9 0l55 55 55-55c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-55 55 55 55c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-55-55-55 55c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l55-55-55-55c-9.4-9.4-9.4-24.6 0-33.9z\"/></svg>","faCircleCheck":"<svg viewBox=\"0 0 512 512\" aria-hidden=\"true\"><path d=\"M256 512a256 256 0 1 1 0-512 256 256 0 1 1 0 512zM374 145.7c-10.7-7.8-25.7-5.4-33.5 5.3L221.1 315.2 169 263.1c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l72 72c5 5 11.8 7.5 18.8 7s13.4-4.1 17.5-9.8L379.3 179.2c7.8-10.7 5.4-25.7-5.3-33.5z\"/></svg>","faLock":"<svg viewBox=\"0 0 384 512\" aria-hidden=\"true\"><path d=\"M128 96l0 64 128 0 0-64c0-35.3-28.7-64-64-64s-64 28.7-64 64zM64 160l0-64C64 25.3 121.3-32 192-32S320 25.3 320 96l0 64c35.3 0 64 28.7 64 64l0 224c0 35.3-28.7 64-64 64L64 512c-35.3 0-64-28.7-64-64L0 224c0-35.3 28.7-64 64-64z\"/></svg>","faCloud":"<svg viewBox=\"0 0 576 512\" aria-hidden=\"true\"><path d=\"M0 336c0 79.5 64.5 144 144 144l304 0c70.7 0 128-57.3 128-128 0-51.6-30.5-96.1-74.5-116.3 6.7-13.1 10.5-28 10.5-43.7 0-53-43-96-96-96-17.7 0-34.2 4.8-48.4 13.1-24.1-45.8-72.2-77.1-127.6-77.1-79.5 0-144 64.5-144 144 0 8 .7 15.9 1.9 23.5-56.9 19.2-97.9 73.1-97.9 136.5z\"/></svg>","faFlask":"<svg viewBox=\"0 0 448 512\" aria-hidden=\"true\"><path d=\"M288 0L128 0C110.3 0 96 14.3 96 32s14.3 32 32 32L128 215.5 7.5 426.3C2.6 435 0 444.7 0 454.7 0 486.4 25.6 512 57.3 512l333.4 0c31.6 0 57.3-25.6 57.3-57.3 0-10-2.6-19.8-7.5-28.4L320 215.5 320 64c17.7 0 32-14.3 32-32S337.7 0 320 0L288 0zM192 215.5l0-151.5 64 0 0 151.5c0 11.1 2.9 22.1 8.4 31.8l41.6 72.7-164 0 41.6-72.7c5.5-9.7 8.4-20.6 8.4-31.8z\"/></svg>","faHandshake":"<svg viewBox=\"0 0 576 512\" aria-hidden=\"true\"><path d=\"M268.9 85.2L152.3 214.8c-4.6 5.1-4.4 13 .5 17.9 30.5 30.5 80 30.5 110.5 0l31.8-31.8c4.2-4.2 9.5-6.5 14.9-6.9 6.8-.6 13.8 1.7 19 6.9L505.6 376 576 320 576 32 464 96 440.2 80.1C424.4 69.6 405.9 64 386.9 64l-70.4 0c-1.1 0-2.3 0-3.4 .1-16.9 .9-32.8 8.5-44.2 21.1zM116.6 182.7L223.4 64 183.8 64c-25.5 0-49.9 10.1-67.9 28.1L112 96 0 32 0 320 156.4 450.3c23 19.2 52 29.7 81.9 29.7l15.7 0-7-7c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l41 41 9 0c19.1 0 37.8-4.3 54.8-12.3L359 441c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l32 32 17.5-17.5c8.9-8.9 11.5-21.8 7.6-33.1l-137.9-136.8-14.9 14.9c-49.3 49.3-129.1 49.3-178.4 0-23-23-23.9-59.9-2.2-84z\"/></svg>","faBullseye":"<svg viewBox=\"0 0 512 512\" aria-hidden=\"true\"><path d=\"M448 256a192 192 0 1 0 -384 0 192 192 0 1 0 384 0zM0 256a256 256 0 1 1 512 0 256 256 0 1 1 -512 0zm256 80a80 80 0 1 0 0-160 80 80 0 1 0 0 160zm0-224a144 144 0 1 1 0 288 144 144 0 1 1 0-288zM224 256a32 32 0 1 1 64 0 32 32 0 1 1 -64 0z\"/></svg>","faStopwatch":"<svg viewBox=\"0 0 448 512\" aria-hidden=\"true\"><path d=\"M168.5 0c-13.3 0-24 10.7-24 24s10.7 24 24 24l32 0 0 25.3c-108 11.9-192 103.5-192 214.7 0 119.3 96.7 216 216 216s216-96.7 216-216c0-39.8-10.8-77.1-29.6-109.2l28.2-28.2c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-23.4 23.4c-32.9-30.2-75.2-50.3-122-55.5l0-25.3 32 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-112 0zm80 184l0 104c0 13.3-10.7 24-24 24s-24-10.7-24-24l0-104c0-13.3 10.7-24 24-24s24 10.7 24 24z\"/></svg>","faMobileScreen":"<svg viewBox=\"0 0 384 512\" aria-hidden=\"true\"><path d=\"M16 64C16 28.7 44.7 0 80 0L304 0c35.3 0 64 28.7 64 64l0 384c0 35.3-28.7 64-64 64L80 512c-35.3 0-64-28.7-64-64L16 64zM128 440c0 13.3 10.7 24 24 24l80 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-80 0c-13.3 0-24 10.7-24 24zM304 64l-224 0 0 304 224 0 0-304z\"/></svg>","faLink":"<svg viewBox=\"0 0 576 512\" aria-hidden=\"true\"><path d=\"M419.5 96c-16.6 0-32.7 4.5-46.8 12.7-15.8-16-34.2-29.4-54.5-39.5 28.2-24 64.1-37.2 101.3-37.2 86.4 0 156.5 70 156.5 156.5 0 41.5-16.5 81.3-45.8 110.6l-71.1 71.1c-29.3 29.3-69.1 45.8-110.6 45.8-86.4 0-156.5-70-156.5-156.5 0-1.5 0-3 .1-4.5 .5-17.7 15.2-31.6 32.9-31.1s31.6 15.2 31.1 32.9c0 .9 0 1.8 0 2.6 0 51.1 41.4 92.5 92.5 92.5 24.5 0 48-9.7 65.4-27.1l71.1-71.1c17.3-17.3 27.1-40.9 27.1-65.4 0-51.1-41.4-92.5-92.5-92.5zM275.2 173.3c-1.9-.8-3.8-1.9-5.5-3.1-12.6-6.5-27-10.2-42.1-10.2-24.5 0-48 9.7-65.4 27.1L91.1 258.2c-17.3 17.3-27.1 40.9-27.1 65.4 0 51.1 41.4 92.5 92.5 92.5 16.5 0 32.6-4.4 46.7-12.6 15.8 16 34.2 29.4 54.6 39.5-28.2 23.9-64 37.2-101.3 37.2-86.4 0-156.5-70-156.5-156.5 0-41.5 16.5-81.3 45.8-110.6l71.1-71.1c29.3-29.3 69.1-45.8 110.6-45.8 86.6 0 156.5 70.6 156.5 156.9 0 1.3 0 2.6 0 3.9-.4 17.7-15.1 31.6-32.8 31.2s-31.6-15.1-31.2-32.8c0-.8 0-1.5 0-2.3 0-33.7-18-63.3-44.8-79.6z\"/></svg>","faDesktop":"<svg viewBox=\"0 0 512 512\" aria-hidden=\"true\"><path d=\"M64 32C28.7 32 0 60.7 0 96L0 352c0 35.3 28.7 64 64 64l144 0-16 48-72 0c-13.3 0-24 10.7-24 24s10.7 24 24 24l272 0c13.3 0 24-10.7 24-24s-10.7-24-24-24l-72 0-16-48 144 0c35.3 0 64-28.7 64-64l0-256c0-35.3-28.7-64-64-64L64 32zM96 96l320 0c17.7 0 32 14.3 32 32l0 160c0 17.7-14.3 32-32 32L96 320c-17.7 0-32-14.3-32-32l0-160c0-17.7 14.3-32 32-32z\"/></svg>","faCalendarCheck":"<svg viewBox=\"0 0 448 512\" aria-hidden=\"true\"><path d=\"M320 0c17.7 0 32 14.3 32 32l0 32 32 0c35.3 0 64 28.7 64 64l0 288c0 35.3-28.7 64-64 64L64 480c-35.3 0-64-28.7-64-64L0 128C0 92.7 28.7 64 64 64l32 0 0-32c0-17.7 14.3-32 32-32s32 14.3 32 32l0 32 128 0 0-32c0-17.7 14.3-32 32-32zm22 161.7c-10.7-7.8-25.7-5.4-33.5 5.3L189.1 331.2 137 279.1c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l72 72c5 5 11.9 7.5 18.8 7s13.4-4.1 17.5-9.8L347.3 195.2c7.8-10.7 5.4-25.7-5.3-33.5z\"/></svg>","faChevronLeft":"<svg viewBox=\"0 0 320 512\" aria-hidden=\"true\"><path d=\"M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l192 192c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256 246.6 86.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-192 192z\"/></svg>","faTableCellsLarge":"<svg viewBox=\"0 0 448 512\" aria-hidden=\"true\"><path d=\"M384 96l-128 0 0 128 128 0 0-128zm64 128l0 192c0 35.3-28.7 64-64 64L64 480c-35.3 0-64-28.7-64-64L0 96C0 60.7 28.7 32 64 32l320 0c35.3 0 64 28.7 64 64l0 128zM64 288l0 128 128 0 0-128-128 0zm128-64l0-128-128 0 0 128 128 0zm64 64l0 128 128 0 0-128-128 0z\"/></svg>","faExpand":"<svg viewBox=\"0 0 448 512\" aria-hidden=\"true\"><path d=\"M32 32C14.3 32 0 46.3 0 64l0 96c0 17.7 14.3 32 32 32s32-14.3 32-32l0-64 64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 32zM64 352c0-17.7-14.3-32-32-32S0 334.3 0 352l0 96c0 17.7 14.3 32 32 32l96 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0 0-64zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32l64 0 0 64c0 17.7 14.3 32 32 32s32-14.3 32-32l0-96c0-17.7-14.3-32-32-32l-96 0zM448 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l96 0c17.7 0 32-14.3 32-32l0-96z\"/></svg>"},"hub":[{"name":"Planeación y Compras","icon":"faCartFlatbed","desc":"Calcula la reposición y convierte la sugerencia en órdenes de compra con seguimiento.","items":["MRP con stock de seguridad y punto de reorden","Órdenes: sugerida → aprobada → enviada → recibida","Evaluación OTIF del proveedor"],"links":["Inventario","Calidad"]},{"name":"Inventario y Almacenes","icon":"faBoxesStacked","desc":"Existencias por sucursal, almacén, zona y lote, con cada movimiento en un kardex valorizado.","items":["Mapa de ubicaciones y traslados verificados","Conteos físicos y cíclicos","Stock fantasma y matriz ABC-XYZ"],"links":["Compras","Ventas","Prevención"]},{"name":"Ventas y Rentabilidad","icon":"faCashRegister","desc":"Venta, costo y margen por sucursal, departamento y producto.","items":["POS con salida FEFO","Pedidos de clientes y cuentas","Importación de ventas o API"],"links":["Inventario","Panel Ejecutivo"]},{"name":"Despachos y Devoluciones","icon":"faTruckFast","desc":"Picking por escáner, empaque, despacho y devoluciones con inspección.","items":["Validación FEFO en el picking","Seguimiento por etapas","Clasificación sanitaria de devoluciones"],"links":["Ventas","Calidad"]},{"name":"Calidad y Vencimientos","icon":"faShieldHeart","desc":"Protege al cliente y al margen: lotes, temperaturas y retiros.","items":["Control FEFO y cuarentena","Cadena de frío por equipo","Trazabilidad de lotes y retiros"],"links":["Mermas","Compras"]},{"name":"Mermas","icon":"faTrashCan","desc":"Registro con evidencia, aprobación y análisis de causas.","items":["Registro con fotografía","Aprobación según nivel","Matriz de causales y recuperación con proveedor"],"links":["Calidad","Prevención"]},{"name":"Prevención de Pérdidas","icon":"faUserShield","desc":"Incidentes, expedientes, activos y celulares con trazabilidad individual.","items":["Expedientes con evidencia","Control de celulares por IMEI","Rondas, CCTV y planes preventivos"],"links":["Inventario","Alertas"]},{"name":"Operaciones y Personal","icon":"faPeopleGroup","desc":"Horarios, asistencia y tareas de piso conectados con la demanda.","items":["Turnos y cobertura por área","Asistencia y fichajes","Tareas con responsable"],"links":["Ventas","Panel Ejecutivo"]}],"inv":[{"short":"Stock","name":"Stock & Movimientos","img":"stockoverview","icon":"faBoxesStacked","desc":"Existencias por almacén, lotes y bitácora de movimientos.","items":["Valor, unidades, rotación y cobertura","Bajo mínimo, próximos a vencer y agotados","Filtros por sucursal y departamento"]},{"short":"Mercancías","name":"Control de Mercancías","img":"merchandise","icon":"faDolly","desc":"Centro operativo de recepciones, entradas, salidas, movimientos y documentos.","items":["Recepciones y salidas con documento","Movimientos por tipo","Búsqueda de trazabilidad"]},{"short":"Control","name":"Control de Inventario","img":"inventory_control","icon":"faMagnifyingGlassChart","desc":"Centro analítico del inventario.","items":["Stock fantasma","Matriz ABC-XYZ","Inventario estancado y cobertura"]},{"short":"Kardex","name":"Kardex Valorizado","img":"kardex","icon":"faBookOpen","desc":"Movimientos valorizados por producto, lote y sucursal.","items":["Entradas, salidas y saldo valorizado","Usuario, hora y documento","Libro de movimientos verificable"]},{"short":"Ubicaciones","name":"Mapa de Ubicaciones","img":"location_map","icon":"faMapLocationDot","desc":"Ocupación, vencimientos y valor por almacén, zona y pasillo.","items":["Vista por zona y pasillo","Etiquetas de ubicación QR / Code 128","Valor y vencimientos por ubicación"]},{"short":"Traslados","name":"Traslados entre Tiendas","img":"transfers","icon":"faRightLeft","desc":"Envío y recepción con verificación entre sucursales.","items":["Envío y recepción confirmados","Diferencias en tránsito","Movimientos en ambas sucursales"]},{"short":"Conciliación","name":"Conciliación & Sensible","img":"reconciliation","icon":"faScaleBalanced","desc":"Trazabilidad 360°, inventario sensible y conciliación de flujos.","items":["Ficha por producto con su historia","Esperado vs. contado","Alertas por diferencias"]},{"short":"Sucursales","name":"Sucursales y Almacenes","img":"branches","icon":"faStore","desc":"Estructura multisucursal y stock consolidado de la red.","items":["Mismos indicadores por tienda","Desviaciones visibles","Del total de la red al detalle"]}],"caso":[{"step":"Recepción","big":"10","color":"#0B6B33","title":"Se reciben 10 unidades de un producto sensible","text":"La recepción queda registrada con documento, usuario y hora. El stock esperado pasa a 10.","img":"case_producto"},{"step":"Conteo","big":"8","color":"#9A6B00","title":"El conteo físico encuentra 8","text":"Al registrar el conteo, DAILY compara lo esperado con lo contado.","img":"case_producto","pos":"top left"},{"step":"Diferencia","big":"−2","color":"#E5484D","title":"Diferencia de 2 unidades: $1.120 al costo","text":"El producto se marca en rojo y se genera una alerta con responsable y plazo.","img":"case_alerta"},{"step":"Investigación","big":"360°","color":"#0B6B33","title":"Línea de tiempo y kardex del producto","text":"Entradas, salidas, ventas, devoluciones y conteos del intervalo auditado, con usuario, hora y documento.","img":"case_cerrado"},{"step":"Causa","big":"?","color":"#9A6B00","title":"De la diferencia a la causa, con evidencia","text":"La ficha propone hipótesis según la evidencia. Un reconteo independiente puede ratificar el faltante; la causa la confirma una persona.","img":"case_ficha"},{"step":"Cierre","big":"✓","color":"#0B6B33","title":"Ajuste autorizado y caso cerrado","text":"El ajuste lo autoriza un supervisor distinto de quien registró, y el expediente se cierra con la causa documentada.","img":"case_kardex"}]};
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const ICON = DATA.icons;
+
+/* ===== Escalado del escenario ===== */
+const stage = $('#stage');
+function fit() {
+  const k = Math.min(innerWidth / 1920, innerHeight / 1080);
+  stage.style.transform = `translate(${-960 * k}px, ${-540 * k}px) scale(${k})`;
+}
+addEventListener('resize', fit); fit();
+
+/* ===== Refracción Liquid Glass =====
+ * El campo de refracción es un port del fragment shader de liquid-glass-js
+ * (https://github.com/dashersw/liquid-glass-js) — Copyright (c) 2025 Armagan Amcalar, MIT.
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of that
+ * software to deal in it without restriction, provided this notice travels with it; it is
+ * provided "as is", without warranty of any kind. */
+const Glass = (() => {
+  const P = { edgeIntensity: .015, rimIntensity: .028, edgeDistance: .5, rimDistance: 1.7, cornerBoost: .06, rippleEffect: .26, blurRadius: 2 };
+  const SS = 2, MAX_EDGE = 1400, BLUR_K = .35, NS = 'http://www.w3.org/2000/svg';
+  const brands = navigator.userAgentData && navigator.userAgentData.brands;
+  const ok = brands ? brands.some(b => /Chromium|Google Chrome|Microsoft Edge/i.test(b.brand)) : /Chrome\//.test(navigator.userAgent);
+  const cache = new Map(); let defs = null, n = 0;
+  const clamp = v => Math.max(0, Math.min(255, Math.round(v)));
+  function ensureDefs() {
+    if (!defs || !defs.isConnected) {
+      const svg = document.createElementNS(NS, 'svg'); svg.setAttribute('width', 0); svg.setAttribute('height', 0);
+      svg.style.position = 'fixed'; svg.setAttribute('aria-hidden', 'true'); defs = document.createElementNS(NS, 'defs');
+      svg.appendChild(defs); document.body.appendChild(svg);
+    }
+    return defs;
+  }
+  function map(w, h, radius, pw, ph) {
+    const ss = Math.max(.25, Math.min(SS, MAX_EDGE / Math.max(w, h)));
+    const bw = Math.max(1, Math.round(w * ss)), bh = Math.max(1, Math.round(h * ss)), r = radius * ss, minDim = Math.min(w, h);
+    const dx = new Float32Array(bw * bh), dy = new Float32Array(bw * bh); let maxAbs = 0;
+    for (let py = 0; py < bh; py++) for (let px = 0; px < bw; px++) {
+      const cx = (px + .5) / bw, cy = (py + .5) / bh;
+      const tx = Math.abs(px + .5 - bw / 2) - (bw / 2 - r), ty = Math.abs(py + .5 - bh / 2) - (bh / 2 - r);
+      const dist = Math.max(-(Math.hypot(Math.max(tx, 0), Math.max(ty, 0)) + Math.min(Math.max(tx, ty), 0) - r), 0) / ss;
+      const rim = Math.exp(-dist * P.rimDistance);
+      const total = Math.exp(-dist * P.edgeDistance) * P.edgeIntensity + rim * P.rimIntensity;
+      let nx = cx - .5, ny = cy - .5; const l = Math.hypot(nx, ny); if (l > 0) { nx /= l; ny /= l; }
+      const corner = Math.exp(-Math.max(Math.min(cx, 1 - cx), Math.min(cy, 1 - cy)) * minDim * .3) * P.cornerBoost;
+      const ripple = Math.sin((dist / minDim) * 25) * P.rippleEffect * rim;
+      const fx = (nx * (total + corner) - ny * ripple) * pw, fy = (ny * (total + corner) + nx * ripple) * ph;
+      const i = py * bw + px; dx[i] = fx; dy[i] = fy; maxAbs = Math.max(maxAbs, Math.abs(fx), Math.abs(fy));
+    }
+    const scale = Math.max(maxAbs * 2, 1e-4), bias = scale * (128 / 255 - .5);
+    const c = document.createElement('canvas'); c.width = bw; c.height = bh;
+    const ctx = c.getContext('2d'), img = ctx.createImageData(bw, bh), d = img.data;
+    for (let i = 0; i < bw * bh; i++) { d[i * 4] = clamp(255 * (.5 + (dx[i] - bias) / scale)); d[i * 4 + 1] = clamp(255 * (.5 + (dy[i] - bias) / scale)); d[i * 4 + 2] = 128; d[i * 4 + 3] = 255; }
+    ctx.putImageData(img, 0, 0);
+    return { url: c.toDataURL('image/png'), scale };
+  }
+  function filterFor(w, h, radius) {
+    const pw = 1920, ph = 1080, key = [w, h, radius].join('|');
+    let f = cache.get(key); if (f && f.isConnected) return f.id;
+    const { url, scale } = map(w, h, radius, pw, ph);
+    const id = 'lg-' + (n++), m = scale / 2 + 3 * P.blurRadius * BLUR_K, mx = m / w * 100, my = m / h * 100;
+    f = document.createElementNS(NS, 'filter');
+    Object.entries({ id, x: -mx + '%', y: -my + '%', width: 100 + 2 * mx + '%', height: 100 + 2 * my + '%', 'color-interpolation-filters': 'sRGB' }).forEach(([k, v]) => f.setAttribute(k, v));
+    const im = document.createElementNS(NS, 'feImage');
+    Object.entries({ href: url, x: 0, y: 0, width: w, height: h, preserveAspectRatio: 'none', result: 'map' }).forEach(([k, v]) => im.setAttribute(k, v));
+    const dm = document.createElementNS(NS, 'feDisplacementMap');
+    Object.entries({ in: 'SourceGraphic', in2: 'map', scale, xChannelSelector: 'R', yChannelSelector: 'G', result: 'd' }).forEach(([k, v]) => dm.setAttribute(k, v));
+    const bl = document.createElementNS(NS, 'feGaussianBlur'); bl.setAttribute('in', 'd'); bl.setAttribute('stdDeviation', 6);
+    const sat = document.createElementNS(NS, 'feColorMatrix'); sat.setAttribute('type', 'saturate'); sat.setAttribute('values', '1.5');
+    f.append(im, dm, bl, sat); ensureDefs().appendChild(f); cache.set(key, f);
+    return id;
+  }
+  function apply(el) {
+    if (!ok) return;
+    const w = el.offsetWidth, h = el.offsetHeight; if (w < 2 || h < 2) return;
+    const cs = getComputedStyle(el), rv = parseFloat(cs.borderTopLeftRadius) || 0;
+    const radius = Math.min(cs.borderTopLeftRadius.trim().endsWith('%') ? rv / 100 * Math.min(w, h) : rv, Math.min(w, h) / 2);
+    const key = w + 'x' + h + 'r' + radius; if (el.dataset.lgk === key) return;
+    el.dataset.lgk = key; el.style.backdropFilter = `url(#${filterFor(w, h, radius)})`;
+  }
+  return { apply, ok };
+})();
+function glassify(root) { $$('.lg', root).forEach(el => Glass.apply(el)); }
+
+/* ===== Navegación ===== */
+const slides = $$('.slide'); let cur = 0;
+function go(i, instant) {
+  i = Math.max(0, Math.min(slides.length - 1, i));
+  slides.forEach((s, k) => { s.classList.toggle('active', k === i); if (instant) s.setAttribute('data-instant', ''); else s.removeAttribute('data-instant'); });
+  cur = i; $('#count').textContent = (i + 1) + ' / ' + slides.length;
+  $('#progress').style.width = ((i + 1) / slides.length * 100) + '%';
+  history.replaceState(null, '', '#' + (i + 1));
+  requestAnimationFrame(() => glassify(slides[i]));
+  runCounters(slides[i]);
+  $$('#ovGrid .it').forEach((b, k) => b.classList.toggle('cur', k === i));
+}
+addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  if (['ArrowRight', 'PageDown', ' ', 'Enter'].includes(e.key)) { e.preventDefault(); go(cur + 1); }
+  else if (['ArrowLeft', 'PageUp', 'Backspace'].includes(e.key)) { e.preventDefault(); go(cur - 1); }
+  else if (e.key === 'Home') go(0); else if (e.key === 'End') go(slides.length - 1);
+  else if (e.key.toLowerCase() === 'o') toggleOverview();
+  else if (e.key.toLowerCase() === 'f') toggleFull();
+  else if (e.key === 'Escape') { $('#overview').classList.remove('on'); $('#lightbox').classList.remove('on'); }
+});
+let tx0 = null;
+addEventListener('touchstart', e => tx0 = e.touches[0].clientX, { passive: true });
+addEventListener('touchend', e => { if (tx0 === null) return; const d = e.changedTouches[0].clientX - tx0; if (Math.abs(d) > 60) go(cur + (d < 0 ? 1 : -1)); tx0 = null; });
+$('#bPrev').onclick = () => go(cur - 1); $('#bNext').onclick = () => go(cur + 1);
+$('#bOver').onclick = toggleOverview; $('#bFull').onclick = toggleFull;
+function toggleFull() { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen().catch(() => {}); }
+function toggleOverview() { $('#overview').classList.toggle('on'); }
+$('#ovGrid').innerHTML = slides.map((s, i) => `<button class="it lg"><b>${String(i + 1).padStart(2, '0')}</b>${s.dataset.title}</button>`).join('');
+$$('#ovGrid .it').forEach((b, i) => b.onclick = () => { go(i); toggleOverview(); });
+let idleT; addEventListener('mousemove', () => { document.body.classList.remove('idle'); clearTimeout(idleT); idleT = setTimeout(() => document.body.classList.add('idle'), 2600); });
+setTimeout(() => $('#hint').style.opacity = 0, 5000);
+
+/* ===== Visor de capturas ===== */
+document.addEventListener('click', e => {
+  const s = e.target.closest('.shot'); if (!s || e.target.closest('.pin')) return;
+  const img = $('img', s); const lb = $('#lightbox');
+  $('img', lb).src = img.src; $('p', lb).textContent = (s.dataset.cap || img.alt || '') + ' · pantalla real de DAILY';
+  lb.classList.add('on');
+});
+$('#lightbox').onclick = () => $('#lightbox').classList.remove('on');
+
+/* ===== Contadores ===== */
+function runCounters(root) {
+  $$('[data-count]', root).forEach(el => {
+    const to = parseFloat(el.dataset.count), dec = +(el.dataset.dec || 0), pre = el.dataset.pre || '', suf = el.dataset.suf || '';
+    const fmt = v => pre + v.toLocaleString('es-CO', { minimumFractionDigits: dec, maximumFractionDigits: dec }) + suf;
+    const t0 = performance.now(), dur = 1400;
+    (function tick(t) { const p = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - p, 3); el.textContent = fmt(to * e); if (p < 1) requestAnimationFrame(tick); })(t0);
+  });
+}
+
+/* ===== S3 · Hub ===== */
+function showNode(i) {
+  const n = DATA.hub[i];
+  $$('#s3 .node').forEach((b, k) => b.classList.toggle('on', k === i));
+  $$('#s3 .wire').forEach((w, k) => w.classList.toggle('on', k === i));
+  $('#hubDetail').innerHTML = `<div class="ico solid">${ICON[n.icon]}</div><h3>${n.name}</h3><p>${n.desc}</p>
+    <ul>${n.items.map(t => `<li>${ICON.faCircleCheck}<span>${t}</span></li>`).join('')}</ul>
+    <div class="links">${n.links.map(l => `<span class="chip g">${ICON.faLink} ${l}</span>`).join('')}</div>`;
+}
+$$('#s3 .node').forEach((b, i) => b.onclick = () => showNode(i)); showNode(0);
+
+/* ===== S6 · Pestañas de inventario ===== */
+function showTab(i) {
+  const t = DATA.inv[i];
+  $$('#invTabs button').forEach((b, k) => b.classList.toggle('on', k === i));
+  const img = $('#invShot img'); img.style.opacity = 0;
+  setTimeout(() => { img.src = 'capturas/' + t.img + '.jpg'; img.alt = t.name; $('#invShot').dataset.cap = t.name; img.onload = () => img.style.opacity = 1; }, 180);
+  $('#invInfo').innerHTML = `<div class="ico solid">${ICON[t.icon]}</div><h3>${t.name}</h3><p>${t.desc}</p><ul>${t.items.map(x => `<li>${ICON.faCircleCheck}<span>${x}</span></li>`).join('')}</ul>`;
+  $('#invInfo').classList.remove('fade-swap'); void $('#invInfo').offsetWidth; $('#invInfo').classList.add('fade-swap');
+}
+$('#invTabs').innerHTML = DATA.inv.map(t => `<button>${t.short}</button>`).join('');
+$$('#invTabs button').forEach((b, i) => b.onclick = () => showTab(i)); showTab(0);
+
+/* ===== S12 · Caso paso a paso ===== */
+let step = 0;
+function showStep(i) {
+  step = Math.max(0, Math.min(DATA.caso.length - 1, i)); const c = DATA.caso[step];
+  $$('#caseSteps button').forEach((b, k) => { b.classList.toggle('on', k === step); b.classList.toggle('done', k < step); });
+  $('#caseStory').innerHTML = `<div class="big" style="color:${c.color}">${c.big}</div><h3>${c.title}</h3><p>${c.text}</p>
+    <div class="nav">${step > 0 ? '<button class="pv">Anterior</button>' : ''}${step < DATA.caso.length - 1 ? '<button class="nx">Siguiente paso →</button>' : ''}</div>`;
+  const pv = $('#caseStory .pv'), nx = $('#caseStory .nx');
+  if (pv) pv.onclick = () => showStep(step - 1); if (nx) nx.onclick = () => showStep(step + 1);
+  const img = $('#caseShot img'); img.src = 'capturas/' + c.img + '.jpg'; img.style.objectPosition = c.pos || 'top left'; $('#caseShot').dataset.cap = c.title;
+  [$('#caseStory'), $('#caseShot')].forEach(el => { el.classList.remove('fade-swap'); void el.offsetWidth; el.classList.add('fade-swap'); });
+}
+$('#caseSteps').innerHTML = DATA.caso.map((c, i) => `<button class="lg"><span class="k">${i + 1}</span><span>${c.step}</span></button>`).join('');
+$$('#caseSteps button').forEach((b, i) => b.onclick = () => showStep(i)); showStep(0);
+
+/* ===== S13 · Antes / después y calculadora ===== */
+$$('#s13 .seg button').forEach(b => b.onclick = () => {
+  $$('#s13 .seg button').forEach(x => x.classList.toggle('on', x === b)); $('#baWrap').dataset.mode = b.dataset.m;
+});
+const money = v => '$' + Math.round(v).toLocaleString('es-CO');
+function calc() {
+  const s = +$('#rSales').value, a = +$('#rNow').value, g = Math.min(+$('#rGoal').value, a);
+  $('#cSales').textContent = money(s); $('#cNow').textContent = a.toFixed(1).replace('.', ',') + ' %'; $('#cGoal').textContent = g.toFixed(1).replace('.', ',') + ' %';
+  const la = s * a / 100, lg = s * g / 100;
+  $('#bNow').style.height = '100%'; $('#bGoal').style.height = (a ? lg / la * 100 : 0) + '%';
+  $('#lNow').textContent = money(la); $('#lGoal').textContent = money(lg); $('#cRes').textContent = money(la - lg);
+}
+['rSales', 'rNow', 'rGoal'].forEach(id => $('#' + id).oninput = calc); calc();
+
+/* ===== S2 · Tarjetas táctiles ===== */
+$$('.flip').forEach(f => f.onclick = () => f.classList.toggle('on'));
+
+go(Math.max(0, (parseInt(location.hash.slice(1)) || 1) - 1));
+</script>
+</body>
+</html>

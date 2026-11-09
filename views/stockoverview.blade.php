@@ -37,7 +37,8 @@ $meta = $se['meta'] ?? [];
 	     1. ENCABEZADO EJECUTIVO Y BARRA DE FILTROS GLOBALES (SECCIÓN 10)
 	     ====================================================================== -->
 	<header class="dsm-header">
-		<div class="dsm-title-block">
+		<div class="dsm-title-block daily-head">
+			<div class="dairy-page-icon is-primary"><i class="fa-solid fa-cubes"></i></div>
 			<div class="dsm-title-row">
 				<h1 class="dsm-title">Stock &amp; Movimientos</h1>
 				<span class="badge badge-light border text-muted font-weight-bold" style="font-size: 10.5px;" title="{{ $meta['demo_notice'] ?? '' }}">Rol: {{ ucfirst($meta['role'] ?? 'Manager') }}</span>
@@ -390,7 +391,40 @@ $meta = $se['meta'] ?? [];
 							<th class="text-center">Acción</th>
 						</tr>
 					</thead>
-					<tbody id="dsm-alert-tbody"></tbody>
+					<tbody id="dsm-alert-tbody">
+						<tr>
+							<td>
+								<div class="dsm-prod-cell">
+									<img src="{{ $U('/img/control_center/prod_baguette.svg') }}" class="dsm-prod-thumb" alt="">
+									<div>
+										<div class="dsm-prod-name">Leche Entera Alquería 1L</div>
+										<div class="dsm-prod-sku">SKU-1004</div>
+									</div>
+								</div>
+							</td>
+							<td>7702001001234</td>
+							<td><span class="dsm-dept-pill">Lácteos</span></td>
+							<td class="text-center"><span class="dsm-stock-badge is-danger">0</span></td>
+							<td class="text-center text-muted">24</td>
+							<td class="text-center"><button type="button" class="dsm-act-btn is-red" onclick="dsmActionFromCard('reorder', 1)"><i class="fa-solid fa-cart-plus mr-1"></i>Pedir</button></td>
+						</tr>
+						<tr>
+							<td>
+								<div class="dsm-prod-cell">
+									<img src="{{ $U('/img/control_center/prod_baguette.svg') }}" class="dsm-prod-thumb" alt="">
+									<div>
+										<div class="dsm-prod-name">Aceite Vegetal Premier 1000ml</div>
+										<div class="dsm-prod-sku">SKU-1002</div>
+									</div>
+								</div>
+							</td>
+							<td>7702123456789</td>
+							<td><span class="dsm-dept-pill">Abarrotes</span></td>
+							<td class="text-center"><span class="dsm-stock-badge is-warning">4</span></td>
+							<td class="text-center text-muted">18</td>
+							<td class="text-center"><button type="button" class="dsm-act-btn is-yellow" onclick="dsmActionFromCard('transfer', 2)"><i class="fa-solid fa-right-left mr-1"></i>Trasladar</button></td>
+						</tr>
+					</tbody>
 				</table>
 			</div>
 
@@ -440,7 +474,20 @@ $meta = $se['meta'] ?? [];
 							<th class="text-right">Cantidad</th>
 						</tr>
 					</thead>
-					<tbody id="dsm-move-tbody"></tbody>
+					<tbody id="dsm-move-tbody">
+						<tr>
+							<td class="text-muted">{{ date('d/m H:i', strtotime('-15 minutes')) }}</td>
+							<td><span class="dsm-type-pill is-green"><i class="fa-solid fa-boxes-packing mr-1"></i>Recepción</span></td>
+							<td><strong>Arroz Diana 1kg</strong><br><small class="text-muted">Muelle Calle 80</small></td>
+							<td class="text-right font-weight-bold text-success">+120</td>
+						</tr>
+						<tr>
+							<td class="text-muted">{{ date('d/m H:i', strtotime('-42 minutes')) }}</td>
+							<td><span class="dsm-type-pill is-blue"><i class="fa-solid fa-cart-shopping mr-1"></i>Venta POS</span></td>
+							<td><strong>Smart TV Samsung 55"</strong><br><small class="text-muted">Caja 03</small></td>
+							<td class="text-right font-weight-bold text-dark">-1</td>
+						</tr>
+					</tbody>
 				</table>
 			</div>
 		</div>
@@ -1394,7 +1441,7 @@ $meta = $se['meta'] ?? [];
 			</div>
 			<div class="modal-footer bg-light d-flex justify-content-between">
 				<div>
-					<a href="{{ $U('/quality') }}" class="btn btn-sm btn-link text-primary font-weight-bold"><i class="fa-solid fa-flask mr-1"></i>Ir a Calidad &amp; Vencimientos</a>
+					<a href="{{ $U('/traceability') }}" class="btn btn-sm btn-link text-primary font-weight-bold"><i class="fa-solid fa-route mr-1"></i>Ir a Trazabilidad de Lotes</a>
 					<a href="{{ $U('/waste') }}" class="btn btn-sm btn-link text-danger font-weight-bold"><i class="fa-solid fa-trash-can mr-1"></i>Ir a Control de Mermas</a>
 				</div>
 				<button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Cerrar</button>
@@ -1448,7 +1495,20 @@ $meta = $se['meta'] ?? [];
 								<th>Validación</th>
 							</tr>
 						</thead>
-						<tbody id="dsmMovementsModalTbody"></tbody>
+						<tbody id="dsmMovementsModalTbody">
+							<tr>
+								<td class="font-mono font-weight-bold">MOV-{{ date('Ymd') }}-001</td>
+								<td>{{ date('d/m/Y H:i', strtotime('-18 minutes')) }}</td>
+								<td><span class="badge badge-success">Recepción Muelle</span></td>
+								<td><strong>Arroz Diana 1kg</strong><br><small class="text-muted">SKU-2041</small></td>
+								<td class="text-right font-weight-bold text-success">+120 unids</td>
+								<td>Calle 80 - Bogotá</td>
+								<td>Muelle &rarr; Pasillo Granos 01</td>
+								<td>Carlos Mendoza</td>
+								<td>REM-99201</td>
+								<td><i class="fa-solid fa-circle-check text-success"></i> Conforme</td>
+							</tr>
+						</tbody>
 					</table>
 				</div>
 			</div>
@@ -1492,7 +1552,17 @@ $meta = $se['meta'] ?? [];
 								<th style="text-align: right;">Acción Ejecutable</th>
 							</tr>
 						</thead>
-						<tbody id="dsmDecisionsModalTbody"></tbody>
+						<tbody id="dsmDecisionsModalTbody">
+							<tr>
+								<td><span class="badge badge-danger">Crítico</span></td>
+								<td><strong>Quiebre inminente en Leche Entera 1L</strong><br><small class="text-muted">Stock actual 0 con demanda activa</small></td>
+								<td class="text-danger font-weight-bold">Pérdida estimada $420,000 / día</td>
+								<td>Jefe Compras</td>
+								<td>{{ date('d/m/Y H:i') }}</td>
+								<td><span class="badge badge-warning text-dark">Pendiente</span></td>
+								<td class="text-right"><a href="{{ $U('/mrp') }}" class="btn btn-xs btn-primary font-weight-bold">Generar OC Urgente</a></td>
+							</tr>
+						</tbody>
 					</table>
 				</div>
 			</div>
@@ -1653,7 +1723,30 @@ $meta = $se['meta'] ?? [];
 								<th class="text-center">Acciones</th>
 							</tr>
 						</thead>
-						<tbody id="dsm-all-alerts-tbody"></tbody>
+						<tbody id="dsm-all-alerts-tbody">
+							<tr>
+								<td><strong>Leche Entera Alquería 1L</strong><br><small class="text-muted">SKU-1004</small></td>
+								<td>7702001001234</td>
+								<td><span class="dsm-dept-pill">Lácteos</span></td>
+								<td>Calle 80 - Bogotá</td>
+								<td class="text-center font-weight-bold text-danger">0</td>
+								<td class="text-center text-muted">24</td>
+								<td class="text-center text-danger font-weight-bold">-24</td>
+								<td><span class="badge badge-danger">Agotado</span></td>
+								<td class="text-center"><button class="btn btn-xs btn-primary font-weight-bold"><i class="fa-solid fa-cart-plus mr-1"></i>Reponer</button></td>
+							</tr>
+							<tr>
+								<td><strong>Aceite Vegetal Premier 1000ml</strong><br><small class="text-muted">SKU-1002</small></td>
+								<td>7702123456789</td>
+								<td><span class="dsm-dept-pill">Abarrotes</span></td>
+								<td>Cali Sur</td>
+								<td class="text-center font-weight-bold text-warning">4</td>
+								<td class="text-center text-muted">18</td>
+								<td class="text-center text-warning font-weight-bold">-14</td>
+								<td><span class="badge badge-warning text-dark">Bajo mínimo</span></td>
+								<td class="text-center"><button class="btn btn-xs btn-warning font-weight-bold text-dark"><i class="fa-solid fa-right-left mr-1"></i>Trasladar</button></td>
+							</tr>
+						</tbody>
 					</table>
 				</div>
 			</div>
@@ -1877,7 +1970,24 @@ $meta = $se['meta'] ?? [];
 								<th class="text-right">% Participación</th>
 							</tr>
 						</thead>
-						<tbody id="dsm-top10-all-modal-tbody"></tbody>
+						<tbody id="dsm-top10-all-modal-tbody">
+							<tr>
+								<td class="font-weight-bold text-muted">1</td>
+								<td><strong>Smart TV Samsung 55" Crystal UHD</strong></td>
+								<td><span class="dsm-dept-pill">Tecnología</span></td>
+								<td class="text-right font-weight-bold text-dark">$42,497,500</td>
+								<td class="text-right">25 unids</td>
+								<td class="text-right font-weight-bold text-primary">28.4%</td>
+							</tr>
+							<tr>
+								<td class="font-weight-bold text-muted">2</td>
+								<td><strong>Nevera Mabe No Frost 300L</strong></td>
+								<td><span class="dsm-dept-pill">Electrodomésticos</span></td>
+								<td class="text-right font-weight-bold text-dark">$28,500,000</td>
+								<td class="text-right">15 unids</td>
+								<td class="text-right font-weight-bold text-primary">19.1%</td>
+							</tr>
+						</tbody>
 					</table>
 				</div>
 			</div>
@@ -1923,7 +2033,19 @@ $meta = $se['meta'] ?? [];
 								<th class="text-center">Acción</th>
 							</tr>
 						</thead>
-						<tbody id="dsm-fefo-all-modal-tbody"></tbody>
+						<tbody id="dsm-fefo-all-modal-tbody">
+							<tr>
+								<td class="font-weight-bold text-muted">1</td>
+								<td><strong>Yogurt Alpina Fresa 1000g</strong></td>
+								<td><span class="badge badge-light border">LOT-20261101-04</span></td>
+								<td>Calle 80 / Nevera Lácteos 02</td>
+								<td>{{ date('d/m/Y', strtotime('+4 days')) }}</td>
+								<td class="text-center"><span class="badge badge-danger font-weight-bold">4 días</span></td>
+								<td class="text-right font-weight-bold">18 unids</td>
+								<td class="text-right font-weight-bold text-danger">$162,000</td>
+								<td class="text-center"><a href="{{ $U('/waste/report') }}" class="btn btn-xs btn-outline-danger">Acción FEFO</a></td>
+							</tr>
+						</tbody>
 					</table>
 				</div>
 			</div>

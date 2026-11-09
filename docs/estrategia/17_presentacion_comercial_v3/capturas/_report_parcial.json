@@ -1,0 +1,181 @@
+[
+ {
+  "f": "01_ejecutivo/today",
+  "u": "/today",
+  "h": 2824,
+  "leaks": [],
+  "noisy": 2
+ },
+ {
+  "f": "02_mermas/waste_causales",
+  "u": "/waste",
+  "h": 2316,
+  "leaks": [],
+  "noisy": 1
+ },
+ {
+  "f": "03_inventario/stockoverview",
+  "u": "/stockoverview",
+  "h": 5005,
+  "leaks": [],
+  "noisy": 0
+ },
+ {
+  "f": "03_inventario/kardex",
+  "u": "/kardex",
+  "h": 2116,
+  "leaks": [],
+  "noisy": 0
+ },
+ {
+  "f": "03_inventario/kardex_producto",
+  "u": "/kardex?product_id=9001",
+  "h": 3134,
+  "leaks": [],
+  "noisy": 0
+ },
+ {
+  "f": "03_inventario/conciliacion",
+  "u": "/reconciliation?product_id=9001",
+  "h": 2056,
+  "leaks": [],
+  "noisy": 0
+ },
+ {
+  "f": "03_inventario/conciliacion_ficha",
+  "u": "/reconciliation?product_id=9001",
+  "h": 2056,
+  "leaks": [],
+  "noisy": 0
+ },
+ {
+  "f": "05_ventas/sales",
+  "u": "/sales",
+  "h": 3317,
+  "leaks": [],
+  "noisy": 0
+ },
+ {
+  "f": "sales_analisis",
+  "fail": "page.click: Timeout 8000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#pill-analisis')\u001b[22m\n"
+ },
+ {
+  "f": "07_multisucursal/branches",
+  "u": "/branches",
+  "h": 8497,
+  "leaks": [],
+  "noisy": 3
+ },
+ {
+  "f": "08_alertas/alerts",
+  "u": "/alerts",
+  "h": 1976,
+  "leaks": [],
+  "noisy": 0
+ },
+ {
+  "f": "11_prevencion/lp",
+  "u": "/loss-prevention",
+  "h": 2056,
+  "leaks": [],
+  "noisy": 1
+ },
+ {
+  "f": "11_prevencion/lp_anomalias",
+  "u": "/loss-prevention",
+  "h": 2472,
+  "leaks": [],
+  "noisy": 1
+ },
+ {
+  "f": "11_prevencion/lp_custodia",
+  "u": "/loss-prevention",
+  "h": 2602,
+  "leaks": [],
+  "noisy": 1
+ },
+ {
+  "f": "11_prevencion/lp_counts",
+  "u": "/loss-prevention/counts",
+  "h": 1080,
+  "leaks": [],
+  "noisy": 0
+ },
+ {
+  "f": "11_prevencion/lp_devices",
+  "u": "/loss-prevention/devices",
+  "h": 11697,
+  "leaks": [],
+  "noisy": 0
+ },
+ {
+  "f": "12_procesos/process_flow",
+  "u": "/process-flow",
+  "h": 9466,
+  "leaks": [],
+  "noisy": 0
+ },
+ {
+  "f": "10_movil/m_home",
+  "u": "/m#/home",
+  "h": 2698,
+  "leaks": [],
+  "noisy": 0
+ },
+ {
+  "f": "10_movil/m_tasks",
+  "u": "/m#/tasks",
+  "h": 5802,
+  "leaks": [],
+  "noisy": 0
+ },
+ {
+  "f": "10_movil/m_scan",
+  "u": "/m#/scan",
+  "h": 844,
+  "leaks": [],
+  "noisy": 0
+ },
+ {
+  "f": "10_movil/m_control",
+  "u": "/m#/control",
+  "h": 104350,
+  "leaks": [],
+  "noisy": 1
+ },
+ {
+  "f": "10_movil/m_notifications",
+  "u": "/m#/notifications",
+  "h": 7678,
+  "leaks": [],
+  "noisy": 0
+ },
+ {
+  "f": "10_movil/m_inv",
+  "u": "/m#/inv",
+  "h": 1927,
+  "leaks": [],
+  "noisy": 0
+ },
+ {
+  "f": "10_movil/m_waste",
+  "u": "/m#/waste",
+  "h": 2251,
+  "leaks": [],
+  "noisy": 1
+ },
+ {
+  "f": "10_movil/m_team",
+  "u": "/m#/team",
+  "h": 2121,
+  "leaks": [],
+  "noisy": 0
+ },
+ {
+  "f": "10_movil/m_sales",
+  "u": "/m#/sales",
+  "h": 2521,
+  "leaks": [],
+  "noisy": 0
+ }
+]

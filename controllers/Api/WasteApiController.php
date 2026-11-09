@@ -667,6 +667,21 @@ class WasteApiController extends BaseApiController
 		}
 	}
 
+	public function MoveToQuarantine(Request $request, Response $response, array $args)
+	{
+		$data = $request->getParsedBody();
+		if (empty($data['product_id']) || empty($data['stock_id']) || empty($data['amount']))
+		{
+			return $this->GenericErrorResponse($response, 'Producto, lote y cantidad son obligatorios', 400);
+		}
+		$id = \Grocy\Services\QualityExpiryService::GetInstance()->MoveToQuarantine($data);
+		return $this->ApiResponse($response, [
+			'success' => true,
+			'quarantine_id' => $id,
+			'message' => 'Lote aislado en cuarentena correctamente'
+		]);
+	}
+
 	public function ExecuteCycleCount(Request $request, Response $response, array $args)
 	{
 		User::CheckPermission($request, User::PERMISSION_STOCK_INVENTORY);

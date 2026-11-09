@@ -1,0 +1,343 @@
+/* Navegación continua DAILY: sin pantallas blancas entre dashboards.
+   - Fondo en <html> igual al lienzo, para que entre documentos nunca se vea blanco.
+   - Transición entre documentos (View Transitions): el navegador mantiene la página anterior hasta
+     pintar la nueva y solo funde el contenido; encabezado y menú lateral quedan fijos.
+   - Mientras el servidor responde, la página anterior sigue visible con una barra de progreso. */
+html { background: #f7fbf8; }
+html.daily-night { background: #333131; }
+
+@view-transition { navigation: auto; }
+/* Sin fundido cruzado: los paneles translúcidos del primer cuadro dejaban ver la página anterior (aspecto
+   lavado). El marco cambia de golpe y solo el contenido central se asienta en 120 ms. */
+::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+/* daily-content se asigna solo durante la transición (daily_nav.js): fijo crearía un contexto de apilamiento
+   que dejaría modales bajo el encabezado y cortaría el backdrop-filter del vidrio. */
+::view-transition-group(daily-content) { animation: none; }
+::view-transition-old(daily-content) { display: none; }
+::view-transition-new(daily-content) { animation: daily-vt-in 120ms ease-out both; }
+@keyframes daily-vt-in { from { opacity: .4; } } /* nunca parte de un área vacía */
+nav.navbar.fixed-top { view-transition-name: daily-header; }
+::view-transition-group(daily-header),
+::view-transition-new(daily-header) { animation: none; }
+::view-transition-old(daily-header) { display: none; }
+@media (prefers-reduced-motion: reduce) {
+	::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
+}
+
+/* Mientras el servidor responde: barra de progreso fina y la página anterior sigue visible e interactiva
+   (antes se lavaba a opacidad .1 sobre fondo claro y se percibía como pantalla blanca). Si la espera se
+   alarga, el contenido se atenúa levemente, sin ocultarlo ni cubrirlo. */
+.daily-nav-bar {
+	position: fixed; top: 0; left: 0; height: 2px; width: 0; z-index: 2000; pointer-events: none;
+	background: var(--dairy-primary, #00a33b); opacity: 0; transition: opacity 120ms;
+}
+html.daily-nav-pending .daily-nav-bar { opacity: 1; transition: none; animation: dailyNavBar 8s cubic-bezier(.1, .7, .3, 1) forwards; }
+@keyframes dailyNavBar { from { width: 0; } 10% { width: 35%; } to { width: 92%; } }
+
+#page-content { position: relative; }
+/* Sin selector universal: invalidaba el estilo de todo el árbol (65 000 nodos en HOY) al cambiar la clase */
+html.daily-nav-loading body, html.daily-nav-loading a { cursor: progress; }
+html.daily-nav-loading #page-content { opacity: .82; transition: opacity 220ms ease-out 600ms; }
+@media (prefers-reduced-motion: reduce) { html.daily-nav-pending .daily-nav-bar { animation: none; width: 60%; } html.daily-nav-loading #page-content { transition: none; } }
+
+/* Aviso recuperable (daily_errors.js): error no controlado, solicitud fallida o navegación lenta */
+.daily-notice { position: fixed; left: 50%; bottom: 20px; z-index: 2000; transform: translateX(-50%); display: flex; align-items: center; gap: 10px; max-width: calc(100vw - 32px); padding: 10px 12px 10px 14px; border-radius: 12px; background: #fff; border: 1px solid #fde68a; box-shadow: 0 12px 32px -12px rgba(15, 23, 42, .35); font-size: .875rem; color: #1f2937; animation: dailyNoticeIn 180ms ease-out; }
+.daily-notice[hidden] { display: none; }
+.daily-notice .fa-triangle-exclamation { color: #d97706; }
+.daily-notice__retry { border: 0; border-radius: 8px; padding: 5px 12px; background: #00a84a; color: #fff; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.daily-notice__close { border: 0; background: none; font-size: 1.25rem; line-height: 1; color: #6b7280; cursor: pointer; }
+@keyframes dailyNoticeIn { from { opacity: 0; transform: translate(-50%, 8px); } }
+@media (prefers-reduced-motion: reduce) { .daily-notice { animation: none; } }
+
+/* ==========================================================================
+   DAILY — OPTIMIZACIÓN DEL ENCABEZADO Y MENÚ DE PERFIL DE USUARIO
+   ========================================================================== */
+
+/* Trigger del perfil en el Navbar */
+.daily-profile-trigger {
+	border-radius: 24px;
+	padding: 4px 10px !important;
+	transition: background 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+	cursor: pointer;
+	text-decoration: none !important;
+	border: 1px solid transparent;
+}
+.daily-profile-trigger:hover,
+.daily-user-profile-item.show .daily-profile-trigger {
+	background: rgba(16, 124, 65, 0.08);
+	border-color: rgba(16, 124, 65, 0.18);
+}
+.daily-profile-avatar {
+	width: 34px;
+	height: 34px;
+	border-radius: 50%;
+	background: #008736;
+	color: #ffffff;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-weight: 700;
+	font-size: 13px;
+	letter-spacing: 0.5px;
+	box-shadow: 0 2px 6px rgba(0, 135, 54, 0.25);
+	flex-shrink: 0;
+	border: 2px solid #ffffff;
+}
+.daily-profile-name {
+	font-size: 13px;
+	color: var(--dairy-text-main, #0f172a);
+	line-height: 1.2;
+}
+.daily-profile-role-sub {
+	font-size: 10.5px;
+	color: var(--dairy-text-muted, #64748b);
+	line-height: 1.2;
+}
+.daily-profile-caret {
+	font-size: 10px;
+	color: var(--dairy-text-muted, #64748b);
+	transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.daily-user-profile-item.show .daily-profile-caret {
+	transform: rotate(180deg);
+}
+
+/* Menú desplegable del perfil */
+html body.crystal-ui .dropdown-menu.daily-profile-dropdown-menu,
+html body .dropdown-menu.daily-profile-dropdown-menu,
+.daily-profile-dropdown-menu {
+	min-width: 325px;
+	max-width: 350px;
+	padding: 0;
+	border-radius: 18px !important;
+	background: #ffffff !important;
+	background-color: #ffffff !important;
+	backdrop-filter: none !important;
+	-webkit-backdrop-filter: none !important;
+	border: 1px solid rgba(226, 232, 240, 0.95) !important;
+	box-shadow: 0 20px 45px -10px rgba(15, 23, 42, 0.22),
+	            0 10px 25px -5px rgba(16, 124, 65, 0.12) !important;
+	animation: dailyProfileSlideDown 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+	transform-origin: top right;
+	margin-top: 8px !important;
+	overflow: hidden;
+	z-index: 1060 !important;
+}
+
+@keyframes dailyProfileSlideDown {
+	from {
+		opacity: 0;
+		transform: translateY(-8px) scale(0.97);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
+
+/* Tarjeta superior dentro del menú */
+.daily-profile-header-card {
+	background: linear-gradient(135deg, rgba(240, 253, 244, 0.85) 0%, rgba(255, 255, 255, 0.95) 100%);
+	border-top-left-radius: 18px;
+	border-top-right-radius: 18px;
+}
+.daily-profile-avatar-lg {
+	width: 44px;
+	height: 44px;
+	border-radius: 50%;
+	background: #008736;
+	color: #ffffff;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-weight: 700;
+	font-size: 16px;
+	letter-spacing: 0.5px;
+	box-shadow: 0 4px 12px rgba(0, 135, 54, 0.3);
+	flex-shrink: 0;
+	border: 2px solid #ffffff;
+}
+.daily-profile-header-name {
+	font-size: 14.5px;
+	color: #0f172a;
+	line-height: 1.25;
+}
+.daily-status-dot {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: #10b981;
+	box-shadow: 0 0 0 2px #d1fae5;
+	display: inline-block;
+}
+.daily-profile-header-role {
+	font-size: 11.5px;
+	color: #64748b;
+}
+
+/* Títulos de sección */
+.daily-menu-section-header {
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	color: #94a3b8;
+}
+
+/* Elementos de menú clickeables */
+.daily-profile-menu-item {
+	font-size: 13px;
+	font-weight: 500;
+	color: #1e293b;
+	transition: background 0.15s ease, color 0.15s ease;
+	border-radius: 8px;
+	margin: 1px 8px;
+	padding: 7px 12px;
+}
+.daily-profile-menu-item:hover {
+	background: rgba(16, 124, 65, 0.08);
+	color: #065f46;
+}
+
+/* Cajas de control de Rol, Plan, Preferencias */
+.daily-profile-control-box {
+	background: rgba(248, 250, 252, 0.75);
+	border: 1px solid rgba(226, 232, 240, 0.85);
+	border-radius: 12px;
+	margin: 4px 10px;
+	padding: 8px 12px;
+}
+.daily-profile-control-title {
+	font-size: 12px;
+	font-weight: 600;
+	color: #334155;
+	display: flex;
+	align-items: center;
+}
+.badge-primary-subtle {
+	background: #e0f2fe;
+	color: #0369a1;
+	font-size: 11px;
+	padding: 3px 8px;
+}
+.badge-success-subtle {
+	background: #dcfce7;
+	color: #15803d;
+	font-size: 11px;
+	padding: 3px 8px;
+}
+.daily-profile-select {
+	font-size: 12px;
+	height: 31px;
+	padding: 2px 8px;
+	border-radius: 8px;
+	border: 1px solid #cbd5e1;
+	background-color: #ffffff;
+	font-weight: 500;
+	cursor: pointer;
+}
+.daily-profile-select:focus {
+	border-color: #10b981;
+	box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
+.daily-plan-link-btn {
+	height: 31px;
+	width: 32px;
+	padding: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 8px;
+	flex-shrink: 0;
+}
+.daily-theme-mode-btn {
+	border-radius: 8px;
+	font-size: 11px;
+	color: #475569;
+}
+.daily-pref-lang-group .btn {
+	font-size: 11.5px;
+	border-radius: 8px !important;
+}
+.daily-pref-lang-group .btn.active {
+	background: #10b981;
+	border-color: #10b981;
+	color: #ffffff;
+}
+
+/* Botón cerrar sesión */
+.daily-logout-item {
+	color: #dc2626 !important;
+	border-radius: 8px;
+	margin: 2px 8px 8px;
+}
+.daily-logout-item:hover {
+	background: #fef2f2 !important;
+	color: #b91c1c !important;
+}
+
+/* Modo oscuro (Night mode) */
+html.daily-night .daily-profile-trigger:hover,
+body.night-mode .daily-profile-trigger:hover,
+html.daily-night .daily-user-profile-item.show .daily-profile-trigger,
+body.night-mode .daily-user-profile-item.show .daily-profile-trigger {
+	background: rgba(255, 255, 255, 0.08);
+	border-color: rgba(255, 255, 255, 0.15);
+}
+html.daily-night .daily-profile-name,
+body.night-mode .daily-profile-name {
+	color: #f8fafc;
+}
+html.daily-night .daily-profile-role-sub,
+body.night-mode .daily-profile-role-sub {
+	color: #94a3b8;
+}
+html.daily-night body.crystal-ui .dropdown-menu.daily-profile-dropdown-menu,
+html.daily-night .daily-profile-dropdown-menu,
+body.night-mode .daily-profile-dropdown-menu {
+	background: #0f172a !important;
+	background-color: #0f172a !important;
+	border-color: rgba(51, 65, 85, 0.9) !important;
+	box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7) !important;
+}
+html.daily-night .daily-profile-header-card,
+body.night-mode .daily-profile-header-card {
+	background: linear-gradient(135deg, rgba(6, 78, 59, 0.4) 0%, rgba(15, 23, 42, 0.9) 100%);
+	border-color: rgba(51, 65, 85, 0.6) !important;
+}
+html.daily-night .daily-profile-header-name,
+body.night-mode .daily-profile-header-name {
+	color: #f8fafc;
+}
+html.daily-night .daily-profile-header-role,
+body.night-mode .daily-profile-header-role {
+	color: #94a3b8;
+}
+html.daily-night .daily-profile-control-box,
+body.night-mode .daily-profile-control-box {
+	background: rgba(30, 41, 59, 0.7);
+	border-color: rgba(51, 65, 85, 0.8);
+}
+html.daily-night .daily-profile-control-title,
+body.night-mode .daily-profile-control-title {
+	color: #e2e8f0;
+}
+html.daily-night .daily-profile-select,
+body.night-mode .daily-profile-select {
+	background-color: #1e293b;
+	border-color: #475569;
+	color: #f8fafc;
+}
+html.daily-night .daily-profile-menu-item,
+body.night-mode .daily-profile-menu-item {
+	color: #cbd5e1;
+}
+html.daily-night .daily-profile-menu-item:hover,
+body.night-mode .daily-profile-menu-item:hover {
+	background: rgba(51, 65, 85, 0.6);
+	color: #ffffff;
+}
+html.daily-night .daily-logout-item:hover,
+body.night-mode .daily-logout-item:hover {
+	background: rgba(153, 27, 27, 0.3) !important;
+	color: #f87171 !important;
+}

@@ -124,7 +124,7 @@
 				<i class="fa-solid fa-drumstick-bite mr-1 text-primary"></i>+ Pollo
 			</button>
 			<button class="btn btn-sm btn-outline-dark" onclick='DairyLoss.dialog("Lote de carne", {!! json_encode($meatForm('carne')) !!}, "loss/yield-lots", "Lote registrado");'>
-				<i class="fa-solid fa-cow mr-1 text-danger"></i>+ Carne
+				<i class="fa-solid fa-drumstick-bite mr-1 text-danger"></i>+ Carne
 			</button>
 			<button class="btn btn-sm btn-outline-dark" onclick='DairyLoss.dialog("Lote de fruver", {!! json_encode($meatForm('fruver')) !!}, "loss/yield-lots", "Lote registrado");'>
 				<i class="fa-solid fa-carrot mr-1 text-success"></i>+ Fruver
@@ -137,7 +137,7 @@
 	<div class="daily-dept-pills" id="dailyDeptPills" role="tablist">
 		<a href="javascript:void(0)" class="daily-dept-pill active" data-dept="all"><i class="fa-solid fa-layer-group"></i> Todos</a>
 		<a href="javascript:void(0)" class="daily-dept-pill" data-dept="pollo"><i class="fa-solid fa-drumstick-bite"></i> Pollo</a>
-		<a href="javascript:void(0)" class="daily-dept-pill" data-dept="carne"><i class="fa-solid fa-cow"></i> Carne</a>
+		<a href="javascript:void(0)" class="daily-dept-pill" data-dept="carne"><i class="fa-solid fa-drumstick-bite"></i> Carne</a>
 		<a href="javascript:void(0)" class="daily-dept-pill" data-dept="fruver"><i class="fa-solid fa-apple-whole"></i> Fruver</a>
 		<a href="javascript:void(0)" class="daily-dept-pill" data-dept="lacteos"><i class="fa-solid fa-cheese"></i> Lácteos</a>
 		<a href="javascript:void(0)" class="daily-dept-pill" data-dept="panaderia"><i class="fa-solid fa-bread-slice"></i> Panadería</a>
@@ -181,7 +181,7 @@
 				</li>
 				<li class="nav-item">
 					<a class="nav-link dairy-tab-link" id="daily-tab-lot-carne" data-toggle="pill" href="#daily-pane-carne" role="tab">
-						<i class="fa-solid fa-cow mr-1"></i>Carnes ({{ count($lotsByKind('carne')) }})
+						<i class="fa-solid fa-drumstick-bite mr-1"></i>Carnes ({{ count($lotsByKind('carne')) }})
 					</a>
 				</li>
 				<li class="nav-item">

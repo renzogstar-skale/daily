@@ -1,0 +1,17 @@
+{
+    "Actualizar con los datos del archivo": "Update with the file data",
+    "Archivo CSV (UTF{0} o Excel «CSV delimitado»)": "CSV file (UTF{0} or Excel «CSV delimited»)",
+    "Confirmar importación": "Confirm import",
+    "Exportar datos actuales": "Export current data",
+    "Guarde la hoja como CSV (Archivo → Guardar como → CSV UTF{0}) e impórtela de nuevo": "Save the sheet as CSV (File → Save as → CSV UTF{0}) and import it again",
+    "No se pudo leer el archivo": "The file could not be read",
+    "Rechazar la fila (solo altas)": "Reject the row (new records only)",
+    "Si el registro ya existe": "If the record already exists",
+    "Sin importaciones.": "No imports.",
+    "Tipo de registro": "Record type",
+    "actualización(es) ·": "update(s) ·",
+    "alta(s) ·": "new record(s) ·",
+    "obligatoria. Separador coma, punto y coma o tabulador.": "required. Comma, semicolon or tab separator.",
+    "registro(s)? Se aplicará todo o nada.": "record(s)? All or nothing will be applied.",
+    "¿Guardar": "Save"
+}

@@ -50,6 +50,19 @@ class StockController extends BaseController
 		]);
 	}
 
+	/** Productos agotados y búsqueda de disponibilidad por SKU, con los filtros compartidos */
+	public function Stockouts(Request $request, Response $response, array $args)
+	{
+		$f = \Grocy\Helpers\DailyFilters::FromQuery($request->getQueryParams());
+		$options = \Grocy\Helpers\DailyFilters::Options($f);
+		return $this->RenderPage($response, 'inventory_stockouts', [
+			'filters' => $f,
+			'filterOptions' => $options,
+			'filterNames' => \Grocy\Helpers\DailyFilters::Describe($f, $options),
+			'result' => \Grocy\Services\StockoutService::GetInstance()->List($f)
+		]);
+	}
+
 	public function Inventory(Request $request, Response $response, array $args)
 	{
 		$q = $request->getQueryParams();
@@ -152,63 +165,9 @@ class StockController extends BaseController
 
 	public function Overview(Request $request, Response $response, array $args)
 	{
-		$usersService = UsersService::GetInstance();
-		$userSettings = $usersService->GetUserSettings(GROCY_USER_ID);
-		$nextXDays = $userSettings['stock_due_soon_days'];
-
-		$where = 'is_in_stock_or_below_min_stock = 1';
-		if (boolval($userSettings['stock_overview_show_all_out_of_stock_products']))
-		{
-			$where = '1=1';
-		}
-
-		$inventoryHealth = \Grocy\Services\DairyInventoryService::GetInstance()->GetInventoryHealth();
-
-		$dbRaw = \Grocy\Services\DatabaseService::GetInstance()->GetDbConnectionRaw();
-		$physicalValuation = floatval($dbRaw->query('SELECT IFNULL(SUM(value), 0) FROM uihelper_stock_current_overview')->fetchColumn());
-
-		$fefoCards = $dbRaw->query("
-			SELECT sc.product_id, p.name as product_name, p.sku, sc.amount, sc.best_before_date, qu.name as qu_name, qu.name_plural as qu_name_plural,
-				CASE 
-					WHEN sc.best_before_date < date('now', 'localtime') THEN 'expired'
-					WHEN sc.best_before_date <= date('now', 'localtime', '+5 days') THEN 'duesoon'
-					ELSE 'optimal'
-				END as expiry_state
-			FROM stock_current sc
-			JOIN products p ON sc.product_id = p.id
-			LEFT JOIN quantity_units qu ON p.qu_id_stock = qu.id
-			WHERE sc.amount > 0 AND sc.best_before_date IS NOT NULL
-			ORDER BY sc.best_before_date ASC
-			LIMIT 2
-		")->fetchAll(\PDO::FETCH_ASSOC);
-
-		// Contexto de sucursal (lotes y movimientos): la elegida si está permitida, si no las permitidas
-		$branchId = intval($request->getQueryParams()['branch_id'] ?? 0);
-		$allowed = \Grocy\Helpers\DairyAccess::AllowedBranches();
-		$scope = $branchId > 0 && ($allowed === null || in_array($branchId, $allowed, true)) ? [$branchId] : $allowed;
-		$branchSql = $scope === null ? '' : ' AND l.branch_id IN (' . implode(',', array_map('intval', $scope ?: [0])) . ')';
-
-		$stockLots = $dbRaw->query("
-			SELECT s.id, s.product_id, p.name as product_name, p.sku, s.amount, s.best_before_date, s.price, l.name as location_name, qu.name as qu_name, qu.name_plural as qu_name_plural, s.purchased_date
-			FROM stock s
-			JOIN products p ON s.product_id = p.id
-			LEFT JOIN locations l ON s.location_id = l.id
-			LEFT JOIN quantity_units qu ON p.qu_id_stock = qu.id
-			WHERE 1 = 1$branchSql
-			ORDER BY s.best_before_date ASC
-		")->fetchAll(\PDO::FETCH_ASSOC);
-
-		$stockJournal = $dbRaw->query("
-			SELECT sl.id, sl.product_id, p.name as product_name, p.sku, sl.amount, sl.transaction_type, sl.row_created_timestamp, qu.name as qu_name, qu.name_plural as qu_name_plural, l.name as location_name, u.first_name, u.last_name, u.username
-			FROM stock_log sl
-			JOIN products p ON sl.product_id = p.id
-			LEFT JOIN locations l ON sl.location_id = l.id
-			LEFT JOIN quantity_units qu ON p.qu_id_stock = qu.id
-			LEFT JOIN users u ON sl.user_id = u.id
-			WHERE sl.undone = 0$branchSql
-			ORDER BY sl.id DESC
-			LIMIT 50
-		")->fetchAll(\PDO::FETCH_ASSOC);
+		// La vista (tablero ejecutivo) solo usa stockExec, locations, branches y suppliers. Antes se calculaban además la
+		// salud de inventario, la valorización física, todos los lotes, el diario y las ubicaciones sin mostrarse (~0,7 s).
+		$userSettings = UsersService::GetInstance()->GetUserSettings(GROCY_USER_ID);
 
 		$branches = [];
 		try
@@ -219,28 +178,12 @@ class StockController extends BaseController
 		{
 		}
 
-		$reconciliation = [
-			'header_valuation' => $physicalValuation,
-			'indicator_valuation' => floatval($inventoryHealth['valuation']),
-			'diff' => round($physicalValuation - floatval($inventoryHealth['valuation']), 2)
-		];
-
 		return $this->RenderPage($response, 'stockoverview', [
-			'currentStock' => $this->DB->uihelper_stock_current_overview()->where($where),
 			'locations' => $this->DB->locations()->where('active = 1')->orderBy('name', 'COLLATE NOCASE'),
-			'currentStockLocations' => StockService::GetInstance()->GetCurrentStockLocations(),
-			'nextXDays' => $nextXDays,
-			'productGroups' => $this->DB->product_groups()->where('active = 1')->orderBy('name', 'COLLATE NOCASE'),
-			'userfields' => UserfieldsService::GetInstance()->GetFields('products'),
-			'userfieldValues' => UserfieldsService::GetInstance()->GetAllValues('products'),
-			'inventoryHealth' => $inventoryHealth,
-			'fefoCards' => $fefoCards,
-			'stockLots' => $stockLots,
-			'stockJournal' => $stockJournal,
+			'nextXDays' => $userSettings['stock_due_soon_days'],
 			'branches' => $branches,
 			'stockExec' => \Grocy\Services\StockExecutiveOverviewService::GetInstance()->GetExecutiveData($request->getQueryParams()),
-			'suppliers' => $this->DB->shopping_locations()->where('active = 1')->orderBy('name', 'COLLATE NOCASE'),
-			'reconciliation' => $reconciliation
+			'suppliers' => $this->DB->shopping_locations()->where('active = 1')->orderBy('name', 'COLLATE NOCASE')
 		]);
 	}
 

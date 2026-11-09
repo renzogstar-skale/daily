@@ -2,7 +2,7 @@
 	"name": "grocy",
 	"private": true,
 	"scripts": {
-		"dev": "php -S localhost:8080 -t public router.php"
+		"dev": "php -S 0.0.0.0:8080 -t public router.php"
 	},
 	"dependencies": {
 		"@danielfarrell/bootstrap-combobox": "https://github.com/berrnd/bootstrap-combobox.git#master-fork",
@@ -32,6 +32,7 @@
 		"gettext-translator": "3.0.1",
 		"jquery": "^3.6.0",
 		"jquery-serializejson": "^2.9.0",
+		"lucide": "^1.70.0",
 		"moment": "^2.27.0",
 		"nosleep.js": "^0.12.0",
 		"sprintf-js": "^1.1.2",
@@ -44,6 +45,7 @@
 		"@testing-library/jest-dom": "^7.0.1",
 		"@testing-library/react": "^16.3.3",
 		"@testing-library/user-event": "^14.6.8",
-		"jsdom": "^29.1.1"
+		"jsdom": "^29.1.1",
+		"playwright": "^1.65.0"
 	}
 }

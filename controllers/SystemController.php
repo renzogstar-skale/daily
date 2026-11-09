@@ -5,6 +5,7 @@ namespace Grocy\Controllers;
 use Grocy\Services\ApplicationService;
 use Grocy\Services\DatabaseMigrationService;
 use Grocy\Services\DemoDataGeneratorService;
+use Grocy\Services\SessionService;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
@@ -36,6 +37,18 @@ class SystemController extends BaseController
 			$demoDataGeneratorService->PopulateDemoData(isset($request->getQueryParams()['nodemodata']));
 		}
 
+		// Visitantes sin sesión ven el sitio comercial; usuarios con sesión entran a la aplicación como antes
+		$token = $request->getCookieParams()[SessionService::SESSION_TOKEN_COOKIE_NAME_ACCESS] ?? '';
+		if ($token !== '' && SessionService::GetInstance()->ValidateToken(SessionService::SESSION_TOKEN_TYPE_ACCESS, $token))
+		{
+			return $this->AppEntry($request, $response, $args);
+		}
+
+		return (new SiteController($this->AppContainer))->Home($request, $response, $args);
+	}
+
+	public function AppEntry(Request $request, Response $response, array $args)
+	{
 		return $response->withRedirect($this->AppContainer->get('UrlManager')->ConstructUrl($this->GetEntryPageRelative()));
 	}
 

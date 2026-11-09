@@ -133,6 +133,17 @@ class DatabaseService
 			$pdo = new \PDO\Sqlite('sqlite:' . $this->GetDbFilePath());
 			$pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 			$pdo->setAttribute(\PDO::ATTR_ORACLE_NULLS, \PDO::NULL_EMPTY_STRING);
+			try
+			{
+				$pdo->exec('PRAGMA busy_timeout = 5000;');
+				// WAL: las lecturas no esperan a las escrituras (el relleno demo en segundo plano dejaba las páginas
+				// en gris hasta terminar); persiste en el archivo, así que solo cambia algo la primera vez
+				$pdo->exec('PRAGMA journal_mode = WAL;');
+				$pdo->exec('PRAGMA synchronous = NORMAL;');
+			}
+			catch (\Throwable $e)
+			{
+			}
 
 			$pdo->createFunction('regexp', function ($pattern, $value)
 			{

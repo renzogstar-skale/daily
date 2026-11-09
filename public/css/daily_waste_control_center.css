@@ -505,8 +505,8 @@
 }
 
 .dw-donut-chart-box {
-	width: 160px;
-	height: 160px;
+	width: 130px;
+	height: 130px;
 	position: relative;
 	flex-shrink: 0;
 }
@@ -537,14 +537,17 @@
 	display: flex;
 	flex-direction: column;
 	gap: 8px;
-	font-size: 0.74rem;
+	font-size: 0.72rem;
 	flex: 1;
+	padding-left: 6px;
+	padding-right: 4px;
 }
 
 .dw-donut-legend-row {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
+	gap: 6px;
 }
 
 .dw-donut-legend-name {
@@ -553,13 +556,17 @@
 	gap: 6px;
 	font-weight: 600;
 	color: var(--dw-text-primary);
+	white-space: nowrap;
 }
 
 .dw-donut-legend-vals {
 	font-weight: 700;
 	color: var(--dw-text-secondary);
 	display: flex;
-	gap: 8px;
+	gap: 6px;
+	white-space: nowrap;
+	text-align: right;
+	font-size: 0.71rem;
 }
 
 /* Barras Horizontales Departamentos */
@@ -616,11 +623,12 @@
 }
 
 .dw-dept-bar-val {
-	width: 38px;
+	min-width: 52px;
 	font-weight: 700;
 	color: var(--dw-text-primary);
 	font-size: 0.72rem;
 	text-align: right;
+	white-space: nowrap;
 }
 
 /* ==========================================================================

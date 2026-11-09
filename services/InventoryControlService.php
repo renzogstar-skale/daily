@@ -397,36 +397,75 @@ class InventoryControlService extends BaseService
 	 */
 	public function GetAbcXyzMatrixData(?int $branchId = null): array
 	{
+		$matrixCells = [
+			'AX' => ['count' => 12, 'revenue' => 148200.00],
+			'AY' => ['count' => 28, 'revenue' => 185400.00],
+			'AZ' => ['count' => 8,  'revenue' => 45600.00],
+			'BX' => ['count' => 15, 'revenue' => 38900.00],
+			'BY' => ['count' => 35, 'revenue' => 48200.00],
+			'BZ' => ['count' => 10, 'revenue' => 14500.00],
+			'CX' => ['count' => 8,  'revenue' => 7800.00],
+			'CY' => ['count' => 18, 'revenue' => 9400.00],
+			'CZ' => ['count' => 6,  'revenue' => 2800.00]
+		];
+
+		$items = [
+			['product_name' => 'Smartphone iPhone 15 Pro Max 256GB', 'cell' => 'AX', 'revenue_90d' => 48200.00, 'stock' => 35],
+			['product_name' => 'Smartphone Samsung Galaxy S24 Ultra', 'cell' => 'AX', 'revenue_90d' => 42100.00, 'stock' => 28],
+			['product_name' => 'Televisor Samsung 65" 4K Crystal UHD', 'cell' => 'AY', 'revenue_90d' => 31200.00, 'stock' => 24],
+			['product_name' => 'Nevera LG No Frost 420L Inverter', 'cell' => 'AY', 'revenue_90d' => 25800.00, 'stock' => 18],
+			['product_name' => 'Lavadora Whirlpool Carga Superior 19kg', 'cell' => 'AY', 'revenue_90d' => 21400.00, 'stock' => 15],
+			['product_name' => 'Audífonos Apple AirPods Pro 2da Gen', 'cell' => 'AZ', 'revenue_90d' => 16500.00, 'stock' => 42],
+			['product_name' => 'Laptop ASUS Vivobook 15 Core i5 16GB', 'cell' => 'AY', 'revenue_90d' => 19800.00, 'stock' => 14],
+			['product_name' => 'Consola PlayStation 5 Slim 1TB SSD', 'cell' => 'AZ', 'revenue_90d' => 15200.00, 'stock' => 12],
+			['product_name' => 'Arroz Blanco Premium 5kg Diana', 'cell' => 'BX', 'revenue_90d' => 10400.00, 'stock' => 180],
+			['product_name' => 'Aceite Vegetal Gourmet 3L', 'cell' => 'BX', 'revenue_90d' => 9200.00, 'stock' => 110],
+			['product_name' => 'Leche Entera 1 Galón Alpina', 'cell' => 'BX', 'revenue_90d' => 11800.00, 'stock' => 240],
+			['product_name' => 'Queso Mozzarella Bloque 1kg Colanta', 'cell' => 'BY', 'revenue_90d' => 7400.00, 'stock' => 65],
+			['product_name' => 'Detergente Líquido Ariel Concentrado 3L', 'cell' => 'BY', 'revenue_90d' => 8100.00, 'stock' => 75],
+			['product_name' => 'Café Tostado y Molido Juan Valdez 500g', 'cell' => 'BY', 'revenue_90d' => 6900.00, 'stock' => 55],
+			['product_name' => 'Pollo Entero Fresco Bucanero kg', 'cell' => 'BZ', 'revenue_90d' => 4800.00, 'stock' => 38],
+			['product_name' => 'Salchicha Tradicional Manguera Zenú', 'cell' => 'BY', 'revenue_90d' => 5200.00, 'stock' => 60],
+			['product_name' => 'Papel Higiénico Familia Acolchamax 12R', 'cell' => 'CX', 'revenue_90d' => 2900.00, 'stock' => 50],
+			['product_name' => 'Lentejas Seleccionadas Extra 1kg', 'cell' => 'CY', 'revenue_90d' => 1850.00, 'stock' => 45],
+			['product_name' => 'Atún en Aceite de Girasol Van Camp\'s 184g', 'cell' => 'CY', 'revenue_90d' => 2400.00, 'stock' => 95],
+			['product_name' => 'Servilletas Acolchadas Familia x 100', 'cell' => 'CY', 'revenue_90d' => 1250.00, 'stock' => 70],
+			['product_name' => 'Galletas Saltinas Taco Noel', 'cell' => 'CZ', 'revenue_90d' => 880.00, 'stock' => 35],
+			['product_name' => 'Desinfectante Multiusos Lavanda 2L', 'cell' => 'CZ', 'revenue_90d' => 720.00, 'stock' => 28]
+		];
+
 		return [
+			'matrix' => $matrixCells,
+			'items' => $items,
 			'A' => [
 				'label' => 'A - Alta (80%)',
 				'cells' => [
-					'X' => ['class' => 'AX', 'badge_class' => 'badge-success', 'count' => 5, 'value' => 3427.81, 'policy' => 'Reposición automática y control estricto JIT'],
-					'Y' => ['class' => 'AY', 'badge_class' => 'badge-success', 'count' => 24, 'value' => 6549.82, 'policy' => 'Stock de seguridad moderado y seguimiento semanal'],
-					'Z' => ['class' => 'AZ', 'badge_class' => 'badge-warning', 'count' => 6, 'value' => 1230.45, 'policy' => 'Bajo pedido o stock de amortiguación dinámico']
+					'X' => ['class' => 'AX', 'badge_class' => 'badge-success', 'count' => 12, 'value' => 148200.00, 'policy' => 'Reposición automática y control estricto JIT'],
+					'Y' => ['class' => 'AY', 'badge_class' => 'badge-success', 'count' => 28, 'value' => 185400.00, 'policy' => 'Stock de seguridad moderado y seguimiento semanal'],
+					'Z' => ['class' => 'AZ', 'badge_class' => 'badge-warning', 'count' => 8,  'value' => 45600.00,  'policy' => 'Bajo pedido o stock de amortiguación dinámico']
 				],
-				'total_count' => 35,
-				'total_value' => 11208.08
+				'total_count' => 48,
+				'total_value' => 379200.00
 			],
 			'B' => [
 				'label' => 'B - Media (15%)',
 				'cells' => [
-					'X' => ['class' => 'BX', 'badge_class' => 'badge-info', 'count' => 0, 'value' => 0.00, 'policy' => 'Revisión periódica quincenal'],
-					'Y' => ['class' => 'BY', 'badge_class' => 'badge-success', 'count' => 8, 'value' => 1245.90, 'policy' => 'Punto de reorden estándar'],
-					'Z' => ['class' => 'BZ', 'badge_class' => 'badge-warning', 'count' => 4, 'value' => 642.10, 'policy' => 'Revisión mensual de obsolescencia']
+					'X' => ['class' => 'BX', 'badge_class' => 'badge-info',    'count' => 15, 'value' => 38900.00, 'policy' => 'Revisión periódica quincenal'],
+					'Y' => ['class' => 'BY', 'badge_class' => 'badge-success', 'count' => 35, 'value' => 48200.00, 'policy' => 'Punto de reorden estándar'],
+					'Z' => ['class' => 'BZ', 'badge_class' => 'badge-warning', 'count' => 10, 'value' => 14500.00, 'policy' => 'Revisión mensual de obsolescencia']
 				],
-				'total_count' => 12,
-				'total_value' => 1888.00
+				'total_count' => 60,
+				'total_value' => 101600.00
 			],
 			'C' => [
 				'label' => 'C - Baja (5%)',
 				'cells' => [
-					'X' => ['class' => 'CX', 'badge_class' => 'badge-info', 'count' => 0, 'value' => 0.00, 'policy' => 'Compras mínimas por lote'],
-					'Y' => ['class' => 'CY', 'badge_class' => 'badge-success', 'count' => 3, 'value' => 380.20, 'policy' => 'Mantener inventario mínimo'],
-					'Z' => ['class' => 'CZ', 'badge_class' => 'badge-warning', 'count' => 2, 'value' => 115.75, 'policy' => 'Candidatos a descontinuar o liquidar']
+					'X' => ['class' => 'CX', 'badge_class' => 'badge-info',    'count' => 8,  'value' => 7800.00,  'policy' => 'Compras mínimas por lote'],
+					'Y' => ['class' => 'CY', 'badge_class' => 'badge-success', 'count' => 18, 'value' => 9400.00,  'policy' => 'Mantener inventario mínimo'],
+					'Z' => ['class' => 'CZ', 'badge_class' => 'badge-warning', 'count' => 6,  'value' => 2800.00,  'policy' => 'Candidatos a descontinuar o liquidar']
 				],
-				'total_count' => 5,
-				'total_value' => 495.95
+				'total_count' => 32,
+				'total_value' => 20000.00
 			]
 		];
 	}

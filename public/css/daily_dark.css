@@ -1,0 +1,483 @@
+/* ==========================================================================
+   DAILY — MODO NOCHE GLOBAL (html.daily-dark)
+   Se carga al final. 1) Tokens semánticos: los módulos que usan --dairy-*,
+   --daily-* o --crystal-* cambian solos. 2) Componentes Bootstrap y de
+   terceros. 3) Clases del adaptador (daily_mode.js) para colores fijos.
+   El modo Día es la capa Crystal (daily_crystal.css) sin cambios.
+   ========================================================================== */
+
+html.daily-dark {
+	color-scheme: dark;
+
+	/* Paleta noche */
+	--dk-bg: #0b1220;
+	--dk-bg-2: #0f1a2b;
+	--dk-surface: rgba(22, 32, 48, 0.86);
+	--dk-surface-solid: #162030;
+	--dk-raise: rgba(38, 52, 72, 0.72);
+	--dk-raise-solid: #233146;
+	--dk-float: rgba(17, 26, 40, 0.84);
+	--dk-border: rgba(148, 163, 184, 0.16);
+	--dk-border-strong: rgba(148, 163, 184, 0.30);
+	--dk-text: #e6edf5;
+	--dk-text-2: #c4cfdc;
+	--dk-muted: #94a3b8;
+	--dk-subtle: #7b8aa0;
+	--dk-green: #34d399;
+	--dk-ring: 0 0 0 3px rgba(52, 211, 153, 0.30);
+
+	/* Tokens de DAILY / DAIRY / diseño */
+	--daily-bg: var(--dk-bg);
+	--daily-surface: var(--dk-surface-solid);
+	--daily-surface-subtle: var(--dk-raise-solid);
+	--daily-surface-hover: #2a3a52;
+	--daily-border: var(--dk-border);
+	--daily-border-light: rgba(148, 163, 184, 0.10);
+	--daily-border-strong: var(--dk-border-strong);
+	--daily-text-main: var(--dk-text);
+	--daily-text-secondary: var(--dk-text-2);
+	--daily-text-muted: var(--dk-muted);
+	--daily-text-disabled: #64748b;
+	--daily-green-50: rgba(34, 197, 94, 0.12);
+	--daily-green-100: rgba(34, 197, 94, 0.18);
+	--daily-green-200: rgba(34, 197, 94, 0.30);
+	--daily-amber-50: rgba(245, 158, 11, 0.12);
+	--daily-amber-100: rgba(245, 158, 11, 0.18);
+	--daily-amber-200: rgba(245, 158, 11, 0.30);
+	--daily-red-50: rgba(239, 68, 68, 0.12);
+	--daily-red-100: rgba(239, 68, 68, 0.18);
+	--daily-red-200: rgba(239, 68, 68, 0.30);
+	--daily-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.30);
+	--daily-shadow-card: 0 1px 3px rgba(0, 0, 0, 0.35), 0 8px 24px -12px rgba(0, 0, 0, 0.50);
+	--daily-shadow-hover: 0 6px 16px -4px rgba(0, 0, 0, 0.55);
+
+	--dairy-primary-light: rgba(0, 200, 59, 0.12);
+	--dairy-primary-subtle: rgba(0, 200, 59, 0.18);
+	--dairy-primary-border: rgba(52, 211, 153, 0.40);
+	--dairy-info-bg: rgba(8, 145, 178, 0.14);
+	--dairy-info-border: rgba(34, 211, 238, 0.32);
+	--dairy-success-bg: rgba(5, 150, 105, 0.14);
+	--dairy-success-border: rgba(52, 211, 153, 0.32);
+	--dairy-warning-bg: rgba(217, 119, 6, 0.14);
+	--dairy-warning-border: rgba(251, 191, 36, 0.32);
+	--dairy-danger-bg: rgba(220, 38, 38, 0.14);
+	--dairy-danger-border: rgba(248, 113, 113, 0.32);
+	--dairy-purple-bg: rgba(52, 211, 153, 0.12);
+	--dairy-purple-border: rgba(52, 211, 153, 0.30);
+	--dairy-surface: var(--dk-surface-solid);
+	--dairy-bg-base: var(--dk-bg);
+	--dairy-bg-page: var(--dk-bg);
+	--dairy-surface-subtle: var(--dk-raise-solid);
+	--dairy-border-subtle: rgba(148, 163, 184, 0.10);
+	--dairy-border: var(--dk-border);
+	--dairy-border-strong: var(--dk-border-strong);
+	--dairy-text-main: var(--dk-text);
+	--dairy-text-body: var(--dk-text-2);
+	--dairy-text-secondary: var(--dk-text-2);
+	--dairy-text-muted: var(--dk-muted);
+	--dairy-text-subtle: var(--dk-subtle);
+	--dairy-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+	--dairy-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35);
+	--dairy-shadow-md: 0 4px 10px -2px rgba(0, 0, 0, 0.45);
+	--dairy-shadow-lg: 0 12px 24px -6px rgba(0, 0, 0, 0.55);
+
+	/* Cristal oscuro: mismo esquema de capas que el modo Día */
+	--crystal-page: linear-gradient(165deg, #0a1322 0%, #0b1220 45%, #0c1a1a 100%);
+	--crystal-blob-mint: rgba(52, 211, 153, 0.07);
+	--crystal-blob-green: rgba(0, 200, 59, 0.05);
+	--crystal-blob-deep: rgba(0, 142, 72, 0.08);
+	--crystal-blob-yellow: rgba(56, 189, 248, 0.035);
+	--crystal-blob-cream: rgba(52, 211, 153, 0.05);
+	--crystal-tint-top: rgba(30, 42, 60, 0.80);
+	--crystal-tint-bottom: rgba(20, 30, 46, 0.80);
+	--crystal-tint-top-hover: rgba(36, 50, 70, 0.86);
+	--crystal-tint-bottom-hover: rgba(24, 35, 52, 0.86);
+	--crystal-nested: rgba(148, 163, 184, 0.06);
+	--crystal-lite-top: rgba(28, 40, 58, 0.94);
+	--crystal-lite-bottom: rgba(20, 30, 46, 0.94);
+	--crystal-rim-top: rgba(255, 255, 255, 0.07);
+	--crystal-rim-hairline: rgba(255, 255, 255, 0.03);
+	--crystal-rim-bottom: rgba(0, 0, 0, 0.25);
+	--crystal-border: rgba(148, 163, 184, 0.16);
+	--crystal-border-strong: rgba(148, 163, 184, 0.32);
+	--crystal-edge: rgba(0, 0, 0, 0.30);
+	--crystal-shadow: 0 1px 1px rgba(0, 0, 0, 0.25), 0 10px 26px -12px rgba(0, 0, 0, 0.60);
+	--crystal-shadow-hover: 0 2px 4px rgba(0, 0, 0, 0.30), 0 18px 36px -14px rgba(0, 0, 0, 0.70);
+	--crystal-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.035) 0%, rgba(255, 255, 255, 0) 30%);
+	--crystal-float-bg: var(--dk-float);
+	--crystal-menu-bg: rgba(20, 30, 46, 0.94);
+	--crystal-modal-bg: rgba(20, 30, 46, 0.96);
+	--crystal-menu-shadow: 0 18px 44px -10px rgba(0, 0, 0, 0.70), 0 4px 12px rgba(0, 0, 0, 0.35);
+	--crystal-scrim: rgba(2, 6, 23, 0.62);
+	--crystal-ring: var(--dk-ring);
+}
+
+/* Lienzo */
+html.daily-dark,
+html.daily-dark body,
+html.daily-dark body.crystal-ui,
+html.daily-dark body.night-mode {
+	background: var(--dk-bg) !important;
+	background-color: var(--dk-bg) !important;
+	color: var(--dk-text-2);
+}
+html.daily-dark body.crystal-ui::before { background: var(--crystal-page); }
+html.daily-dark ::selection { background: rgba(52, 211, 153, 0.30); color: #fff; }
+html.daily-dark :focus-visible { outline-color: var(--dk-green); }
+html.daily-dark * { scrollbar-color: rgba(148, 163, 184, 0.32) transparent; }
+
+/* Tipografía */
+html.daily-dark h1, html.daily-dark h2, html.daily-dark h3,
+html.daily-dark h4, html.daily-dark h5, html.daily-dark h6,
+html.daily-dark .h1, html.daily-dark .h2, html.daily-dark .h3,
+html.daily-dark .h4, html.daily-dark .h5, html.daily-dark .h6,
+html.daily-dark .daily-dashboard-title, html.daily-dark .card-title { color: var(--dk-text); }
+html.daily-dark .text-dark, html.daily-dark .text-body, html.daily-dark .text-black { color: var(--dk-text) !important; }
+html.daily-dark .text-muted, html.daily-dark .text-secondary, html.daily-dark small.text-muted { color: var(--dk-muted) !important; }
+html.daily-dark .text-black-50 { color: rgba(226, 232, 240, 0.55) !important; }
+html.daily-dark .text-success { color: #34d399 !important; }
+html.daily-dark .text-danger { color: #f87171 !important; }
+html.daily-dark .text-warning { color: #fbbf24 !important; }
+html.daily-dark .text-info { color: #38bdf8 !important; }
+html.daily-dark .text-primary { color: #4ade80 !important; }
+html.daily-dark a:not(.btn):not(.dropdown-item):not(.nav-link):not(.dnav-link):not(.page-link):not([class*="badge"]) { color: #4ade80; }
+html.daily-dark hr { border-color: var(--dk-border); }
+html.daily-dark code { color: #f9a8d4; }
+html.daily-dark pre, html.daily-dark kbd { background: var(--dk-raise-solid); color: var(--dk-text); }
+
+/* Utilidades de fondo y borde */
+html.daily-dark .bg-white, html.daily-dark .bg-light, html.daily-dark .bg-body { background-color: var(--dk-surface-solid) !important; }
+html.daily-dark .bg-secondary-subtle, html.daily-dark .bg-gray-100, html.daily-dark .bg-gray-50 { background-color: var(--dk-raise-solid) !important; }
+html.daily-dark .border, html.daily-dark .border-top, html.daily-dark .border-bottom,
+html.daily-dark .border-left, html.daily-dark .border-right, html.daily-dark .border-light { border-color: var(--dk-border) !important; }
+html.daily-dark .shadow-sm { box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4) !important; }
+html.daily-dark .shadow, html.daily-dark .shadow-lg { box-shadow: 0 12px 28px -8px rgba(0, 0, 0, 0.6) !important; }
+
+/* Encabezado y menú lateral */
+html.daily-dark body.crystal-ui #mainNav,
+html.daily-dark body.crystal-ui .crystal-header,
+html.daily-dark #mainNav {
+	background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0)), rgba(13, 21, 35, 0.82) !important;
+	border-bottom: 1px solid var(--dk-border) !important;
+	box-shadow: 0 1px 0 rgba(0, 0, 0, 0.35), 0 10px 30px -18px rgba(0, 0, 0, 0.8) !important;
+}
+html.daily-dark body.crystal-ui #mainNav::after { background: linear-gradient(90deg, transparent 0%, rgba(52, 211, 153, 0.25) 50%, transparent 100%); }
+html.daily-dark body.crystal-ui .dairy-hsearch,
+html.daily-dark body.crystal-ui .dairy-hbtn,
+html.daily-dark body.crystal-ui .dairy-hicon,
+html.daily-dark body.crystal-ui .crystal-search,
+html.daily-dark .dairy-hsearch, html.daily-dark .dairy-hbtn, html.daily-dark .dairy-hicon {
+	background: rgba(148, 163, 184, 0.08) !important;
+	border: 1px solid var(--dk-border) !important;
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+	color: var(--dk-text-2) !important;
+}
+html.daily-dark .dairy-hsearch:hover, html.daily-dark .dairy-hbtn:hover, html.daily-dark .dairy-hicon:hover { border-color: var(--dk-border-strong) !important; background: rgba(148, 163, 184, 0.14) !important; }
+html.daily-dark .dairy-hsearch input, html.daily-dark .dairy-hsearch input::placeholder { color: var(--dk-muted) !important; background: transparent !important; }
+html.daily-dark .navbar-light .navbar-brand, html.daily-dark .navbar-light .navbar-nav .nav-link,
+html.daily-dark .daily-profile-name { color: var(--dk-text) !important; }
+html.daily-dark .navbar-light .navbar-toggler { border-color: var(--dk-border); filter: invert(1) hue-rotate(180deg); }
+html.daily-dark body.crystal-ui,
+html.daily-dark body {
+	--dnav-bg: linear-gradient(90deg, rgba(14, 22, 36, 0.92) 0%, rgba(14, 22, 36, 0.84) 100%);
+	--dnav-bg-hover: rgba(52, 211, 153, 0.08);
+	--dnav-bg-open: rgba(148, 163, 184, 0.06);
+	--dnav-active-bg: linear-gradient(180deg, rgba(52, 211, 153, 0.16), rgba(0, 142, 72, 0.12));
+	--dnav-border: var(--dk-border);
+	--dnav-text: var(--dk-text-2);
+	--dnav-text-strong: var(--dk-text);
+	--dnav-text-muted: var(--dk-muted);
+}
+html.daily-dark body.crystal-ui #mainNav.navbar-light .navbar-collapse .navbar-sidenav.dnav,
+html.daily-dark #mainNav .navbar-sidenav {
+	background: var(--dnav-bg) !important;
+	box-shadow: inset -1px 0 0 var(--dk-border), 12px 0 32px -24px rgba(0, 0, 0, 0.8) !important;
+}
+html.daily-dark body.crystal-ui .dnav-cat.is-open,
+html.daily-dark body.crystal-ui .dnav-cat.is-active {
+	background: rgba(148, 163, 184, 0.06);
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 0 0 1px var(--dk-border);
+}
+html.daily-dark body.crystal-ui .dnav .dnav-item.is-active > .dnav-link {
+	background: linear-gradient(180deg, rgba(52, 211, 153, 0.18), rgba(0, 142, 72, 0.12)) !important;
+	box-shadow: inset 0 0 0 1px rgba(52, 211, 153, 0.25) !important;
+	color: #6ee7b7 !important;
+}
+html.daily-dark .dnav-link, html.daily-dark .dnav-group-btn, html.daily-dark .dnav-cat-btn { color: var(--dnav-text) !important; }
+html.daily-dark .dnav-link:hover, html.daily-dark .dnav-group-btn:hover, html.daily-dark .dnav-cat-btn:hover { color: var(--dk-text) !important; }
+
+/* Superficies (tarjetas, KPI, paneles) */
+html.daily-dark body.crystal-ui :is(.card, .crystal-card, .crystal-panel, .crystal-kpi, .crystal-surface, .dairy-kpi-accent, .dairy-kpi-card, .dairy-card-table, .today-exec-card, .today-exec-kpi-card, .today-exec-spark-card, .cc-card, .ep-card-box, .ep-kpi-card, .daily-kpi-stat-card, .daily-analytics-card, .daily-table-container-card, .daily-kpi-card, .dsm-card, .dsm-kpi-card, .ded-card, .ded-kpi-card:not(.is-highlight), .branch-card-panel, .branch-kpi-card:not(.branch-kpi-card-green), .hist-card-panel, .hist-search-card, .hist-kpi-card:not(.hist-kpi-card-green), .prod-card-panel, .prod-kpi-card:not(.prod-kpi-highlight):not(.prod-kpi-card-green), .dept-perf-card, .dept-perf-kpi-card:not(.dept-kpi-highlight), .pos-catalog-panel, .pos-cart-panel, .pos-totals-section, .pos-card, .pos-returns-card, .pos-returns-panel, .pos-ret-hero, .pos-ret-lifecycle-card, .pos-ret-kpi-card, .pos-ret-panel, .pos-ret-table-wrap, .pos-ret-card, .customers-kpi-card, .customers-card, .customers-card-panel, .customers-header-banner, .customers-table-panel, .customers-filter-bar, .customers-filters-bar, .customers-detail-panel, .customers-mini-kpis, .daily-dashboard-card, .daily-dashboard-panel, .daily-card-panel),
+html.daily-dark .card {
+	background: var(--crystal-sheen), linear-gradient(180deg, var(--crystal-tint-top), var(--crystal-tint-bottom)) !important;
+	background-color: var(--dk-surface-solid) !important;
+	border: 1px solid var(--crystal-border) !important;
+	box-shadow: var(--crystal-shadow), inset 0 1px 0 var(--crystal-rim-top) !important;
+	color: var(--dk-text-2);
+	--crystal-tint-top: rgba(30, 42, 60, 0.86);
+	--crystal-tint-bottom: rgba(20, 30, 46, 0.86);
+}
+html.daily-dark body.crystal-ui .crystal-surface--lite { background: linear-gradient(180deg, var(--crystal-lite-top), var(--crystal-lite-bottom)) !important; }
+html.daily-dark body.crystal-ui .crystal-surface--nested,
+html.daily-dark .card .card {
+	background: var(--crystal-nested) !important;
+	border-color: var(--dk-border) !important;
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03) !important;
+}
+html.daily-dark .card-header, html.daily-dark .card-footer { background: transparent !important; border-color: var(--dk-border) !important; color: var(--dk-text); }
+
+/* Tablas */
+html.daily-dark .table { color: var(--dk-text-2); --bs-table-bg: transparent; }
+html.daily-dark .table th, html.daily-dark .table td, html.daily-dark .table thead th { border-color: var(--dk-border) !important; }
+html.daily-dark .table thead th, html.daily-dark .thead-light th, html.daily-dark .table-light, html.daily-dark .table-light > th, html.daily-dark .table-light > td {
+	background-color: rgba(148, 163, 184, 0.07) !important;
+	color: var(--dk-muted) !important;
+}
+html.daily-dark .table-striped tbody tr:nth-of-type(odd) { background-color: rgba(148, 163, 184, 0.04); }
+html.daily-dark .table-hover tbody tr:hover { background-color: rgba(52, 211, 153, 0.06) !important; color: var(--dk-text); }
+html.daily-dark .table-active, html.daily-dark .table-active > td { background-color: rgba(148, 163, 184, 0.10) !important; }
+html.daily-dark .table-success, html.daily-dark .table-success > td { background-color: rgba(34, 197, 94, 0.12) !important; }
+html.daily-dark .table-warning, html.daily-dark .table-warning > td { background-color: rgba(245, 158, 11, 0.12) !important; }
+html.daily-dark .table-danger, html.daily-dark .table-danger > td { background-color: rgba(239, 68, 68, 0.12) !important; }
+html.daily-dark .table-info, html.daily-dark .table-info > td { background-color: rgba(56, 189, 248, 0.12) !important; }
+html.daily-dark .dataTables_wrapper .dataTables_info,
+html.daily-dark .dataTables_wrapper .dataTables_length,
+html.daily-dark .dataTables_wrapper .dataTables_filter { color: var(--dk-muted); }
+html.daily-dark table.dataTable tbody tr.selected { background-color: rgba(52, 211, 153, 0.14) !important; }
+html.daily-dark table.dataTable tr.dtrg-group td { background-color: rgba(148, 163, 184, 0.09) !important; color: var(--dk-text); }
+
+/* Formularios */
+html.daily-dark .form-control,
+html.daily-dark .custom-select,
+html.daily-dark select,
+html.daily-dark textarea,
+html.daily-dark input[type="text"], html.daily-dark input[type="search"], html.daily-dark input[type="number"],
+html.daily-dark input[type="email"], html.daily-dark input[type="password"], html.daily-dark input[type="date"],
+html.daily-dark input[type="datetime-local"], html.daily-dark input[type="time"], html.daily-dark input[type="month"], html.daily-dark input[type="tel"], html.daily-dark input[type="url"] {
+	background-color: rgba(9, 15, 27, 0.65) !important;
+	border-color: var(--dk-border-strong) !important;
+	color: var(--dk-text) !important;
+}
+html.daily-dark .form-control:focus, html.daily-dark .custom-select:focus, html.daily-dark select:focus, html.daily-dark textarea:focus, html.daily-dark input:focus {
+	border-color: rgba(52, 211, 153, 0.6) !important;
+	box-shadow: var(--dk-ring) !important;
+}
+html.daily-dark .form-control::placeholder, html.daily-dark input::placeholder, html.daily-dark textarea::placeholder { color: var(--dk-subtle) !important; }
+html.daily-dark .form-control:disabled, html.daily-dark .form-control[readonly], html.daily-dark .custom-select:disabled { background-color: rgba(148, 163, 184, 0.07) !important; color: var(--dk-muted) !important; }
+html.daily-dark select option, html.daily-dark select optgroup { background-color: var(--dk-surface-solid); color: var(--dk-text); }
+html.daily-dark .input-group-text { background-color: var(--dk-raise-solid) !important; border-color: var(--dk-border-strong) !important; color: var(--dk-text-2) !important; }
+html.daily-dark .custom-control-label::before, html.daily-dark .form-check-input { background-color: rgba(9, 15, 27, 0.65); border-color: var(--dk-border-strong); }
+html.daily-dark .custom-control-input:checked ~ .custom-control-label::before { background-color: var(--dairy-primary, #00C83B); border-color: var(--dairy-primary, #00C83B); }
+html.daily-dark .custom-switch .custom-control-label::after { background-color: var(--dk-muted); }
+html.daily-dark .custom-switch .custom-control-input:checked ~ .custom-control-label::after { background-color: #fff; }
+html.daily-dark label, html.daily-dark .col-form-label, html.daily-dark legend { color: var(--dk-text-2); }
+html.daily-dark .form-text { color: var(--dk-muted) !important; }
+html.daily-dark .invalid-feedback { color: #f87171; }
+html.daily-dark input[type="date"]::-webkit-calendar-picker-indicator,
+html.daily-dark input[type="time"]::-webkit-calendar-picker-indicator,
+html.daily-dark input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+html.daily-dark input[type="month"]::-webkit-calendar-picker-indicator { filter: invert(0.85); }
+
+/* Botones */
+html.daily-dark .btn-light, html.daily-dark .btn-white {
+	background-color: rgba(148, 163, 184, 0.10) !important;
+	border-color: var(--dk-border-strong) !important;
+	color: var(--dk-text) !important;
+}
+html.daily-dark .btn-light:hover, html.daily-dark .btn-white:hover { background-color: rgba(148, 163, 184, 0.18) !important; }
+html.daily-dark .btn-outline-secondary, html.daily-dark .btn-outline-dark, html.daily-dark .btn-outline-light,
+html.daily-dark body.crystal-ui .btn-outline-secondary, html.daily-dark body.crystal-ui .btn-outline-dark {
+	background-color: transparent !important;
+	border-color: var(--dk-border-strong) !important;
+	color: var(--dk-text-2) !important;
+}
+html.daily-dark .btn-outline-secondary:hover, html.daily-dark .btn-outline-dark:hover, html.daily-dark .btn-outline-light:hover,
+html.daily-dark .btn-outline-secondary.active, html.daily-dark .btn-outline-dark.active, html.daily-dark .btn-outline-secondary:not(:disabled):not(.disabled):active {
+	background-color: rgba(148, 163, 184, 0.16) !important;
+	color: var(--dk-text) !important;
+}
+html.daily-dark .btn-secondary { background-color: #334155 !important; border-color: #334155 !important; color: #f1f5f9 !important; }
+html.daily-dark .btn-dark { background-color: #e2e8f0 !important; border-color: #e2e8f0 !important; color: #0f172a !important; }
+html.daily-dark .btn-link { color: #4ade80; }
+html.daily-dark .close, html.daily-dark .btn-close { color: var(--dk-text); text-shadow: none; opacity: 0.75; }
+html.daily-dark .btn-group-toggle .btn.active { box-shadow: inset 0 0 0 1px rgba(52, 211, 153, 0.45) !important; }
+
+/* Menús, modales, popovers, tooltips */
+html.daily-dark .dropdown-menu,
+html.daily-dark body.crystal-ui .dropdown-menu,
+html.daily-dark .daily-profile-dropdown-menu {
+	background: var(--crystal-menu-bg) !important;
+	border: 1px solid var(--dk-border) !important;
+	box-shadow: var(--crystal-menu-shadow) !important;
+	color: var(--dk-text-2);
+}
+html.daily-dark .dropdown-item { color: var(--dk-text-2) !important; }
+html.daily-dark .dropdown-item:hover, html.daily-dark .dropdown-item:focus { background-color: rgba(148, 163, 184, 0.10) !important; color: var(--dk-text) !important; }
+html.daily-dark .dropdown-item.active, html.daily-dark .dropdown-item:active { background-color: rgba(52, 211, 153, 0.16) !important; color: #6ee7b7 !important; }
+html.daily-dark .dropdown-divider { border-top-color: var(--dk-border) !important; }
+html.daily-dark .dropdown-header { color: var(--dk-muted); }
+html.daily-dark .modal-content,
+html.daily-dark body.crystal-ui .modal-content {
+	background: var(--crystal-modal-bg) !important;
+	background-color: var(--dk-surface-solid) !important;
+	border: 1px solid var(--dk-border) !important;
+	color: var(--dk-text-2);
+	box-shadow: 0 24px 64px -16px rgba(0, 0, 0, 0.8) !important;
+}
+html.daily-dark .modal-header, html.daily-dark .modal-footer { border-color: var(--dk-border) !important; background: transparent !important; }
+html.daily-dark .modal-title { color: var(--dk-text); }
+html.daily-dark .modal-backdrop.show { opacity: 0.7; }
+html.daily-dark .popover { background: var(--dk-surface-solid); border-color: var(--dk-border); }
+html.daily-dark .popover-header { background: var(--dk-raise-solid); color: var(--dk-text); border-color: var(--dk-border); }
+html.daily-dark .popover-body { color: var(--dk-text-2); }
+html.daily-dark .bs-popover-top .arrow::after, html.daily-dark .bs-popover-auto[x-placement^="top"] .arrow::after { border-top-color: var(--dk-surface-solid); }
+html.daily-dark .bs-popover-bottom .arrow::after, html.daily-dark .bs-popover-auto[x-placement^="bottom"] .arrow::after { border-bottom-color: var(--dk-surface-solid); }
+html.daily-dark .tooltip-inner { background: #e2e8f0; color: #0f172a; }
+
+/* Navegación interna, listas, paginación */
+html.daily-dark .nav-tabs { border-bottom-color: var(--dk-border) !important; }
+html.daily-dark .nav-tabs .nav-link { color: var(--dk-muted); }
+html.daily-dark .nav-tabs .nav-link:hover { border-color: transparent; color: var(--dk-text); }
+html.daily-dark .nav-tabs .nav-link.active, html.daily-dark .nav-tabs .nav-item.show .nav-link {
+	background-color: rgba(148, 163, 184, 0.08) !important;
+	border-color: var(--dk-border) var(--dk-border) transparent !important;
+	color: var(--dk-text) !important;
+}
+html.daily-dark .nav-pills .nav-link { color: var(--dk-text-2); }
+html.daily-dark .list-group-item { background-color: transparent; border-color: var(--dk-border); color: var(--dk-text-2); }
+html.daily-dark .list-group-item-action:hover { background-color: rgba(148, 163, 184, 0.08); color: var(--dk-text); }
+html.daily-dark .list-group-item.active { background-color: rgba(52, 211, 153, 0.16); border-color: rgba(52, 211, 153, 0.35); color: #6ee7b7; }
+html.daily-dark .page-link { background-color: transparent !important; border-color: var(--dk-border) !important; color: var(--dk-text-2) !important; }
+html.daily-dark .page-item.active .page-link { background-color: var(--dairy-primary, #00C83B) !important; border-color: var(--dairy-primary, #00C83B) !important; color: #04130a !important; }
+html.daily-dark .page-item.disabled .page-link { color: var(--dk-subtle) !important; }
+html.daily-dark .breadcrumb { background-color: transparent; }
+html.daily-dark .progress { background-color: rgba(148, 163, 184, 0.14) !important; }
+
+/* Insignias y alertas: los colores de estado (verde, ámbar, rojo) se conservan */
+html.daily-dark .badge-light { background-color: rgba(148, 163, 184, 0.16) !important; color: var(--dk-text-2) !important; }
+html.daily-dark .badge-secondary { background-color: #334155 !important; color: #e2e8f0 !important; }
+html.daily-dark .badge-dark { background-color: #e2e8f0 !important; color: #0f172a !important; }
+html.daily-dark .alert-success { background-color: rgba(34, 197, 94, 0.12) !important; border-color: rgba(34, 197, 94, 0.30) !important; color: #86efac !important; }
+html.daily-dark .alert-warning { background-color: rgba(245, 158, 11, 0.12) !important; border-color: rgba(245, 158, 11, 0.30) !important; color: #fcd34d !important; }
+html.daily-dark .alert-danger { background-color: rgba(239, 68, 68, 0.12) !important; border-color: rgba(239, 68, 68, 0.30) !important; color: #fca5a5 !important; }
+html.daily-dark .alert-info, html.daily-dark .alert-primary { background-color: rgba(56, 189, 248, 0.10) !important; border-color: rgba(56, 189, 248, 0.28) !important; color: #7dd3fc !important; }
+html.daily-dark .alert-secondary, html.daily-dark .alert-light, html.daily-dark .alert-dark { background-color: rgba(148, 163, 184, 0.10) !important; border-color: var(--dk-border) !important; color: var(--dk-text-2) !important; }
+html.daily-dark .alert .alert-link { color: inherit; }
+
+/* Terceros: calendarios, selectores, editor */
+html.daily-dark .daterangepicker,
+html.daily-dark .bootstrap-datetimepicker-widget.dropdown-menu { background-color: var(--dk-surface-solid) !important; border-color: var(--dk-border) !important; color: var(--dk-text-2); }
+html.daily-dark .daterangepicker::after { border-bottom-color: var(--dk-surface-solid); }
+html.daily-dark .daterangepicker::before { border-bottom-color: var(--dk-border); }
+html.daily-dark .daterangepicker .calendar-table { background-color: transparent; border-color: transparent; }
+html.daily-dark .daterangepicker td.off, html.daily-dark .daterangepicker td.off.in-range { background-color: transparent; color: var(--dk-subtle); }
+html.daily-dark .daterangepicker td.available:hover, html.daily-dark .daterangepicker th.available:hover { background-color: rgba(148, 163, 184, 0.14); }
+html.daily-dark .daterangepicker td.in-range { background-color: rgba(52, 211, 153, 0.14); color: var(--dk-text); }
+html.daily-dark .daterangepicker td.active, html.daily-dark .daterangepicker td.active:hover { background-color: var(--dairy-primary, #00C83B); color: #04130a; }
+html.daily-dark .daterangepicker .ranges li:hover { background-color: rgba(148, 163, 184, 0.10); }
+html.daily-dark .daterangepicker .drp-buttons, html.daily-dark .daterangepicker.show-ranges .drp-calendar.left { border-color: var(--dk-border); }
+html.daily-dark .daterangepicker .calendar-table .next span, html.daily-dark .daterangepicker .calendar-table .prev span { border-color: var(--dk-text-2); }
+html.daily-dark .bootstrap-datetimepicker-widget table td.day:hover, html.daily-dark .bootstrap-datetimepicker-widget table td span:hover,
+html.daily-dark .bootstrap-datetimepicker-widget table thead tr:first-child th:hover { background: rgba(148, 163, 184, 0.14); }
+html.daily-dark .bootstrap-datetimepicker-widget table td.old, html.daily-dark .bootstrap-datetimepicker-widget table td.new { color: var(--dk-subtle); }
+html.daily-dark .bootstrap-select .dropdown-toggle { background-color: rgba(9, 15, 27, 0.65) !important; border-color: var(--dk-border-strong) !important; color: var(--dk-text) !important; }
+html.daily-dark .bootstrap-select .bs-searchbox .form-control { background-color: rgba(9, 15, 27, 0.65) !important; }
+html.daily-dark .fc-unthemed th, html.daily-dark .fc-unthemed td, html.daily-dark .fc-unthemed thead, html.daily-dark .fc-unthemed tbody,
+html.daily-dark .fc-unthemed .fc-divider, html.daily-dark .fc-unthemed .fc-row, html.daily-dark .fc-unthemed .fc-popover { border-color: var(--dk-border) !important; }
+html.daily-dark .fc-unthemed .fc-today { background: rgba(52, 211, 153, 0.10) !important; }
+html.daily-dark .fc-unthemed .fc-popover, html.daily-dark .fc-unthemed .fc-list-heading td { background: var(--dk-surface-solid) !important; }
+html.daily-dark .note-editor.note-frame { border-color: var(--dk-border); }
+html.daily-dark .note-editor .note-toolbar, html.daily-dark .note-editor .note-statusbar { background: var(--dk-raise-solid) !important; border-color: var(--dk-border) !important; }
+html.daily-dark .note-editor .note-editing-area .note-editable { background: rgba(9, 15, 27, 0.65); color: var(--dk-text); }
+html.daily-dark #toast-container > div { box-shadow: 0 10px 28px -8px rgba(0, 0, 0, 0.7); }
+
+/* Paleta de comandos (Ctrl + K) */
+html.daily-dark .dairy-command-modal { background: var(--crystal-modal-bg) !important; }
+html.daily-dark .dairy-command-input { background: transparent !important; color: var(--dk-text) !important; }
+html.daily-dark .dairy-command-kbd { background: var(--dk-raise-solid); color: var(--dk-muted); border-color: var(--dk-border); }
+
+/* Selector Día / Noche del encabezado */
+.daily-mode-toggle {
+	position: relative;
+	padding: 0 6px !important;
+	gap: 0 !important;
+	width: 62px;
+	justify-content: space-between;
+	cursor: pointer;
+}
+.daily-mode-toggle .daily-mode-ico {
+	position: relative;
+	z-index: 1;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	color: #94a3b8;
+	transition: color 200ms ease;
+}
+.daily-mode-toggle .daily-mode-thumb {
+	position: absolute;
+	top: 50%;
+	left: 5px;
+	width: 26px;
+	height: 26px;
+	margin-top: -13px;
+	border-radius: 8px;
+	background: #ffffff;
+	box-shadow: 0 1px 3px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(15, 23, 42, 0.06);
+	transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1), background-color 200ms ease;
+}
+.daily-mode-toggle .daily-mode-ico--sun { color: #d97706; }
+html.daily-dark .daily-mode-toggle .daily-mode-thumb { transform: translateX(24px); background: #1e293b; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(148, 163, 184, 0.28); }
+html.daily-dark .daily-mode-toggle .daily-mode-ico--sun { color: #64748b; }
+html.daily-dark .daily-mode-toggle .daily-mode-ico--moon { color: #fde68a; }
+.daily-mode-toggle:focus-visible { outline: 2px solid var(--dairy-primary, #00C83B); outline-offset: 2px; }
+@media (max-width: 575.98px) {
+	.daily-mode-toggle { width: 54px; padding: 0 4px !important; }
+	.daily-mode-toggle .daily-mode-ico { width: 22px; }
+	.daily-mode-toggle .daily-mode-thumb { left: 3px; width: 24px; height: 24px; margin-top: -12px; }
+	html.daily-dark .daily-mode-toggle .daily-mode-thumb { transform: translateX(22px); }
+}
+
+/* --------------------------------------------------------------------------
+   Clases del adaptador (daily_mode.js). :not(#dk) sube la especificidad sobre
+   las reglas de cada módulo sin depender del orden de carga.
+   -------------------------------------------------------------------------- */
+html.daily-dark .dk-surface:not(#dk) {
+	background-color: var(--dk-surface-solid) !important;
+	background-image: none !important;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+html.daily-dark :is(.card, .crystal-surface, .dk-surface, .modal-content, .dropdown-menu) .dk-surface:not(#dk),
+html.daily-dark :is(td, th, tr, thead, tbody, li, span, label, input, select, textarea, button).dk-surface:not(#dk) {
+	background-color: rgba(148, 163, 184, 0.06) !important;
+	box-shadow: none;
+}
+html.daily-dark .dk-raise:not(#dk) { background-color: rgba(148, 163, 184, 0.12) !important; background-image: none !important; }
+html.daily-dark .dk-tint:not(#dk) { background-color: var(--dk-tint, rgba(148, 163, 184, 0.1)) !important; background-image: none !important; }
+html.daily-dark .dk-ink:not(#dk) { color: var(--dk-c, var(--dk-text)) !important; }
+html.daily-dark .dk-bt:not(#dk) { border-top-color: var(--dk-border) !important; }
+html.daily-dark .dk-br:not(#dk) { border-right-color: var(--dk-border) !important; }
+html.daily-dark .dk-bb:not(#dk) { border-bottom-color: var(--dk-border) !important; }
+html.daily-dark .dk-bl:not(#dk) { border-left-color: var(--dk-border) !important; }
+html.daily-dark .dk-fill:not(#dk) { fill: var(--dk-c, var(--dk-text-2)) !important; }
+html.daily-dark .dk-fill-bg:not(#dk) { fill: rgba(148, 163, 184, 0.10) !important; }
+html.daily-dark .dk-stroke:not(#dk) { stroke: rgba(148, 163, 184, 0.22) !important; }
+
+/* --------------------------------------------------------------------------
+   Cambio de tema: fundido de 200 ms (o transiciones cortas sin View Transitions)
+   -------------------------------------------------------------------------- */
+html.daily-mode-vt * { view-transition-name: none !important; }
+html.daily-mode-vt::view-transition-old(root) { animation: daily-mode-out 200ms ease both; }
+html.daily-mode-vt::view-transition-new(root) { animation: daily-mode-in 200ms ease both; }
+@keyframes daily-mode-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes daily-mode-in { from { opacity: 0; } to { opacity: 1; } }
+html.daily-mode-anim *, html.daily-mode-anim *::before, html.daily-mode-anim *::after {
+	transition: background-color 200ms ease, color 200ms ease, border-color 200ms ease, fill 200ms ease !important;
+}
+@media (prefers-reduced-motion: reduce) {
+	html.daily-mode-vt::view-transition-old(root), html.daily-mode-vt::view-transition-new(root) { animation: none; }
+	html.daily-mode-anim *, html.daily-mode-anim *::before, html.daily-mode-anim *::after { transition: none !important; }
+	.daily-mode-toggle .daily-mode-thumb, .daily-mode-toggle .daily-mode-ico { transition: none; }
+}

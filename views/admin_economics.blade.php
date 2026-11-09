@@ -3,7 +3,7 @@
 @section('title', 'Economía de DAILY · Centro de Costos y Rentabilidad SaaS')
 
 @push('pageStyles')
-<link href="{{ $U('/css/daily_design_system.css?v=', true) }}{{ $version }}" rel="stylesheet">
+<link href="{{ $U('/css/daily_design_system.css?v=', true) }}{{ daily_asset_version('/css/daily_design_system.css') }}" rel="stylesheet">
 <style>
 .econ-metric-box {
 	background: var(--daily-surface);
@@ -35,8 +35,9 @@
 
 	<!-- CABECERA PRINCIPAL -->
 	<header class="daily-header">
-		<div class="daily-header-title-group">
-			<h1><i class="fa-solid fa-coins text-success mr-2"></i>Economía de DAILY</h1>
+		<div class="daily-header-title-group daily-head">
+			<div class="dairy-page-icon is-primary"><i class="fa-solid fa-coins"></i></div>
+			<h1>Economía de DAILY</h1>
 			<p class="daily-header-subtitle">
 				Gestión financiera interna SaaS · Cómputo cloud, rentabilidad unitaria, márgenes y simulador de precios
 			</p>
@@ -121,7 +122,7 @@
 			<button type="button" class="daily-tab-btn" data-tab-target="#econ-tab-alerts">
 				<i class="fa-solid fa-bell mr-1 text-danger"></i> 4. Alertas FinOps
 				@if(count($alerts) > 0)
-					<span class="daily-badge daily-badge-danger ml-1" style="font-size: 10px; padding: 1px 6px;">{{ count($alerts) }}</span>
+					<span class="daily-badge daily-badge-danger ml-1" style="font-size: 11px; padding: 1px 6px;">{{ count($alerts) }}</span>
 				@endif
 			</button>
 		</div>
@@ -247,7 +248,7 @@
 								<strong class="{{ $cl['gross_margin_pct'] >= 85.0 ? 'text-success' : ($cl['gross_margin_pct'] >= 75.0 ? 'text-warning' : 'text-danger') }}">
 									{{ $cl['gross_margin_pct'] }}%
 								</strong>
-								<div class="text-muted" style="font-size: 10px;">+${{ number_format($cl['gross_margin_usd'], 0) }}</div>
+								<div class="text-muted" style="font-size: 11px;">+${{ number_format($cl['gross_margin_usd'], 0) }}</div>
 							</td>
 							<td class="is-center">
 								<span class="daily-badge daily-badge-success">Activo</span>

@@ -1,0 +1,9 @@
+{
+    "Conteo no encontrado": "Count not found",
+    "No tiene acceso a este traslado": "You do not have access to this transfer",
+    "No tiene permiso para ver esta alerta": "You do not have permission to view this alert",
+    "No tiene permiso para ver esta información": "You do not have permission to view this information",
+    "Tipo de caso no válido": "Invalid case type",
+    "Usted ejecutó este conteo: otra persona debe aprobar el ajuste.": "You performed this count: another person must approve the adjustment.",
+    "Usted reportó esta merma: otra persona debe aprobarla (segregación de funciones).": "You reported this shrink: another person must approve it (segregation of duties)."
+}

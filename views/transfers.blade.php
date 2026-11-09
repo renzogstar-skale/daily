@@ -718,7 +718,14 @@
 							</tr>
 						</thead>
 						<tbody id="lotsModalTableBody">
-							<!-- Llenado dinámico vía JS -->
+							<tr>
+								<td><strong>Aceite Vegetal Premium 1L</strong><br><small class="text-muted">SKU-1002</small></td>
+								<td><span class="badge badge-light border">LOT-20261028-01</span></td>
+								<td><span class="badge badge-success">{{ date('d/m/Y', strtotime('+180 days')) }}</span></td>
+								<td class="text-right font-weight-bold">150 unids</td>
+								<td class="text-right">$12.50</td>
+								<td class="text-right font-weight-bold text-success">$1,875.00</td>
+							</tr>
 						</tbody>
 					</table>
 				</div>
@@ -787,7 +794,12 @@
 									</tr>
 								</thead>
 								<tbody id="tr-lines">
-									<!-- Dinámico -->
+									<tr>
+										<td><strong>Arroz Diana Premium 1kg</strong><br><small class="text-muted">SKU-2041 · Pasillo Granos 01</small></td>
+										<td class="text-right font-weight-bold text-dark">450 unids</td>
+										<td><input type="number" class="form-control form-control-sm text-right font-weight-bold" value="50" min="1" max="450"></td>
+										<td class="text-center"><button type="button" class="btn btn-xs btn-outline-danger" title="Eliminar"><i class="fa-solid fa-trash"></i></button></td>
+									</tr>
 								</tbody>
 							</table>
 						</div>
@@ -835,7 +847,11 @@
 								</tr>
 							</thead>
 							<tbody id="tr-receive-lines">
-								<!-- Dinámico -->
+								<tr>
+									<td><strong>Aceite Vegetal Premium 1L</strong><br><small class="text-muted">SKU-1002 · Lote LOT-20261028-01</small></td>
+									<td class="text-right font-weight-bold">150 unids</td>
+									<td class="text-right"><input type="number" class="form-control form-control-sm text-right font-weight-bold text-success" value="150" min="0" max="150"></td>
+								</tr>
 							</tbody>
 						</table>
 					</div>

@@ -153,11 +153,182 @@ class SalesController extends BaseController
 		$customers = $this->DB->customers()->where('active = 1')->orderBy('id')->fetchAll();
 		$currentShift = $salesService->GetCurrentShift($selectedBranchId);
 		$heldSales = $salesService->GetHeldSales($selectedBranchId);
-		$recentSales = $salesService->GetSales($selectedBranchId, null, null, 25);
+		$recentSales = $salesService->GetSales($selectedBranchId, null, null, 50);
 
-				$rawDb = \Grocy\Services\DatabaseService::GetInstance()->GetDbConnectionRaw();
-		$cashReconciliations = $rawDb->query("SELECT * FROM daily_pos_cash_reconciliations ORDER BY id DESC LIMIT 10")->fetchAll(\PDO::FETCH_ASSOC);
-return $this->RenderPage($response, 'pos', [
+		$rawDb = \Grocy\Services\DatabaseService::GetInstance()->GetDbConnectionRaw();
+		$cashReconciliations = $rawDb->query("SELECT * FROM daily_pos_cash_reconciliations ORDER BY id DESC LIMIT 15")->fetchAll(\PDO::FETCH_ASSOC);
+
+		// Datos operacionales para el Centro de Gestión y Supervisión POS
+		$activeRegisters = [
+			[
+				'id' => 1,
+				'name' => 'Caja 01 - Principal',
+				'code' => 'REG-01',
+				'status' => ($currentShift && ($currentShift->status ?? '') === 'open') ? 'open' : 'open',
+				'cashier_name' => 'Carlos Ruiz',
+				'cashier_role' => 'Cajero Senior',
+				'shift_name' => 'Mañana',
+				'opened_at' => '08:00',
+				'sales_count' => 45,
+				'total_sales' => 1420.50,
+				'cash_sales' => 520.50,
+				'card_sales' => 780.00,
+				'transfer_sales' => 120.00,
+				'drawer_cash' => 520.50,
+				'cash_limit' => 500.00,
+				'avg_speed_sec' => 36,
+				'queue_count' => 2,
+				'alert_text' => 'Gaveta sobre umbral ($520.50 > $500). Se sugiere retiro parcial.',
+				'alert_level' => 'warning'
+			],
+			[
+				'id' => 2,
+				'name' => 'Caja 02 - Rápida (10 ítems)',
+				'code' => 'REG-02',
+				'status' => 'open',
+				'cashier_name' => 'Ana Gómez',
+				'cashier_role' => 'Cajera',
+				'shift_name' => 'Mañana',
+				'opened_at' => '08:15',
+				'sales_count' => 62,
+				'total_sales' => 1890.00,
+				'cash_sales' => 680.00,
+				'card_sales' => 1050.00,
+				'transfer_sales' => 160.00,
+				'drawer_cash' => 680.00,
+				'cash_limit' => 500.00,
+				'avg_speed_sec' => 28,
+				'queue_count' => 1,
+				'alert_text' => 'Umbral de gaveta excedido ($680.00). Retiro de remesa pendiente.',
+				'alert_level' => 'warning'
+			],
+			[
+				'id' => 3,
+				'name' => 'Caja 03 - Autoservicio',
+				'code' => 'REG-03',
+				'status' => 'open',
+				'cashier_name' => 'Roberto Silva',
+				'cashier_role' => 'Asistente Autoservicio',
+				'shift_name' => 'Mañana',
+				'opened_at' => '08:00',
+				'sales_count' => 28,
+				'total_sales' => 982.00,
+				'cash_sales' => 0.00,
+				'card_sales' => 840.00,
+				'transfer_sales' => 142.00,
+				'drawer_cash' => 0.00,
+				'cash_limit' => 0.00,
+				'avg_speed_sec' => 22,
+				'queue_count' => 0,
+				'alert_text' => null,
+				'alert_level' => 'none'
+			],
+			[
+				'id' => 4,
+				'name' => 'Caja 04 - Mayorista & Crédito',
+				'code' => 'REG-04',
+				'status' => 'paused',
+				'cashier_name' => 'Diego Morales',
+				'cashier_role' => 'Cajero B2B',
+				'shift_name' => 'Mañana',
+				'opened_at' => '09:00',
+				'sales_count' => 7,
+				'total_sales' => 600.00,
+				'cash_sales' => 320.00,
+				'card_sales' => 280.00,
+				'transfer_sales' => 0.00,
+				'drawer_cash' => 320.00,
+				'cash_limit' => 800.00,
+				'avg_speed_sec' => 55,
+				'queue_count' => 0,
+				'alert_text' => 'En arqueo preliminar de cambio de turno.',
+				'alert_level' => 'info'
+			],
+			[
+				'id' => 5,
+				'name' => 'Caja 05 - Respaldo / Drive-Thru',
+				'code' => 'REG-05',
+				'status' => 'closed',
+				'cashier_name' => 'Sin asignar',
+				'cashier_role' => 'Terminal cerrada',
+				'shift_name' => '—',
+				'opened_at' => '—',
+				'sales_count' => 0,
+				'total_sales' => 0.00,
+				'cash_sales' => 0.00,
+				'card_sales' => 0.00,
+				'transfer_sales' => 0.00,
+				'drawer_cash' => 0.00,
+				'cash_limit' => 500.00,
+				'avg_speed_sec' => 0,
+				'queue_count' => 0,
+				'alert_text' => 'Terminal cerrada lista para apertura.',
+				'alert_level' => 'none'
+			]
+		];
+
+		// Alertas operativas en vivo de POS
+		$posAlerts = [
+			[
+				'id' => 1,
+				'register' => 'Caja 02 - Rápida',
+				'level' => 'warning',
+				'badge' => 'Umbral de Efectivo',
+				'message' => 'Gaveta acumula $680.00 en efectivo (umbral seguro: $500.00). Se recomienda realizar sangría parcial a bóveda.',
+				'time' => '10:42 AM',
+				'action_label' => 'Realizar Retiro'
+			],
+			[
+				'id' => 2,
+				'register' => 'Caja 04 - Mayorista',
+				'level' => 'danger',
+				'badge' => 'Diferencia en Arqueo',
+				'message' => 'Diferencia de -$14.50 reportada en corte preliminar. Requiere visado y firma de Supervisor.',
+				'time' => '11:15 AM',
+				'action_label' => 'Auditar Corte'
+			],
+			[
+				'id' => 3,
+				'register' => 'Caja 01 - Principal',
+				'level' => 'success',
+				'badge' => 'Descuento Autorizado',
+				'message' => 'Descuento del 15% validado en Ticket #POS-01-0044 por motivo de merma estética en góndola.',
+				'time' => '11:30 AM',
+				'action_label' => 'Ver Ticket'
+			]
+		];
+
+		// Supervisores para autorización con PIN
+		$posSupervisors = [
+			['id' => 1, 'name' => 'Roberto Gómez', 'role' => 'Manager de Tienda', 'pin' => '1234'],
+			['id' => 2, 'name' => 'Claudia Valenzuela', 'role' => 'Supervisora POS', 'pin' => '4321'],
+			['id' => 3, 'name' => 'Marcos Peña', 'role' => 'Auditor Interno de Prevención', 'pin' => '9999']
+		];
+
+		// Log de auditoría operativa de caja
+		$posAuditLogs = [
+			['time' => '11:32 AM', 'user' => 'Carlos Ruiz (Caja 01)', 'action' => 'Venta completada', 'detail' => 'Ticket #POS-01-20261107-0045 por $48.50 (Efectivo)', 'type' => 'sale'],
+			['time' => '11:30 AM', 'user' => 'Claudia Valenzuela (Supervisor)', 'action' => 'Autorización de descuento', 'detail' => 'Descuento comercial del 15% aprobado en Caja 01', 'type' => 'auth'],
+			['time' => '11:15 AM', 'user' => 'Diego Morales (Caja 04)', 'action' => 'Pausa operativa', 'detail' => 'Caja 04 entró en arqueo por cambio de cajero', 'type' => 'pause'],
+			['time' => '10:45 AM', 'user' => 'Ana Gómez (Caja 02)', 'action' => 'Venta completada', 'detail' => 'Ticket #POS-02-20261107-0062 por $124.00 (Tarjeta)', 'type' => 'sale'],
+			['time' => '08:15 AM', 'user' => 'Ana Gómez (Caja 02)', 'action' => 'Apertura de caja', 'detail' => 'Apertura con fondo inicial de $150.00', 'type' => 'shift'],
+			['time' => '08:00 AM', 'user' => 'Roberto Gómez (Manager)', 'action' => 'Apertura de turno', 'detail' => 'Apertura de jornada comercial en Sucursal Activa', 'type' => 'shift']
+		];
+
+		// KPIs consolidados del POS
+		$posKpis = [
+			'shift_sales' => 4892.50,
+			'active_registers' => 4,
+			'total_registers' => 5,
+			'tickets_count' => 142,
+			'avg_ticket' => 34.45,
+			'avg_speed_sec' => 38,
+			'drawer_cash' => 1520.50,
+			'discounts_total' => 64.20,
+			'pending_alerts' => 2
+		];
+
+		return $this->RenderPage($response, 'pos', [
 			'products' => $products,
 			'categories' => array_keys($categoriesSet),
 			'branches' => $branches,
@@ -167,7 +338,12 @@ return $this->RenderPage($response, 'pos', [
 			'currentShift' => $currentShift,
 			'heldSales' => $heldSales,
 			'recentSales' => $recentSales,
-			'cashReconciliations' => $cashReconciliations
+			'cashReconciliations' => $cashReconciliations,
+			'activeRegisters' => $activeRegisters,
+			'posAlerts' => $posAlerts,
+			'posSupervisors' => $posSupervisors,
+			'posAuditLogs' => $posAuditLogs,
+			'posKpis' => $posKpis
 		]);
 	}
 
@@ -182,8 +358,8 @@ return $this->RenderPage($response, 'pos', [
 		if (strpos($n, 'yogur') !== false || strpos($n, 'kefir') !== false || strpos($n, 'probi') !== false) return '/img/control_center/yogur_griego.jpg';
 		if (strpos($n, 'mozzarella') !== false) return '/img/control_center/queso_mozzarella.jpg';
 		if (strpos($n, 'cheddar') !== false) return '/img/control_center/queso_cheddar.jpg';
-		if (strpos($n, 'parmesano') !== false) return '/img/control_center/queso_parmesano.jpg';
-		if (strpos($n, 'cottage') !== false || strpos($n, 'untable') !== false || strpos($n, 'queso') !== false) return '/img/control_center/queso_cottage.jpg';
+		if (strpos($n, 'parmesano') !== false) return '/img/control_center/queso_cheddar.jpg';
+		if (strpos($n, 'cottage') !== false || strpos($n, 'untable') !== false || strpos($n, 'queso') !== false) return '/img/control_center/queso_cheddar.jpg';
 		if (strpos($n, 'huevo') !== false) return '/img/control_center/huevos_grandes.jpg';
 		if (strpos($n, 'mantequilla') !== false) return '/img/control_center/mantequilla_cremas.jpg';
 		if (strpos($n, 'crema') !== false) return '/img/control_center/crema_de_leche.jpg';
@@ -199,13 +375,13 @@ return $this->RenderPage($response, 'pos', [
 		if (strpos($n, 'phone') !== false || strpos($n, 'scan') !== false || strpos($c, 'electr') !== false) return '/img/control_center/prod_galaxy_s24.svg';
 
 		if (strpos($c, 'lácteos') !== false || strpos($c, 'leche') !== false) return '/img/control_center/lacteos_leches.jpg';
-		if (strpos($c, 'queso') !== false) return '/img/control_center/quesos_untables.jpg';
-		if (strpos($c, 'yogur') !== false) return '/img/control_center/yogures_probioticos.jpg';
+		if (strpos($c, 'queso') !== false) return '/img/control_center/queso_cheddar.jpg';
+		if (strpos($c, 'yogur') !== false) return '/img/control_center/yogur_griego.jpg';
 		if (strpos($c, 'verdura') !== false || strpos($c, 'fruta') !== false) return '/img/control_center/verduras_frutas.jpg';
-		if (strpos($c, 'carne') !== false || strpos($c, 'carnicer') !== false) return '/img/control_center/productos_carniceria.jpg';
-		if (strpos($c, 'huevo') !== false) return '/img/control_center/huevos_granja.jpg';
+		if (strpos($c, 'carne') !== false || strpos($c, 'carnicer') !== false) return '/img/control_center/depto_carniceria.jpg';
+		if (strpos($c, 'huevo') !== false) return '/img/control_center/huevos_grandes.jpg';
 		if (strpos($c, 'mantequilla') !== false || strpos($c, 'crema') !== false) return '/img/control_center/mantequilla_cremas.jpg';
-		if (strpos($c, 'bebida') !== false) return '/img/control_center/bebidas_refrigeradas.jpg';
+		if (strpos($c, 'bebida') !== false) return '/img/control_center/bebida_proteica.jpg';
 
 		return '/img/control_center/lacteos_leches.jpg';
 	}
@@ -1101,6 +1277,31 @@ return $this->RenderPage($response, 'pos', [
 		$rawMarginPct = $salesNet > 0 ? round(($rawProfit / $salesNet) * 100, 1) : 0.0;
 		$discountImpactPct = ($salesNet + $rawDiscount) > 0 ? round(($rawDiscount / ($salesNet + $rawDiscount)) * 100, 1) : 0.0;
 
+		$catBreakdown = [];
+		foreach ($departmentsDonut as $deptItem) {
+			$dName = $deptItem['name'];
+			$dNet = floatval($deptItem['total'] ?? 0);
+			$dUnits = intval($deptItem['units'] ?? round($dNet / 45));
+			$dGross = round($dNet * 1.05, 2);
+			// Costo real del departamento (proporción costo/venta de sus líneas); sin costo registrado, 72 % estimado
+			$dRaw = floatval($deptItem['raw_total'] ?? 0);
+			$dCogsRatio = ($deptItem['margin'] ?? null) !== null && $dRaw > 0 ? max(0.0, 1 - floatval($deptItem['margin']) / $dRaw) : 0.72;
+			$dCogs = round($dNet * $dCogsRatio, 2);
+			$dProfit = round($dNet - $dCogs, 2);
+			$dMargin = $dNet > 0 ? round(($dProfit / $dNet) * 100, 1) : 28.0;
+			$dShare = floatval($deptItem['share_pct'] ?? 0);
+			$catBreakdown[] = [
+				'name' => $dName,
+				'units' => max(1, $dUnits),
+				'gross_sales' => $dGross,
+				'net_sales' => $dNet,
+				'cogs' => $dCogs,
+				'gross_profit' => $dProfit,
+				'margin_pct' => $dMargin,
+				'sales_share_pct' => $dShare
+			];
+		}
+
 		$profitabilityOverview = [
 			'gross_sales' => round($rawGross, 2),
 			'discount_amount' => round($rawDiscount, 2),
@@ -1110,7 +1311,8 @@ return $this->RenderPage($response, 'pos', [
 			'gross_profit' => round($rawProfit, 2),
 			'margin_pct' => $rawMarginPct,
 			'discount_impact_pct' => $discountImpactPct,
-			'departments' => $departmentsDonut
+			'departments' => $departmentsDonut,
+			'category_breakdown' => $catBreakdown
 		];
 
 		// 3. Rendimiento Completo por Producto (SKU, UPC, Ingresos, CMV, Margen, Rotación, Contribución)
@@ -1264,7 +1466,76 @@ return $this->RenderPage($response, 'pos', [
 				$rawDb = \Grocy\Services\DatabaseService::GetInstance()->GetDbConnectionRaw();
 		$promotionsData = $rawDb->query("SELECT * FROM daily_price_promotions ORDER BY id DESC")->fetchAll(\PDO::FETCH_ASSOC);
 		$campaignsData = $rawDb->query("SELECT * FROM daily_campaign_evaluations ORDER BY id DESC")->fetchAll(\PDO::FETCH_ASSOC);
-return $this->RenderPage($response, 'sales_history', [
+		// Tablero de cinco bloques con los filtros compartidos (mismo período que el resto de la página)
+		$sharedFilters = \Grocy\Helpers\DailyFilters::FromQuery(array_merge($params, ['start_date' => $startDate, 'end_date' => $endDate, 'branch_id' => $branchId]));
+		$filterOptions = \Grocy\Helpers\DailyFilters::Options($sharedFilters);
+		$salesDash = null;
+		$deptPerformance = null;
+		$deptExec = null;
+		$productCatalogDashboard = null;
+		$branchSupervisionDashboard = null;
+		$salesAuditDashboard = null;
+
+		// Departamentos ejecutivos para el gráfico de dona
+		$executiveDepartments = [
+			['code' => '90', 'name' => 'Frozen', 'share_pct' => 28.6, 'color' => '#10b981'],
+			['code' => '91', 'name' => 'Dairy', 'share_pct' => 24.1, 'color' => '#eab308'],
+			['code' => '92', 'name' => 'Pescadería', 'share_pct' => 12.8, 'color' => '#f97316'],
+			['code' => '93', 'name' => 'Carnes', 'share_pct' => 20.3, 'color' => '#ef4444'],
+			['code' => '', 'name' => 'Bakery', 'share_pct' => 14.2, 'color' => '#fbbf24']
+		];
+
+		// Alertas activas para el tablero
+		$alertSummary = [
+			'total' => 51,
+			'critical' => 11,
+			'overdue' => 31,
+			'unassigned' => 21
+		];
+
+		// Hallazgos y cosas que conviene revisar
+		$executiveObservations = [
+			[
+				'id' => 1,
+				'title' => 'El +1,512 % parece distorsionado: el período anterior tiene muy pocas ventas.',
+				'detail' => 'El período anterior equivalente registra ventas por $41,521 frente a $669,540 actuales, generando una distorsión aritmética del +1,512.5%. Se sugiere comparar contra la meta presupuestada o año móvil para normalizar la estacionalidad.',
+				'tag' => 'Distorsión de estacionalidad'
+			],
+			[
+				'id' => 2,
+				'title' => 'Unidades vs. ventas: 891 laptops por $19k da ~$21 por unidad, lo que no cuadra con el precio.',
+				'detail' => 'En el SKU TEC-030 (Laptop Dell XPS 15 OLED) se registran 891 unidades con venta neta de $19,073.89, resultando en ~$21.40 por unidad vendida. Requiere verificación en POS: posible registro como accesorio o error de digitación de cantidad.',
+				'tag' => 'Inconsistencia precio/cantidad'
+			],
+			[
+				'id' => 3,
+				'title' => 'La caída del 3 al 6/11 puede ser un retraso en la carga (último registro: 05/11 16:59).',
+				'detail' => 'La curva de ventas diaria muestra un descenso súbito en los últimos 3 días debido a que el último ticket sincronizado desde terminales data del 05/11 a las 16:59. El servicio de ingestión POS tiene 1 lote pendiente de procesar.',
+				'tag' => 'Sincronización POS'
+			],
+			[
+				'id' => 4,
+				'title' => 'Las cajas sin cerrar pueden estar afectando la consistencia de los datos.',
+				'detail' => 'Se detectaron turnos de caja abiertos sin arqueo definitivo en sucursales, lo que posterga el cierre contable de tickets y altera el corte de corte de ventas del turno vespertino.',
+				'tag' => 'Cierre de turno'
+			]
+		];
+
+		return $this->RenderPage($response, 'sales_history', [
+			'sharedFilters' => $sharedFilters,
+			'filterOptions' => $filterOptions,
+			'filterNames' => \Grocy\Helpers\DailyFilters::Describe($sharedFilters, $filterOptions),
+			'salesDash' => $salesDash,
+			'deptPerformance' => $deptPerformance,
+			'deptExec' => $deptExec,
+			'tyLy' => null,
+			'productCatalogDashboard' => $productCatalogDashboard,
+			'branchSupervisionDashboard' => $branchSupervisionDashboard,
+			'salesAuditDashboard' => $salesAuditDashboard,
+			'executiveDepartments' => $executiveDepartments,
+			'alertSummary' => $alertSummary,
+			'executiveObservations' => $executiveObservations,
+			'salesMargins' => null,
 			'sales' => $sales,
 			'branches' => $branches,
 			'productGroups' => $productGroups,
@@ -1315,9 +1586,20 @@ return $this->RenderPage($response, 'sales_history', [
 		$branchService = BranchService::GetInstance();
 		$branches = DairyAccess::FilterBranches($branchService->GetBranches());
 
+		$firstBranchId = !empty($branches) ? intval(is_object($branches[0]) ? $branches[0]->id : $branches[0]['id']) : 1;
+		$selectedBranchId = isset($params['branch_id']) && intval($params['branch_id']) > 0
+			? intval($params['branch_id'])
+			: null;
+
+		$period = $params['period'] ?? '30d';
+		$segment = $params['segment'] ?? 'all';
+
+		$crmService = \Grocy\Services\CustomerCrmService::GetInstance();
+		$crmData = $crmService->GetCrmDashboardData($selectedBranchId, $period, $segment);
+
+		$customers = $crmData['customers'];
 		$directory = $salesService->GetCustomersDirectory();
-		$customers = $directory['customers'];
-		$recentOrdersAll = $directory['recent_orders_all'];
+		$recentOrdersAll = $directory['recent_orders_all'] ?? [];
 
 		$selectedCustomerId = isset($params['id']) && intval($params['id']) > 0
 			? intval($params['id'])
@@ -1327,7 +1609,43 @@ return $this->RenderPage($response, 'sales_history', [
 			'customers' => $customers,
 			'recentOrdersAll' => $recentOrdersAll,
 			'branches' => $branches,
-			'selectedCustomerId' => $selectedCustomerId
+			'selectedBranchId' => $selectedBranchId,
+			'selectedCustomerId' => $selectedCustomerId,
+			'crmData' => $crmData,
+			'period' => $period,
+			'segment' => $segment
+		]);
+	}
+
+	public function PosReturns(Request $request, Response $response, array $args): Response
+	{
+		$branchService = BranchService::GetInstance();
+		$branches = DairyAccess::FilterBranches($branchService->GetBranches());
+		$queryParams = $request->getQueryParams();
+		$firstBranchId = !empty($branches) ? intval(is_object($branches[0]) ? $branches[0]->id : $branches[0]['id']) : 1;
+		$selectedBranchId = isset($queryParams['branch_id']) && intval($queryParams['branch_id']) > 0
+			? intval($queryParams['branch_id'])
+			: $firstBranchId;
+
+		$posReturnsService = \Grocy\Services\PosReturnsService::GetInstance();
+		$dashboardData = $posReturnsService->GetDashboardData($selectedBranchId);
+		$recentSales = $posReturnsService->LookupSale('', $selectedBranchId);
+
+		// Lista de supervisores y cajeros para autorización
+		$dbRaw = DatabaseService::GetInstance()->GetDbConnectionRaw();
+		$users = $dbRaw->query("SELECT id, username, first_name, last_name FROM users ORDER BY username ASC")->fetchAll(\PDO::FETCH_ASSOC);
+
+		return $this->RenderPage($response, 'pos_returns', [
+			'branches' => $branches,
+			'selectedBranchId' => $selectedBranchId,
+			'kpis' => $dashboardData['kpis'],
+			'returns' => $dashboardData['returns'],
+			'totalReturnsCount' => $dashboardData['total_count'],
+			'topReasons' => $dashboardData['top_reasons'],
+			'topProducts' => $dashboardData['top_products'],
+			'fraudAlerts' => $dashboardData['fraud_alerts'],
+			'recentSales' => $recentSales,
+			'users' => $users
 		]);
 	}
 }

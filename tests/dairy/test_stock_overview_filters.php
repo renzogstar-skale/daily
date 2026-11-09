@@ -51,7 +51,8 @@ $rowSum = array_sum(array_map(fn($r) => $r['cells'][3]['val'], array_slice($u['r
 ok('Total = suma de departamentos', $eq($rowSum, $u['rows'][0]['cells'][3]['val'], 0.5));
 ok('Estadísticas salen de los totales diarios', $eq($u['stats']['min'], min(array_column($u['rows'][0]['cells'], 'val')), 0.01) && $eq($u['stats']['max'], max(array_column($u['rows'][0]['cells'], 'val')), 0.01) && $eq($u['stats']['avg'], array_sum(array_column($u['rows'][0]['cells'], 'val')) / 7, 0.02));
 $first = $u['rows'][0]['cells'][0]['val'];
-ok('Variación = primer vs último cierre', $eq($u['stats']['variation_pct'], ($u['rows'][0]['cells'][6]['val'] - $first) / $first * 100, 0.06));
+$expectedVar = ($first !== null && $first > 0) ? ($u['rows'][0]['cells'][6]['val'] - $first) / $first * 100 : null;
+ok('Variación = primer vs último cierre', $expectedVar !== null ? $eq($u['stats']['variation_pct'], $expectedVar, 0.06) : ($u['stats']['variation_pct'] === null || $u['stats']['variation_pct'] === 0));
 ok('Días críticos = celdas rojas del total', $u['stats']['critical_days'] === count(array_filter($u['rows'][0]['cells'], fn($c) => $c['color'] === '#ef4444')));
 
 $metrics = ['units', 'value', 'rotation', 'coverage', 'critical', 'variation'];
@@ -126,8 +127,12 @@ $e = $exp(['window' => 'expired']);
 $r = $sqlWin('0000-00-00', date('Y-m-d', strtotime('-1 day')));
 ok('Vencidos = registros', intval($r[0]) === $e['stats']['products_count'] && $eq($r[2], $e['stats']['total_risk'], 0.05) && array_filter($e['rows'], fn($x) => $x['days_left'] >= 0 || $x['fefo_state'] !== 'Vencido') === []);
 // Lote vencido sembrado en la copia, repartido en dos ubicaciones de la misma sucursal: una sola fila, con cantidades sumadas
-$seed = $db->query("SELECT s.* FROM stock s JOIN locations l ON l.id = s.location_id WHERE IFNULL(l.is_transit, 0) = 0 AND s.amount > 0 AND s.price > 0 AND l.branch_id = 1 LIMIT 1")->fetch(PDO::FETCH_ASSOC);
-$otherLoc = intval($db->query("SELECT id FROM locations WHERE branch_id = 1 AND IFNULL(is_transit, 0) = 0 AND id <> " . intval($seed['location_id']) . ' LIMIT 1')->fetchColumn());
+$seed = $db->query("SELECT s.* FROM stock s JOIN locations l ON l.id = s.location_id JOIN products p ON p.id = s.product_id WHERE IFNULL(l.is_transit, 0) = 0 AND s.amount > 0 AND s.price > 0 AND l.branch_id = 1 AND (IFNULL(p.storage_class, '') = '' OR IFNULL(l.storage_class, '') = '' OR p.storage_class = l.storage_class) LIMIT 1")->fetch(PDO::FETCH_ASSOC);
+$prodStorage = $db->query("SELECT IFNULL(storage_class, '') FROM products WHERE id = " . intval($seed['product_id']))->fetchColumn();
+$otherLoc = intval($db->query("SELECT id FROM locations WHERE branch_id = 1 AND IFNULL(is_transit, 0) = 0 AND (IFNULL(storage_class, '') = '$prodStorage' OR IFNULL(storage_class, '') = '') AND id <> " . intval($seed['location_id']) . ' LIMIT 1')->fetchColumn());
+if (!$otherLoc) {
+	$otherLoc = intval($seed['location_id']);
+}
 $past = date('Y-m-d', strtotime('-3 days'));
 $ins = function (int $loc, float $amount) use ($db, $seed, $past) {
 	$r = $seed;

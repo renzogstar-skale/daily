@@ -54,11 +54,9 @@
 
 	{{-- 2. ENCABEZADO HERO CARD (RÉPLICA EXACTA) --}}
 	<div class="mc-hero-banner">
-		<div class="mc-hero-info">
-			<div class="mc-hero-kicker">INVENTARIO Y ALMACENES</div>
-			<h1 class="mc-hero-title">
-				<i class="fas fa-boxes mc-hero-title-icon"></i> Control Integral de Mercancías
-			</h1>
+		<div class="mc-hero-info daily-head">
+			<div class="dairy-page-icon is-primary"><i class="fa-solid fa-warehouse"></i></div>
+			<h1 class="mc-hero-title">Control Integral de Mercancías</h1>
 			<p class="mc-hero-subtitle">Entradas · Salidas · Traslados · Recepciones · Diferencias · Trazabilidad</p>
 		</div>
 
@@ -90,7 +88,7 @@
 	</div>
 
 	{{-- BANNER DE DISTINCIÓN DE PROCESO (PROCESO B vs PROCESO A) --}}
-	<div class="card border-0 shadow-xs mb-3 bg-white" style="border-radius:12px; border-left:4px solid #10b981 !important;">
+	<div class="card border-0 shadow-xs mb-3 bg-white" style="border-radius:12px; border:1px solid rgba(0,142,72,0.22) !important;">
 		<div class="card-body p-3 d-flex flex-wrap justify-content-between align-items-center">
 			<div>
 				<span class="badge badge-success text-uppercase font-weight-bold px-2 py-1 mb-1" style="font-size:0.72rem;">Proceso B: Registro de Inventario</span>
@@ -1076,10 +1074,10 @@
 						<div style="width: 80px; height: 80px; position: relative;">
 							<canvas id="chartMovesByType"></canvas>
 							<div style="position: absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; font-size:0.7rem; font-weight:800;">
-								1,248<br><span style="font-size:0.55rem; color:#64748b; font-weight:600;">Total</span>
+								1,248<br><span style="font-size:0.6875rem; color:#64748b; font-weight:600;">Total</span>
 							</div>
 						</div>
-						<div class="small" style="font-size: 0.65rem; line-height: 1.3;">
+						<div class="small" style="font-size: 0.6875rem; line-height: 1.3;">
 							<div><span style="color:#06b6d4">●</span> Entrada: 45.2%</div>
 							<div><span style="color:#ef4444">●</span> Salida: 28.7%</div>
 							<div><span style="color:#3b82f6">●</span> Traslado: 12.4%</div>
@@ -1092,7 +1090,7 @@
 				{{-- Gráfico 3: Top productos con mayor movimiento --}}
 				<div class="mc-chart-card">
 					<div class="mc-chart-title">Top productos mayor movimiento</div>
-					<div class="d-flex flex-column gap-1" style="font-size: 0.68rem;">
+					<div class="d-flex flex-column gap-1" style="font-size: 0.6875rem;">
 						@foreach($charts['top_products'] ?? [] as $tp)
 						<div>
 							<div class="d-flex justify-content-between mb-1">

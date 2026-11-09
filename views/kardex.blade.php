@@ -251,7 +251,8 @@
 					</thead>
 					<tbody id="kx-findings-tbody">
 						@foreach($anomalies['items'] as $idx => $a)
-						<tr class="kx-row-item @if($idx === 0) is-selected @endif"
+						{{-- Igual que applyFilters() al cargar (Todos, sin búsqueda, 6 visibles): así el primer layout no incluye ~2 000 filas --}}
+						<tr class="kx-row-item @if($idx === 0) is-selected @endif" @if($idx >= 6) style="display: none;" @endif
 							data-index="{{ $idx }}"
 							data-type="{{ $a['type'] }}"
 							data-product="{{ strtolower($a['product_name']) }}"

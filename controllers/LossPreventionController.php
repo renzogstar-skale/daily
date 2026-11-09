@@ -158,7 +158,7 @@ class LossPreventionController extends BaseController
 			'list' => $list,
 			'filters' => $filters,
 			'query' => array_intersect_key($q, array_flip(['period', 'from', 'to', 'trend', 'tab', 'sort', 'branch_id', 'department', 'category', 'alert_type', 'priority', 'status', 'owner', 'q', 'rule', 'overdue', 'group', 'flow', 'shift'])),
-			'avoided' => $canSee ? $svc->AvoidedLosses(!empty($filters['branch_id']) ? intval($filters['branch_id']) : null, $filters['allowed']) : null,
+			'avoided' => null,
 			'rules' => $svc->GetRules(),
 			'lastScan' => $svc->LastScan(),
 			'scan' => $scan,

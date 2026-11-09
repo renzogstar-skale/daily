@@ -1,0 +1,22 @@
+{
+    "Brecha de Merma": "Shrink Gap",
+    "Casos Abiertos": "Open Cases",
+    "Dentro de referencia": "Within reference",
+    "Gestión de unidades operativas": "Management of operating units",
+    "Mayor Merma": "Highest Shrink",
+    "Menor Merma": "Lowest Shrink",
+    "Merma de la Red": "Network Shrink",
+    "Período {0}": "Period {0}",
+    "Sin ninguna sucursal marcada el usuario ve toda la red. Los administradores siempre ven toda la red": "With no branch checked, the user sees the whole network. Administrators always see the whole network",
+    "Sobre tope corporativo": "Above corporate cap",
+    "Sucursales en Meta": "Branches on Target",
+    "Ticket prom": "Avg. ticket",
+    "almacenes físicos y aislamiento de inventarios por sucursal.": "physical warehouses and inventory isolation by branch.",
+    "en el mes": "in the month",
+    "merma ≤ {0}%": "shrink ≤ {0}%",
+    "pendientes de cierre": "pending closure",
+    "peor vs. mejor sucursal": "worst vs. best branch",
+    "semáforo de merma s/ventas": "shrink traffic light vs. sales",
+    "toda la red": "whole network",
+    "{0} sin información": "{0} without information"
+}

@@ -4,7 +4,7 @@
 
 @section('content')
 <meta http-equiv="refresh"
-	content="5;url={{$U('/')}}">
+	content="5;url={{$U('/app')}}">
 
 <div class="row">
 	<div class="col text-center">

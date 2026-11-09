@@ -2880,6 +2880,14 @@ class AlertCenterService extends BaseService
 	 */
 	public function AvoidedLosses(?int $branchId = null, ?array $allowedBranches = null, int $days = 90): array
 	{
+		// Recorre el stock_log de cada lote alertado (segundos): el tablero lo pide varias veces por página
+		static $memo = [];
+		$key = json_encode([$branchId, $allowedBranches, $days, date('Y-m-d H')]);
+		return $memo[$key] ??= $this->AvoidedLossesRaw($branchId, $allowedBranches, $days);
+	}
+
+	private function AvoidedLossesRaw(?int $branchId, ?array $allowedBranches, int $days): array
+	{
 		$where = "a.rule_code = 'expiring_lots' AND a.created_at >= :from";
 		$p = [':from' => date('Y-m-d H:i:s', strtotime("-$days days"))];
 		if ($branchId)
@@ -2893,6 +2901,13 @@ class AlertCenterService extends BaseService
 		}
 		$rows = [];
 		$tot = ['alerts' => 0, 'avoided' => 0.0, 'lost' => 0.0, 'adjusted' => 0.0, 'pending' => 0.0, 'at_risk' => 0.0];
+		// Saldo actual de cada lote en una sola pasada: stock no tiene índice por stock_id y la consulta por alerta
+		// recorría la tabla completa cientos de veces (~1,2 s en /alerts)
+		$leftBy = [];
+		foreach ($this->Rows('SELECT stock_id, IFNULL(SUM(amount), 0) AS qty, IFNULL(SUM(amount * IFNULL(price, 0)), 0) AS val FROM stock WHERE stock_id IS NOT NULL GROUP BY stock_id') as $l)
+		{
+			$leftBy[(string)$l['stock_id']] = $l;
+		}
 		foreach ($this->Rows("SELECT a.id, a.title, a.status, a.branch_id, a.created_at, a.dedupe_key FROM dairy_alerts a WHERE $where ORDER BY a.created_at DESC", $p) as $a)
 		{
 			$parts = explode(':', $a['dedupe_key']);
@@ -2908,7 +2923,7 @@ class AlertCenterService extends BaseService
 					SUM(CASE WHEN transaction_type = 'consume' AND spoiled = 1 THEN -amount * IFNULL(price, 0) ELSE 0 END) AS lost_val,
 					SUM(CASE WHEN transaction_type = 'inventory-correction' AND amount < 0 THEN -amount * IFNULL(price, 0) ELSE 0 END) AS adj_val
 				FROM stock_log WHERE stock_id = :s AND undone = 0 AND row_created_timestamp >= :c", [':s' => $stockId, ':c' => $a['created_at']]);
-			$left = $this->Row('SELECT IFNULL(SUM(amount), 0) AS qty, IFNULL(SUM(amount * IFNULL(price, 0)), 0) AS val FROM stock WHERE stock_id = :s', [':s' => $stockId]);
+			$left = $leftBy[(string)$stockId] ?? ['qty' => 0, 'val' => 0];
 			$expired = $bbd < date('Y-m-d');
 			$r = [
 				'alert_id' => intval($a['id']), 'title' => $a['title'], 'status' => $a['status'], 'branch_id' => intval($a['branch_id']), 'created_at' => $a['created_at'], 'best_before_date' => $bbd,

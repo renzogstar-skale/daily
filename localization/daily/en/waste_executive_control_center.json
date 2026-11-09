@@ -1,0 +1,18 @@
+{
+    "% de la merma del mes ($": "% of the month's shrink ($",
+    "% de {0} sem.": "% of {0} wk.",
+    ": el stock aún no se descontó.": ": the stock has not been deducted yet.",
+    "Merma por vencimiento: prevenible con FEFO y rebajas": "Expiry shrink: preventable with FEFO and markdowns",
+    "Meta: ≤": "Target: ≤",
+    "Prioridad alta": "High priority",
+    "Recuperado registrado (mermas y notas de crédito)": "Recorded recovery (shrink and credit notes)",
+    "Sin datos del mismo mes del año anterior": "No data for the same month last year",
+    "Sin merma en el período": "No shrink in the period",
+    "Sin recuperaciones registradas": "No recoveries recorded",
+    "Sin ventas del departamento": "No department sales",
+    "por aprobar ($": "to approve ($",
+    "producto(s) con lotes que vencen en ≤ {0} días. Costo expuesto: $": "product(s) with lots expiring in ≤ {0} days. Exposed cost: $",
+    "registro(s) por $": "record(s) for $",
+    "vs. mismo mes del año anterior": "vs. same month last year",
+    "vs. mismos días del mes anterior": "vs. same days of the previous month"
+}

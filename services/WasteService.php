@@ -631,9 +631,12 @@ class WasteService extends BaseService
 			$dbRaw->commit();
 			return $this->GetWasteRecord($newRecordId);
 		}
-		catch (\Exception $ex)
+		catch (\Throwable $ex)
 		{
-			$dbRaw->rollBack();
+			if ($dbRaw->inTransaction())
+			{
+				$dbRaw->rollBack();
+			}
 			throw $ex;
 		}
 	}

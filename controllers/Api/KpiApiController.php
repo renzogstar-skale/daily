@@ -2,7 +2,6 @@
 
 namespace Grocy\Controllers\Api;
 
-use Grocy\Services\AIAdvisorService;
 use Grocy\Services\BudgetService;
 use Grocy\Services\KpiService;
 use Grocy\Controllers\Users\User;
@@ -43,80 +42,6 @@ class KpiApiController extends BaseApiController
 		{
 			return $this->GenericErrorResponse($response, $ex->getMessage());
 		}
-	}
-
-	// Acciones propuestas por Arturito: vista previa (sin escribir) y ejecución con confirmación; permiso propio de cada acción
-	private function AiActionBranch(Request $request, array $body): ?int
-	{
-		$type = strval($body['type'] ?? '');
-		return $this->DairyRead($request, [\Grocy\Services\AiActionService::Permission($type)], !empty($body['branch_id']) ? intval($body['branch_id']) : null);
-	}
-
-	public function AiActionPreview(Request $request, Response $response, array $args)
-	{
-		$body = $request->getParsedBody() ?? [];
-		try
-		{
-			$branchId = $this->AiActionBranch($request, $body);
-			return $this->ApiResponse($response, \Grocy\Services\AiActionService::GetInstance()->Preview(strval($body['type']), $branchId));
-		}
-		catch (\Grocy\Controllers\Users\PermissionMissingException $ex)
-		{
-			throw $ex;
-		}
-		catch (\Exception $ex)
-		{
-			return $this->GenericErrorResponse($response, $ex->getMessage());
-		}
-	}
-
-	public function AiActionExecute(Request $request, Response $response, array $args)
-	{
-		$body = $request->getParsedBody() ?? [];
-		try
-		{
-			$branchId = $this->AiActionBranch($request, $body);
-			return $this->ApiResponse($response, \Grocy\Services\AiActionService::GetInstance()->Execute(strval($body['type']), $branchId, ($body['confirm'] ?? false) === true, GROCY_USER_ID, isset($body['question']) ? strval($body['question']) : null));
-		}
-		catch (\Grocy\Controllers\Users\PermissionMissingException $ex)
-		{
-			throw $ex;
-		}
-		catch (\Exception $ex)
-		{
-			return $this->GenericErrorResponse($response, $ex->getMessage());
-		}
-	}
-
-	public function AiActionHistory(Request $request, Response $response, array $args)
-	{
-		User::CheckPermission($request, User::PERMISSION_KPIS_VIEW);
-		return $this->ApiResponse($response, \Grocy\Services\AiActionService::GetInstance()->History());
-	}
-
-	public function Ask(Request $request, Response $response, array $args)
-	{
-		User::CheckPermission($request, User::PERMISSION_KPIS_VIEW);
-		$body = $request->getParsedBody() ?? [];
-		$branchId = !empty($body['branch_id']) ? intval($body['branch_id']) : null;
-		try
-		{
-			return $this->ApiResponse($response, \Grocy\Services\AdvisorQaService::GetInstance()->Ask(mb_substr(strval($body['question'] ?? ''), 0, 500), $branchId));
-		}
-		catch (\Exception $ex)
-		{
-			return $this->GenericErrorResponse($response, $ex->getMessage());
-		}
-	}
-
-	public function GetSmartAlerts(Request $request, Response $response, array $args)
-	{
-		$params = $request->getQueryParams();
-		$branchId = $this->DairyRead($request, [User::PERMISSION_KPIS_VIEW, User::PERMISSION_LOSS_PREVENTION, User::PERMISSION_ALERTS_MANAGE], self::QueryBranch($request));
-
-		$aiService = AIAdvisorService::GetInstance();
-		$alerts = $aiService->GetSmartAlerts($branchId);
-		return $this->ApiResponse($response, $alerts);
 	}
 
 	public function GetTodayExecutiveSales(Request $request, Response $response, array $args)

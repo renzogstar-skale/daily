@@ -53,7 +53,7 @@
 	}
 @endphp
 
-<link rel="stylesheet" href="{{ $U('/css/daily_location_map.css?v=', true) }}{{ $version }}">
+<link rel="stylesheet" href="{{ $U('/css/daily_location_map.css?v=', true) }}{{ daily_asset_version('/css/daily_location_map.css') }}">
 
 <div class="daily-locmap-container">
 	{{-- Encabezado con imagen difuminada y acciones --}}

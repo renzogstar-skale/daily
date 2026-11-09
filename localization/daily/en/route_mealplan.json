@@ -1,0 +1,10 @@
+{
+    "dom": "Sun",
+    "jue": "Thu",
+    "lun": "Mon",
+    "mar": "Tue",
+    "mié": "Wed",
+    "sáb": "Sat",
+    "vie": "Fri",
+    "{0} de nov. de {1}": "Nov {0}, {1}"
+}

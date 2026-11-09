@@ -1,0 +1,15 @@
+{
+    "+ Nueva plantilla": "+ New template",
+    "Auditorías": "Audits",
+    "Cerrar auditoría": "Close audit",
+    "Comparativo por sucursal · {0} días": "Comparison by branch · {0} days",
+    "Guardar avance": "Save progress",
+    "Hallazgo (obligatorio si no cumple)": "Finding (required if not compliant)",
+    "Nueva auditoría": "New audit",
+    "Plantillas de auditoría": "Audit templates",
+    "Sin auditorías. Inicie la primera con «Nueva auditoría».": "No audits. Start the first with «New audit».",
+    "Sin sucursales.": "No branches.",
+    "Ya había una auditoría en curso: se continúa": "There was already an audit in progress: it continues",
+    "¿Cerrar la auditoría? Se calculará el puntaje y cada «No cumple» creará una tarea correctiva.": "Close the audit? The score will be calculated and each «Not compliant» will create a corrective task.",
+    "Última": "Last"
+}

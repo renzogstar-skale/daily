@@ -1,0 +1,14 @@
+{
+    "({0} min/pedido) y": "({0} min/order) and",
+    "({0} min/transacción),": "({0} min/transaction),",
+    "Colaboradores en piso trabajando efectivamente (Programados - En Pausa)": "Team members on the floor actually working (Scheduled - On Break)",
+    "Departamento / Área:": "Department / Area:",
+    "Distribución precisa de personal cada {0} minutos: disponible, programado, en descanso/pausa y trabajando efectivamente vs. requerimiento estándar editable.": "Precise staff distribution every {0} minutes: available, scheduled, on break/pause and actually working vs. editable standard requirement.",
+    "Escenario de Demanda:": "Demand Scenario:",
+    "Fecha de Operación:": "Operation Date:",
+    "Filtrar tabla:": "Filter table:",
+    "Franjas cubiertas / total": "Covered slots / total",
+    "La dotación requerida no se calcula dividiendo ventas entre empleados de forma plana. Integra:": "Required staffing is not calculated by simply dividing sales by employees. It integrates:",
+    "Personal en Piso / En Pausa": "Staff on Floor / On Break",
+    "Todas las áreas (Consolidado)": "All areas (Consolidated)"
+}

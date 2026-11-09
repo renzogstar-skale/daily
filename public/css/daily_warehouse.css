@@ -1,0 +1,454 @@
+/* DAILY — Almacén y Bodega (WMS) Stylesheet */
+
+.wms-container {
+	padding: 0.5rem 0 2rem 0;
+}
+
+/* Header */
+.wms-header-box {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 1rem;
+	margin-bottom: 1.25rem;
+	padding-bottom: 0.75rem;
+	border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.wms-title-wrap h1 {
+	font-size: 1.45rem;
+	font-weight: 800;
+	color: #0f172a;
+	margin: 0;
+	display: flex;
+	align-items: center;
+	gap: 0.6rem;
+}
+
+.wms-title-wrap p {
+	font-size: 0.82rem;
+	color: #64748b;
+	margin: 0.2rem 0 0 0;
+}
+
+.wms-badge-live {
+	background: #ecfdf5;
+	color: #059669;
+	border: 1px solid #a7f3d0;
+	font-size: 0.72rem;
+	font-weight: 700;
+	padding: 0.2rem 0.55rem;
+	border-radius: 9999px;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.3rem;
+}
+
+.wms-badge-dot {
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: #10b981;
+	display: inline-block;
+	animation: pulseGreen 2s infinite;
+}
+
+/* 10-Step Cycle Stepper */
+.wms-cycle-card {
+	background: #ffffff;
+	border: 1px solid #e2e8f0;
+	border-radius: 12px;
+	padding: 0.85rem 1rem;
+	margin-bottom: 1.25rem;
+	box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
+
+.wms-cycle-title {
+	font-size: 0.78rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: #475569;
+	margin-bottom: 0.75rem;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.wms-cycle-stepper {
+	display: grid;
+	grid-template-columns: repeat(10, 1fr);
+	gap: 0.45rem;
+}
+
+.wms-cycle-step {
+	background: #f8fafc;
+	border: 1px solid #e2e8f0;
+	border-radius: 8px;
+	padding: 0.45rem 0.35rem;
+	text-align: center;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+.wms-cycle-step:hover, .wms-cycle-step.active {
+	background: #f0f9ff;
+	border-color: #0284c7;
+	transform: translateY(-2px);
+}
+
+.wms-step-num {
+	width: 20px;
+	height: 20px;
+	border-radius: 50%;
+	background: #e2e8f0;
+	color: #475569;
+	font-size: 0.68rem;
+	font-weight: 700;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin-bottom: 0.2rem;
+}
+
+.wms-cycle-step.active .wms-step-num {
+	background: #0284c7;
+	color: #ffffff;
+}
+
+.wms-step-name {
+	font-size: 0.73rem;
+	font-weight: 700;
+	color: #0f172a;
+	line-height: 1.1;
+}
+
+.wms-step-desc {
+	font-size: 0.62rem;
+	color: #64748b;
+	margin-top: 0.15rem;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	width: 100%;
+}
+
+/* KPI Grid */
+.wms-kpi-grid {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 0.85rem;
+	margin-bottom: 1.25rem;
+}
+
+.wms-kpi-card {
+	background: #ffffff;
+	border: 1px solid #e2e8f0;
+	border-radius: 12px;
+	padding: 0.9rem 1rem;
+	box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+	display: flex;
+	flex-direction: column;
+	transition: all 0.2s ease;
+}
+
+.wms-kpi-card:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 6px 16px rgba(0,0,0,0.05);
+	border-color: #cbd5e1;
+}
+
+.wms-kpi-head {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 0.35rem;
+}
+
+.wms-kpi-label {
+	font-size: 0.74rem;
+	font-weight: 700;
+	color: #64748b;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+}
+
+.wms-kpi-icon {
+	width: 32px;
+	height: 32px;
+	border-radius: 8px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 0.85rem;
+}
+
+.wms-kpi-icon-sky { background: #f0f9ff; color: #0284c7; }
+.wms-kpi-icon-green { background: #ecfdf5; color: #059669; }
+.wms-kpi-icon-amber { background: #fffbeb; color: #d97706; }
+.wms-kpi-icon-purple { background: #faf5ff; color: #7c3aed; }
+.wms-kpi-icon-rose { background: #fff1f2; color: #e11d48; }
+
+.wms-kpi-value {
+	font-size: 1.55rem;
+	font-weight: 800;
+	color: #0f172a;
+	line-height: 1.1;
+	margin-bottom: 0.25rem;
+}
+
+.wms-kpi-footer {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	font-size: 0.72rem;
+	color: #64748b;
+	margin-top: auto;
+}
+
+.wms-kpi-trend {
+	font-weight: 700;
+	color: #059669;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.2rem;
+}
+
+/* Nav Tabs */
+.wms-nav-tabs {
+	display: flex;
+	align-items: center;
+	gap: 0.4rem;
+	overflow-x: auto;
+	padding-bottom: 0.5rem;
+	margin-bottom: 1.25rem;
+	border-bottom: 2px solid #e2e8f0;
+}
+
+.wms-tab-btn {
+	background: transparent;
+	border: none;
+	padding: 0.55rem 0.95rem;
+	font-size: 0.84rem;
+	font-weight: 600;
+	color: #64748b;
+	border-radius: 8px;
+	cursor: pointer;
+	white-space: nowrap;
+	transition: all 0.15s ease;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.45rem;
+}
+
+.wms-tab-btn:hover {
+	color: #0f172a;
+	background: #f1f5f9;
+}
+
+.wms-tab-btn.active {
+	color: #0284c7;
+	background: #f0f9ff;
+	font-weight: 700;
+}
+
+.wms-tab-badge {
+	font-size: 0.68rem;
+	padding: 0.15rem 0.45rem;
+	border-radius: 9999px;
+	background: #e2e8f0;
+	color: #475569;
+	font-weight: 700;
+}
+
+.wms-tab-btn.active .wms-tab-badge {
+	background: #0284c7;
+	color: #ffffff;
+}
+
+/* Tab Panels */
+.wms-tab-panel {
+	display: none;
+}
+
+.wms-tab-panel.active {
+	display: block;
+	animation: fadeIn 0.2s ease-in;
+}
+
+/* Cards & Tables */
+.wms-card {
+	background: #ffffff;
+	border: 1px solid #e2e8f0;
+	border-radius: 12px;
+	padding: 1.15rem 1.25rem;
+	margin-bottom: 1.25rem;
+	box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
+
+.wms-card-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 1rem;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
+.wms-card-title {
+	font-size: 1.05rem;
+	font-weight: 700;
+	color: #0f172a;
+	margin: 0;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.wms-table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 0.86rem;
+}
+
+.wms-table th {
+	background: #f8fafc;
+	color: #64748b;
+	font-weight: 700;
+	font-size: 0.72rem;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	padding: 0.7rem 0.85rem;
+	border-bottom: 1px solid #e2e8f0;
+	text-align: left;
+}
+
+.wms-table td {
+	padding: 0.75rem 0.85rem;
+	border-bottom: 1px solid #f1f5f9;
+	color: #334155;
+	vertical-align: middle;
+}
+
+.wms-table tbody tr:hover {
+	background: #f8fafc;
+}
+
+/* Dock Bay Cards */
+.wms-dock-grid {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 0.85rem;
+	margin-bottom: 1.25rem;
+}
+
+.wms-dock-card {
+	background: #ffffff;
+	border: 2px solid #e2e8f0;
+	border-radius: 10px;
+	padding: 0.85rem 1rem;
+	transition: all 0.2s ease;
+	display: flex;
+	flex-direction: column;
+}
+
+.wms-dock-card.status-disponible { border-color: #10b981; }
+.wms-dock-card.status-ocupado { border-color: #f59e0b; }
+.wms-dock-card.status-en_descarga { border-color: #0284c7; }
+.wms-dock-card.status-en_limpieza { border-color: #94a3b8; }
+
+.wms-dock-number {
+	font-size: 1.15rem;
+	font-weight: 800;
+	color: #0f172a;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 0.35rem;
+}
+
+/* Interactive Racks Grid */
+.wms-racks-grid {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 0.75rem;
+}
+
+.wms-rack-box {
+	background: #f8fafc;
+	border: 1px solid #e2e8f0;
+	border-radius: 8px;
+	padding: 0.75rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.35rem;
+}
+
+.wms-rack-name {
+	font-size: 0.84rem;
+	font-weight: 700;
+	color: #0f172a;
+	display: flex;
+	justify-content: space-between;
+}
+
+/* Modals */
+.wms-modal-overlay {
+	display: none;
+	position: fixed;
+	top: 0; left: 0; right: 0; bottom: 0;
+	background: rgba(15, 23, 42, 0.55);
+	backdrop-filter: blur(4px);
+	z-index: 1050;
+	align-items: center;
+	justify-content: center;
+	padding: 1rem;
+}
+
+.wms-modal-overlay.active {
+	display: flex;
+}
+
+.wms-modal-box {
+	background: #ffffff;
+	border-radius: 14px;
+	max-width: 640px;
+	width: 100%;
+	max-height: 90vh;
+	overflow-y: auto;
+	box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+	padding: 1.5rem;
+}
+
+.wms-modal-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 1rem;
+	padding-bottom: 0.75rem;
+	border-bottom: 1px solid #e2e8f0;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+	.wms-kpi-grid, .wms-dock-grid, .wms-racks-grid {
+		grid-template-columns: repeat(2, 1fr);
+	}
+	.wms-cycle-stepper {
+		grid-template-columns: repeat(5, 1fr);
+	}
+}
+
+@media (max-width: 640px) {
+	.wms-kpi-grid, .wms-dock-grid, .wms-racks-grid {
+		grid-template-columns: 1fr;
+	}
+	.wms-cycle-stepper {
+		grid-template-columns: repeat(2, 1fr);
+	}
+}
+

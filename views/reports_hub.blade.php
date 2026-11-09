@@ -37,10 +37,10 @@
 			['Resumen del kardex', 'Movimientos agregados por producto', '/stockjournal/summary'],
 			['Gastos de compra', 'Distribución del gasto por producto y grupo', '/stockreports/spendings'],
 		]],
-		['Calidad y Abastecimiento', '#0891b2', 'fa-snowflake', [
-			['Lotes y caducidades', 'Semáforo FEFO, cuarentenas e inspecciones', '/quality'],
+		['Abastecimiento y Trazabilidad', '#1d4ed8', 'fa-truck-field', [
+			['Trazabilidad de lotes', 'Seguimiento 360° de lotes, movimientos y traslados', '/traceability'],
 			['Proveedores y OTIF', 'Cumplimiento de entregas, precios e incidencias', '/suppliers'],
-			['MRP y simulador', 'Reabastecimiento sugerido y escenarios de rebaja', '/ai-advisor'],
+			['Planificación MRP', 'Reabastecimiento sugerido, stock de seguridad y punto de reorden', '/mrp'],
 		]],
 		['Red de Sucursales', '#7c3aed', 'fa-shop', [
 			['Scorecard de sucursales', 'Ventas, margen y merma por tienda', '/branches'],
@@ -299,7 +299,7 @@ document.addEventListener('DOMContentLoaded', function() {
 				datasets: [
 					{ type: 'line', label: '% Merma s/ventas', data: pct, borderColor: '#d97706', backgroundColor: '#d97706', fill: false, lineTension: 0.35, pointRadius: 2, spanGaps: true, yAxisID: 'pct' },
 					{ type: 'line', label: 'Ref. sector', data: labels.map(function() { return ref; }), borderColor: '#94a3b8', borderDash: [5, 4], fill: false, pointRadius: 0, borderWidth: 1.5, yAxisID: 'pct' },
-					{ label: 'Ventas', data: sales, backgroundColor: 'rgba(37, 99, 235,0.75)', yAxisID: 'money' },
+					{ label: 'Ventas', data: sales, backgroundColor: 'rgba(0, 142, 72, 0.75)', yAxisID: 'money' },
 					{ label: 'Merma', data: waste, backgroundColor: 'rgba(239,68,68,0.8)', yAxisID: 'money' }
 				]
 			},
@@ -326,7 +326,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			data: {
 				labels: branches.map(function(b) { return b.name; }),
 				datasets: [
-					{ label: 'Ventas netas', data: branches.map(function(b) { return b.sales; }), backgroundColor: 'rgba(37, 99, 235,0.75)', xAxisID: 'money' },
+					{ label: 'Ventas netas', data: branches.map(function(b) { return b.sales; }), backgroundColor: 'rgba(71, 85, 105, 0.55)', xAxisID: 'money' },
 					{ label: '% Merma', data: branches.map(function(b) { return b.waste_pct; }), backgroundColor: branches.map(function(b) { return b.waste_pct <= ref ? '#059669' : (b.waste_pct <= 2.5 ? '#d97706' : '#dc2626'); }), xAxisID: 'pct' }
 				]
 			},

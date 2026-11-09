@@ -3,13 +3,15 @@
 
 <head>
 	<meta charset="utf-8">
+	@include('components.daily_i18n_head')
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<meta name="robots" content="noindex,nofollow">
 	<title>{{ $doc['folio'] }} · {{ $doc['type_label'] }} | DAILY</title>
 	<link href="{{ $U('/packages/bootstrap/dist/css/bootstrap.min.css?v=', true) }}{{ $version }}" rel="stylesheet">
 	<link href="{{ $U('/packages/@fortawesome/fontawesome-free/css/fontawesome.min.css?v=', true) }}{{ $version }}" rel="stylesheet">
 	<link href="{{ $U('/packages/@fortawesome/fontawesome-free/css/solid.min.css?v=', true) }}{{ $version }}" rel="stylesheet">
-	<link href="{{ $U('/css/dairy_enterprise_theme.css?v=', true) }}{{ $version }}" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=fallback" rel="stylesheet">
+	<link href="{{ $U('/css/dairy_enterprise_theme.css?v=', true) }}{{ daily_asset_version('/css/dairy_enterprise_theme.css') }}" rel="stylesheet">
 	<style>
 		body { background: var(--dairy-bg-page); color: var(--dairy-text-body); }
 		.doc-sheet { max-width: 960px; margin: 24px auto; background: var(--dairy-surface); border: 1px solid var(--dairy-border); border-radius: var(--dairy-radius-md); padding: 32px; }

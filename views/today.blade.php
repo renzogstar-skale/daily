@@ -4,7 +4,7 @@
 @section('title', 'Hoy')
 
 @push('pageStyles')
-<link href="{{ $U('/css/dairy_today.css?v=', true) }}{{ $version }}" rel="stylesheet">
+<link href="{{ $U('/css/dairy_today.css?v=', true) }}{{ daily_asset_version('/css/dairy_today.css') }}" rel="stylesheet">
 <link href="{{ $U('/css/daily_today_executive.css?v=', true) }}{{ daily_asset_version('/css/daily_today_executive.css') }}" rel="stylesheet">
 @endpush
 
@@ -116,7 +116,8 @@
 <div class="today-exec-container" id="today-exec-container">
 	<!-- 1. Encabezado Ejecutivo & Filtros -->
 	<header class="today-exec-header">
-		<div class="today-exec-title-area">
+		<div class="today-exec-title-area daily-head">
+			<div class="dairy-page-icon is-primary"><i class="fa-solid fa-list-check"></i></div>
 			<h1 class="today-exec-title">HOY</h1>
 			<p class="today-exec-subtitle">
 				Resumen ejecutivo · Ventas y operación comercial
@@ -841,7 +842,7 @@
 						{!! $sparkBars($exec['sparks']['expiring'] ?? [], '#16a34a') !!}
 					</div>
 				</div>
-				<a href="{{ $U('/quality') }}" class="today-exec-spark-link" title="{{ $exec['risk_inventory']['expiring']['tooltip'] }}">Ver detalle →</a>
+				<a href="{{ $U('/inventory/stockouts') }}" class="today-exec-spark-link" title="{{ $exec['risk_inventory']['expiring']['tooltip'] }}">Ver detalle →</a>
 			</div>
 
 			<!-- Card 3: Productos sensibles -->
@@ -1293,8 +1294,14 @@
 		</div>
 		<div class="cc-q-head" aria-hidden="true"><span>Prioridad</span><span>Tipo</span><span>Descripción</span><span style="text-align:right">Impacto</span><span>Responsable</span><span>Límite</span><span style="text-align:right">Acción</span></div>
 		<ol class="cc-q" id="cc-q">
-			@foreach($d['decisions'] as $i => $q)
+			@php $visibleDecisions = array_slice($d['decisions'], 0, 150); @endphp
+			@foreach($visibleDecisions as $i => $q)
 			@php $dl = $docLink($q['doc']); $cs = $catStyle[$q['cat']] ?? $catStyle['other']; @endphp
+			{{-- Las filas fuera de la primera página van en un <template>: el JS las inserta al filtrar o paginar --}}
+			@if($i === $perPage)
+		</ol>
+		<template id="cc-q-rest" data-count="{{ count($visibleDecisions) - $perPage }}">
+			@endif
 			<li class="cc-q-row tone-{{ $q['tone'] }}" id="dec-{{ str_replace(':', '-', $q['uid']) }}" data-uid="{{ $q['uid'] }}" data-cat="{{ $q['cat'] }}" data-critical="{{ $q['score'] >= 60 ? 1 : 0 }}" data-overdue="{{ $q['state'] === 'overdue' ? 1 : 0 }}" data-unowned="{{ $q['owner'] ? 0 : 1 }}" data-branch="{{ $q['branch_id'] }}"
 				data-search="{{ mb_strtolower($q['type'] . ' ' . $q['subject'] . ' ' . $q['detail'] . ' ' . ($q['owner'] ?? '') . ' ' . ($q['branch'] ?? '') . ' ' . $q['uid']) }}" @if($i >= $perPage) hidden @endif>
 				<button type="button" class="cc-score" aria-expanded="false" title="Puntuación {{ $q['score'] }} · ver factores"><span class="cc-sev"></span><span class="cc-prio">{{ $q['priority'] }}</span></button>
@@ -1329,7 +1336,11 @@
 				</div>
 			</li>
 			@endforeach
+		@if(count($d['decisions']) > $perPage)
+		</template>
+		@else
 		</ol>
+		@endif
 		<div class="cc-empty is-small" id="cc-q-none" hidden><i class="fa-solid fa-filter-circle-xmark" style="color: var(--cc-muted)"></i><b>Ninguna decisión coincide con los filtros</b><button type="button" class="cc-link" id="cc-q-reset">Quitar filtros</button></div>
 		<div class="cc-pager" id="cc-pager">
 			<span id="cc-pager-txt"></span>
@@ -1644,7 +1655,16 @@
 	// ---- Agenda: búsqueda, filtros, paginación
 	var F = { q: '', st: 'all', cat: 'all', br: 'all', page: 0, all: false };
 	var rows = $('#cc-q .cc-q-row');
+	// Filas diferidas (ver <template id="cc-q-rest">): en el estado inicial todas coinciden y no se muestran
+	var rest = document.getElementById('cc-q-rest');
+	function inflate() {
+		document.getElementById('cc-q').appendChild(rest.content);
+		rest.remove(); rest = null;
+		rows = $('#cc-q .cc-q-row');
+	}
 	function render() {
+		if (rest && (F.q || F.st !== 'all' || F.cat !== 'all' || F.br !== 'all' || F.page > 0 || F.all)) inflate();
+		var extra = rest ? parseInt(rest.getAttribute('data-count'), 10) || 0 : 0;
 		var match = rows.filter(function() {
 			var r = this.dataset;
 			if (F.st === 'critical' && r.critical !== '1') return false;
@@ -1654,16 +1674,17 @@
 			if (F.br !== 'all' && r.branch !== F.br) return false;
 			return !F.q || r.search.indexOf(F.q) !== -1;
 		});
-		var per = F.all ? Math.max(1, match.length) : PER_PAGE;
-		var pages = Math.max(1, Math.ceil(match.length / per));
+		var total = match.length + extra, all = rows.length + extra;
+		var per = F.all ? Math.max(1, total) : PER_PAGE;
+		var pages = Math.max(1, Math.ceil(total / per));
 		F.page = Math.min(F.page, pages - 1);
 		var from = F.page * per;
 		rows.prop('hidden', true);
 		match.slice(from, from + per).prop('hidden', false);
-		$('#cc-q-none').prop('hidden', match.length > 0);
-		$('#cc-pager').prop('hidden', match.length === 0);
+		$('#cc-q-none').prop('hidden', total > 0);
+		$('#cc-pager').prop('hidden', total === 0);
 		$('.cc-pager-btns').prop('hidden', pages <= 1);
-		$('#cc-pager-txt').text(match.length ? (from + 1) + '–' + Math.min(from + per, match.length) + ' de ' + match.length + (match.length !== rows.length ? ' (filtradas de ' + rows.length + ')' : '') : '');
+		$('#cc-pager-txt').text(total ? (from + 1) + '–' + Math.min(from + per, total) + ' de ' + total + (total !== all ? ' (filtradas de ' + all + ')' : '') : '');
 		$('#cc-prev').prop('disabled', F.page === 0);
 		$('#cc-next').prop('disabled', F.page >= pages - 1);
 		$('#cc-q-all').text(F.all ? 'Ver menos' : 'Ver todas');

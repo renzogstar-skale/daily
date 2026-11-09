@@ -1,6 +1,6 @@
 // Verificación funcional tras Crystal: pestañas, filtros, menús y gráficos de los tableros principales.
 // Uso: PW_DIR=<playwright> node tests/dairy/crystal_functional.js
-const { chromium } = require(process.env.PW_DIR);
+const { chromium } = require(process.env.PW_DIR || 'playwright');
 const B = 'http://localhost:8080';
 
 (async () => {

@@ -1,0 +1,1159 @@
+{
+ "results": [
+  {
+   "name": "Orden de categorías",
+   "ok": true,
+   "info": [
+    "SUPERVISIÓN Y CONTROL",
+    "1. VENTAS Y RENTABILIDAD",
+    "2. INVENTARIO Y ALMACENES",
+    "3. DESPACHOS Y DEVOLUCIONES",
+    "4. MERMAS Y PREVENCIÓN",
+    "5. OPERACIONES Y PERSONAL",
+    "6. ADMINISTRACIÓN Y SISTEMA",
+    "7. PLANEACIÓN Y COMPRAS",
+    "INDICADORES FINANCIEROS"
+   ]
+  },
+  {
+   "name": "Menú con enlaces",
+   "ok": true,
+   "info": 68
+  },
+  {
+   "name": "Ruta /today",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 5098
+   }
+  },
+  {
+   "name": "Ruta /alerts",
+   "ok": false,
+   "info": {
+    "st": -1,
+    "len": 0
+   }
+  },
+  {
+   "name": "Ruta /kpis?period=day",
+   "ok": false,
+   "info": {
+    "st": -1,
+    "len": 0
+   }
+  },
+  {
+   "name": "Ruta /sales",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 8821
+   }
+  },
+  {
+   "name": "Ruta /sales?tab=detalle",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 73664
+   }
+  },
+  {
+   "name": "Ruta /pos",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 7258
+   }
+  },
+  {
+   "name": "Ruta /customers",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 8012
+   }
+  },
+  {
+   "name": "Ruta /stockoverview",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 114089
+   }
+  },
+  {
+   "name": "Ruta /inventory/stockouts",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 71017
+   }
+  },
+  {
+   "name": "Ruta /inventory-control",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 3895
+   }
+  },
+  {
+   "name": "Ruta /kardex",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 42836
+   }
+  },
+  {
+   "name": "Ruta /inventory",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 3520
+   }
+  },
+  {
+   "name": "Ruta /reconciliation",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 60167
+   }
+  },
+  {
+   "name": "Ruta /transfers",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 5815
+   }
+  },
+  {
+   "name": "Ruta /merchandise",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 4233
+   }
+  },
+  {
+   "name": "Ruta /scan",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 2197
+   }
+  },
+  {
+   "name": "Ruta /locations/map",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 12984
+   }
+  },
+  {
+   "name": "Ruta /branches",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 11886
+   }
+  },
+  {
+   "name": "Ruta /traceability",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 40477
+   }
+  },
+  {
+   "name": "Ruta /orders",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 5183
+   }
+  },
+  {
+   "name": "Ruta /dispatch#tab-picking",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 8003
+   }
+  },
+  {
+   "name": "Ruta /dispatch",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 8003
+   }
+  },
+  {
+   "name": "Ruta /returns",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 4002
+   }
+  },
+  {
+   "name": "Ruta /recalls",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 1682
+   }
+  },
+  {
+   "name": "Ruta /waste",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 6289
+   }
+  },
+  {
+   "name": "Ruta /waste/report",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 4703
+   }
+  },
+  {
+   "name": "Ruta /waste/approvals",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 19286
+   }
+  },
+  {
+   "name": "Ruta /waste/reasons",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 12809
+   }
+  },
+  {
+   "name": "Ruta /loss-prevention",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 5878
+   }
+  },
+  {
+   "name": "Ruta /loss-prevention/devices",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 38815
+   }
+  },
+  {
+   "name": "Ruta /reports/loss-executive",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 26002
+   }
+  },
+  {
+   "name": "Ruta /schedule#tab-employees",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 15383
+   }
+  },
+  {
+   "name": "Ruta /operations/scheduling",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 15383
+   }
+  },
+  {
+   "name": "Ruta /operations/attendance",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 2300
+   }
+  },
+  {
+   "name": "Ruta /workforce",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 75415
+   }
+  },
+  {
+   "name": "Ruta /schedule#tab-productivity",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 15383
+   }
+  },
+  {
+   "name": "Ruta /settings",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 1565
+   }
+  },
+  {
+   "name": "Ruta /users",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 3967
+   }
+  },
+  {
+   "name": "Ruta /products",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 77563
+   }
+  },
+  {
+   "name": "Ruta /locations",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 4811
+   }
+  },
+  {
+   "name": "Ruta /shoppinglocations",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 5821
+   }
+  },
+  {
+   "name": "Ruta /quantityunits",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 1151
+   }
+  },
+  {
+   "name": "Ruta /productgroups",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 2338
+   }
+  },
+  {
+   "name": "Ruta /chores",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 1139
+   }
+  },
+  {
+   "name": "Ruta /batteries",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 1233
+   }
+  },
+  {
+   "name": "Ruta /taskcategories",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 899
+   }
+  },
+  {
+   "name": "Ruta /userfields",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 1638
+   }
+  },
+  {
+   "name": "Ruta /userentities",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 867
+   }
+  },
+  {
+   "name": "Ruta /data-import",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 1782
+   }
+  },
+  {
+   "name": "Ruta /locations/labels",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 4566
+   }
+  },
+  {
+   "name": "Ruta /audit-log",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 7778
+   }
+  },
+  {
+   "name": "Ruta /system-map",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 3450
+   }
+  },
+  {
+   "name": "Ruta /admin/economics",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 1987
+   }
+  },
+  {
+   "name": "Ruta /mrp",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 124662
+   }
+  },
+  {
+   "name": "Ruta /suppliers",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 10086
+   }
+  },
+  {
+   "name": "Ruta /sales?tab=rentabilidad",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 6264
+   }
+  },
+  {
+   "name": "Ruta /cost-centers",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 4902
+   }
+  },
+  {
+   "name": "Ruta /reports",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 3398
+   }
+  },
+  {
+   "name": "Ruta /usersettings",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 815
+   }
+  },
+  {
+   "name": "Ruta /stocksettings",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 3326
+   }
+  },
+  {
+   "name": "Ruta /shoppinglistsettings",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 876
+   }
+  },
+  {
+   "name": "Ruta /choressettings",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 525
+   }
+  },
+  {
+   "name": "Ruta /taskssettings",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 423
+   }
+  },
+  {
+   "name": "Ruta /batteriessettings",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 445
+   }
+  },
+  {
+   "name": "Ruta /usersettings?returnto=%2Ftoday",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 815
+   }
+  },
+  {
+   "name": "Ruta /api",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 8265
+   }
+  },
+  {
+   "name": "Ruta /barcodescannertesting",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 494
+   }
+  },
+  {
+   "name": "Ruta /about?embedded",
+   "ok": true,
+   "info": {
+    "st": 200,
+    "len": 504
+   }
+  },
+  {
+   "name": "Ruta existente conservada /inventory",
+   "ok": true,
+   "info": 200
+  },
+  {
+   "name": "Ruta existente conservada /orders",
+   "ok": true,
+   "info": 200
+  },
+  {
+   "name": "Ruta existente conservada /reports",
+   "ok": true,
+   "info": 200
+  },
+  {
+   "name": "Ruta existente conservada /customers",
+   "ok": true,
+   "info": 200
+  },
+  {
+   "name": "Ruta existente conservada /loss-prevention#tab-expedientes",
+   "ok": true,
+   "info": 200
+  },
+  {
+   "name": "Ruta existente conservada /waste#tab-investigaciones",
+   "ok": true,
+   "info": 200
+  },
+  {
+   "name": "Bloque evolution",
+   "ok": true,
+   "info": ""
+  },
+  {
+   "name": "Bloque comparison",
+   "ok": true,
+   "info": ""
+  },
+  {
+   "name": "Bloque productivity",
+   "ok": true,
+   "info": ""
+  },
+  {
+   "name": "Bloque top5",
+   "ok": true,
+   "info": ""
+  },
+  {
+   "name": "Bloque traffic",
+   "ok": true,
+   "info": ""
+  },
+  {
+   "name": "Ventas netas con valor",
+   "ok": true,
+   "info": "$665,530"
+  },
+  {
+   "name": "KPI con período, definición y fuente",
+   "ok": true,
+   "info": ""
+  },
+  {
+   "name": "Tráfico sin información (no inventado)",
+   "ok": true,
+   "info": ""
+  },
+  {
+   "name": "Top 5 con filas",
+   "ok": true,
+   "info": ""
+  },
+  {
+   "name": "Gráfico de evolución dibujado",
+   "ok": true,
+   "info": ""
+  },
+  {
+   "name": "URL con departamento",
+   "ok": true,
+   "info": "http://localhost:8080/sales?tab=resumen&branch_id=&department=carnes&group_id=&subcategory=&product=&start_date=2026-10-07&end_date=2026-11-05&compare_with=prev_period"
+  },
+  {
+   "name": "Ventas cambian al filtrar Carnes",
+   "ok": true,
+   "info": [
+    "$665,530",
+    "$8,289"
+   ]
+  },
+  {
+   "name": "Contexto muestra el departamento",
+   "ok": true,
+   "info": ""
+  },
+  {
+   "name": "Top 5 solo de Carnes",
+   "ok": true,
+   "info": [
+    "Carnes",
+    "Carnes",
+    "Carnes",
+    "Carnes y aves"
+   ]
+  },
+  {
+   "name": "Productividad no aplica por departamento",
+   "ok": true,
+   "info": ""
+  },
+  {
+   "name": "Análisis complementario oculto (no mezcla departamentos)",
+   "ok": true,
+   "info": ""
+  },
+  {
+   "name": "Enlace a HOY lleva el departamento",
+   "ok": true,
+   "info": "/today?department=carnes&date=2026-11-05"
+  },
+  {
+   "name": "Enlace a Agotados lleva el departamento",
+   "ok": true,
+   "info": "/inventory/stockouts?department=carnes"
+  },
+  {
+   "name": "Aviso de filtros activos",
+   "ok": true,
+   "info": ""
+  },
+  {
+   "name": "Restablecer limpia los filtros",
+   "ok": true,
+   "info": [
+    "http://localhost:8080/today",
+    "http://localhost:8080/sales"
+   ]
+  },
+  {
+   "name": "Período en el contexto",
+   "ok": true,
+   "info": ""
+  },
+  {
+   "name": "KPI con período correcto",
+   "ok": true,
+   "info": ""
+  },
+  {
+   "name": "Filtro por SKU deja un producto",
+   "ok": true,
+   "info": 1
+  },
+  {
+   "name": "Ventas del SKU = fila del Top 5",
+   "ok": true,
+   "info": [
+    "$17,640",
+    "$17,639.91"
+   ]
+  },
+  {
+   "name": "Detalle del producto abre",
+   "ok": true,
+   "info": "http://localhost:8080/sales?product=TEC-027&start_date=2026-10-01&end_date=2026-10-31&product_id=9033&tab=productos"
+  },
+  {
+   "name": "Conteo de agotados",
+   "ok": true,
+   "info": "625"
+  },
+  {
+   "name": "Búsqueda por SKU",
+   "ok": true,
+   "info": [
+    "DAIRY-CRM-003",
+    "DAIRY-CRM-003",
+    "DAIRY-CRM-003"
+   ]
+  },
+  {
+   "name": "Detalle (Kardex) abre",
+   "ok": true,
+   "info": "http://localhost:8080/kardex?product_id=47&branch_id=4"
+  },
+  {
+   "name": "Agotados filtrados por departamento",
+   "ok": true,
+   "info": [
+    "Carnes",
+    "Carnes",
+    "Carnes"
+   ]
+  },
+  {
+   "name": "Panel con indicadores reales",
+   "ok": true,
+   "info": ""
+  },
+  {
+   "name": "Sin cifra fija $128,450",
+   "ok": true,
+   "info": ""
+  },
+  {
+   "name": "Sin marca de terceros en el selector",
+   "ok": true,
+   "info": ""
+  },
+  {
+   "name": "Margen diario/mensual/acumulado",
+   "ok": true,
+   "info": ""
+  },
+  {
+   "name": "Sin desplazamiento horizontal /sales",
+   "ok": true,
+   "info": ""
+  },
+  {
+   "name": "Sin desplazamiento horizontal /inventory/stockouts",
+   "ok": true,
+   "info": ""
+  },
+  {
+   "name": "Sin desplazamiento horizontal /kpis",
+   "ok": true,
+   "info": ""
+  },
+  {
+   "name": "Sin desplazamiento horizontal /today",
+   "ok": true,
+   "info": ""
+  },
+  {
+   "name": "Sin errores de consola",
+   "ok": true,
+   "info": []
+  },
+  {
+   "name": "Sin solicitudes fallidas",
+   "ok": true,
+   "info": []
+  }
+ ],
+ "errors": [],
+ "failed": [],
+ "routes": [
+  {
+   "u": "/today",
+   "st": 200,
+   "len": 5098
+  },
+  {
+   "u": "/alerts",
+   "st": -1,
+   "len": 0
+  },
+  {
+   "u": "/kpis?period=day",
+   "st": -1,
+   "len": 0
+  },
+  {
+   "u": "/sales",
+   "st": 200,
+   "len": 8821
+  },
+  {
+   "u": "/sales?tab=detalle",
+   "st": 200,
+   "len": 73664
+  },
+  {
+   "u": "/pos",
+   "st": 200,
+   "len": 7258
+  },
+  {
+   "u": "/customers",
+   "st": 200,
+   "len": 8012
+  },
+  {
+   "u": "/stockoverview",
+   "st": 200,
+   "len": 114089
+  },
+  {
+   "u": "/inventory/stockouts",
+   "st": 200,
+   "len": 71017
+  },
+  {
+   "u": "/inventory-control",
+   "st": 200,
+   "len": 3895
+  },
+  {
+   "u": "/kardex",
+   "st": 200,
+   "len": 42836
+  },
+  {
+   "u": "/inventory",
+   "st": 200,
+   "len": 3520
+  },
+  {
+   "u": "/reconciliation",
+   "st": 200,
+   "len": 60167
+  },
+  {
+   "u": "/transfers",
+   "st": 200,
+   "len": 5815
+  },
+  {
+   "u": "/merchandise",
+   "st": 200,
+   "len": 4233
+  },
+  {
+   "u": "/scan",
+   "st": 200,
+   "len": 2197
+  },
+  {
+   "u": "/locations/map",
+   "st": 200,
+   "len": 12984
+  },
+  {
+   "u": "/branches",
+   "st": 200,
+   "len": 11886
+  },
+  {
+   "u": "/traceability",
+   "st": 200,
+   "len": 40477
+  },
+  {
+   "u": "/orders",
+   "st": 200,
+   "len": 5183
+  },
+  {
+   "u": "/dispatch#tab-picking",
+   "st": 200,
+   "len": 8003
+  },
+  {
+   "u": "/dispatch",
+   "st": 200,
+   "len": 8003
+  },
+  {
+   "u": "/returns",
+   "st": 200,
+   "len": 4002
+  },
+  {
+   "u": "/recalls",
+   "st": 200,
+   "len": 1682
+  },
+  {
+   "u": "/waste",
+   "st": 200,
+   "len": 6289
+  },
+  {
+   "u": "/waste/report",
+   "st": 200,
+   "len": 4703
+  },
+  {
+   "u": "/waste/approvals",
+   "st": 200,
+   "len": 19286
+  },
+  {
+   "u": "/waste/reasons",
+   "st": 200,
+   "len": 12809
+  },
+  {
+   "u": "/loss-prevention",
+   "st": 200,
+   "len": 5878
+  },
+  {
+   "u": "/loss-prevention/devices",
+   "st": 200,
+   "len": 38815
+  },
+  {
+   "u": "/reports/loss-executive",
+   "st": 200,
+   "len": 26002
+  },
+  {
+   "u": "/schedule#tab-employees",
+   "st": 200,
+   "len": 15383
+  },
+  {
+   "u": "/operations/scheduling",
+   "st": 200,
+   "len": 15383
+  },
+  {
+   "u": "/operations/attendance",
+   "st": 200,
+   "len": 2300
+  },
+  {
+   "u": "/workforce",
+   "st": 200,
+   "len": 75415
+  },
+  {
+   "u": "/schedule#tab-productivity",
+   "st": 200,
+   "len": 15383
+  },
+  {
+   "u": "/settings",
+   "st": 200,
+   "len": 1565
+  },
+  {
+   "u": "/users",
+   "st": 200,
+   "len": 3967
+  },
+  {
+   "u": "/products",
+   "st": 200,
+   "len": 77563
+  },
+  {
+   "u": "/locations",
+   "st": 200,
+   "len": 4811
+  },
+  {
+   "u": "/shoppinglocations",
+   "st": 200,
+   "len": 5821
+  },
+  {
+   "u": "/quantityunits",
+   "st": 200,
+   "len": 1151
+  },
+  {
+   "u": "/productgroups",
+   "st": 200,
+   "len": 2338
+  },
+  {
+   "u": "/chores",
+   "st": 200,
+   "len": 1139
+  },
+  {
+   "u": "/batteries",
+   "st": 200,
+   "len": 1233
+  },
+  {
+   "u": "/taskcategories",
+   "st": 200,
+   "len": 899
+  },
+  {
+   "u": "/userfields",
+   "st": 200,
+   "len": 1638
+  },
+  {
+   "u": "/userentities",
+   "st": 200,
+   "len": 867
+  },
+  {
+   "u": "/data-import",
+   "st": 200,
+   "len": 1782
+  },
+  {
+   "u": "/locations/labels",
+   "st": 200,
+   "len": 4566
+  },
+  {
+   "u": "/audit-log",
+   "st": 200,
+   "len": 7778
+  },
+  {
+   "u": "/system-map",
+   "st": 200,
+   "len": 3450
+  },
+  {
+   "u": "/admin/economics",
+   "st": 200,
+   "len": 1987
+  },
+  {
+   "u": "/mrp",
+   "st": 200,
+   "len": 124662
+  },
+  {
+   "u": "/suppliers",
+   "st": 200,
+   "len": 10086
+  },
+  {
+   "u": "/sales?tab=rentabilidad",
+   "st": 200,
+   "len": 6264
+  },
+  {
+   "u": "/cost-centers",
+   "st": 200,
+   "len": 4902
+  },
+  {
+   "u": "/reports",
+   "st": 200,
+   "len": 3398
+  },
+  {
+   "u": "/usersettings",
+   "st": 200,
+   "len": 815
+  },
+  {
+   "u": "/stocksettings",
+   "st": 200,
+   "len": 3326
+  },
+  {
+   "u": "/shoppinglistsettings",
+   "st": 200,
+   "len": 876
+  },
+  {
+   "u": "/choressettings",
+   "st": 200,
+   "len": 525
+  },
+  {
+   "u": "/taskssettings",
+   "st": 200,
+   "len": 423
+  },
+  {
+   "u": "/batteriessettings",
+   "st": 200,
+   "len": 445
+  },
+  {
+   "u": "/usersettings?returnto=%2Ftoday",
+   "st": 200,
+   "len": 815
+  },
+  {
+   "u": "/api",
+   "st": 200,
+   "len": 8265
+  },
+  {
+   "u": "/barcodescannertesting",
+   "st": 200,
+   "len": 494
+  },
+  {
+   "u": "/about?embedded",
+   "st": 200,
+   "len": 504
+  }
+ ]
+}

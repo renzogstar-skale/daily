@@ -14,7 +14,6 @@ $mobileCan = [
 	'kardex' => \Grocy\Helpers\DairyAccess::CanOpen('/kardex'),
 	'stock' => \Grocy\Helpers\DairyAccess::CanOpen('/stockoverview'),
 	'inventory' => \Grocy\Helpers\DairyAccess::CanOpen('/inventory'),
-	'quality' => \Grocy\Helpers\DairyAccess::CanOpen('/quality'),
 ];
 @endphp
 
@@ -128,6 +127,6 @@ $mobileCan = [
 	window.DairyMobile = {
 		can: {!! json_encode($mobileCan) !!},
 		zxingUrl: '{{ $U('/packages/@zxing/library/umd/index.min.js?v=', true) }}{{ $version }}',
-		swUrl: '{{ $U('/sw.js', true) }}'
+		swUrl: null
 	};
 </script>

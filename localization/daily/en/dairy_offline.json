@@ -1,0 +1,15 @@
+{
+    "Almacenamiento local en uso por otra pestaña de DAIRY": "Local storage in use by another DAIRY tab",
+    "IndexedDB no disponible": "IndexedDB not available",
+    "No hay operaciones pendientes.": "No pending operations.",
+    "Operaciones sin conexión": "Offline operations",
+    "Se envían en orden al recuperar la conexión, una sola vez cada una. Las rechazadas no se reintentan: corrija y registre de nuevo si corresponde.": "They are sent in order when the connection returns, once each. Rejected ones are not retried: correct and record again if appropriate.",
+    "Sin conexión": "Offline",
+    "Sin conexión y sin almacenamiento local disponible: la operación no se guardó": "Offline and no local storage available: the operation was not saved",
+    "Sin conexión: «": "Offline: «",
+    "rechazada(s) por el servidor: revise la cola sin conexión": "rejected by the server: review the offline queue",
+    "sin enviar": "not sent",
+    "· con foto": "· with photo",
+    "· sin conexión": "· offline",
+    "» se enviará al recuperar la red": "» will be sent when the network returns"
+}

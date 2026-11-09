@@ -1,0 +1,10 @@
+{
+    "Almacén general": "General warehouse",
+    "Bus de Eventos": "Event Bus",
+    "Detectado durante conteo en sucursal. Iniciando protocolo de búsqueda y bloqueo en POS.": "Detected during a branch count. Starting the search protocol and POS block.",
+    "Dispositivo no localizado:": "Device not located:",
+    "Evento de dominio:": "Domain event:",
+    "Movimiento de inventario en Kardex contable": "Inventory movement in the accounting Kardex",
+    "Registro de conteo / movimiento sensible (": "Count record / sensitive movement (",
+    "Área sensible": "Sensitive area"
+}

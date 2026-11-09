@@ -3,6 +3,7 @@
 namespace Grocy\Controllers\Api;
 
 use Grocy\Controllers\Users\User;
+use Grocy\Helpers\DailySubscription;
 use Grocy\Helpers\DairyAccess;
 use Grocy\Services\AlertCenterService;
 use Grocy\Services\MobileManagerService;
@@ -110,10 +111,13 @@ class MobileApiController extends BaseApiController
 				'permissions' => $perms, 'branches' => $branches, 'all_branches' => $allowed === null,
 				'self_approval' => defined('GROCY_WASTE_ALLOW_SELF_APPROVAL') && GROCY_WASTE_ALLOW_SELF_APPROVAL, 'currency' => defined('GROCY_CURRENCY') ? GROCY_CURRENCY : '',
 				'role' => ($role = \Grocy\Services\MobileWorkService::Role()), 'role_label' => \Grocy\Services\MobileWorkService::ROLE_LABELS[$role],
-				'employee' => \Grocy\Services\MobileWorkService::GetInstance()->Employee(GROCY_USER_ID), 'can_approve' => \Grocy\Services\MobileWorkService::CanApprove(),
-				'can_team' => \Grocy\Services\MobileWorkService::CanSeeTeam(), 'can_ai' => DairyAccess::HasAny([User::PERMISSION_KPIS_VIEW]),
+				// Plan contratado: la app móvil aplica las mismas restricciones que la web (las APIs también las validan)
+				'plan' => DailySubscription::Plan(), 'capabilities' => DailySubscription::Current()['capabilities'],
+				'employee' => DailySubscription::Has('workforce.schedule') ? \Grocy\Services\MobileWorkService::GetInstance()->Employee(GROCY_USER_ID) : null,
+				'can_approve' => \Grocy\Services\MobileWorkService::CanApprove() && DailySubscription::Has('waste.approve'),
+				'can_team' => \Grocy\Services\MobileWorkService::CanSeeTeam() && DailySubscription::Has('workforce.schedule'), 'can_ai' => false,
 				'onboarded' => \Grocy\Services\MobileWorkService::GetInstance()->GetSetting(GROCY_USER_ID, 'dairy_m_onboarded') === '1',
-				'web' => array_values(array_filter(['/schedule', '/workforce', '/kardex', '/transfers', '/mrp', '/suppliers', '/quality', '/recalls', '/alerts', '/kpis', '/reports', '/branches', '/scan', '/orders', '/traceability', '/audits', '/inventory-control', '/ai-advisor'], fn($p) => DairyAccess::CanOpen($p)))];
+				'web' => array_values(array_filter(['/schedule', '/workforce', '/kardex', '/transfers', '/mrp', '/suppliers', '/quality', '/recalls', '/alerts', '/kpis', '/reports', '/branches', '/scan', '/orders', '/traceability', '/audits', '/inventory-control'], fn($p) => DairyAccess::CanOpen($p) && DailySubscription::MissingForRoute($p) === null))];
 		});
 	}
 

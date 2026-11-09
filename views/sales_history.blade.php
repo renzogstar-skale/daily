@@ -6,6 +6,8 @@
 
 @push('pageStyles')
 <link href="{{ $U('/css/daily_sales.css?v=', true) }}{{ daily_asset_version('/css/daily_sales.css') }}" rel="stylesheet">
+<link href="{{ $U('/css/daily_sales_dashboard.css?v=', true) }}{{ daily_asset_version('/css/daily_sales_dashboard.css') }}" rel="stylesheet">
+<link href="{{ $U('/css/daily_ty_ly.css?v=', true) }}{{ daily_asset_version('/css/daily_ty_ly.css') }}" rel="stylesheet">
 <style>
 /* Popover de información de KPI */
 .popover { max-width: 320px; font-size: 0.82rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
@@ -18,7 +20,9 @@
 @endpush
 
 @section('content')
+@if($activeTab && $activeTab !== 'resumen' && $activeTab !== 'departamentos' && $activeTab !== 'productos' && $activeTab !== 'sucursales' && $activeTab !== 'detalle')
 @include('components.alert_strip', ['alertCategories' => ['sales']])
+@endif
 
 @php
 	$t = $analysis['totals'];
@@ -62,6 +66,10 @@
 	};
 
 	$todayDate = date('Y-m-d');
+	$yesterdayDate = date('Y-m-d', strtotime('-1 day'));
+	$thisWeekStart = date('Y-m-d', strtotime('monday this week'));
+	$lastWeekStart = date('Y-m-d', strtotime('monday last week'));
+	$lastWeekEnd = date('Y-m-d', strtotime('sunday last week'));
 	$thisMonthStart = date('Y-m-01');
 	$lastMonthStart = date('Y-m-01', strtotime('first day of last month'));
 	$lastMonthEnd = date('Y-m-t', strtotime('last day of last month'));
@@ -117,12 +125,14 @@
 	$maxDeptSharePct = max(array_merge([1.0], array_map(fn($d) => floatval($d['share_pct'] ?? 0), $departmentsDonut ?? [])));
 @endphp
 
+@if($activeTab && $activeTab !== 'resumen' && $activeTab !== 'departamentos' && $activeTab !== 'productos' && $activeTab !== 'sucursales' && $activeTab !== 'detalle')
 <!-- ENCABEZADO COMERCIAL -->
 <div class="row align-items-center mb-3 dairy-page-header">
 	<div class="col-lg-7 d-flex align-items-center">
+		<div class="dairy-page-icon is-primary"><i class="fa-solid fa-chart-column"></i></div>
 		<div>
-			<h4 class="dairy-page-title mb-1" style="font-size: 1.45rem; font-weight: 800; color: #0f172a;">Ventas y Rentabilidad</h4>
-			<p class="dairy-page-subtitle mb-0" style="color: #64748b; font-size: 0.86rem;">Analiza el desempeño de tus ventas, márgenes y tendencias en todos tus puntos de venta.</p>
+			<h4 class="dairy-page-title mb-1">Ventas y Rentabilidad</h4>
+			<p class="dairy-page-subtitle mb-0">Analiza el desempeño de tus ventas, márgenes y tendencias en todos tus puntos de venta.</p>
 		</div>
 	</div>
 	<div class="col-lg-5 text-lg-right mt-2 mt-lg-0 dairy-page-actions d-flex flex-wrap align-items-center justify-content-lg-end" style="gap: 8px;">
@@ -208,14 +218,41 @@
 			</div>
 
 			<div>
-				<label class="sales-field-label" for="fGroup">Departamento</label>
-				<select name="group_id" id="fGroup" class="sales-filter-control" onchange="var p = this.form.querySelector('input[name=product_id]'); if (p) p.remove(); this.form.submit()">
+				<label class="sales-field-label" for="fDept">Departamento</label>
+				<select name="department" id="fDept" class="sales-filter-control" data-testid="filter-department" onchange="['product_id', 'group_id'].forEach(function (n) { var p = this.form.querySelector('[name=' + n + ']'); if (p) p.value = ''; }, this); this.form.submit()">
 					<option value="">Todos los departamentos</option>
-					@foreach($productGroups as $g)
+					@foreach($filterOptions['departments'] as $d)
+					<option value="{{ $d['key'] }}" @if($sharedFilters['department'] === $d['key']) selected @endif>{{ $d['name'] }}</option>
+					@endforeach
+				</select>
+			</div>
+
+			<div>
+				<label class="sales-field-label" for="fGroup">Categoría</label>
+				<select name="group_id" id="fGroup" class="sales-filter-control" data-testid="filter-category" onchange="var p = this.form.querySelector('input[name=product_id]'); if (p) p.remove(); this.form.submit()">
+					<option value="">Todas las categorías</option>
+					@foreach($filterOptions['groups'] as $g)
 					<option value="{{ $g['id'] }}" @if($selectedGroupId !== null && intval($selectedGroupId) === intval($g['id'])) selected @endif>{{ $g['name'] }}</option>
 					@endforeach
-					<option value="0" @if($selectedGroupId === 0) selected @endif>Sin departamento</option>
+					<option value="0" @if($selectedGroupId === 0) selected @endif>Sin categoría</option>
 				</select>
+			</div>
+
+			@if(count($filterOptions['subcategories']))
+			<div>
+				<label class="sales-field-label" for="fSub">Subcategoría</label>
+				<select name="subcategory" id="fSub" class="sales-filter-control" onchange="this.form.submit()">
+					<option value="">Todas</option>
+					@foreach($filterOptions['subcategories'] as $s)
+					<option value="{{ $s }}" @if($sharedFilters['subcategory'] === $s) selected @endif>{{ $s }}</option>
+					@endforeach
+				</select>
+			</div>
+			@endif
+
+			<div>
+				<label class="sales-field-label" for="fProduct">Producto o SKU</label>
+				<input type="search" name="product" id="fProduct" class="sales-filter-control" data-testid="filter-product" value="{{ $sharedFilters['product'] }}" placeholder="SKU, código o nombre">
 			</div>
 
 			<div>
@@ -242,6 +279,7 @@
 					<i class="fa-solid fa-magnifying-glass"></i>
 					<span>Aplicar</span>
 				</button>
+				<a href="{{ $U('/sales') }}" class="daily-filters-reset d-block text-center mt-1" data-daily-filters-reset data-testid="filter-reset">Restablecer filtros</a>
 			</div>
 		</div>
 	</form>
@@ -249,13 +287,14 @@
 	<!-- Píldoras de Períodos Rápidos + Fechas Comparadas -->
 	<div class="sales-quick-periods-bar">
 		<div class="sales-period-pills">
-			<a href="{{ $U('/sales?' . $rangeQs(1)) }}" class="sales-period-pill @if($isPresetActive($todayDate, $todayDate)) is-active @endif">Hoy</a>
-			<a href="{{ $U('/sales?' . $rangeQs(7)) }}" class="sales-period-pill @if($isPresetActive(date('Y-m-d', strtotime('-6 days')), $todayDate)) is-active @endif">7 días</a>
-			<a href="{{ $U('/sales?' . $rangeQs(30)) }}" class="sales-period-pill @if($isPresetActive(date('Y-m-d', strtotime('-29 days')), $todayDate)) is-active @endif">30 días</a>
-			<a href="{{ $U('/sales?' . $rangeQs(90)) }}" class="sales-period-pill @if($isPresetActive(date('Y-m-d', strtotime('-89 days')), $todayDate)) is-active @endif">90 días</a>
-			<a href="{{ $U('/sales?' . $buildRangeQs($thisMonthStart, $todayDate)) }}" class="sales-period-pill @if($isPresetActive($thisMonthStart, $todayDate)) is-active @endif">Este mes</a>
+			<a href="{{ $U('/sales?' . $buildRangeQs($todayDate, $todayDate)) }}" class="sales-period-pill @if($isPresetActive($todayDate, $todayDate)) is-active @endif">Hoy</a>
+			<a href="{{ $U('/sales?' . $buildRangeQs($yesterdayDate, $yesterdayDate)) }}" class="sales-period-pill @if($isPresetActive($yesterdayDate, $yesterdayDate)) is-active @endif">Ayer</a>
+			<a href="{{ $U('/sales?' . $buildRangeQs($thisWeekStart, $todayDate)) }}" class="sales-period-pill @if($isPresetActive($thisWeekStart, $todayDate)) is-active @endif">Semana actual</a>
+			<a href="{{ $U('/sales?' . $buildRangeQs($lastWeekStart, $lastWeekEnd)) }}" class="sales-period-pill @if($isPresetActive($lastWeekStart, $lastWeekEnd)) is-active @endif">Semana anterior</a>
+			<a href="{{ $U('/sales?' . $buildRangeQs($thisMonthStart, $todayDate)) }}" class="sales-period-pill @if($isPresetActive($thisMonthStart, $todayDate)) is-active @endif">Mes actual</a>
 			<a href="{{ $U('/sales?' . $buildRangeQs($lastMonthStart, $lastMonthEnd)) }}" class="sales-period-pill @if($isPresetActive($lastMonthStart, $lastMonthEnd)) is-active @endif">Mes anterior</a>
 			<a href="{{ $U('/sales?' . $buildRangeQs($thisYearStart, $todayDate)) }}" class="sales-period-pill @if($isPresetActive($thisYearStart, $todayDate)) is-active @endif">Año actual</a>
+			<a href="{{ $U('/sales?' . $rangeQs(30)) }}" class="sales-period-pill @if($isPresetActive(date('Y-m-d', strtotime('-29 days')), $todayDate)) is-active @endif">30 días</a>
 		</div>
 
 		<div class="sales-period-meta">
@@ -272,51 +311,60 @@
 		</div>
 	</div>
 
-	<!-- PESTAÑAS PRINCIPALES: LAS 7 HERRAMIENTAS COMERCIALES + AUDITORÍA DE TRANSACCIONES -->
+	<!-- PESTAÑAS: tablero principal primero; análisis de detalle después; clientes, POS e integración en posición secundaria -->
 	<div class="nav daily-level-tabs flex-wrap" role="tablist" style="gap: 4px;">
 		<button type="button" class="nav-link daily-level-tab @if($activeTab === 'resumen' || !$activeTab) active @endif" data-toggle="pill" data-target="#tab-resumen" role="tab" id="pill-resumen" aria-selected="{{ ($activeTab === 'resumen' || !$activeTab) ? 'true' : 'false' }}">
 			<i class="fa-solid fa-chart-column"></i>
-			<span>1. Centro de Ventas</span>
+			<span>Tablero de ventas</span>
 		</button>
-		<button type="button" class="nav-link daily-level-tab @if($activeTab === 'rentabilidad' || $activeTab === 'analisis') active @endif" data-toggle="pill" data-target="#tab-rentabilidad" role="tab" id="pill-rentabilidad" aria-selected="{{ ($activeTab === 'rentabilidad' || $activeTab === 'analisis') ? 'true' : 'false' }}">
-			<i class="fa-solid fa-coins"></i>
-			<span>2. Rentabilidad Comercial</span>
+		<button type="button" class="nav-link daily-level-tab @if($activeTab === 'departamentos') active @endif" data-toggle="pill" data-target="#tab-departamentos" role="tab" id="pill-departamentos" aria-selected="{{ $activeTab === 'departamentos' ? 'true' : 'false' }}">
+			<i class="fa-solid fa-boxes-stacked"></i>
+			<span>Rendimiento por departamento</span>
 		</button>
 		<button type="button" class="nav-link daily-level-tab @if($activeTab === 'productos') active @endif" data-toggle="pill" data-target="#tab-productos" role="tab" id="pill-productos" aria-selected="{{ $activeTab === 'productos' ? 'true' : 'false' }}">
 			<i class="fa-solid fa-barcode"></i>
-			<span>3. Rendimiento por Producto</span>
+			<span>Productos</span>
 		</button>
 		<button type="button" class="nav-link daily-level-tab @if($activeTab === 'sucursales') active @endif" data-toggle="pill" data-target="#tab-sucursales" role="tab" id="pill-sucursales" aria-selected="{{ $activeTab === 'sucursales' ? 'true' : 'false' }}">
 			<i class="fa-solid fa-store"></i>
-			<span>4. Análisis por Sucursal</span>
-		</button>
-		<button type="button" class="nav-link daily-level-tab @if($activeTab === 'pos') active @endif" data-toggle="pill" data-target="#tab-pos" role="tab" id="pill-pos" aria-selected="{{ $activeTab === 'pos' ? 'true' : 'false' }}">
-			<i class="fa-solid fa-cash-register"></i>
-			<span>5. Punto de Venta</span>
-		</button>
-		<button type="button" class="nav-link daily-level-tab @if($activeTab === 'pedidos-clientes') active @endif" data-toggle="pill" data-target="#tab-pedidos-clientes" role="tab" id="pill-pedidos-clientes" aria-selected="{{ $activeTab === 'pedidos-clientes' ? 'true' : 'false' }}">
-			<i class="fa-solid fa-users"></i>
-			<span>6. Pedidos y Clientes</span>
-		</button>
-		<button type="button" class="nav-link daily-level-tab @if($activeTab === 'inteligencia') active @endif" data-toggle="pill" data-target="#tab-inteligencia" role="tab" id="pill-inteligencia" aria-selected="{{ $activeTab === 'inteligencia' ? 'true' : 'false' }}">
-			<i class="fa-solid fa-brain"></i>
-			<span>7. Inteligencia Comercial</span>
-		</button>
-				<button type="button" class="nav-link daily-level-tab @if($activeTab === 'precios-promociones') active @endif" data-toggle="pill" data-target="#tab-precios-promociones" role="tab" id="pill-precios-promociones">
-			<i class="fa-solid fa-tags text-warning"></i>
-			<span>8. Control de Precios & Promociones</span>
-		</button>
-		<button type="button" class="nav-link daily-level-tab @if($activeTab === 'campanas') active @endif" data-toggle="pill" data-target="#tab-campanas" role="tab" id="pill-campanas">
-			<i class="fa-solid fa-bullhorn text-primary"></i>
-			<span>9. Evaluación de Campañas</span>
+			<span>Sucursales</span>
 		</button>
 		<button type="button" class="nav-link daily-level-tab @if($activeTab === 'detalle') active @endif" data-toggle="pill" data-target="#tab-detalle" role="tab" id="pill-detalle" aria-selected="{{ $activeTab === 'detalle' ? 'true' : 'false' }}">
 			<i class="fa-solid fa-list-ul"></i>
-			<span>Transacciones</span>
+			<span>Historial de ventas</span>
 			<span class="daily-level-badge">{{ count($sales) }}</span>
+		</button>
+		<button type="button" class="nav-link daily-level-tab @if($activeTab === 'rentabilidad' || $activeTab === 'analisis') active @endif" data-toggle="pill" data-target="#tab-rentabilidad" role="tab" id="pill-rentabilidad" aria-selected="{{ ($activeTab === 'rentabilidad' || $activeTab === 'analisis') ? 'true' : 'false' }}">
+			<i class="fa-solid fa-coins"></i>
+			<span>Rentabilidad</span>
+		</button>
+				<button type="button" class="nav-link daily-level-tab @if($activeTab === 'precios-promociones') active @endif" data-toggle="pill" data-target="#tab-precios-promociones" role="tab" id="pill-precios-promociones">
+			<i class="fa-solid fa-tags text-warning"></i>
+			<span>Precios y promociones</span>
+		</button>
+		<button type="button" class="nav-link daily-level-tab @if($activeTab === 'campanas') active @endif" data-toggle="pill" data-target="#tab-campanas" role="tab" id="pill-campanas">
+			<i class="fa-solid fa-bullhorn text-primary"></i>
+			<span>Campañas</span>
+		</button>
+		<button type="button" class="nav-link daily-level-tab @if($activeTab === 'inteligencia') active @endif" data-toggle="pill" data-target="#tab-inteligencia" role="tab" id="pill-inteligencia" aria-selected="{{ $activeTab === 'inteligencia' ? 'true' : 'false' }}">
+			<i class="fa-solid fa-brain"></i>
+			<span>Inteligencia comercial</span>
+		</button>
+		<button type="button" class="nav-link daily-level-tab @if($activeTab === 'pedidos-clientes') active @endif" data-toggle="pill" data-target="#tab-pedidos-clientes" role="tab" id="pill-pedidos-clientes" aria-selected="{{ $activeTab === 'pedidos-clientes' ? 'true' : 'false' }}">
+			<i class="fa-solid fa-users"></i>
+			<span>Clientes y pedidos</span>
+		</button>
+		<button type="button" class="nav-link daily-level-tab @if($activeTab === 'pos') active @endif" data-toggle="pill" data-target="#tab-pos" role="tab" id="pill-pos" aria-selected="{{ $activeTab === 'pos' ? 'true' : 'false' }}">
+			<i class="fa-solid fa-cash-register"></i>
+			<span>POS e integración</span>
 		</button>
 	</div>
 </div>
+
+@if($sharedFilters['department'] !== null || $sharedFilters['subcategory'] !== null || $sharedFilters['product'] !== null)
+<p class="sdash-scope-note" data-testid="filter-scope-note"><i class="fa-solid fa-filter"></i> Departamento, subcategoría y producto/SKU se aplican al <strong>Tablero de ventas</strong>. Las demás pestañas aplican sucursal, categoría y fechas.</p>
+@endif
+@endif
 
 <!-- CONTENEDOR DE PESTAÑAS -->
 <div class="tab-content" id="salesMainTabContent">
@@ -325,1198 +373,33 @@
 <!-- PESTAÑA 1: RESUMEN COMERCIAL                                   -->
 <!-- ============================================================== -->
 <div class="tab-pane fade @if($activeTab === 'resumen' || !$activeTab) show active @endif" id="tab-resumen" role="tabpanel">
+	@include('components.sales.executive_sales_dashboard')
+</div>
 
-	<!-- FILA 1: 6 INDICADORES COMERCIALES PRINCIPALES -->
-	<div class="sales-kpi-grid" id="kpi-cards-row">
-		<!-- 1. Ventas netas -->
-		<div class="sales-kpi-card">
-			<div class="sales-kpi-top">
-				<span class="sales-kpi-icon-box is-green"><i class="fa-solid fa-cart-shopping"></i></span>
-				<div class="sales-kpi-body">
-					<div class="sales-kpi-head">
-						<span class="sales-kpi-label">Ventas netas</span>
-						<button type="button" class="daily-kpi-info-btn" data-toggle="popover" title="Ventas netas" data-content="<div class='kpi-meta-item'><span class='kpi-meta-label'>Definición</span><span class='kpi-meta-val'>Facturación comercial sin IVA, deducidos descuentos</span></div><div class='kpi-meta-item'><span class='kpi-meta-label'>Fórmula</span><span class='kpi-meta-val'>&Sigma; (Total ticket &minus; IVA) de ventas completadas</span></div><div class='kpi-meta-item'><span class='kpi-meta-label'>Fuente</span><span class='kpi-meta-val'>sales / sale_items</span></div>"><i class="fa-solid fa-circle-info"></i></button>
-					</div>
-					<div class="sales-kpi-value">{{ $t['total'] !== null ? $m($t['total']) : 'Sin información' }}</div>
-					@if($salesDeltaPct !== null)
-					<div class="sales-kpi-delta @if($salesDeltaPct >= 0) is-up @else is-down @endif">
-						<i class="fa-solid @if($salesDeltaPct >= 0) fa-caret-up @else fa-caret-down @endif"></i>
-						<span>{{ ($salesDeltaPct >= 0 ? '+' : '') . number_format($salesDeltaPct, 1) }}%</span>
-					</div>
-					@else
-					<div class="sales-kpi-delta is-neutral"><span>Sin información</span></div>
-					@endif
-					<div class="sales-kpi-sub">{{ $compareSubLabel }}</div>
-				</div>
-			</div>
-			<svg class="sales-kpi-spark" viewBox="0 0 120 26" preserveAspectRatio="none">
-				<path d="M2,22 L20,18 L38,20 L56,13 L74,16 L92,8 L118,5 L118,26 L2,26 Z" fill="rgba(22,163,74,0.14)"></path>
-				<polyline fill="none" stroke="#16a34a" stroke-width="2" points="2,22 20,18 38,20 56,13 74,16 92,8 118,5"></polyline>
-				<circle cx="118" cy="5" r="2.5" fill="#16a34a"></circle>
-			</svg>
-		</div>
-
-		<!-- 2. Cumplimiento -->
-		<div class="sales-kpi-card">
-			<div class="sales-kpi-top">
-				<span class="sales-kpi-icon-box is-blue"><i class="fa-solid fa-bullseye"></i></span>
-				<div class="sales-kpi-body">
-					<div class="sales-kpi-head">
-						<span class="sales-kpi-label">Cumplimiento</span>
-						<button type="button" class="daily-kpi-info-btn" data-toggle="popover" title="Cumplimiento de meta" data-content="<div class='kpi-meta-item'><span class='kpi-meta-label'>Definición</span><span class='kpi-meta-val'>Avance frente al objetivo comercial del período</span></div><div class='kpi-meta-item'><span class='kpi-meta-label'>Fórmula</span><span class='kpi-meta-val'>(Ventas netas &divide; Meta del período) &times; 100</span></div><div class='kpi-meta-item'><span class='kpi-meta-label'>Meta período</span><span class='kpi-meta-val'>{{ $thermometer['target_goal'] > 0 ? $m($thermometer['target_goal']) : 'Sin meta' }}</span></div>"><i class="fa-solid fa-circle-info"></i></button>
-					</div>
-					<div class="sales-kpi-value @if(!$thermometer['has_target']) @elseif($thermometer['compliance_pct'] >= 90) is-green @elseif($thermometer['compliance_pct'] >= 75) is-amber @else is-red @endif">
-						{{ $thermometer['has_target'] ? number_format($thermometer['compliance_pct'], 1) . '%' : 'Sin meta' }}
-					</div>
-					@if($complianceGapPp !== null)
-					<div class="sales-kpi-delta @if($complianceGapPp >= 0) is-up @else is-down @endif">
-						<i class="fa-solid @if($complianceGapPp >= 0) fa-caret-up @else fa-caret-down @endif"></i>
-						<span>{{ ($complianceGapPp >= 0 ? '+' : '') . number_format($complianceGapPp, 1) }} pp</span>
-					</div>
-					@else
-					<div class="sales-kpi-delta is-neutral"><span>Sin meta configurada</span></div>
-					@endif
-					<div class="sales-kpi-sub">{{ $thermometer['has_target'] ? 'Meta: 100.0%' : 'Configurar presupuesto' }}</div>
-				</div>
-			</div>
-			<svg class="sales-kpi-spark" viewBox="0 0 120 26" preserveAspectRatio="none">
-				<path d="M2,17 L24,14 L46,16 L68,19 L92,15 L118,16 L118,26 L2,26 Z" fill="rgba(37,99,235,0.12)"></path>
-				<polyline fill="none" stroke="#2563eb" stroke-width="1.8" stroke-dasharray="3,2" points="2,17 24,14 46,16 68,19 92,15 118,16"></polyline>
-				<circle cx="118" cy="16" r="2.5" fill="#2563eb"></circle>
-			</svg>
-		</div>
-
-		<!-- 3. Utilidad bruta -->
-		<div class="sales-kpi-card">
-			<div class="sales-kpi-top">
-				<span class="sales-kpi-icon-box is-green"><i class="fa-solid fa-coins"></i></span>
-				<div class="sales-kpi-body">
-					<div class="sales-kpi-head">
-						<span class="sales-kpi-label">Utilidad bruta</span>
-						<button type="button" class="daily-kpi-info-btn" data-toggle="popover" title="Utilidad bruta" data-content="<div class='kpi-meta-item'><span class='kpi-meta-label'>Definición</span><span class='kpi-meta-val'>Ganancia comercial antes de gastos operativos</span></div><div class='kpi-meta-item'><span class='kpi-meta-label'>Fórmula</span><span class='kpi-meta-val'>Ventas netas &minus; Costo de ventas (CMV)</span></div><div class='kpi-meta-item'><span class='kpi-meta-label'>CMV registrado</span><span class='kpi-meta-val'>{{ $t['cogs'] > 0 ? $m($t['cogs']) : 'Sin información' }}</span></div><div class='kpi-meta-item'><span class='kpi-meta-label'>Cobertura costo</span><span class='kpi-meta-val'>{{ number_format($dq['line_cost_coverage_pct'], 1) }}% de líneas</span></div>"><i class="fa-solid fa-circle-info"></i></button>
-					</div>
-					<div class="sales-kpi-value is-green">
-						{{ $t['margin'] !== null ? $m($t['margin']) : 'Sin información' }}
-					</div>
-					@if($marginDeltaPct !== null)
-					<div class="sales-kpi-delta @if($marginDeltaPct >= 0) is-up @else is-down @endif">
-						<i class="fa-solid @if($marginDeltaPct >= 0) fa-caret-up @else fa-caret-down @endif"></i>
-						<span>{{ ($marginDeltaPct >= 0 ? '+' : '') . number_format($marginDeltaPct, 1) }}%</span>
-					</div>
-					@else
-					<div class="sales-kpi-delta is-neutral"><span>{{ $t['margin'] === null ? 'Costos incompletos' : 'Sin información' }}</span></div>
-					@endif
-					<div class="sales-kpi-sub">{{ $compareSubLabel }}</div>
-				</div>
-			</div>
-			<svg class="sales-kpi-spark" viewBox="0 0 120 26" preserveAspectRatio="none">
-				<path d="M2,21 L22,19 L44,15 L66,17 L88,11 L118,6 L118,26 L2,26 Z" fill="rgba(22,163,74,0.14)"></path>
-				<polyline fill="none" stroke="#16a34a" stroke-width="2" points="2,21 22,19 44,15 66,17 88,11 118,6"></polyline>
-				<circle cx="118" cy="6" r="2.5" fill="#16a34a"></circle>
-			</svg>
-		</div>
-
-		<!-- 4. Margen bruto -->
-		<div class="sales-kpi-card">
-			<div class="sales-kpi-top">
-				<span class="sales-kpi-icon-box is-purple"><i class="fa-solid fa-chart-pie"></i></span>
-				<div class="sales-kpi-body">
-					<div class="sales-kpi-head">
-						<span class="sales-kpi-label">Margen bruto</span>
-						<button type="button" class="daily-kpi-info-btn" data-toggle="popover" title="Margen bruto" data-content="<div class='kpi-meta-item'><span class='kpi-meta-label'>Definición</span><span class='kpi-meta-val'>Porcentaje de utilidad bruta sobre ventas netas</span></div><div class='kpi-meta-item'><span class='kpi-meta-label'>Fórmula</span><span class='kpi-meta-val'>(Utilidad bruta &divide; Ventas netas) &times; 100</span></div><div class='kpi-meta-item'><span class='kpi-meta-label'>Calidad de datos</span><span class='kpi-meta-val'>{{ $dq['products_without_cost'] > 0 ? $dq['products_without_cost'] . ' prod. sin costo' : 'Costos completos' }}</span></div>"><i class="fa-solid fa-circle-info"></i></button>
-					</div>
-					<div class="sales-kpi-value @if(($t['margin_pct'] ?? 0) >= 25) is-green @elseif(($t['margin_pct'] ?? 0) >= 18) is-amber @else is-red @endif">
-						{{ $t['margin_pct'] !== null ? number_format($t['margin_pct'], 1) . '%' : 'Sin información' }}
-					</div>
-					@if($marginPpDelta !== null)
-					<div class="sales-kpi-delta @if($marginPpDelta >= 0) is-up @else is-down @endif">
-						<i class="fa-solid @if($marginPpDelta >= 0) fa-caret-up @else fa-caret-down @endif"></i>
-						<span>{{ ($marginPpDelta >= 0 ? '+' : '') . number_format($marginPpDelta, 1) }} pp</span>
-					</div>
-					@else
-					<div class="sales-kpi-delta is-neutral"><span>{{ $t['margin_pct'] === null ? 'Costos incompletos' : 'Sin información' }}</span></div>
-					@endif
-					<div class="sales-kpi-sub">{{ $compareSubLabel }}</div>
-				</div>
-			</div>
-			<svg class="sales-kpi-spark" viewBox="0 0 120 26" preserveAspectRatio="none">
-				<path d="M2,20 L24,17 L48,14 L72,18 L96,12 L118,9 L118,26 L2,26 Z" fill="rgba(147,51,234,0.14)"></path>
-				<polyline fill="none" stroke="#9333ea" stroke-width="2" points="2,20 24,17 48,14 72,18 96,12 118,9"></polyline>
-				<circle cx="118" cy="9" r="2.5" fill="#9333ea"></circle>
-			</svg>
-		</div>
-
-		<!-- 5. Transacciones -->
-		<div class="sales-kpi-card">
-			<div class="sales-kpi-top">
-				<span class="sales-kpi-icon-box is-blue"><i class="fa-solid fa-receipt"></i></span>
-				<div class="sales-kpi-body">
-					<div class="sales-kpi-head">
-						<span class="sales-kpi-label">Transacciones</span>
-						<button type="button" class="daily-kpi-info-btn" data-toggle="popover" title="Transacciones" data-content="<div class='kpi-meta-item'><span class='kpi-meta-label'>Definición</span><span class='kpi-meta-val'>Tickets de venta completados en el período</span></div><div class='kpi-meta-item'><span class='kpi-meta-label'>Fórmula</span><span class='kpi-meta-val'>Conteo de tickets con estado completado</span></div><div class='kpi-meta-item'><span class='kpi-meta-label'>Período anterior</span><span class='kpi-meta-val'>{{ number_format($prev['tickets'] ?? 0) }} tickets</span></div>"><i class="fa-solid fa-circle-info"></i></button>
-					</div>
-					<div class="sales-kpi-value">{{ number_format($t['tickets']) }}</div>
-					@if($ticketsDeltaPct !== null)
-					<div class="sales-kpi-delta @if($ticketsDeltaPct >= 0) is-up @else is-down @endif">
-						<i class="fa-solid @if($ticketsDeltaPct >= 0) fa-caret-up @else fa-caret-down @endif"></i>
-						<span>{{ ($ticketsDeltaPct >= 0 ? '+' : '') . number_format($ticketsDeltaPct, 1) }}%</span>
-					</div>
-					@else
-					<div class="sales-kpi-delta is-neutral"><span>Sin información</span></div>
-					@endif
-					<div class="sales-kpi-sub">{{ $compareSubLabel }}</div>
-				</div>
-			</div>
-			<svg class="sales-kpi-spark" viewBox="0 0 120 26" preserveAspectRatio="none">
-				<path d="M2,21 L24,16 L48,19 L70,13 L94,15 L118,8 L118,26 L2,26 Z" fill="rgba(37,99,235,0.13)"></path>
-				<polyline fill="none" stroke="#2563eb" stroke-width="2" points="2,21 24,16 48,19 70,13 94,15 118,8"></polyline>
-				<circle cx="118" cy="8" r="2.5" fill="#2563eb"></circle>
-			</svg>
-		</div>
-
-		<!-- 6. Ticket promedio -->
-		<div class="sales-kpi-card">
-			<div class="sales-kpi-top">
-				<span class="sales-kpi-icon-box is-red"><i class="fa-solid fa-tag"></i></span>
-				<div class="sales-kpi-body">
-					<div class="sales-kpi-head">
-						<span class="sales-kpi-label">Ticket promedio</span>
-						<button type="button" class="daily-kpi-info-btn" data-toggle="popover" title="Ticket promedio" data-content="<div class='kpi-meta-item'><span class='kpi-meta-label'>Definición</span><span class='kpi-meta-val'>Importe neto promedio por transacción válida</span></div><div class='kpi-meta-item'><span class='kpi-meta-label'>Fórmula</span><span class='kpi-meta-val'>Ventas netas &divide; Transacciones completadas</span></div><div class='kpi-meta-item'><span class='kpi-meta-label'>Período anterior</span><span class='kpi-meta-val'>{{ ($prev['tickets'] ?? 0) > 0 ? $m($prev['avg_ticket'] ?? 0) : 'Sin información' }}</span></div>"><i class="fa-solid fa-circle-info"></i></button>
-					</div>
-					<div class="sales-kpi-value">{{ $t['tickets'] > 0 ? $m($t['avg_ticket']) : 'Sin información' }}</div>
-					@if($avgTicketDeltaPct !== null)
-					<div class="sales-kpi-delta @if($avgTicketDeltaPct >= 0) is-up @else is-down @endif">
-						<i class="fa-solid @if($avgTicketDeltaPct >= 0) fa-caret-up @else fa-caret-down @endif"></i>
-						<span>{{ ($avgTicketDeltaPct >= 0 ? '+' : '') . number_format($avgTicketDeltaPct, 1) }}%</span>
-					</div>
-					@else
-					<div class="sales-kpi-delta is-neutral"><span>Sin información</span></div>
-					@endif
-					<div class="sales-kpi-sub">{{ $compareSubLabel }}</div>
-				</div>
-			</div>
-			<svg class="sales-kpi-spark" viewBox="0 0 120 26" preserveAspectRatio="none">
-				<path d="M2,9 L24,13 L48,11 L72,18 L96,16 L118,21 L118,26 L2,26 Z" fill="rgba(239,68,68,0.13)"></path>
-				<polyline fill="none" stroke="#ef4444" stroke-width="2" points="2,9 24,13 48,11 72,18 96,16 118,21"></polyline>
-				<circle cx="118" cy="21" r="2.5" fill="#ef4444"></circle>
-			</svg>
-		</div>
-	</div>
-
-	<!-- FILA 2: CURVA DE VENTAS (IZQ) Y PARTICIPACIÓN POR DEPARTAMENTO (DER) -->
-	<div class="row mb-3">
-		<!-- Columna Izquierda (7 cols): Curva de ventas + Avance frente a la meta -->
-		<div class="col-lg-7 mb-3 mb-lg-0">
-			<div class="dsm-curve-card">
-				<!-- Encabezado con degradado verde DAILY -->
-				<div class="dsm-curve-header">
-					<div class="dsm-curve-header-left">
-						<div class="dsm-curve-header-icon">
-							<i class="fa-solid fa-arrow-trend-up"></i>
-						</div>
-						<div>
-							<h2 class="dsm-curve-header-title">Curva de ventas</h2>
-							<p class="dsm-curve-header-subtitle">Evolución de ventas, meta y período anterior</p>
-						</div>
-					</div>
-					<button type="button" class="dsm-curve-info-btn" data-toggle="popover" data-placement="left" title="Curva de ventas y meta" data-content="Evolución diaria de las ventas netas comparada con el período anterior equivalente y la meta proporcional del período." aria-label="Información de la curva de ventas">
-						<i class="fa-solid fa-circle-info"></i>
-					</button>
-				</div>
-
-				<div class="dsm-curve-body">
-					<!-- Filtros píldora superiores -->
-					<div class="dsm-curve-filters-bar">
-						<!-- Filtro Período -->
-						<div class="dsm-curve-pill-wrapper">
-							<i class="fa-regular fa-calendar dsm-curve-pill-icon"></i>
-							<select id="cardPeriodSelect" class="dsm-curve-pill-select" aria-label="Seleccionar período de la curva">
-								<option value="7" @if($isPresetActive(date('Y-m-d', strtotime('-6 days')), $todayDate)) selected @endif>Últimos 7 días</option>
-								<option value="30" @if($isPresetActive(date('Y-m-d', strtotime('-29 days')), $todayDate) || (!$isPresetActive($todayDate, $todayDate) && !$isPresetActive(date('Y-m-d', strtotime('-6 days')), $todayDate) && !$isPresetActive(date('Y-m-d', strtotime('-89 days')), $todayDate))) selected @endif>Últimos 30 días</option>
-								<option value="month" @if($isPresetActive($thisMonthStart, $todayDate)) selected @endif>Este mes</option>
-								<option value="90" @if($isPresetActive(date('Y-m-d', strtotime('-89 days')), $todayDate)) selected @endif>Últimos 90 días</option>
-								<option value="year" @if($isPresetActive($thisYearStart, $todayDate)) selected @endif>Este año</option>
-							</select>
-							<i class="fa-solid fa-chevron-down dsm-curve-pill-arrow"></i>
-						</div>
-
-						<!-- Filtro Sucursal -->
-						<div class="dsm-curve-pill-wrapper">
-							<i class="fa-solid fa-store dsm-curve-pill-icon"></i>
-							<select id="cardBranchSelect" class="dsm-curve-pill-select" aria-label="Seleccionar sucursal de la curva">
-								<option value="">Todas las sucursales</option>
-								@foreach($branches as $b)
-								<option value="{{ $b->id }}" @if($selectedBranchId == $b->id) selected @endif>{{ $b->name }}</option>
-								@endforeach
-							</select>
-							<i class="fa-solid fa-chevron-down dsm-curve-pill-arrow"></i>
-						</div>
-
-						<!-- Filtro Categoría / Departamento -->
-						<div class="dsm-curve-pill-wrapper">
-							<i class="fa-solid fa-layer-group dsm-curve-pill-icon"></i>
-							<select id="cardCategorySelect" class="dsm-curve-pill-select" aria-label="Seleccionar categoría de la curva">
-								<option value="">Todas las categorías</option>
-								@foreach($productGroups as $g)
-								<option value="{{ $g['id'] }}" @if($selectedGroupId !== null && intval($selectedGroupId) === intval($g['id'])) selected @endif>{{ $g['name'] }}</option>
-								@endforeach
-							</select>
-							<i class="fa-solid fa-chevron-down dsm-curve-pill-arrow"></i>
-						</div>
-					</div>
-
-					<!-- Selector de Granularidad de la Curva -->
-					<div class="d-flex flex-wrap justify-content-between align-items-center mb-2 px-1">
-						<div class="btn-group btn-group-sm" role="group" aria-label="Granularidad de curva">
-							<button type="button" class="btn btn-outline-secondary btn-curve-grain active" data-grain="daily" onclick="dlxSetCurveGrain('daily')">Por Día</button>
-							<button type="button" class="btn btn-outline-secondary btn-curve-grain" data-grain="hourly" onclick="dlxSetCurveGrain('hourly')">Por Hora</button>
-							<button type="button" class="btn btn-outline-secondary btn-curve-grain" data-grain="weekly" onclick="dlxSetCurveGrain('weekly')">Por Semana</button>
-							<button type="button" class="btn btn-outline-secondary btn-curve-grain" data-grain="monthly" onclick="dlxSetCurveGrain('monthly')">Por Mes</button>
-							<button type="button" class="btn btn-outline-secondary btn-curve-grain" data-grain="cumulative" onclick="dlxSetCurveGrain('cumulative')">Acumulada</button>
-						</div>
-						<div class="small d-flex align-items-center" style="gap:10px;">
-							<span class="badge badge-light border text-success"><i class="fa-solid fa-arrow-up mr-1"></i>Pico: <strong>$8,940</strong> (18:00)</span>
-							<span class="badge badge-light border text-danger"><i class="fa-solid fa-arrow-down mr-1"></i>Valle: <strong>$1,210</strong> (10:00)</span>
-						</div>
-					</div>
-
-					<!-- Leyenda interactiva -->
-					<div class="dsm-curve-legend">
-						<span class="dsm-curve-legend-item" id="legendCurrent" data-dataset="0" title="Clic para ocultar/mostrar">
-							<span class="dsm-curve-line-solid"><span class="dsm-curve-line-solid-dot"></span></span>
-							Ventas actuales
-						</span>
-						<span class="dsm-curve-legend-item" id="legendPrev" data-dataset="1" title="Clic para ocultar/mostrar">
-							<span class="dsm-curve-line-prev"></span>
-							Período anterior
-						</span>
-						<span class="dsm-curve-legend-item" id="legendGoal" data-dataset="2" title="Clic para ocultar/mostrar">
-							<span class="dsm-curve-line-goal"></span>
-							Meta del periodo
-						</span>
-					</div>
-
-					<!-- Gráfico interactivo -->
-					<div style="position: relative; height: 215px;">
-						<canvas id="sales-daily-chart" aria-label="Curva de ventas"></canvas>
-					</div>
-
-					<!-- Avance frente a la meta de ventas -->
-					<div class="dsm-target-section" id="section-thermometer">
-						@php
-							$hasTarget = !empty($thermometer['has_target']) && floatval($thermometer['target_goal'] ?? 0) > 0;
-							$rawComp = $hasTarget ? floatval($thermometer['compliance_pct']) : null;
-							$barPct = $rawComp !== null ? min(100.0, max(0.0, $rawComp)) : 0.0;
-							$overTarget = ($rawComp !== null && $rawComp > 100.0) ? round($rawComp - 100.0, 1) : 0.0;
-						@endphp
-						<div class="dsm-target-head">
-							<div class="dsm-target-title-wrap">
-								<span class="dsm-target-icon"><i class="fa-solid fa-bullseye"></i></span>
-								<h3 class="dsm-target-title">Avance frente a la meta de ventas</h3>
-							</div>
-							<div class="dsm-target-metrics">
-								<span class="dsm-target-goal-txt">Meta del período: <strong class="text-dark">{{ $hasTarget ? $m($thermometer['target_goal']) : 'Sin meta definida' }}</strong></span>
-								@if($hasTarget)
-									<span class="dsm-target-pct" title="Cumplimiento visual máximo 100%">
-										{{ number_format($barPct, 1) }}%
-										@if($overTarget > 0)
-											<span class="badge badge-success font-weight-bold ml-1" style="font-size: 0.72rem;">Real: {{ number_format($rawComp, 1) }}% (+{{ $overTarget }}% sobre meta)</span>
-										@endif
-									</span>
-								@else
-									<span class="badge badge-secondary ml-1">Sin meta definida</span>
-								@endif
-							</div>
-						</div>
-
-						<div class="dsm-target-track" title="{{ $hasTarget ? 'Cumplimiento visual: ' . number_format($barPct, 1) . '% · Real: ' . number_format($rawComp, 1) . '%' . ($overTarget > 0 ? ' (+' . $overTarget . '% sobre meta)' : '') : 'Sin meta definida' }}">
-							<div class="dsm-target-fill" style="width: {{ $hasTarget ? max(4, $barPct) : 0 }}%;"></div>
-						</div>
-
-						<!-- Cuatro tarjetas de indicadores -->
-						<div class="dsm-kpis-grid">
-							<!-- 1. Ventas del período -->
-							<div class="dsm-kpi-item">
-								<div class="dsm-kpi-icon-circle">
-									<i class="fa-solid fa-sack-dollar"></i>
-								</div>
-								<div class="dsm-kpi-content">
-									<div class="dsm-kpi-val">{{ $m($thermometer['sales_net']) }}</div>
-									<div class="dsm-kpi-lbl">Ventas del período</div>
-									@if($salesDeltaPct !== null)
-									<div class="dsm-kpi-delta @if($salesDeltaPct >= 0) text-success @else text-danger @endif">
-										<i class="fa-solid @if($salesDeltaPct >= 0) fa-caret-up @else fa-caret-down @endif"></i>
-										{{ ($salesDeltaPct >= 0 ? '+' : '') . number_format($salesDeltaPct, 1) }}%
-									</div>
-									@endif
-								</div>
-							</div>
-
-							<!-- 2. Meta del período -->
-							<div class="dsm-kpi-item">
-								<div class="dsm-kpi-icon-circle">
-									<i class="fa-solid fa-bullseye"></i>
-								</div>
-								<div class="dsm-kpi-content">
-									<div class="dsm-kpi-val">{{ $thermometer['has_target'] ? $m($thermometer['target_goal']) : '$58,470.00' }}</div>
-									<div class="dsm-kpi-lbl">Meta del período</div>
-								</div>
-							</div>
-
-							<!-- 3. Brecha vs. meta -->
-							<div class="dsm-kpi-item">
-								<div class="dsm-kpi-icon-circle">
-									<i class="fa-solid fa-chart-simple"></i>
-								</div>
-								<div class="dsm-kpi-content">
-									<div class="dsm-kpi-val">{{ $m($thermometer['pending_amount']) }}</div>
-									<div class="dsm-kpi-lbl">Brecha vs. meta</div>
-								</div>
-							</div>
-
-							<!-- 4. Días restantes -->
-							<div class="dsm-kpi-item">
-								<div class="dsm-kpi-icon-circle">
-									<i class="fa-solid fa-calendar-check"></i>
-								</div>
-								<div class="dsm-kpi-content">
-									<div class="dsm-kpi-val">{{ $thermometer['days_remaining'] }} días</div>
-									<div class="dsm-kpi-lbl">Días restantes</div>
-									<div class="dsm-kpi-sub">@if($thermometer['is_closed'] || $thermometer['days_remaining'] == 0) Periodo completado @else En curso @endif</div>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<!-- Columna Derecha (5 cols): Participación por departamento -->
-		<div class="col-lg-5">
-			<div class="dsm-dept-card">
-				<!-- Encabezado con squircle verde e icono de capas -->
-				<div class="dsm-dept-header">
-					<div class="dsm-dept-header-left">
-						<div class="dsm-dept-squircle">
-							<i class="fa-solid fa-layer-group"></i>
-						</div>
-						<div>
-							<div class="d-flex align-items-center">
-								<h2 class="dsm-dept-title">Participación por departamento</h2>
-								<button type="button" class="dsm-dept-info-btn" data-toggle="popover" data-placement="left" title="Participación por departamento" data-content="Distribución proporcional de las ventas, volumen o rentabilidad generada por cada departamento en el período seleccionado." aria-label="Información de participación">
-									<i class="fa-solid fa-circle-info"></i>
-								</button>
-							</div>
-							<p class="dsm-dept-subtitle">Contribución de ventas al total del período</p>
-						</div>
-					</div>
-					<select id="deptMetricSelect" class="dsm-dept-metric-select" aria-label="Métrica de análisis por departamento">
-						<option value="sales_total" selected>Ventas totales</option>
-						<option value="sales_net">Ventas netas</option>
-						<option value="units">Unidades vendidas</option>
-						<option value="margin_pct">Margen bruto</option>
-						<option value="profit">Utilidad bruta</option>
-					</select>
-				</div>
-
-				<div class="dsm-dept-body">
-					<!-- Callouts de Mayor y Menor Desempeño Departamental -->
-					@if(!empty($departmentsDonut))
-					@php
-						$sortedDepts = $departmentsDonut;
-						usort($sortedDepts, fn($a, $b) => floatval($b['total'] ?? 0) <=> floatval($a['total'] ?? 0));
-						$topDept = $sortedDepts[0] ?? null;
-						$lowestDept = end($sortedDepts) ?: null;
-					@endphp
-					<div class="d-flex justify-content-between align-items-center mb-2 px-1">
-						@if($topDept)
-						<span class="badge badge-light border text-success small" style="cursor:pointer;" onclick="dlxOpenDeptDrilldown('{{ $topDept['name'] }}', '{{ $m($topDept['total']) }}', '{{ number_format($topDept['share_pct'], 1) }}%')">
-							<i class="fa-solid fa-trophy mr-1 text-warning"></i>Mayor venta: <strong>{{ $topDept['name'] }}</strong> ({{ number_format($topDept['share_pct'], 1) }}%)
-						</span>
-						@endif
-						@if($lowestDept && $lowestDept['name'] !== ($topDept['name'] ?? ''))
-						<span class="badge badge-light border text-muted small" style="cursor:pointer;" onclick="dlxOpenDeptDrilldown('{{ $lowestDept['name'] }}', '{{ $m($lowestDept['total']) }}', '{{ number_format($lowestDept['share_pct'], 1) }}%')">
-							<i class="fa-solid fa-arrow-down-wide-short mr-1 text-danger"></i>Menor venta: <strong>{{ $lowestDept['name'] }}</strong> ({{ number_format($lowestDept['share_pct'], 1) }}%)
-						</span>
-						@endif
-					</div>
-					@endif
-
-					<!-- Encabezado de columnas -->
-					<div class="dsm-dept-table-head">
-						<span>Departamento</span>
-						<span>Participación</span>
-						<span class="text-right" id="deptMetricColTitle">Ventas <i class="fa-solid fa-sort ml-1"></i></span>
-					</div>
-
-					@php
-						$deptTotalSum = 0.0;
-						$deptVisualConfigs = [
-							['icon' => 'fa-desktop', 'color' => '#00a651', 'bg' => '#e8f8ee', 'iconColor' => '#00a651'],
-							['icon' => 'fa-bottle-water', 'color' => '#2563eb', 'bg' => '#dbeafe', 'iconColor' => '#2563eb'],
-							['icon' => 'fa-couch', 'color' => '#ea580c', 'bg' => '#ffedd5', 'iconColor' => '#ea580c'],
-							['icon' => 'fa-drumstick-bite', 'color' => '#9333ea', 'bg' => '#f3e8ff', 'iconColor' => '#9333ea'],
-							['icon' => 'fa-apple-whole', 'color' => '#84cc16', 'bg' => '#ecfccb', 'iconColor' => '#65a30d'],
-							['icon' => 'fa-ellipsis', 'color' => '#64748b', 'bg' => '#f1f5f9', 'iconColor' => '#64748b']
-						];
-					@endphp
-
-					@if(!empty($departmentsDonut))
-					<div class="dsm-dept-rows-list" id="deptBarsList">
-						@foreach($departmentsDonut as $idx => $dItem)
-						@php
-							$deptTotalSum += floatval($dItem['total']);
-							$barWidthPct = $maxDeptSharePct > 0 ? max(6, round(($dItem['share_pct'] / $maxDeptSharePct) * 100, 1)) : 6;
-							
-							// Configuración visual por departamento
-							$dNameNorm = mb_strtolower($dItem['name'], 'UTF-8');
-							$cfg = null;
-							if (str_contains($dNameNorm, 'electr') || str_contains($dNameNorm, 'telef')) {
-								$cfg = ['icon' => 'fa-desktop', 'color' => '#00a651', 'bg' => '#e8f8ee', 'iconColor' => '#00a651'];
-							} elseif (str_contains($dNameNorm, 'lác') || str_contains($dNameNorm, 'lac') || str_contains($dNameNorm, 'lech')) {
-								$cfg = ['icon' => 'fa-bottle-water', 'color' => '#2563eb', 'bg' => '#dbeafe', 'iconColor' => '#2563eb'];
-							} elseif (str_contains($dNameNorm, 'muebl') || str_contains($dNameNorm, 'hogar') || str_contains($dNameNorm, 'manteq')) {
-								$cfg = ['icon' => 'fa-couch', 'color' => '#ea580c', 'bg' => '#ffedd5', 'iconColor' => '#ea580c'];
-							} elseif (str_contains($dNameNorm, 'carn') || str_contains($dNameNorm, 'huevo') || str_contains($dNameNorm, 'pollo')) {
-								$cfg = ['icon' => 'fa-drumstick-bite', 'color' => '#9333ea', 'bg' => '#f3e8ff', 'iconColor' => '#9333ea'];
-							} elseif (str_contains($dNameNorm, 'frut') || str_contains($dNameNorm, 'verdur') || str_contains($dNameNorm, 'granja') || str_contains($dNameNorm, 'consum')) {
-								$cfg = ['icon' => 'fa-apple-whole', 'color' => '#84cc16', 'bg' => '#ecfccb', 'iconColor' => '#65a30d'];
-							} elseif (str_contains($dNameNorm, 'otro')) {
-								$cfg = ['icon' => 'fa-ellipsis', 'color' => '#64748b', 'bg' => '#f1f5f9', 'iconColor' => '#64748b'];
-							} else {
-								$cfg = $deptVisualConfigs[$idx % count($deptVisualConfigs)];
-							}
-
-							$deptFilterParams = [
-								'branch_id' => $selectedBranchId,
-								'start_date' => $startDate,
-								'end_date' => $endDate
-							];
-							$deptFilterParams = array_filter($deptFilterParams, fn($v) => $v !== null && $v !== '');
-							if ($dItem['id'] !== null) {
-								$deptFilterParams['group_id'] = $dItem['id'];
-							}
-						@endphp
-						<div class="dsm-dept-row-item sales-dept-bar-row"
-							data-sales="{{ $dItem['total'] }}"
-							data-pct="{{ $dItem['share_pct'] }}"
-							data-units="{{ $dItem['units'] }}"
-							data-margin="{{ $dItem['margin'] ?? '' }}">
-							<!-- Columna 1: Icono circular + Nombre del departamento -->
-							<div class="dsm-dept-col-info">
-								<div class="dsm-dept-circle-icon" style="background: {{ $cfg['bg'] }}; color: {{ $cfg['iconColor'] }};">
-									<i class="fa-solid {{ $cfg['icon'] }}"></i>
-								</div>
-								<div class="text-truncate">
-									@if($dItem['id'] !== null)
-									<a href="{{ $U('/sales?' . http_build_query($deptFilterParams)) }}" class="dsm-dept-name-link sales-dept-link" title="Filtrar tablero por {{ $dItem['name'] }}">
-										{{ $dItem['name'] }}
-									</a>
-									@else
-									<span class="dsm-dept-name-link sales-dept-link" title="{{ $dItem['name'] }}">{{ $dItem['name'] }}</span>
-									@endif
-								</div>
-							</div>
-
-							<!-- Columna 2: Barra horizontal + Porcentaje -->
-							<div class="dsm-dept-col-bar">
-								<div class="dsm-dept-bar-track-wrap sales-dept-bar-track" title="{{ $dItem['name'] }}: {{ number_format($dItem['share_pct'], 1) }}%">
-									<div class="dsm-dept-bar-fill-pro sales-dept-bar-fill" style="background: {{ $cfg['color'] }}; width: {{ $barWidthPct }}%;"></div>
-								</div>
-								<span class="dsm-dept-pct-num sales-dept-pct">{{ number_format($dItem['share_pct'], 1) }}%</span>
-							</div>
-
-							<!-- Columna 3: Importe / Valor -->
-							<div class="dsm-dept-col-amt sales-dept-amt">
-								{{ $m($dItem['total']) }}
-							</div>
-						</div>
-						@endforeach
-					</div>
-
-					<!-- Fila de total -->
-					<div class="dsm-dept-total-box">
-						<div class="dsm-dept-total-left">
-							<i class="fa-solid fa-coins"></i>
-							<span id="deptTotalLabel">Total de ventas</span>
-						</div>
-						<div class="dsm-dept-total-right">
-							<div class="dsm-dept-total-pill" id="deptTotalValPill">
-								{{ $m($deptTotalSum > 0 ? $deptTotalSum : $thermometer['sales_net']) }}
-							</div>
-							<span class="dsm-dept-total-pct">100.0%</span>
-						</div>
-					</div>
-					@else
-					<div class="text-center text-muted py-5 my-auto">Sin información de departamentos en el período.</div>
-					@endif
-				</div>
-			</div>
-		</div>
-	</div>
-
-	<!-- SVG DEFS PARA LOS MINI GRÁFICOS DE TENDENCIA (SPARKLINES) -->
-	<svg width="0" height="0" style="position: absolute; width: 0; height: 0; overflow: hidden;" aria-hidden="true">
-		<defs>
-			<linearGradient id="sparkGradGreen" x1="0%" y1="0%" x2="0%" y2="100%">
-				<stop offset="0%" stop-color="#00c83b" stop-opacity="0.38"/>
-				<stop offset="100%" stop-color="#00c83b" stop-opacity="0.0"/>
-			</linearGradient>
-			<linearGradient id="sparkGradRed" x1="0%" y1="0%" x2="0%" y2="100%">
-				<stop offset="0%" stop-color="#ef4444" stop-opacity="0.38"/>
-				<stop offset="100%" stop-color="#ef4444" stop-opacity="0.0"/>
-			</linearGradient>
-		</defs>
-	</svg>
-
-	<!-- FILA 3: RENDIMIENTO POR SUCURSAL + ANÁLISIS DE PRODUCTOS + OPORTUNIDADES COMERCIALES -->
-	<div class="row mb-3 dsm-trio-row">
-		<!-- Columna 1: Rendimiento por sucursal -->
-		<div class="col-xl-5 col-lg-5 mb-3 mb-xl-0" id="section-branches">
-			<div class="dsm-perf-card">
-				<!-- Encabezado con degradado verde DAILY -->
-				<div class="dsm-perf-header">
-					<div class="dsm-perf-header-left">
-						<div class="dsm-perf-header-icon">
-							<i class="fa-solid fa-cash-register"></i>
-						</div>
-						<div class="dsm-perf-header-titles">
-							<h2 class="dsm-perf-title">Rendimiento por sucursal</h2>
-							<p class="dsm-perf-subtitle">Ventas, margen y transacciones por tienda</p>
-						</div>
-					</div>
-					<button type="button" class="dsm-perf-ver-todas-btn" onclick="$('#pill-analisis').tab('show'); document.getElementById('section-comparisons').scrollIntoView({behavior:'smooth'});">
-						<span>Ver todas</span>
-						<i class="fa-solid fa-chevron-right ml-1" style="font-size: 0.65rem;"></i>
-					</button>
-				</div>
-
-				<div class="dsm-perf-body">
-					<!-- Filtros superiores tipo píldora -->
-					<div class="dsm-perf-filters-bar">
-						<!-- Filtro Período -->
-						<div class="dsm-filter-pill-dropdown">
-							<i class="fa-regular fa-calendar dsm-filter-icon"></i>
-							<select id="dsm-filter-period" class="dsm-filter-select" title="Filtrar por período comercial">
-								<option value="today" @if($isPresetActive($todayDate, $todayDate)) selected @endif>Hoy</option>
-								<option value="7d" @if($startDate === date('Y-m-d', strtotime('-6 days')) && $endDate === $todayDate) selected @endif>Últimos 7 días</option>
-								<option value="30d" @if($startDate === date('Y-m-d', strtotime('-29 days')) && $endDate === $todayDate) selected @endif>Últimos 30 días</option>
-								<option value="month" @if($isPresetActive($thisMonthStart, $todayDate)) selected @endif>Este mes</option>
-								<option value="quarter" @if($startDate === date('Y-m-d', strtotime('-89 days')) && $endDate === $todayDate) selected @endif>Este trimestre</option>
-								<option value="year" @if($isPresetActive($thisYearStart, $todayDate)) selected @endif>Este año</option>
-							</select>
-							<i class="fa-solid fa-chevron-down dsm-filter-caret"></i>
-						</div>
-
-						<!-- Filtro Departamento -->
-						<div class="dsm-filter-pill-dropdown">
-							<i class="fa-solid fa-layer-group dsm-filter-icon"></i>
-							<select id="dsm-filter-dept" class="dsm-filter-select" title="Filtrar por departamento">
-								<option value="" @if($selectedGroupId === null || $selectedGroupId === '') selected @endif>Todos los departamentos</option>
-								@foreach($productGroups as $pg)
-									<option value="{{ $pg->id }}" @if((string)$selectedGroupId === (string)$pg->id) selected @endif>{{ $pg->name }}</option>
-								@endforeach
-							</select>
-							<i class="fa-solid fa-chevron-down dsm-filter-caret"></i>
-						</div>
-
-						<!-- Filtro Tipo de venta (neta / bruta) -->
-						<div class="dsm-filter-pill-dropdown">
-							<i class="fa-solid fa-tag dsm-filter-icon"></i>
-							<select id="dsm-filter-type" class="dsm-filter-select" title="Seleccionar base de cálculo de venta">
-								<option value="net" selected>Ventas netas</option>
-								<option value="gross">Ventas brutas</option>
-							</select>
-							<i class="fa-solid fa-chevron-down dsm-filter-caret"></i>
-						</div>
-					</div>
-
-					<!-- Indicador de sucursal seleccionada (activo al hacer clic en una sucursal) -->
-					<div id="dsm-branch-active-pill" class="dsm-branch-active-pill d-none">
-						<span>
-							<i class="fa-solid fa-store mr-1 text-success"></i>
-							Mostrando sucursal: <strong id="dsm-branch-active-name">-</strong>
-						</span>
-						<button type="button" class="dsm-branch-reset-btn" id="dsm-branch-reset-btn" title="Volver a ver todas las sucursales">
-							<i class="fa-solid fa-xmark mr-1"></i>Ver todas
-						</button>
-					</div>
-
-					<!-- 4 Indicadores KPI Compactos -->
-					<div class="dsm-perf-kpis">
-						<!-- KPI 1: Ventas totales -->
-						<div class="dsm-perf-kpi-item">
-							<div class="dsm-perf-kpi-icon">
-								<i class="fa-solid fa-coins"></i>
-							</div>
-							<div class="dsm-perf-kpi-content">
-								<div class="dsm-perf-kpi-val" id="dsm-kpi-sales-val">{{ $m($branchKpis['total_sales'] ?? 56344.97) }}</div>
-								<div class="dsm-perf-kpi-lbl">Ventas totales</div>
-								<div class="dsm-perf-kpi-delta" id="dsm-kpi-sales-delta">
-									<i class="fa-solid fa-caret-up"></i>
-									<span>+{{ number_format($branchKpis['sales_delta'] ?? 30.5, 1) }}%</span>
-								</div>
-							</div>
-						</div>
-
-						<!-- KPI 2: Transacciones -->
-						<div class="dsm-perf-kpi-item">
-							<div class="dsm-perf-kpi-icon">
-								<i class="fa-solid fa-cart-shopping"></i>
-							</div>
-							<div class="dsm-perf-kpi-content">
-								<div class="dsm-perf-kpi-val" id="dsm-kpi-trans-val">{{ number_format($branchKpis['tickets'] ?? 4329) }}</div>
-								<div class="dsm-perf-kpi-lbl">Transacciones</div>
-								<div class="dsm-perf-kpi-delta" id="dsm-kpi-trans-delta">
-									<i class="fa-solid fa-caret-up"></i>
-									<span>+{{ number_format($branchKpis['tickets_delta'] ?? 28.7, 1) }}%</span>
-								</div>
-							</div>
-						</div>
-
-						<!-- KPI 3: Margen bruto -->
-						<div class="dsm-perf-kpi-item">
-							<div class="dsm-perf-kpi-icon">
-								<i class="fa-solid fa-percent"></i>
-							</div>
-							<div class="dsm-perf-kpi-content">
-								<div class="dsm-perf-kpi-val" id="dsm-kpi-margin-val">{{ number_format($branchKpis['margin_pct'] ?? 40.8, 1) }}%</div>
-								<div class="dsm-perf-kpi-lbl">Margen bruto</div>
-								<div class="dsm-perf-kpi-delta" id="dsm-kpi-margin-delta">
-									<i class="fa-solid fa-caret-up"></i>
-									<span>+{{ number_format($branchKpis['margin_diff_pp'] ?? 1.6, 1) }} pp</span>
-								</div>
-							</div>
-						</div>
-
-						<!-- KPI 4: Sucursales -->
-						<div class="dsm-perf-kpi-item">
-							<div class="dsm-perf-kpi-icon">
-								<i class="fa-solid fa-store"></i>
-							</div>
-							<div class="dsm-perf-kpi-content">
-								<div class="dsm-perf-kpi-val" id="dsm-kpi-branches-val">{{ $branchKpis['branches_count'] ?? 10 }}</div>
-								<div class="dsm-perf-kpi-lbl">Sucursales</div>
-								<div class="dsm-perf-kpi-sub" id="dsm-kpi-branches-sub">{{ $branchKpis['operating_pct'] ?? 100 }}% operativas</div>
-							</div>
-						</div>
-					</div>
-
-					<!-- Tabla profesional de sucursales -->
-					<div class="dsm-perf-table-wrapper table-responsive">
-						<table class="dsm-perf-table" id="dsmPerfBranchesTable">
-							<thead>
-								<tr>
-									<th style="width: 24px;" class="text-muted">#</th>
-									<th class="is-sortable" data-sort="name">Sucursal</th>
-									<th class="text-right is-sortable" data-sort="sales">
-										<span id="colHeaderSalesLabel">Ventas netas</span>
-										<i class="fa-solid fa-caret-down ml-1 text-success"></i>
-									</th>
-									<th class="text-center is-sortable" data-sort="vs_prev">vs. período<br>anterior</th>
-									<th class="text-center is-sortable" data-sort="margin">Margen bruto</th>
-									<th class="text-right is-sortable" data-sort="trans">Trans.</th>
-									<th class="text-center" style="width: 72px;">Tendencia</th>
-								</tr>
-							</thead>
-							<tbody>
-								@forelse($branchesSummary as $idx => $br)
-								<tr class="dsm-branch-row" data-branch-id="{{ $br['id'] }}" data-branch-name="{{ $br['name'] }}" data-sales="{{ $br['total'] }}" data-prev="{{ $br['prev_total'] }}" data-margin="{{ $br['margin_pct'] ?? 0 }}" data-trans="{{ $br['tickets'] }}" data-vs="{{ $br['vs_prev_pct'] ?? 0 }}">
-									<td class="text-muted font-weight-600">{{ $idx + 1 }}</td>
-									<td>
-										<a href="javascript:void(0)" class="dsm-branch-select-link" data-branch-id="{{ $br['id'] }}" data-branch-name="{{ $br['name'] }}" title="Seleccionar y filtrar análisis por {{ $br['name'] }}">
-											{{ $br['name'] }}
-										</a>
-									</td>
-									<td class="text-right font-weight-bold dsm-row-sales-cell">
-										@if($br['has_activity'])
-											{{ $m($br['total']) }}
-										@else
-											<span class="text-muted">$0.00</span>
-										@endif
-									</td>
-									<td class="text-center">
-										@if($br['has_activity'] && $br['vs_prev_pct'] !== null)
-											<span class="{{ $br['vs_prev_pct'] >= 0 ? 'dsm-badge-up' : 'dsm-badge-down' }}">
-												{{ ($br['vs_prev_pct'] >= 0 ? '+' : '') . number_format($br['vs_prev_pct'], 1) }}%
-											</span>
-										@else
-											<span class="text-muted">—</span>
-										@endif
-									</td>
-									<td class="text-center">
-										@if($br['has_activity'] && $br['margin_pct'] !== null)
-											<span class="dsm-margin-val">{{ number_format($br['margin_pct'], 1) }}%</span>
-										@else
-											<span class="text-muted">—</span>
-										@endif
-									</td>
-									<td class="text-right font-weight-600">
-										{{ number_format($br['tickets']) }}
-									</td>
-									<td class="text-center" style="padding: 4px 6px;">
-										{!! $br['sparkline_svg'] ?? '' !!}
-									</td>
-								</tr>
-								@empty
-								<tr>
-									<td colspan="7" class="text-center text-muted py-4">Sin sucursales registradas en el período.</td>
-								</tr>
-								@endforelse
-							</tbody>
-						</table>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<!-- Columna 2: Análisis de productos -->
-		<div class="col-xl-4 col-lg-4 mb-3 mb-xl-0" id="section-top-products">
-			<div class="dsm-prod-card">
-				<!-- Encabezado con icono verde y botón Ver todos -->
-				<div class="dsm-prod-header">
-					<div class="dsm-prod-header-left">
-						<div class="dsm-prod-header-icon">
-							<i class="fa-solid fa-cube"></i>
-						</div>
-						<div class="dsm-prod-header-titles">
-							<h2 class="dsm-prod-title">Análisis de productos</h2>
-							<p class="dsm-prod-subtitle">Desempeño de productos y rentabilidad</p>
-						</div>
-					</div>
-					<button type="button" class="dsm-prod-ver-todos-btn" onclick="$('#pill-detalle').tab('show'); $('a[href=\'#subtab-sku\']').tab('show');">
-						<span>Ver todos</span>
-						<i class="fa-solid fa-chevron-right ml-1" style="font-size: 0.65rem;"></i>
-					</button>
-				</div>
-
-				<div class="dsm-prod-body">
-					<!-- Pestañas píldora Más vendidos | Mayor margen -->
-					<div class="dsm-prod-pill-tabs" role="tablist">
-						<button type="button" class="dsm-prod-tab-pill active" id="tabBtnSales" data-target="#paneProdSales">
-							<i class="fa-solid fa-trophy mr-1"></i>Más vendidos
-						</button>
-						<button type="button" class="dsm-prod-tab-pill" id="tabBtnMargin" data-target="#paneProdMargin">
-							<i class="fa-solid fa-chart-column mr-1"></i>Mayor margen
-						</button>
-					</div>
-
-					<!-- Sub-pane 1: Más vendidos -->
-					<div id="paneProdSales" class="dsm-prod-pane">
-						<div class="table-responsive">
-							<table class="dsm-prod-table" id="tableProdsSales">
-								<thead>
-									<tr>
-										<th style="width: 20px;">#</th>
-										<th>Producto</th>
-										<th class="text-right">Ventas netas</th>
-										<th class="text-right">Unidades</th>
-									</tr>
-								</thead>
-								<tbody id="tbodyProdsSales">
-									@forelse($topProductsBySales as $idx => $prod)
-									<tr class="dsm-prod-row" onclick="openProductDetailModal({{ json_encode($prod) }})" title="Ver detalle comercial de {{ $prod['name'] }}">
-										<td class="text-muted font-weight-600">{{ $idx + 1 }}</td>
-										<td>
-											<div class="dsm-prod-cell">
-												<img src="{{ $U($prod['image_url']) }}" alt="{{ $prod['name'] }}" class="dsm-prod-thumb" onerror="this.onerror=null; this.src='{{ $U('/img/control_center/prod_jugo_naranja.svg') }}';">
-												<div class="dsm-prod-info">
-													<div class="dsm-prod-name" title="{{ $prod['full_name'] ?? $prod['name'] }}">{{ $prod['name'] }}</div>
-												</div>
-											</div>
-										</td>
-										<td class="dsm-prod-price-val">{{ $m($prod['total']) }}</td>
-										<td class="dsm-prod-units-val">{{ number_format($prod['units'], 0) }}</td>
-									</tr>
-									@empty
-									<tr>
-										<td colspan="4" class="text-center text-muted py-4">Sin ventas de productos en el período.</td>
-									</tr>
-									@endforelse
-								</tbody>
-							</table>
-						</div>
-					</div>
-
-					<!-- Sub-pane 2: Mayor margen -->
-					<div id="paneProdMargin" class="dsm-prod-pane d-none">
-						<div class="table-responsive">
-							<table class="dsm-prod-table" id="tableProdsMargin">
-								<thead>
-									<tr>
-										<th style="width: 20px;">#</th>
-										<th>Producto</th>
-										<th class="text-center">Margen</th>
-										<th class="text-right">Ventas netas</th>
-										<th class="text-right">Unid.</th>
-									</tr>
-								</thead>
-								<tbody id="tbodyProdsMargin">
-									@forelse($topProductsByMargin as $idx => $prod)
-									<tr class="dsm-prod-row" onclick="openProductDetailModal({{ json_encode($prod) }})" title="Ver detalle comercial de {{ $prod['name'] }}">
-										<td class="text-muted font-weight-600">{{ $idx + 1 }}</td>
-										<td>
-											<div class="dsm-prod-cell">
-												<img src="{{ $U($prod['image_url']) }}" alt="{{ $prod['name'] }}" class="dsm-prod-thumb" onerror="this.onerror=null; this.src='{{ $U('/img/control_center/prod_jugo_naranja.svg') }}';">
-												<div class="dsm-prod-info">
-													<div class="dsm-prod-name" title="{{ $prod['full_name'] ?? $prod['name'] }}">{{ $prod['name'] }}</div>
-												</div>
-											</div>
-										</td>
-										<td class="text-center">
-											<span class="dsm-margin-val">{{ number_format($prod['margin_pct'], 1) }}%</span>
-										</td>
-										<td class="dsm-prod-price-val">{{ $m($prod['total']) }}</td>
-										<td class="dsm-prod-units-val">{{ number_format($prod['units'], 0) }}</td>
-									</tr>
-									@empty
-									<tr>
-										<td colspan="5" class="text-center text-muted py-4">Sin productos con margen registrado.</td>
-									</tr>
-									@endforelse
-								</tbody>
-							</table>
-						</div>
-					</div>
-
-					<!-- Panel verde suave inferior: Resumen de productos -->
-					<div class="dsm-prod-summary-box">
-						<div class="dsm-prod-summary-head">
-							<i class="fa-solid fa-chart-simple text-success"></i>
-							<span>Resumen de productos</span>
-						</div>
-						<div class="dsm-prod-summary-grid">
-							<!-- 1. Productos analizados -->
-							<div class="dsm-prod-summary-item">
-								<div class="dsm-prod-summary-icon">
-									<i class="fa-solid fa-tag"></i>
-								</div>
-								<div>
-									<div class="dsm-prod-summary-val" id="summaryProdCount">{{ $top5Summary['count'] ?? 5 }}</div>
-									<div class="dsm-prod-summary-lbl">Productos analizados</div>
-								</div>
-							</div>
-
-							<!-- 2. Ventas del top 5 -->
-							<div class="dsm-prod-summary-item">
-								<div class="dsm-prod-summary-icon">
-									<i class="fa-solid fa-coins"></i>
-								</div>
-								<div>
-									<div class="dsm-prod-summary-val" id="summaryProdSales">{{ $m($top5Summary['sales'] ?? 17942.32) }}</div>
-									<div class="dsm-prod-summary-lbl">Ventas del top 5</div>
-								</div>
-							</div>
-
-							<!-- 3. Participación del total -->
-							<div class="dsm-prod-summary-item">
-								<div class="dsm-prod-summary-icon">
-									<i class="fa-solid fa-chart-pie"></i>
-								</div>
-								<div>
-									<div class="dsm-prod-summary-val" id="summaryProdShare">{{ number_format($top5Summary['share_pct'] ?? 31.8, 1) }}%</div>
-									<div class="dsm-prod-summary-lbl">Participación del total</div>
-								</div>
-							</div>
-
-							<!-- 4. vs. período anterior -->
-							<div class="dsm-prod-summary-item">
-								<div class="dsm-prod-summary-icon">
-									<i class="fa-solid fa-arrow-trend-up"></i>
-								</div>
-								<div>
-									<div class="dsm-prod-summary-val text-success" id="summaryProdDelta">+{{ number_format($top5Summary['delta_pct'] ?? 28.9, 1) }}%</div>
-									<div class="dsm-prod-summary-lbl">vs. período anterior</div>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<!-- Columna 3: Oportunidades comerciales -->
-		<div class="col-xl-3 col-lg-3" id="section-highlights">
-			<div class="dsm-opp-card-wrapper">
-				<div class="dsm-opp-header">
-					<div class="dsm-opp-header-icon">
-						<i class="fa-solid fa-seedling"></i>
-					</div>
-					<div>
-						<h2 class="dsm-opp-title">Oportunidades comerciales</h2>
-						<p class="dsm-opp-subtitle">Acciones para aumentar ventas y rentabilidad</p>
-					</div>
-				</div>
-
-				<div class="dsm-opp-body">
-					<!-- Bloque A: Brecha frente a la meta comercial (Amarillo / Naranja) -->
-					<div class="dsm-opp-block is-amber">
-						<div class="dsm-opp-block-left">
-							<div class="dsm-opp-icon-circle">
-								<i class="fa-solid fa-bullseye"></i>
-							</div>
-							<div>
-								<div class="dsm-opp-block-title">Brecha frente a la meta comercial</div>
-								<div class="dsm-opp-block-desc" id="oppMetaDesc">
-									{!! $highlights[0]['desc'] ?? 'Faltan <strong>$1,754.69</strong> para cubrir la meta del período (97.0% de avance).' !!}
-								</div>
-							</div>
-						</div>
-						<button type="button" class="dsm-opp-btn" data-toggle="modal" data-target="#modalBrechaMeta">
-							<span>Ver análisis</span>
-							<i class="fa-solid fa-chevron-right" style="font-size: 0.65rem;"></i>
-						</button>
-					</div>
-
-					<!-- Bloque B: Impulsar ticket promedio (Azul suave) -->
-					<div class="dsm-opp-block is-blue">
-						<div class="dsm-opp-block-left">
-							<div class="dsm-opp-icon-circle">
-								<i class="fa-solid fa-receipt"></i>
-							</div>
-							<div>
-								<div class="dsm-opp-block-title">Impulsar ticket promedio</div>
-								<div class="dsm-opp-block-desc" id="oppTicketDesc">
-									{!! $highlights[1]['desc'] ?? 'Ticket promedio actual de <strong>$15.96</strong>. Potenciar venta cruzada en categorías de alto margen.' !!}
-								</div>
-							</div>
-						</div>
-						<button type="button" class="dsm-opp-btn" data-toggle="modal" data-target="#modalEstrategiasTicket">
-							<span>Ver estrategias</span>
-							<i class="fa-solid fa-chevron-right" style="font-size: 0.65rem;"></i>
-						</button>
-					</div>
-
-					<!-- Bloque C: Costos e inventario conciliados (Verde suave) -->
-					<div class="dsm-opp-block is-green">
-						<div class="dsm-opp-block-left">
-							<div class="dsm-opp-icon-circle">
-								<i class="fa-solid fa-circle-check"></i>
-							</div>
-							<div>
-								<div class="dsm-opp-block-title">Costos e inventario conciliados</div>
-								<div class="dsm-opp-block-desc" id="oppCostosDesc">
-									{!! $highlights[2]['desc'] ?? '100% de las líneas vendidas tienen costo de lote y trazabilidad actualizada.' !!}
-								</div>
-							</div>
-						</div>
-						<button type="button" class="dsm-opp-btn" data-toggle="modal" data-target="#modalConciliacionKardex">
-							<span>Ver detalle</span>
-							<i class="fa-solid fa-chevron-right" style="font-size: 0.65rem;"></i>
-						</button>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-
-	<!-- FILA 4: BANDA DE CALIDAD DE DATOS -->
-	<div class="sales-data-quality-strip" id="section-data-quality">
-		<div class="sales-dq-title">
-			<span class="sales-title-icon"><i class="fa-solid fa-database"></i></span>
-			<span>Calidad de datos</span>
-		</div>
-
-		<div class="sales-dq-banner">
-			<div class="d-flex align-items-center" style="gap: 9px;">
-				<span class="sales-dq-info-icon"><i class="fa-solid fa-info"></i></span>
-				<span>
-					@if($dq['products_without_cost'] > 0 || $dq['unlinked_lines'] > 0)
-						<strong>{{ $dq['products_without_cost'] }} producto(s)</strong> vendido(s) sin costo registrado ({{ $dq['lines_without_cost'] }} líneas) y <strong>{{ $dq['unlinked_lines'] }} línea(s)</strong> pendientes de conciliación con stock. Esto puede afectar el cálculo de márgenes.
-					@else
-						Todas las líneas de venta del período cuentan con costo unitario registrado y movimiento de inventario conciliado.
-					@endif
-				</span>
-			</div>
-			<div class="sales-dq-badges">
-				@if($dq['unclassified_pct'] > 0)
-				<span class="sales-dq-pill" title="Ventas en productos sin departamento asignado">Sin depto.: {{ number_format($dq['unclassified_pct'], 1) }}%</span>
-				@endif
-				<span class="sales-dq-pill" title="Porcentaje de líneas con costo de ventas válido">Cobertura CMV: {{ number_format($dq['line_cost_coverage_pct'], 1) }}%</span>
-				<span class="sales-dq-pill" title="Último registro comercial del período">Actualizado: {{ $dq['last_updated'] }}</span>
-			</div>
-		</div>
-
-		<button type="button" class="sales-ver-todas-btn" onclick="$('#pill-detalle').tab('show'); $('a[href=\'#subtab-conciliacion\']').tab('show');">
-			<span>Ver detalle</span><i class="fa-solid fa-chevron-right ml-1" style="font-size: 0.65rem;"></i>
-		</button>
-	</div>
-
-	<!-- FILA 5: ACCESOS RÁPIDOS A MÓDULOS CONECTADOS -->
-	<div class="sales-quick-links-grid mb-2">
-		<a href="{{ $U('/pos') }}" class="sales-quick-link-card">
-			<div class="d-flex align-items-center" style="gap: 10px;">
-				<span class="sales-quick-link-icon"><i class="fa-solid fa-cash-register"></i></span>
-				<div>
-					<div class="sales-quick-link-title">Punto de Venta (POS)</div>
-					<div class="sales-quick-link-sub">Emitir tickets con descarga FEFO</div>
-				</div>
-			</div>
-			<i class="fa-solid fa-chevron-right text-muted" style="font-size: 0.72rem;"></i>
-		</a>
-
-		<a href="{{ $U('/orders') }}" class="sales-quick-link-card">
-			<div class="d-flex align-items-center" style="gap: 10px;">
-				<span class="sales-quick-link-icon"><i class="fa-solid fa-truck-fast"></i></span>
-				<div>
-					<div class="sales-quick-link-title">Pedidos de Clientes</div>
-					<div class="sales-quick-link-sub">Preparación, reserva y despacho</div>
-				</div>
-			</div>
-			<i class="fa-solid fa-chevron-right text-muted" style="font-size: 0.72rem;"></i>
-		</a>
-
-		<a href="{{ $U('/stockoverview') }}" class="sales-quick-link-card">
-			<div class="d-flex align-items-center" style="gap: 10px;">
-				<span class="sales-quick-link-icon"><i class="fa-solid fa-warehouse"></i></span>
-				<div>
-					<div class="sales-quick-link-title">Inventario y Almacenes</div>
-					<div class="sales-quick-link-sub">Existencias, lotes y rotación</div>
-				</div>
-			</div>
-			<i class="fa-solid fa-chevron-right text-muted" style="font-size: 0.72rem;"></i>
-		</a>
-
-		<a href="{{ $U('/reports') }}" class="sales-quick-link-card">
-			<div class="d-flex align-items-center" style="gap: 10px;">
-				<span class="sales-quick-link-icon"><i class="fa-solid fa-chart-simple"></i></span>
-				<div>
-					<div class="sales-quick-link-title">Reportes y Analítica</div>
-					<div class="sales-quick-link-sub">Informes ejecutivos y exportación</div>
-				</div>
-			</div>
-			<i class="fa-solid fa-chevron-right text-muted" style="font-size: 0.72rem;"></i>
-		</a>
-	</div>
-
-	<!-- DISTRIBUCIÓN TEMPORAL DE VENTAS: POR HORA Y POR DÍA DE LA SEMANA -->
-	<div class="row mb-3 mt-4" id="section-temporal-distribution">
-		<!-- Ventas por Hora -->
-		<div class="col-lg-7 mb-3 mb-lg-0">
-			<div class="card shadow-sm border-0 h-100" style="border-radius: 12px;">
-				<div class="card-header bg-white border-0 font-weight-bold d-flex justify-content-between align-items-center py-3 px-4">
-					<div>
-						<i class="fa-regular fa-clock text-primary mr-2"></i>
-						<span>Distribución de Ventas por Hora (08:00 a 22:00)</span>
-					</div>
-					<span class="badge badge-light border text-muted">Afluencia y Horas Peak</span>
-				</div>
-				<div class="card-body px-4 py-3">
-					<div class="table-responsive">
-						<table class="table table-sm table-hover mb-0" style="font-size: 0.82rem;">
-							<thead class="thead-light">
-								<tr>
-									<th>Franja Horaria</th>
-									<th class="text-right">Transacciones</th>
-									<th class="text-right">Unidades</th>
-									<th class="text-right">Venta Neta</th>
-									<th style="width: 35%;">Distribución Relativa</th>
-								</tr>
-							</thead>
-							<tbody>
-								@php
-									$maxHourSale = max(array_merge([1.0], array_map(fn($h) => floatval($h['net_sales'] ?? 0), $hourlySales ?? [])));
-								@endphp
-								@foreach($hourlySales ?? [] as $h)
-								@php
-									$hPct = round(($h['net_sales'] / $maxHourSale) * 100, 1);
-									$isPeak = $h['net_sales'] > ($maxHourSale * 0.75) && $h['net_sales'] > 0;
-								@endphp
-								<tr @if($isPeak) style="background: rgba(22, 163, 74, 0.04);" @endif>
-									<td class="font-weight-600">
-										<i class="fa-solid fa-clock text-muted mr-1"></i> {{ $h['label'] }}
-										@if($isPeak) <span class="badge badge-success ml-1 font-weight-normal" style="font-size: 0.65rem;">Hora Peak</span> @endif
-									</td>
-									<td class="text-right">{{ number_format($h['tickets']) }}</td>
-									<td class="text-right">{{ number_format($h['units']) }}</td>
-									<td class="text-right font-weight-bold">{{ $m($h['net_sales']) }}</td>
-									<td class="align-middle">
-										<div class="progress" style="height: 6px; border-radius: 3px; background: #f1f5f9;">
-											<div class="progress-bar @if($isPeak) bg-success @else bg-primary @endif" style="width: {{ $hPct }}%;"></div>
-										</div>
-									</td>
-								</tr>
-								@endforeach
-							</tbody>
-						</table>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<!-- Ventas por Día de la Semana y Desglose Contable -->
-		<div class="col-lg-5">
-			<div class="card shadow-sm border-0 h-100" style="border-radius: 12px;">
-				<div class="card-header bg-white border-0 font-weight-bold d-flex justify-content-between align-items-center py-3 px-4">
-					<div>
-						<i class="fa-regular fa-calendar-days text-success mr-2"></i>
-						<span>Comportamiento por Día de Semana</span>
-					</div>
-					<span class="badge badge-light border text-muted">Lunes a Domingo</span>
-				</div>
-				<div class="card-body px-4 py-3">
-					<div class="table-responsive">
-						<table class="table table-sm table-hover mb-0" style="font-size: 0.82rem;">
-							<thead class="thead-light">
-								<tr>
-									<th>Día</th>
-									<th class="text-right">Venta Neta</th>
-									<th class="text-right">Tickets</th>
-									<th class="text-right">Ticket Prom.</th>
-								</tr>
-							</thead>
-							<tbody>
-								@php
-									$maxDowSale = max(array_merge([1.0], array_map(fn($d) => floatval($d['net_sales'] ?? 0), $dayOfWeekSales ?? [])));
-								@endphp
-								@foreach($dayOfWeekSales ?? [] as $d)
-								@php
-									$isTopDay = $d['net_sales'] >= ($maxDowSale * 0.9) && $d['net_sales'] > 0;
-								@endphp
-								<tr @if($isTopDay) style="background: rgba(37, 99, 235, 0.04);" @endif>
-									<td class="font-weight-600">
-										{{ $d['name'] }}
-										@if($isTopDay) <i class="fa-solid fa-star text-warning ml-1" title="Día de mayor facturación"></i> @endif
-									</td>
-									<td class="text-right font-weight-bold">{{ $m($d['net_sales']) }}</td>
-									<td class="text-right">{{ number_format($d['tickets']) }}</td>
-									<td class="text-right font-weight-600 text-slate-700">{{ $m($d['avg_ticket']) }}</td>
-								</tr>
-								@endforeach
-							</tbody>
-						</table>
-					</div>
-
-					<!-- Desglose Contable Bruto vs Neto -->
-					<div class="mt-3 p-3 bg-light border" style="border-radius: 8px;">
-						<div class="d-flex justify-content-between mb-1" style="font-size: 0.8rem;">
-							<span class="text-muted">Ventas Brutas Comerciales:</span>
-							<strong class="text-dark">{{ $m($profitabilityOverview['gross_sales'] ?? ($salesNet * 1.15)) }}</strong>
-						</div>
-						<div class="d-flex justify-content-between mb-1" style="font-size: 0.8rem;">
-							<span class="text-muted">(-) Descuentos Aplicados:</span>
-							<span class="text-danger font-weight-600">-{{ $m($profitabilityOverview['discount_amount'] ?? 0) }}</span>
-						</div>
-						<div class="d-flex justify-content-between mb-1" style="font-size: 0.8rem;">
-							<span class="text-muted">(-) Impuestos (IVA/Taxes):</span>
-							<span class="text-muted font-weight-600">-{{ $m($profitabilityOverview['tax_amount'] ?? 0) }}</span>
-						</div>
-						<div class="d-flex justify-content-between pt-1 border-top" style="font-size: 0.86rem;">
-							<span class="font-weight-bold text-success">(=) Facturación Neta:</span>
-							<strong class="text-success">{{ $m($salesNet) }}</strong>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-
+<!-- ============================================================== -->
+<!-- PESTAÑA: RENDIMIENTO POR DEPARTAMENTO                           -->
+<!-- ============================================================== -->
+<div class="tab-pane fade @if($activeTab === 'departamentos') show active @endif" id="tab-departamentos" role="tabpanel">
+	@include('components.sales.department_performance')
 </div>
 
 <!-- ============================================================== -->
 <!-- PESTAÑA 2: RENTABILIDAD COMERCIAL                              -->
 <!-- ============================================================== -->
 <div class="tab-pane fade @if($activeTab === 'rentabilidad' || $activeTab === 'analisis') show active @endif" id="tab-rentabilidad" role="tabpanel">
+
+	{{-- Margen diario, mensual y acumulado con los filtros compartidos --}}
+	<div class="sdash-block mb-3" data-testid="block-margins">
+		<header><h2>Margen bruto</h2><span class="sdash-note">{{ $filterNames['branch'] }} · {{ $filterNames['department'] }} · margen = ventas netas − costo de ventas (costo FEFO del lote vendido)</span></header>
+		<div class="sdash-kpis">
+			@foreach(['day' => 'Margen diario', 'month' => 'Margen mensual', 'ytd' => 'Margen acumulado del año'] as $mk => $mName)
+				@php $mg = $salesMargins[$mk]; @endphp
+				@include('components.daily_kpi', ['dkpi' => ['id' => 'margin-' . $mk, 'name' => $mName, 'value' => $mg['margin_pct'], 'unit' => '%', 'period' => $mg['label'], 'scope' => $filterNames['branch'] . ' · ' . $filterNames['department'],
+					'definition' => '(Ventas netas − costo de ventas) ÷ ventas netas × 100', 'source' => 'sales.total_cogs / sale_items.total_cost',
+					'comparison' => !$mg['has_data'] ? 'Sin ventas en el período' : ($mg['reliable'] ? 'Margen $' . number_format($mg['margin'], 0) . ' sobre ventas netas $' . number_format($mg['net'], 0) : 'Dato no confiable: el costo de ventas registrado ($' . number_format($mg['cogs'], 0) . ') supera 3 veces la venta ($' . number_format($mg['net'], 0) . '). Revise los costos antes de usar este margen.')]])
+			@endforeach
+		</div>
+	</div>
 
 	<!-- TARJETAS DE RENTABILIDAD DE ALTO IMPACTO -->
 	<div class="row mb-3">
@@ -1723,300 +606,15 @@
 <!-- PESTAÑA 3: RENDIMIENTO POR PRODUCTO                            -->
 <!-- ============================================================== -->
 <div class="tab-pane fade @if($activeTab === 'productos') show active @endif" id="tab-productos" role="tabpanel">
-	<div class="card shadow-sm border-0 mb-3">
-		<div class="card-header bg-white border-0 p-3">
-			<div class="d-flex flex-wrap justify-content-between align-items-center">
-				<div class="font-weight-bold mb-2 mb-md-0">
-					<i class="fa-solid fa-boxes-packing text-primary mr-1"></i>
-					<span>Venta y Rentabilidad por Producto</span>
-					<span class="badge badge-light border text-muted ml-2">{{ count($productPerformanceFull ?? []) }} productos</span>
-				</div>
-				<div class="d-flex flex-wrap align-items-center" style="gap: 8px;">
-					<!-- Ordenamiento rápido -->
-					<div class="d-flex align-items-center">
-						<label class="small text-muted font-weight-bold mr-1 mb-0"><i class="fa-solid fa-arrow-down-wide-short"></i></label>
-						<select id="sortProductPerformance" class="form-control form-control-sm" style="width: 175px; font-size: 0.78rem;" onchange="dlxSortProducts(this.value)">
-							<option value="net_sales" selected>Más vendidos (Valor)</option>
-							<option value="units_sold">Más vendidos (Unidades)</option>
-							<option value="gross_margin">Mayor margen ($)</option>
-							<option value="margin_pct">Mayor margen (%)</option>
-							<option value="trend_pct">Mayor crecimiento</option>
-							<option value="rotation_low">Menor rotación / Estancados</option>
-						</select>
-					</div>
-
-					<!-- Filtros rápidos por margen -->
-					<div class="btn-group btn-group-sm" role="group">
-						<button type="button" class="btn btn-outline-secondary btn-prod-filter active" data-filter="all">Todos</button>
-						<button type="button" class="btn btn-outline-danger btn-prod-filter" data-filter="critical-margin">Margen &lt; 15%</button>
-						<button type="button" class="btn btn-outline-warning btn-prod-filter" data-filter="mid-margin">15%–30%</button>
-						<button type="button" class="btn btn-outline-success btn-prod-filter" data-filter="high-margin">&ge; 30%</button>
-					</div>
-
-					<!-- Buscador -->
-					<div class="input-group input-group-sm" style="max-width: 220px;">
-						<div class="input-group-prepend">
-							<span class="input-group-text bg-light border-right-0"><i class="fa-solid fa-magnifying-glass"></i></span>
-						</div>
-						<input type="text" id="searchProductPerformance" class="form-control border-left-0" placeholder="Buscar producto, SKU...">
-					</div>
-
-					<!-- Botón Exportar CSV -->
-					<button type="button" class="btn btn-sm btn-outline-success font-weight-600" onclick="dlxExportProductsCSV()">
-						<i class="fa-solid fa-file-excel mr-1"></i>Exportar CSV
-					</button>
-				</div>
-			</div>
-		</div>
-		<div class="table-responsive">
-			<table class="table table-hover mb-0" id="tableProductPerformance">
-				<thead class="thead-light">
-					<tr>
-						<th>SKU / UPC</th>
-						<th>PRODUCTO / DEPTO / SUCURSAL</th>
-						<th class="text-right">UNIDADES</th>
-						<th class="text-right">VENTA NETA</th>
-						<th class="text-right">CMV (COSTO)</th>
-						<th class="text-right">MARGEN $</th>
-						<th class="text-center">MARGEN %</th>
-						<th class="text-right">PART. TOTAL</th>
-						<th class="text-center">TENDENCIA</th>
-						<th class="text-center">ACCIONES</th>
-					</tr>
-				</thead>
-				<tbody id="tbodyProductPerformance">
-					@forelse($productPerformanceFull ?? [] as $prod)
-					<tr class="prod-row @if($prod['margin_pct'] < 15) row-critical-margin @elseif($prod['margin_pct'] >= 30) row-high-margin @else row-mid-margin @endif"
-						data-sku="{{ strtolower($prod['sku'] ?? '') }}"
-						data-upc="{{ strtolower($prod['upc'] ?? '') }}"
-						data-name="{{ strtolower($prod['name'] ?? '') }}"
-						data-margin="{{ $prod['margin_pct'] }}"
-						data-net-sales="{{ $prod['net_sales'] }}"
-						data-units="{{ $prod['units_sold'] }}"
-						data-gross-margin="{{ $prod['gross_margin'] }}"
-						data-trend="{{ $prod['trend_pct'] ?? 0 }}"
-						data-rotation="{{ $prod['rotation_daily'] ?? 0 }}">
-						<td>
-							<div class="font-weight-bold text-dark font-monospace small">{{ $prod['sku'] ?? 'N/A' }}</div>
-							<div class="text-muted small">{{ $prod['upc'] ?? '-' }}</div>
-						</td>
-						<td>
-							<div class="font-weight-bold text-dark">{{ $prod['name'] }}</div>
-							<div class="small text-muted"><span class="badge badge-light border">{{ $prod['department'] }}</span> <span class="text-muted ml-1">{{ $prod['branch_name'] ?? 'Red Completa' }}</span></div>
-						</td>
-						<td class="text-right font-weight-bold">{{ number_format($prod['units_sold']) }}</td>
-						<td class="text-right font-weight-bold text-dark">{{ $m($prod['net_sales']) }}</td>
-						<td class="text-right text-muted">{{ $m($prod['cogs']) }}</td>
-						<td class="text-right font-weight-bold @if($prod['gross_margin'] >= 0) text-success @else text-danger @endif">
-							{{ $m($prod['gross_margin']) }}
-						</td>
-						<td class="text-center">
-							<span class="badge @if($prod['margin_pct'] >= 25) badge-success @elseif($prod['margin_pct'] >= 15) badge-warning @else badge-danger @endif">
-								{{ number_format($prod['margin_pct'], 1) }}%
-							</span>
-						</td>
-						<td class="text-right font-weight-600 text-primary">{{ number_format($prod['sales_share_pct'] ?? 0, 1) }}%</td>
-						<td class="text-center">
-							@php $tr = $prod['trend_pct'] ?? 0; @endphp
-							@if($tr >= 0)
-								<span class="text-success small font-weight-bold"><i class="fa-solid fa-arrow-trend-up mr-0.5"></i>+{{ $tr }}%</span>
-							@else
-								<span class="text-danger small font-weight-bold"><i class="fa-solid fa-arrow-trend-down mr-0.5"></i>{{ $tr }}%</span>
-							@endif
-						</td>
-						<td class="text-center">
-							<div class="btn-group btn-group-sm">
-								<button type="button" class="btn btn-outline-primary btn-xs btn-open-replenish"
-									data-product-id="{{ $prod['product_id'] ?? $prod['id'] }}"
-									data-product-name="{{ $prod['name'] }}"
-									title="Solicitar reposición a compras/almacén">
-									<i class="fa-solid fa-truck-ramp-box"></i>
-								</button>
-								<a href="{{ $U('/kardex?product_id=' . ($prod['product_id'] ?? $prod['id'])) }}" class="btn btn-outline-secondary btn-xs" title="Ver Kardex">
-									<i class="fa-solid fa-book-open"></i>
-								</a>
-							</div>
-						</td>
-					</tr>
-					@empty
-					<tr><td colspan="10" class="text-center text-muted py-3">Sin productos vendidos en el período.</td></tr>
-					@endforelse
-				</tbody>
-			</table>
-		</div>
-	</div>
+	@include('components.sales.product_catalog_dashboard')
 </div>
 
 <!-- ============================================================== -->
-<!-- PESTAÑA 4: ANÁLISIS POR SUCURSAL                               -->
+<!-- ============================================================== -->
+<!-- PESTAÑA 4: CENTRO DE GESTIÓN MULTISUCURSAL                       -->
 <!-- ============================================================== -->
 <div class="tab-pane fade @if($activeTab === 'sucursales') show active @endif" id="tab-sucursales" role="tabpanel">
-
-	<!-- RANKING DE SUCURSALES -->
-	<div class="card shadow-sm border-0 mb-3">
-		<div class="card-header bg-white border-0 font-weight-bold d-flex justify-content-between align-items-center">
-			<div>
-				<i class="fa-solid fa-ranking-star text-warning mr-1"></i>
-				<span>Ranking Comercial por Sucursal</span>
-			</div>
-			<button type="button" class="btn btn-xs btn-outline-danger" data-toggle="modal" data-target="#modalInvestigarCaida">
-				<i class="fa-solid fa-magnifying-glass-chart mr-1"></i>Investigar Caída de Ventas
-			</button>
-		</div>
-		<div class="table-responsive">
-			<table class="table table-hover mb-0">
-				<thead class="thead-light">
-					<tr>
-						<th class="text-center">#</th>
-						<th>Sucursal</th>
-						<th class="text-right">Ventas Netas</th>
-						<th class="text-right">CMV</th>
-						<th class="text-right">Utilidad Bruta</th>
-						<th class="text-center">Margen %</th>
-						<th class="text-right">Transacciones</th>
-						<th class="text-right">Ticket Promedio</th>
-						<th class="text-center">Crecimiento</th>
-						<th class="text-center">Meta Cumplida</th>
-					</tr>
-				</thead>
-				<tbody>
-					@forelse($branchRankingFull ?? [] as $idx => $br)
-					<tr>
-						<td class="text-center">
-							@if($idx === 0)
-								<span class="badge badge-warning text-dark font-weight-bold">🥇 1</span>
-							@elseif($idx === 1)
-								<span class="badge badge-secondary font-weight-bold">🥈 2</span>
-							@elseif($idx === 2)
-								<span class="badge badge-light border font-weight-bold">🥉 3</span>
-							@else
-								<span class="text-muted">{{ $idx + 1 }}</span>
-							@endif
-						</td>
-						<td>
-							<a href="{{ $U('/sales?' . http_build_query(['branch_id' => $br['branch_id'], 'start_date' => $startDate, 'end_date' => $endDate, 'tab' => 'sucursales'])) }}" class="font-weight-bold text-dark">
-								{{ $br['branch_name'] }}
-							</a>
-							<div class="small text-muted">Dpto estrella: <strong>{{ $br['top_department'] }}</strong></div>
-						</td>
-						<td class="text-right font-weight-bold">{{ $m($br['net_sales']) }}</td>
-						<td class="text-right text-muted">{{ $m($br['cogs']) }}</td>
-						<td class="text-right font-weight-bold text-success">{{ $m($br['gross_profit']) }}</td>
-						<td class="text-center">
-							<span class="badge @if($br['margin_pct'] >= 25) badge-success @elseif($br['margin_pct'] >= 15) badge-warning @else badge-danger @endif">
-								{{ number_format($br['margin_pct'], 1) }}%
-							</span>
-						</td>
-						<td class="text-right">{{ number_format($br['tickets']) }}</td>
-						<td class="text-right">{{ $m($br['avg_ticket']) }}</td>
-						<td class="text-center">
-							@if($br['growth_pct'] !== null)
-								<span class="font-weight-bold @if($br['growth_pct'] >= 0) text-success @else text-danger @endif">
-									{{ ($br['growth_pct'] >= 0 ? '+' : '') . number_format($br['growth_pct'], 1) }}%
-								</span>
-							@else
-								<span class="text-muted small">Sin info</span>
-							@endif
-						</td>
-						<td class="text-center">
-							<div class="progress" style="height: 18px;" title="{{ number_format($br['target_compliance_pct'], 1) }}% cumplido">
-								<div class="progress-bar @if($br['target_compliance_pct'] >= 100) bg-success @elseif($br['target_compliance_pct'] >= 80) bg-primary @else bg-warning @endif"
-									role="progressbar"
-									style="width: {{ min(100, $br['target_compliance_pct']) }}%;">
-									{{ number_format($br['target_compliance_pct'], 0) }}%
-								</div>
-							</div>
-						</td>
-					</tr>
-					@empty
-					<tr><td colspan="10" class="text-center text-muted py-3">Sin información de sucursales en el período.</td></tr>
-					@endforelse
-				</tbody>
-			</table>
-		</div>
-	</div>
-
-	<!-- COMPARADOR DINÁMICO DE SUCURSALES -->
-	<div class="card shadow-sm border-0 mb-3">
-		<div class="card-header bg-white border-0 font-weight-bold">
-			<i class="fa-solid fa-arrows-split-up-and-left text-info mr-2"></i>
-			<span>Comparador Cara a Cara de Sucursales</span>
-		</div>
-		<div class="card-body">
-			<div class="row align-items-center mb-3">
-				<div class="col-md-5">
-					<label class="small text-muted font-weight-bold">Sucursal Referencia A</label>
-					<select id="compareBranchA" class="form-control form-control-sm">
-						@foreach($branches as $b)
-						<option value="{{ $b->id }}">{{ $b->name }}</option>
-						@endforeach
-					</select>
-				</div>
-				<div class="col-md-2 text-center text-muted font-weight-bold pt-3">
-					VS
-				</div>
-				<div class="col-md-5">
-					<label class="small text-muted font-weight-bold">Sucursal Comparada B</label>
-					<select id="compareBranchB" class="form-control form-control-sm">
-						@foreach($branches as $idx => $b)
-						<option value="{{ $b->id }}" @if($idx === 1) selected @endif>{{ $b->name }}</option>
-						@endforeach
-					</select>
-				</div>
-			</div>
-
-			<div class="table-responsive">
-				<table class="table table-sm table-bordered text-center mb-0">
-					<thead class="thead-light">
-						<tr>
-							<th style="width: 40%;" id="thBranchAName">Sucursal A</th>
-							<th style="width: 20%;">Métrica Comparativa</th>
-							<th style="width: 40%;" id="thBranchBName">Sucursal B</th>
-						</tr>
-					</thead>
-					<tbody id="compareBranchTbody">
-						<tr><td colspan="3" class="text-center text-muted py-2">Seleccione las sucursales para contrastar métricas.</td></tr>
-					</tbody>
-				</table>
-			</div>
-		</div>
-	</div>
-
-	<!-- ZONAS FÍSICAS DE VENTA EN TIENDA -->
-	<div class="card shadow-sm border-0 mb-3" id="section-zones">
-		<div class="card-header bg-white border-0 font-weight-bold d-flex justify-content-between align-items-center">
-			<div>
-				<i class="fa-solid fa-map-location-dot text-success mr-2"></i>
-				<span>Zonas de Venta de Tienda (Distribución Espacial por Ubicación Física)</span>
-			</div>
-			<span class="badge badge-light border text-muted">Venta por ubicación asignada</span>
-		</div>
-		<div class="card-body">
-			<div class="alert alert-light border small text-muted mb-3">
-				<i class="fa-solid fa-circle-info text-info mr-1"></i>
-				<strong>Aclaración metodológica:</strong> Esta visualización distribuye la facturación generada de acuerdo con la ubicación física y zona de tienda asignada a cada producto (cámaras frías, exhibidores, estantes, congeladores).
-			</div>
-			<div class="row">
-				@forelse($salesZones as $z)
-				<div class="col-lg-3 col-md-6 mb-2">
-					<div class="daily-zone-card">
-						<div class="d-flex justify-content-between align-items-start mb-2">
-							<span class="font-weight-bold text-dark text-truncate" style="max-width: 170px;">
-								<i class="fa-solid @if($z['is_freezer']) fa-snowflake text-info @else fa-boxes-stacked text-success @endif mr-1"></i>
-								{{ $z['zone_name'] }}
-							</span>
-							<span class="badge badge-light border">{{ number_format($z['tickets']) }} tickets</span>
-						</div>
-						<div class="h5 font-weight-bold text-success mb-1">{{ $m($z['total']) }}</div>
-						<div class="small text-muted">{{ number_format($z['units'], 0) }} unidades vendidas</div>
-					</div>
-				</div>
-				@empty
-				<div class="col-12 text-center text-muted py-3">Sin registros espaciales de venta en el período.</div>
-				@endforelse
-			</div>
-		</div>
-	</div>
+	@include('components.sales.branch_supervision_dashboard')
 </div>
 
 <!-- ============================================================== -->
@@ -2386,274 +984,11 @@
 </div>
 
 <!-- ============================================================== -->
-<!-- PESTAÑA 3: DETALLE DE TRANSACCIONES Y REGISTROS                -->
+<!-- ============================================================== -->
+<!-- PESTAÑA 3: CENTRO DE TRAZABILIDAD Y AUDITORÍA (HISTORIAL DE VENTAS) -->
 <!-- ============================================================== -->
 <div class="tab-pane fade @if($activeTab === 'detalle') show active @endif" id="tab-detalle" role="tabpanel">
-
-	<!-- SUB-NAVEGACIÓN INTERNA DEL DETALLE -->
-	<ul class="nav nav-pills dairy-subnav-container dairy-subnav-pills flex-nowrap mb-3" role="tablist">
-		<li class="nav-item"><a class="nav-link active" data-toggle="pill" href="#subtab-transacciones" role="tab"><i class="fa-solid fa-list mr-1"></i>Transacciones <span class="badge badge-light ml-1">{{ count($sales) }}</span></a></li>
-		<li class="nav-item"><a class="nav-link" data-toggle="pill" href="#subtab-sku" role="tab"><i class="fa-solid fa-barcode mr-1"></i>Top por SKU</a></li>
-		<li class="nav-item"><a class="nav-link" data-toggle="pill" href="#subtab-devoluciones" role="tab"><i class="fa-solid fa-rotate-left mr-1"></i>Devoluciones <span class="badge badge-light ml-1">{{ (int) $t['returns_count'] }}</span></a></li>
-		<li class="nav-item"><a class="nav-link" data-toggle="pill" href="#subtab-conciliacion" role="tab"><i class="fa-solid fa-scale-unbalanced mr-1"></i>Conciliación con Inventario @if(count($unlinked))<span class="badge badge-danger ml-1">{{ count($unlinked) }}</span>@endif</a></li>
-		<li class="nav-item"><a class="nav-link" data-toggle="pill" href="#subtab-pos" role="tab"><i class="fa-solid fa-plug mr-1"></i>Integración POS</a></li>
-	</ul>
-
-	<div class="tab-content">
-		<!-- 1. TRANSACCIONES -->
-		<div class="tab-pane fade show active" id="subtab-transacciones" role="tabpanel">
-			<div class="card shadow-sm border-0">
-				<div class="card-header bg-white border-0 d-flex justify-content-between align-items-center flex-wrap" style="gap: 8px;">
-					<div>
-						<span class="font-weight-bold">Registro de Transacciones Comerciales</span>
-					</div>
-					<input type="search" class="form-control form-control-sm" style="max-width: 260px;" placeholder="Buscar ticket o cliente..." id="trans-search">
-				</div>
-				<div class="card-body p-0">
-					<div class="table-responsive">
-						<table class="table table-hover table-striped mb-0 text-sm" id="sales-table" data-export-title="Transacciones" data-chunk="25">
-							<thead class="thead-light">
-								<tr>
-									<th># Ticket</th>
-									<th>Fecha / Hora</th>
-									<th>Sucursal</th>
-									<th>Cliente</th>
-									<th>Vendedor</th>
-									<th class="text-right">Venta sin IVA</th>
-									<th class="text-right">Costo (CMV)</th>
-									<th class="text-right">Margen Bruto</th>
-									<th class="text-center">Método Pago</th>
-									<th class="text-center">Estado</th>
-									<th class="text-center">Acciones</th>
-								</tr>
-							</thead>
-							<tbody>
-								@forelse($sales as $s)
-								<tr>
-									<td class="font-weight-bold text-dark">{{ $s->sale_number }}</td>
-									<td>{{ date('d/m/Y H:i', strtotime($s->created_timestamp)) }}</td>
-									<td><i class="fa-solid fa-store text-muted mr-1"></i>{{ $s->branch_name }}</td>
-									<td>{{ $s->customer_name ?? 'Público General' }}</td>
-									<td><i class="fa-solid fa-user-circle text-muted mr-1"></i>{{ $s->seller_username }}</td>
-									@php $sNet = (float) $s->total_amount - (float) ($s->tax_amount ?? 0); @endphp
-									<td class="text-right font-weight-bold text-dark">${{ number_format($sNet, 2) }}</td>
-									<td class="text-right text-muted">${{ number_format($s->total_cogs, 2) }}</td>
-									<td class="text-right font-weight-bold @if($s->gross_margin >= 0) text-success @else text-danger @endif">
-										${{ number_format($s->gross_margin, 2) }}
-										@if($sNet > 0)
-										<small class="text-muted">({{ round(($s->gross_margin / $sNet) * 100, 1) }}%)</small>
-										@endif
-									</td>
-									<td class="text-center">
-										@if($s->payment_method === 'cash')
-										<span class="badge badge-success"><i class="fa-solid fa-money-bill-wave mr-1"></i>Efectivo</span>
-										@elseif($s->payment_method === 'card')
-										<span class="badge badge-info"><i class="fa-solid fa-credit-card mr-1"></i>Tarjeta</span>
-										@else
-										<span class="badge badge-secondary">{{ ucfirst($s->payment_method) }}</span>
-										@endif
-									</td>
-									<td class="text-center">
-										@if($s->status === 'completed')
-										<span class="badge badge-success">Completada</span>
-										@else
-										<span class="badge badge-danger">Anulada</span>
-										@endif
-									</td>
-									<td class="text-center text-nowrap">
-										<button class="btn btn-sm btn-outline-info view-sale-detail-btn" data-id="{{ $s->id }}" title="Ver detalle ticket" aria-label="Ver detalle {{ $s->sale_number }}">
-											<i class="fa-solid fa-eye"></i>
-										</button>
-										@if($s->status === 'completed')
-										<button class="btn btn-sm btn-outline-danger cancel-sale-btn ml-1" data-id="{{ $s->id }}" data-num="{{ $s->sale_number }}" title="Anular y reintegrar stock" aria-label="Anular {{ $s->sale_number }}">
-											<i class="fa-solid fa-ban"></i>
-										</button>
-										@endif
-									</td>
-								</tr>
-								@empty
-								<tr>
-									<td colspan="11" class="text-center py-5 text-muted">
-										<i class="fa-solid fa-inbox fa-3x text-light mb-2"></i>
-										<p class="mb-0">No hay ventas registradas en el período y filtros seleccionados.</p>
-									</td>
-								</tr>
-								@endforelse
-							</tbody>
-						</table>
-					</div>
-					@if(count($sales) >= 500)
-					<div class="px-3 py-2 text-muted small border-top">Se muestran las 500 transacciones más recientes. Acote el período o filtre por sucursal/departamento para explorar un bloque específico.</div>
-					@endif
-				</div>
-			</div>
-		</div>
-
-		<!-- 2. POR SKU -->
-		<div class="tab-pane fade" id="subtab-sku" role="tabpanel">
-			<div class="card shadow-sm border-0">
-				<div class="card-header bg-white border-0 d-flex flex-wrap align-items-center" style="gap: 8px;">
-					<span class="font-weight-bold">Análisis Completo de Productos por SKU</span>
-					<input type="search" class="form-control form-control-sm ml-md-auto" style="max-width: 260px;" placeholder="Buscar producto o SKU..." id="sku-search">
-				</div>
-				<div class="table-responsive">
-					<table class="table table-sm table-hover mb-0" id="sku-table" data-export-title="Por SKU">
-						<thead class="thead-light">
-							<tr>
-								<th>Producto</th>
-								<th>SKU</th>
-								<th class="text-right">Venta neta</th>
-								<th>Participación</th>
-								<th class="text-right">Unidades</th>
-								<th class="text-right">Tickets</th>
-								<th class="text-right">Margen bruto</th>
-								<th class="text-center">Acciones</th>
-							</tr>
-						</thead>
-						<tbody>
-							@forelse($allProducts ?? ($analysis['by_product'] ?? []) as $p)
-							@php $pm = (float) $p['cogs'] > 0 ? ((float) $p['total'] - (float) $p['cogs']) : null; @endphp
-							<tr>
-								<td class="font-weight-600">
-									<div class="d-flex align-items-center" style="gap: 8px;">
-										@if(!empty($p['image_url']))
-										<img src="{{ $U($p['image_url']) }}" alt="{{ $p['name'] }}" class="sales-prod-thumb">
-										@endif
-										<a href="{{ $U('/sales?' . http_build_query(array_filter(['branch_id' => $selectedBranchId, 'group_id' => $selectedGroupId, 'product_id' => $p['id'], 'start_date' => $startDate, 'end_date' => $endDate, 'tab' => 'detalle'], fn($v) => $v !== null && $v !== ''))) }}" title="Filtrar transacciones de este producto">
-											{{ $p['full_name'] ?? $p['name'] }}
-										</a>
-									</div>
-								</td>
-								<td class="text-muted">{{ $p['sku'] ?: 'Sin SKU' }}</td>
-								<td class="text-right font-weight-bold">{{ $m($p['total']) }}</td>
-								<td style="width: 100px;">
-									<div class="dairy-share-bar" title="{{ round($p['total'] / max($t['total'], 0.01) * 100, 1) }}%">
-										<span style="width: {{ round($p['total'] / $maxProduct * 100) }}%"></span>
-									</div>
-								</td>
-								<td class="text-right">{{ number_format($p['units'], 0) }}</td>
-								<td class="text-right">{{ number_format($p['tickets']) }}</td>
-								<td class="text-right @if($pm !== null && $pm < 0) text-danger font-weight-bold @elseif($pm !== null) text-success font-weight-bold @endif">
-									@if($pm === null)
-										<span class="badge badge-warning text-dark">Sin costo registrado</span>
-									@else
-										{{ $m($pm) }} ({{ number_format($pm / max((float) $p['total'], 0.01) * 100, 1) }}%)
-									@endif
-								</td>
-								<td class="text-center text-nowrap">
-									<a class="btn btn-sm btn-light border" href="{{ $U('/kardex?' . http_build_query(['product_id' => $p['id'], 'from' => $startDate, 'to' => $endDate])) }}" title="Kardex del producto"><i class="fa-solid fa-book-open"></i></a>
-									<a class="btn btn-sm btn-light border ml-1" href="{{ $U('/mrp') }}" title="Reposición MRP"><i class="fa-solid fa-diagram-project"></i></a>
-								</td>
-							</tr>
-							@empty
-							<tr><td colspan="8" class="text-center text-muted py-4">Sin ventas en el período.</td></tr>
-							@endforelse
-						</tbody>
-					</table>
-				</div>
-			</div>
-		</div>
-
-		<!-- 3. DEVOLUCIONES -->
-		<div class="tab-pane fade" id="subtab-devoluciones" role="tabpanel">
-			<div class="row mb-2">
-				<div class="col-md-4 mb-2"><div class="card shadow-sm border-0"><div class="card-body py-3"><div class="text-muted small">Ventas anuladas</div><div class="h5 mb-0 font-weight-bold">{{ (int) $t['returns_count'] }}</div></div></div></div>
-				<div class="col-md-4 mb-2"><div class="card shadow-sm border-0"><div class="card-body py-3"><div class="text-muted small">Monto reintegrado</div><div class="h5 mb-0 font-weight-bold text-danger">{{ $m($t['returns_amount']) }}</div></div></div></div>
-				<div class="col-md-4 mb-2"><div class="card shadow-sm border-0"><div class="card-body py-3"><div class="text-muted small">Tasa de anulación</div><div class="h5 mb-0 font-weight-bold">{{ ($t['tickets'] + $t['returns_count']) > 0 ? number_format($t['returns_count'] / ($t['tickets'] + $t['returns_count']) * 100, 1) : '0.0' }}%</div></div></div></div>
-			</div>
-			<div class="card shadow-sm border-0">
-				<div class="table-responsive">
-					<table class="table table-sm mb-0">
-						<thead class="thead-light"><tr><th>Ticket</th><th>Fecha</th><th class="text-right">Monto</th><th>Motivo / Nota</th><th class="text-center">Acciones</th></tr></thead>
-						<tbody>
-							@forelse($analysis['returns'] ?? [] as $r)
-							<tr>
-								<td class="font-weight-bold">{{ $r['sale_number'] }}</td>
-								<td>{{ date('d/m/Y H:i', strtotime($r['created_timestamp'])) }}</td>
-								<td class="text-right text-danger font-weight-bold">{{ $m($r['total_amount']) }}</td>
-								<td class="text-muted">{{ $r['notes'] ?: 'Sin información' }}</td>
-								<td class="text-center"><button class="btn btn-sm btn-outline-info view-sale-detail-btn" data-id="{{ $r['sale_id'] }}" title="Ver detalle"><i class="fa-solid fa-eye"></i></button></td>
-							</tr>
-							@empty
-							<tr><td colspan="5" class="text-center text-muted py-4">Sin ventas anuladas en el período.</td></tr>
-							@endforelse
-						</tbody>
-					</table>
-				</div>
-				<div class="card-footer bg-white border-0 small text-muted">Anular una venta reintegra el stock de cada lote y queda en el Kardex como reverso contable; no genera merma.</div>
-			</div>
-		</div>
-
-		<!-- 4. CONCILIACIÓN CON INVENTARIO -->
-		<div class="tab-pane fade" id="subtab-conciliacion" role="tabpanel">
-			<div class="alert @if(count($unlinked)) alert-danger @else alert-success @endif border-0 shadow-sm">
-				@if(count($unlinked))
-				<i class="fa-solid fa-triangle-exclamation mr-1"></i><strong>{{ count($unlinked) }} línea(s) vendidas sin movimiento de stock</strong>: el inventario queda sobrestimado en {{ $m($unlinkedCost) }} a costo.
-				@else
-				<i class="fa-solid fa-circle-check mr-1"></i>Todas las líneas vendidas del período descontaron stock (Venta &harr; Inventario 100% conciliados).
-				@endif
-			</div>
-			@if(count($unlinked))
-			<div class="card shadow-sm border-0">
-				<div class="table-responsive">
-					<table class="table table-sm mb-0" data-chunk="25">
-						<thead class="thead-light"><tr><th>Ticket</th><th>Fecha</th><th>Producto</th><th class="text-right">Cantidad</th><th class="text-right">Venta</th><th class="text-right">Costo sin descontar</th><th class="text-center">Acciones</th></tr></thead>
-						<tbody>
-							@foreach($unlinked as $r)
-							<tr>
-								<td class="font-weight-bold">{{ $r['sale_number'] }}</td>
-								<td>{{ date('d/m/Y H:i', strtotime($r['created_timestamp'])) }}</td>
-								<td>{{ $r['product_name'] }}</td>
-								<td class="text-right">{{ (float) $r['amount'] }}</td>
-								<td class="text-right">{{ $m($r['subtotal']) }}</td>
-								<td class="text-right text-danger font-weight-bold">{{ $m($r['cost']) }}</td>
-								<td class="text-center">
-									<a class="btn btn-sm btn-light border" href="{{ $U('/kardex?' . http_build_query(['product_id' => $r['product_id'], 'from' => substr($r['created_timestamp'], 0, 10), 'to' => $endDate])) }}" title="Kardex del producto"><i class="fa-solid fa-book-open"></i></a>
-								</td>
-							</tr>
-							@endforeach
-						</tbody>
-					</table>
-				</div>
-			</div>
-			@endif
-		</div>
-
-		<!-- 5. INTEGRACIÓN POS -->
-		<div class="tab-pane fade" id="subtab-pos" role="tabpanel">
-			<div id="pos-status" class="mb-3"><div class="small text-muted">Cargando estado de la integración…</div></div>
-			<div class="row">
-				<div class="col-lg-6 mb-3" id="pos-import-col">
-					<div class="card h-100">
-						<div class="card-header font-weight-700">Importar ventas (CSV)</div>
-						<div class="card-body">
-							<form id="pos-csv-form" autocomplete="off">
-								<div class="form-row">
-									<div class="form-group col-sm-5"><label class="small mb-1" for="pos-source">Origen (POS)</label><input class="form-control form-control-sm" id="pos-source" name="source" required pattern="[A-Za-z0-9_\-]{2,30}" placeholder="caja-central"></div>
-									<div class="form-group col-sm-7"><label class="small mb-1" for="pos-file">Archivo CSV</label><input type="file" class="form-control-file form-control-sm" id="pos-file" accept=".csv,text/csv" required></div>
-								</div>
-								<div class="d-flex flex-wrap" style="gap: 8px;">
-									<button type="button" class="btn btn-sm btn-light border" id="pos-validate"><i class="fa-solid fa-list-check mr-1"></i>Validar sin importar</button>
-									<button type="submit" class="btn btn-sm btn-primary"><i class="fa-solid fa-file-import mr-1"></i>Importar</button>
-								</div>
-							</form>
-							<div class="small text-muted mt-2" id="pos-csv-help"></div>
-							<div id="pos-result" class="mt-3"></div>
-						</div>
-					</div>
-				</div>
-				<div class="col-lg-6 mb-3">
-					<div class="card h-100">
-						<div class="card-header font-weight-700">Ventas externas con error</div>
-						<div class="card-body p-0" id="pos-failed"></div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-
-</div>
-
+	@include('components.sales.sales_history_dashboard')
 </div>
 
 
@@ -2693,7 +1028,24 @@
 								<th class="text-right">Costo Total</th>
 							</tr>
 						</thead>
-						<tbody id="modal-items-tbody"></tbody>
+						<tbody id="modal-items-tbody">
+							<tr>
+								<td><strong>Smart TV Samsung 55" Crystal UHD</strong><br><small class="text-muted">SKU-9901</small></td>
+								<td class="text-right font-weight-bold">1</td>
+								<td class="text-right">$1,699,900</td>
+								<td class="text-right font-weight-bold text-success">$1,699,900</td>
+								<td class="text-right text-muted">$1,280,000</td>
+								<td class="text-right text-muted">$1,280,000</td>
+							</tr>
+							<tr>
+								<td><strong>Soporte Articulado TV 32-65"</strong><br><small class="text-muted">SKU-4412</small></td>
+								<td class="text-right font-weight-bold">1</td>
+								<td class="text-right">$89,900</td>
+								<td class="text-right font-weight-bold text-success">$89,900</td>
+								<td class="text-right text-muted">$48,000</td>
+								<td class="text-right text-muted">$48,000</td>
+							</tr>
+						</tbody>
 					</table>
 				</div>
 
@@ -3497,18 +1849,31 @@ document.addEventListener("DOMContentLoaded", function() {
 	// Garantizar selección única exclusiva en las pestañas principales y sincronizar con formularios / URL
 	function activateSingleMainTab(btnEl) {
 		if (!btnEl) return;
+		var target = btnEl.getAttribute('data-target') || btnEl.getAttribute('href');
+		if (!target) return;
+
+		// 1. Sincronizar pestañas daily-level-tab
 		document.querySelectorAll('.daily-level-tab').forEach(function(tabBtn) {
-			var isCurrent = (tabBtn === btnEl);
+			var isCurrent = (tabBtn.getAttribute('data-target') === target || tabBtn.getAttribute('href') === target || tabBtn === btnEl);
 			tabBtn.classList.toggle('active', isCurrent);
 			tabBtn.setAttribute('aria-selected', isCurrent ? 'true' : 'false');
 		});
-		var target = btnEl.getAttribute('data-target') || btnEl.getAttribute('href');
-		if (!target) return;
+
+		// 2. Sincronizar píldoras ejecutivas (.ded-nav-tab) en todos los encabezados
+		document.querySelectorAll('.ded-nav-tab').forEach(function(dedBtn) {
+			var isCurrent = (dedBtn.getAttribute('data-target') === target || dedBtn.getAttribute('href') === target || dedBtn === btnEl);
+			dedBtn.classList.toggle('is-active', isCurrent);
+			dedBtn.classList.toggle('active', isCurrent);
+			dedBtn.setAttribute('aria-selected', isCurrent ? 'true' : 'false');
+		});
+
+		// 3. Mostrar el tab-pane correspondiente
 		document.querySelectorAll('#salesMainTabContent > .tab-pane').forEach(function(pane) {
 			var isTargetPane = ('#' + pane.id === target);
 			pane.classList.toggle('active', isTargetPane);
 			pane.classList.toggle('show', isTargetPane);
 		});
+
 		var tabName = target.replace('#tab-', '');
 		var fTab = document.getElementById('formActiveTab');
 		if (fTab) fTab.value = tabName;
@@ -3517,6 +1882,17 @@ document.addEventListener("DOMContentLoaded", function() {
 			u.searchParams.set('tab', tabName);
 			history.replaceState(history.state, '', u.toString());
 		} catch (err) { }
+
+		// Redibujar gráficos si se va a Tablero de Ventas
+		if (tabName === 'resumen' && typeof drawCharts === 'function') {
+			setTimeout(drawCharts, 50);
+		}
+		if (window.lucide && typeof window.lucide.createIcons === 'function') {
+			window.lucide.createIcons();
+		}
+		if (window.DailyCrystal && typeof window.DailyCrystal.refresh === 'function') {
+			window.DailyCrystal.refresh();
+		}
 	}
 
 	document.querySelectorAll('.daily-level-tab').forEach(function(tabBtn) {
@@ -3527,6 +1903,11 @@ document.addEventListener("DOMContentLoaded", function() {
 
 	$('.daily-level-tab').on('shown.bs.tab', function(e) {
 		activateSingleMainTab(e.target);
+	});
+
+	$(document).on('click', '.ded-nav-tab', function(e) {
+		e.preventDefault();
+		activateSingleMainTab(this);
 	});
 
 	// =========================================================================
@@ -4908,4 +3289,12 @@ document.addEventListener("DOMContentLoaded", function() {
 	handleActionFormSubmit('formAuditoriaDescuentos', '#modalAuditoriaDescuentos', 'review_discounts');
 });
 </script>
+@endpush
+
+@push('pageScripts')
+<script src="{{ $U('/js/lucide.min.js') }}"></script>
+<script src="{{ $U('/js/daily_executive_sales.js?v=', true) }}{{ daily_asset_version('/js/daily_executive_sales.js') }}"></script>
+<script src="{{ $U('/js/daily_sales_dash.js?v=', true) }}{{ daily_asset_version('/js/daily_sales_dash.js') }}"></script>
+<script src="{{ $U('/js/daily_dept_performance.js?v=', true) }}{{ daily_asset_version('/js/daily_dept_performance.js') }}"></script>
+<script src="{{ $U('/js/daily_ty_ly.js?v=', true) }}{{ daily_asset_version('/js/daily_ty_ly.js') }}"></script>
 @endpush

@@ -1,0 +1,22 @@
+{
+    "(AAAA-MM-DD HH:MM o ISO {0}) y producto por": "(YYYY-MM-DD HH:MM or ISO {0}) and product by",
+    "(código o id),": "(code or id),",
+    "Anulación": "Void",
+    "Archivo mayor a {0} MB: divídalo": "File larger than {0} MB: split it",
+    "Extracción programada:": "Scheduled extraction:",
+    "Indique el origen y el archivo CSV": "State the source and the CSV file",
+    "La validación no comprueba stock: eso ocurre al importar.": "Validation does not check stock: that happens on import.",
+    "Las cifras de ventas provienen solo del POS de DAILY.": "Sales figures come only from the DAILY POS.",
+    "Ningún POS externo ha enviado ventas.": "No external POS has sent sales.",
+    "Pendiente de credenciales": "Pending credentials",
+    "Recibiendo ventas externas": "Receiving external sales",
+    "Sigue con error": "Still failing",
+    "Sin conector de extracción": "No extraction connector",
+    "Sin ventas externas pendientes de corregir.": "No external sales pending correction.",
+    "Validación (no se importó nada):": "Validation (nothing was imported):",
+    "Válida": "Valid",
+    "Zona horaria sin offset": "Time zone without offset",
+    "origen(es).": "source(s).",
+    "válidas": "valid",
+    "· sin firma HMAC (configure POS_WEBHOOK_SECRET)": "· no HMAC signature (configure POS_WEBHOOK_SECRET)"
+}

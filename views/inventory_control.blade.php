@@ -102,7 +102,7 @@
 		{{-- Lotes Inmovilizados --}}
 		@php
 			$actIcon = ['write_off' => ['fa-trash-can', 'danger', 'Dar de baja'], 'markdown' => ['fa-tags', 'warning', 'Rebaja'], 'transfer' => ['fa-right-left', 'info', 'Trasladar'], 'return' => ['fa-truck-arrow-right', 'primary', 'Devolver'], 'count' => ['fa-list-check', 'secondary', 'Contar']];
-			$actHref = ['write_off' => '/waste/report?product_id=', 'markdown' => '/quality?product_id=', 'transfer' => '/transfers?product_id=', 'return' => '/suppliers?product_id='];
+			$actHref = ['write_off' => '/waste/report?product_id=', 'markdown' => '/traceability?search=', 'transfer' => '/transfers?product_id=', 'return' => '/suppliers?product_id='];
 		@endphp
 		<div class="card mb-3" id="ic-stagnant">
 			<div class="card-header d-flex justify-content-between align-items-center flex-wrap dairy-gap-2">

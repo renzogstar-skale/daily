@@ -1,0 +1,576 @@
+{
+  "home": {
+    "title": "▷ Sistema BIND ERP para PYMES Comercializadoras y Distribuidoras",
+    "desc": "Organiza todo tu negocio en un sistema ERP especializado que te ayuda a montar tu operación en 90 días y no te deja solo.",
+    "height": 10014,
+    "headerSticky": "static",
+    "headerH": 140,
+    "navLinks": [
+      {
+        "t": "Atención a clientes",
+        "href": "https://api.whatsapp.com/send/?phone=525593310173&text=Hola&type=phone_number&app_absent=0"
+      },
+      {
+        "t": "Crear Cuenta",
+        "href": "https://bind.com.mx/crea-tu-cuenta?utm_source=bind_website&utm_medium=content&utm_campaign=create_your_account&utm_content=home"
+      },
+      {
+        "t": "Contratar ahora",
+        "href": "https://api.whatsapp.com/send/?phone=525591569409&text=Hola%20Bind%20ERP+los+vi+en+sitio+web+me+gustaria+info+del+sistema"
+      },
+      {
+        "t": "Soluciones",
+        "href": "https://bind.com.mx/#"
+      },
+      {
+        "t": "Precios",
+        "href": "https://bind.com.mx/precios"
+      },
+      {
+        "t": "Compañía",
+        "href": "https://bind.com.mx/sistemadeadministracion/softwareadministrativo"
+      },
+      {
+        "t": "Más Módulos",
+        "href": "https://bind.com.mx/erp/administracion-de-modulos"
+      },
+      {
+        "t": "Solicitar demo",
+        "href": "https://1jpgd.share.hsforms.com/2ihSn-IsXSbybmNufLfxe0A?&__hstc=90057732.dd9161fee84eb3323dc3d0ab901dc1aa.1793903426697.1793903426697.1793903426697.1&__hssc=90057732.1.1793903426697&__hsfp=b40e93afcd3e407e7f320f848a856a7a"
+      },
+      {
+        "t": "Iniciar sesión",
+        "href": "https://app.bind.com.mx/"
+      }
+    ],
+    "hs": [
+      "H1 Controla la mercancía que tienes y el dinero que te deben BIND conecta inventario, ventas ",
+      "H1 Controla la mercancía que tienes y el dinero que te deben",
+      "H2 ¿Te subieron el precio de tu sistema?",
+      "H2 Bind está hecho para ti si:",
+      "H2 Más control para una operación que ya no puede depender de procesos manuales.",
+      "H2 ¿Por qué elegir un sistema como BIND ?",
+      "H2 Ten claridad de qué tienes, qué se mueve y qué necesitas resurtir",
+      "H2 Elije tu ruta de crecimiento",
+      "H1 Precios ERP",
+      "H2 ENCUENTRA EL PLAN DE ERP IDEAL PARA LLEVAR TU NEGOCIO AL SIGUIENTE NIVEL",
+      "H3 Una bodega",
+      "H3 Varias sucursales",
+      "H3 Operación completa",
+      "H2 Una operación, no una colección de módulos Lo que pasa en un área afecta a todas las demás",
+      "H3 Comercializadoras B2B",
+      "H3 Distribuidoras",
+      "H3 PYMES",
+      "H2 Implementación en 90 días.",
+      "H2 Acompañamiento + tecnología especializada",
+      "H2 Legal"
+    ],
+    "btns": [
+      {
+        "t": "Iniciar sesión",
+        "bg": "rgba(0, 0, 0, 0)",
+        "color": "rgb(255, 255, 255)",
+        "radius": "40px",
+        "pad": "12px 24px"
+      },
+      {
+        "t": "Solicitar DEMO",
+        "bg": "rgb(0, 114, 206)",
+        "color": "rgb(255, 255, 255)",
+        "radius": "4px",
+        "pad": "12px 32px"
+      },
+      {
+        "t": "Ver planes",
+        "bg": "rgb(244, 147, 47)",
+        "color": "rgb(255, 255, 255)",
+        "radius": "4px",
+        "pad": "12px 32px"
+      },
+      {
+        "t": "Haz tu cálculo gratis",
+        "bg": "rgb(242, 164, 41)",
+        "color": "rgb(75, 75, 77)",
+        "radius": "999px",
+        "pad": "14px 28px"
+      },
+      {
+        "t": "Conoce BIND",
+        "bg": "rgba(0, 114, 206, 0)",
+        "color": "rgb(0, 30, 98)",
+        "radius": "4px",
+        "pad": "12px 32px"
+      },
+      {
+        "t": "Cotiza tu plan hoy",
+        "bg": "rgb(0, 114, 206)",
+        "color": "rgb(255, 255, 255)",
+        "radius": "4px",
+        "pad": "12px 32px"
+      },
+      {
+        "t": "Agenda una demo",
+        "bg": "rgb(13, 45, 107)",
+        "color": "rgb(255, 255, 255)",
+        "radius": "50px",
+        "pad": "13px 20px"
+      },
+      {
+        "t": "Agenda una demo →",
+        "bg": "rgb(245, 166, 35)",
+        "color": "rgb(255, 255, 255)",
+        "radius": "50px",
+        "pad": "13px 20px"
+      },
+      {
+        "t": "Agenda una demo",
+        "bg": "rgb(63, 70, 96)",
+        "color": "rgb(255, 255, 255)",
+        "radius": "50px",
+        "pad": "13px 20px"
+      },
+      {
+        "t": "POR INDUSTRIA",
+        "bg": "rgb(242, 164, 41)",
+        "color": "rgb(255, 255, 255)",
+        "radius": "30px",
+        "pad": "9px 24px"
+      },
+      {
+        "t": "Lo quiero",
+        "bg": "rgb(242, 164, 41)",
+        "color": "rgb(255, 255, 255)",
+        "radius": "16px",
+        "pad": "6px 8px"
+      },
+      {
+        "t": "Conoce más",
+        "bg": "rgba(255, 255, 255, 0.1)",
+        "color": "rgb(255, 255, 255)",
+        "radius": "16px",
+        "pad": "6px 8px"
+      },
+      {
+        "t": "Lo quiero",
+        "bg": "rgb(242, 164, 41)",
+        "color": "rgb(255, 255, 255)",
+        "radius": "16px",
+        "pad": "6px 8px"
+      },
+      {
+        "t": "Conoce más",
+        "bg": "rgba(255, 255, 255, 0.1)",
+        "color": "rgb(255, 255, 255)",
+        "radius": "16px",
+        "pad": "6px 8px"
+      },
+      {
+        "t": "Lo quiero",
+        "bg": "rgb(242, 164, 41)",
+        "color": "rgb(255, 255, 255)",
+        "radius": "16px",
+        "pad": "6px 8px"
+      },
+      {
+        "t": "Conoce más",
+        "bg": "rgba(255, 255, 255, 0.1)",
+        "color": "rgb(255, 255, 255)",
+        "radius": "16px",
+        "pad": "6px 8px"
+      },
+      {
+        "t": "Solicita una demo personalizada",
+        "bg": "rgb(0, 115, 230)",
+        "color": "rgb(255, 255, 255)",
+        "radius": "6px",
+        "pad": "15px 40px"
+      },
+      {
+        "t": "Conoce cómo empezar con BIND",
+        "bg": "rgb(0, 114, 206)",
+        "color": "rgb(255, 255, 255)",
+        "radius": "10px",
+        "pad": "12px 32px"
+      },
+      {
+        "t": "Quiero saber si BIND es para mi empresa",
+        "bg": "rgb(244, 147, 47)",
+        "color": "rgb(255, 255, 255)",
+        "radius": "10px",
+        "pad": "12px 32px"
+      },
+      {
+        "t": "Facebook",
+        "bg": "rgb(255, 255, 255)",
+        "color": "rgb(0, 0, 0)",
+        "radius": "1px",
+        "pad": "0px"
+      },
+      {
+        "t": "Twitter",
+        "bg": "rgb(255, 255, 255)",
+        "color": "rgb(0, 0, 0)",
+        "radius": "1px",
+        "pad": "0px"
+      },
+      {
+        "t": "Youtube",
+        "bg": "rgb(255, 255, 255)",
+        "color": "rgb(0, 0, 0)",
+        "radius": "1px",
+        "pad": "0px"
+      },
+      {
+        "t": "Instagram",
+        "bg": "rgb(255, 255, 255)",
+        "color": "rgb(0, 0, 0)",
+        "radius": "1px",
+        "pad": "0px"
+      }
+    ],
+    "secs": [
+      {
+        "h": 1100,
+        "bg": "rgba(0, 0, 0, 0)",
+        "bgImg": "url(\"https://bind.com.mx/wp-content/uploads/2026/08/Diseno-s",
+        "title": "Controla la mercancía que tienes y el dinero que te deben BIND conecta",
+        "cols": 1
+      },
+      {
+        "h": 49,
+        "bg": "rgba(0, 0, 0, 0)",
+        "bgImg": "none",
+        "title": "Sistema para empresas distribuidoras",
+        "cols": 0
+      },
+      {
+        "h": 68,
+        "bg": "rgba(0, 0, 0, 0)",
+        "bgImg": "none",
+        "title": "Solicitar DEMO Ver planes",
+        "cols": 0
+      },
+      {
+        "h": 191,
+        "bg": "rgba(0, 0, 0, 0)",
+        "bgImg": "none",
+        "title": "¿Te subieron el precio de tu sistema?",
+        "cols": 2
+      },
+      {
+        "h": 342,
+        "bg": "rgba(0, 0, 0, 0)",
+        "bgImg": "radial-gradient(circle at 78% 55%, rgba(242, 164, 41, 0.18) ",
+        "title": "Calculadora del Dinero Atorado ¿Sabes cuánto de tu dinero está hoy en ",
+        "cols": 0
+      },
+      {
+        "h": 542,
+        "bg": "rgba(0, 0, 0, 0)",
+        "bgImg": "none",
+        "title": "Más control para una operación que ya no puede depender de procesos ma",
+        "cols": 0
+      },
+      {
+        "h": 190,
+        "bg": "rgba(0, 0, 0, 0)",
+        "bgImg": "none",
+        "title": "80% Más Rápido Realiza facturas 80% más rápido frente a procesos manua",
+        "cols": 0
+      },
+      {
+        "h": 880,
+        "bg": "rgba(0, 0, 0, 0)",
+        "bgImg": "none",
+        "title": "¿Por qué elegir un sistema como BIND ?",
+        "cols": 0
+      },
+      {
+        "h": 136,
+        "bg": "rgba(0, 0, 0, 0)",
+        "bgImg": "none",
+        "title": "Sistema intuitivo, fácil de usar Sistema con integración nativa con Me",
+        "cols": 0
+      },
+      {
+        "h": 156,
+        "bg": "rgba(0, 0, 0, 0)",
+        "bgImg": "none",
+        "title": "Configuración asistida especializada incluida El sistema más robusto y",
+        "cols": 0
+      },
+      {
+        "h": 156,
+        "bg": "rgba(0, 0, 0, 0)",
+        "bgImg": "none",
+        "title": "Único integrado con CONTPAQi Contabilidad Acceso a tu información desd",
+        "cols": 0
+      },
+      {
+        "h": 164,
+        "bg": "rgba(0, 0, 0, 0)",
+        "bgImg": "none",
+        "title": "",
+        "cols": 1
+      },
+      {
+        "h": 278,
+        "bg": "rgb(255, 255, 255)",
+        "bgImg": "none",
+        "title": "Legal",
+        "cols": 4
+      },
+      {
+        "h": 33,
+        "bg": "rgba(0, 0, 0, 0)",
+        "bgImg": "none",
+        "title": "2026 © Minnt Solutions S.A.P.I de CV. Todos los Derechos Reservados. O",
+        "cols": 0
+      }
+    ],
+    "fonts": [
+      [
+        "Poppins",
+        452
+      ],
+      [
+        "Rubik",
+        30
+      ]
+    ],
+    "colors": [
+      [
+        "rgb(255, 255, 255)",
+        126
+      ],
+      [
+        "rgb(0, 0, 0)",
+        61
+      ],
+      [
+        "rgb(28, 36, 75)",
+        61
+      ],
+      [
+        "rgb(31, 33, 36)",
+        48
+      ],
+      [
+        "rgb(0, 114, 206)",
+        30
+      ],
+      [
+        "rgb(58, 74, 106)",
+        28
+      ],
+      [
+        "rgb(87, 87, 87)",
+        26
+      ],
+      [
+        "rgb(0, 95, 178)",
+        16
+      ],
+      [
+        "rgb(82, 81, 81)",
+        13
+      ],
+      [
+        "rgb(0, 123, 255)",
+        12
+      ]
+    ],
+    "bgs": [
+      [
+        "rgb(255, 255, 255)",
+        33
+      ],
+      [
+        "rgb(13, 95, 232)",
+        15
+      ],
+      [
+        "rgb(242, 164, 41)",
+        14
+      ],
+      [
+        "rgb(243, 245, 248)",
+        13
+      ],
+      [
+        "rgba(255, 255, 255, 0.1)",
+        13
+      ],
+      [
+        "rgb(245, 166, 35)",
+        12
+      ],
+      [
+        "rgba(255, 255, 255, 0.07)",
+        10
+      ],
+      [
+        "rgb(63, 70, 96)",
+        6
+      ],
+      [
+        "rgb(0, 114, 206)",
+        5
+      ],
+      [
+        "rgba(255, 255, 255, 0.18)",
+        4
+      ]
+    ],
+    "h1Style": {
+      "size": "64px",
+      "weight": "600",
+      "lh": "64px",
+      "font": "Poppins, sans-serif"
+    },
+    "animatedEls": 269,
+    "libs": {
+      "swiper": true,
+      "slick": false,
+      "aos": false,
+      "lottie": false,
+      "video": 0,
+      "iframes": [
+        "https://app.hubspot.com/feedback-web-fetcher",
+        "https://1jpgd.share.hsforms.com/2ihSn-IsXSbybmNufLfxe0A?utm_source=sitio-web&utm",
+        "https://1jpgd.share.hsforms.com/2ihSn-IsXSbybmNufLfxe0A?utm_source=sitio-web&utm",
+        "https://1jpgd.share.hsforms.com/2ihSn-IsXSbybmNufLfxe0A?utm_source=sitio-web&utm",
+        "",
+        "about:blank"
+      ]
+    },
+    "generator": "WordPress 6.9.9"
+  },
+  "menus": [
+    {
+      "label": "Soluciones",
+      "sub": [
+        "Soluciones"
+      ]
+    },
+    {
+      "label": "Precios",
+      "sub": [
+        "Precios"
+      ]
+    },
+    {
+      "label": "Compañía",
+      "sub": [
+        "Compañía"
+      ]
+    },
+    {
+      "label": "Más Módulos",
+      "sub": [
+        "Más Módulos"
+      ]
+    }
+  ],
+  "internal": [
+    {
+      "url": "https://bind.com.mx/crea-tu-cuenta?utm_source=bind_website&utm_medium=content&utm_campaign=create_your_account&utm_content=home",
+      "title": "▷ Prueba gratis ERP para PYMES【BIND ERP】",
+      "height": 5451,
+      "hs": [
+        "H1 El sistema ERP que pruebas antes de decidir ​",
+        "H2 ¿Qué incluye la prueba?",
+        "H2 ¿Qué puedes probar en 7 días?",
+        "H3 Controla tu inventario y deja de vender lo que ya no tienes.",
+        "H3 Registra tus ventas y compras en un solo lugar, sin hojas de cálculo sueltas.",
+        "H3 Saca reportes para saber, de verdad, cómo va tu negocio.",
+        "H2 Legal"
+      ],
+      "secs": 6
+    },
+    {
+      "url": "https://bind.com.mx/precios",
+      "title": "▷ Precios ERP 【BIND】",
+      "height": 6011,
+      "hs": [
+        "H1 Elige el plan que le devuelve el control a tu distribuidora.",
+        "H3 Resumen General",
+        "H2 Encuentra el plan que corresponde a tu operación",
+        "H1 Planes ERP",
+        "H2 ENCUENTRA EL PLAN DE ERP IDEAL PARA LLEVAR TU NEGOCIO AL SIGUIENTE NIVEL",
+        "H3 Una bodega",
+        "H3 Varias sucursales",
+        "H3 Operación completa",
+        "H2 ¿QUÉ OBTIENES EN CADA PLAN?",
+        "H2 POTENCIA TU PLAN CON COMPLEMENTOS ADICIONALES",
+        "H2 ¿No sabes cuál elegir?",
+        "H2 ¿Te subieron el precio de tu sistema?",
+        "H2 LA SOLUCIÓN EN MÉXICO DE UN SISTEMA EN LA NUBE A PRECIO ÚNICO",
+        "H2 Legal"
+      ],
+      "secs": 6
+    },
+    {
+      "url": "https://bind.com.mx/sistemadeadministracion/softwareadministrativo",
+      "title": "▷ Software administrativo【BIND ERP】",
+      "height": 7138,
+      "hs": [
+        "H1 Software administrativo para distribuidoras y comercializadoras",
+        "H2 Software administrativo para distribuidoras y comercializadoras",
+        "H2 Hojas de cálculo o software administrativo: ¿Dónde se te va el dinero?",
+        "H2 ¿Cómo elegir un software administrativo para tu pyme?",
+        "H3 1. Que conecte inventario, ventas y cobranza",
+        "H3 2. Que cumpla con el SAT",
+        "H3 3. Que te muestre la utilidad",
+        "H3 4. Que funcione donde tú estés",
+        "H3 5. Que alguien te ponga a operar.",
+        "H3 6. Que lo pruebes con tu operación real",
+        "H2 En 90 días estás operando en Bind",
+        "H2 No te entregamos un sistema.Te ponemos a operar con un método escrito, y quien te acompaña",
+        "H2 ¿Cuánto cuesta un software administrativo?",
+        "H2 Preguntas frecuentes sobre software administrativo",
+        "H3 ¿Qué diferencia hay entre un software administrativo y uno contable?",
+        "H3 ¿Necesito un software administrativo o me basta con un programa para facturar?",
+        "H3 ¿Es mejor un software administrativo en la nube o uno instalado?",
+        "H3 ¿Qué debe cumplir un software administrativo con el SAT?",
+        "H3 ¿Un software administrativo se puede conectar con MercadoLibre?",
+        "H3 ¿Cuánto tarda en implementarse un software administrativo?",
+        "H2 Legal"
+      ],
+      "secs": 8
+    },
+    {
+      "url": "https://bind.com.mx/erp/administracion-de-modulos",
+      "title": "ᐅ Módulos ERP especializado en PYMES【BIND ERP】",
+      "height": 14640,
+      "hs": [
+        "H1 Módulos ERP especializado PYMES",
+        "H2 Agenda una demo gratis",
+        "H2 ¡SI PUEDES TENERLO TODO!",
+        "H2 Tu Contabilidad + Facturación + Ventas + Negocio juntos",
+        "H2 Módulo de inventarios ERP",
+        "H2 Controla tus inventarios",
+        "H3 Multi sucursal y multi almacén",
+        "H3 Reportes en tiempo real de existencias",
+        "H3 Transferencias y ajustes de tus productos",
+        "H3 Un excel para importar todo más rápido",
+        "H3 Lotes, pedimentos y números de serie",
+        "H3 Evita costos por falta de stock",
+        "H2 Módulo de compras ERP",
+        "H2 Administra tus compras",
+        "H3 Importa tus gastos usando la factura de tu proveedor",
+        "H3 Catálogo de productos",
+        "H3 Catálogo de proveedores",
+        "H3 Recepciones de mercancía automáticas",
+        "H2 Módulo de ventas ERP",
+        "H2 Controla tus ventas",
+        "H3 Punto de venta en línea",
+        "H3 Catálogo de clientes y prospectos",
+        "H3 Genera cotizaciones y pedidos",
+        "H3 Emite facturas y remisiones automaticamente",
+        "H3 Catálogo de servicios y productos"
+      ],
+      "secs": 10
+    }
+  ]
+}

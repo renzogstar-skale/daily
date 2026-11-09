@@ -117,7 +117,8 @@
 
 	<!-- 2. MAIN TITLE & CONTROLS ROW -->
 	<div class="sch-title-row">
-		<div>
+		<div class="daily-head">
+			<div class="dairy-page-icon is-primary"><i class="fa-solid fa-calendar-days"></i></div>
 			<h1 class="sch-main-title">Horarios y Cobertura</h1>
 			<p class="sch-subtitle">Planificación laboral dinámica calculada según proyección de ventas, productividad por departamento (SPLH) y distribución equitativa de turnos.</p>
 		</div>
@@ -247,7 +248,7 @@
 			</div>
 			<div class="sch-kpi-sub">{{ $kpiData['demand_coverage']['sub'] ?? 'Horas óptimas por ventas' }}</div>
 			<div class="sch-kpi-footer">
-				<span class="sch-badge sch-badge-green" style="padding: 0.15rem 0.5rem; font-size: 0.68rem;">
+				<span class="sch-badge sch-badge-green" style="padding: 0.15rem 0.5rem; font-size: 0.6875rem;">
 					<span class="sch-badge-dot"></span> {{ $kpiData['demand_coverage']['status'] ?? 'En rango objetivo' }}
 				</span>
 				<span class="sch-kpi-arrow"><i class="fa-solid fa-arrow-right"></i></span>
@@ -268,7 +269,7 @@
 			</div>
 			<div class="sch-kpi-sub">{{ $kpiData['labor_budget']['target_pct'] ?? '8.5% de ventas' }}</div>
 			<div class="sch-kpi-footer">
-				<span class="sch-badge sch-badge-green" style="padding: 0.15rem 0.5rem; font-size: 0.68rem;">
+				<span class="sch-badge sch-badge-green" style="padding: 0.15rem 0.5rem; font-size: 0.6875rem;">
 					<span class="sch-badge-dot"></span> {{ $kpiData['labor_budget']['status'] ?? 'Bajo presupuesto' }}
 				</span>
 				<span class="sch-kpi-arrow"><i class="fa-solid fa-arrow-right"></i></span>
@@ -384,7 +385,7 @@
 							<div class="sch-dist-bar-fill" style="width: {{ min(100, $d['sales_share_pct'] * 3.2) }}%; background-color: {{ $d['color'] }};"></div>
 						</div>
 						<span class="sch-dist-count">${{ number_format($d['current_splh'] ?? $d['target_splh'], 0) }}/h</span>
-						<span class="sch-dist-pct" style="font-size: 0.65rem; color: {{ $d['risk_level'] === 'Alto' ? '#ef4444' : '#10b981' }};">
+						<span class="sch-dist-pct" style="font-size: 0.6875rem; color: {{ $d['risk_level'] === 'Alto' ? '#ef4444' : '#10b981' }};">
 							{{ $d['coverage_pct'] }}% cob.
 						</span>
 					</div>
@@ -587,7 +588,7 @@
 										</div>
 										<div class="text-right" style="margin-left: auto; margin-right: 0.5rem;">
 											@if($hasRec)
-												<div class="small text-muted" style="text-decoration: line-through; font-size: 0.65rem;">{{ $origH }}</div>
+												<div class="small text-muted" style="text-decoration: line-through; font-size: 0.6875rem;">{{ $origH }}</div>
 												<div class="sch-emp-hours-rec" title="{{ $emp->rec_reason ?? 'Recomendación de optimización por ventas' }}">
 													{{ $recH }}
 												</div>
@@ -661,7 +662,7 @@
 				<div class="sch-side-card">
 					<div class="sch-side-card-title d-flex align-items-center justify-content-between">
 						<span><i class="fa-solid fa-wand-magic-sparkles text-purple mr-1"></i> Recomendaciones IA</span>
-						<span class="badge badge-purple" style="font-size: 0.65rem;">{{ count($sidebarData['recommendations'] ?? []) }} activas</span>
+						<span class="badge badge-purple" style="font-size: 0.6875rem;">{{ count($sidebarData['recommendations'] ?? []) }} activas</span>
 					</div>
 
 					@if(!empty($sidebarData['potential_savings']) && $sidebarData['potential_savings'] > 0)
@@ -723,7 +724,7 @@
 						<div class="sch-detail-avatar" id="detailShiftAvatar">{{ $selectedShift['employee_avatar'] }}</div>
 						<div>
 							<div class="font-weight-bold" style="font-size: 0.8rem; color: #0f172a;" id="detailShiftEmpName">{{ $selectedShift['employee_name'] }}</div>
-							<div class="text-muted" style="font-size: 0.68rem;" id="detailShiftEmpId">ID: {{ $selectedShift['employee_id'] }}</div>
+							<div class="text-muted" style="font-size: 0.6875rem;" id="detailShiftEmpId">ID: {{ $selectedShift['employee_id'] }}</div>
 						</div>
 					</div>
 
@@ -805,11 +806,11 @@
 						<div class="sch-abs-meta">
 							<div class="sch-abs-dates">{{ $req['dates'] }}</div>
 							@if($req['status'] === 'Pendiente')
-								<span class="sch-badge sch-badge-amber" style="padding: 0.15rem 0.4rem; font-size: 0.65rem;">Pendiente</span>
+								<span class="sch-badge sch-badge-amber" style="padding: 0.15rem 0.4rem; font-size: 0.6875rem;">Pendiente</span>
 							@elseif($req['status'] === 'Requiere aprobación')
-								<span class="sch-badge sch-badge-danger" style="padding: 0.15rem 0.4rem; font-size: 0.65rem;">Requiere aprobación</span>
+								<span class="sch-badge sch-badge-danger" style="padding: 0.15rem 0.4rem; font-size: 0.6875rem;">Requiere aprobación</span>
 							@else
-								<span class="sch-badge sch-badge-info" style="padding: 0.15rem 0.4rem; font-size: 0.65rem;">Por revisar</span>
+								<span class="sch-badge sch-badge-info" style="padding: 0.15rem 0.4rem; font-size: 0.6875rem;">Por revisar</span>
 							@endif
 						</div>
 						<button type="button" class="sch-emp-menu-btn" title="Opciones" onclick="window.decideRequest('{{ $req['name'] }}')">
@@ -840,7 +841,7 @@
 		<div class="sch-card">
 			<div class="sch-card-header">
 				<h3 class="sch-card-title">Impacto de la Optimización por Ventas</h3>
-				<span class="badge badge-purple" style="font-size: 0.65rem;">IA Motor 35</span>
+				<span class="badge badge-purple" style="font-size: 0.6875rem;">IA Motor 35</span>
 			</div>
 			<div class="p-2">
 				<div class="d-flex align-items-center justify-content-between mb-2 p-2 rounded bg-light border">
@@ -892,7 +893,7 @@
 							</span>
 							<div>
 								<strong class="mr-1" style="font-size: 0.75rem;">{{ $m['value'] }}</strong>
-								<span class="text-success font-weight-600" style="font-size: 0.68rem;">{{ $m['delta'] }}</span>
+								<span class="text-success font-weight-600" style="font-size: 0.6875rem;">{{ $m['delta'] }}</span>
 							</div>
 						</div>
 					@endforeach

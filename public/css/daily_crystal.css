@@ -29,33 +29,45 @@
 	--crystal-yellow-2: #B66A00;
 
 	/* Lienzo y fondo ambiental (lo que el cristal "recoge") */
-	--crystal-page: #f3f6f4;
-	--crystal-mesh-green: rgba(57, 245, 0, 0.17);
-	--crystal-mesh-mint: rgba(0, 142, 72, 0.12);
-	--crystal-mesh-yellow: rgba(255, 230, 0, 0.16);
-	--crystal-mesh-cyan: rgba(6, 182, 212, 0.09);
+	/* Formas difusas: lo que el cristal recoge. Fuertes a propósito: sin contraste detrás, el blur no se ve */
+	/* Blanco y verde: sin amarillos ni cian (los tintes cálidos ensuciaban el blanco de las tarjetas) */
+	--crystal-page: linear-gradient(165deg, #f1faf4 0%, #ffffff 42%, #fafdfb 100%);
+	--crystal-blob-mint: rgba(52, 211, 153, 0.20);
+	--crystal-blob-green: rgba(0, 200, 59, 0.10);
+	--crystal-blob-deep: rgba(0, 142, 72, 0.12);
+	--crystal-blob-yellow: rgba(0, 200, 59, 0.07);
+	--crystal-blob-cream: rgba(52, 211, 153, 0.10);
+	--crystal-blob-sky: rgba(255, 255, 255, 0);
 
-	/* Cristal: tinte blanco (incoloro) + rim */
-	--crystal-tint-top: rgba(255, 255, 255, 0.80);
-	--crystal-tint-bottom: rgba(255, 255, 255, 0.56);
-	--crystal-tint-top-hover: rgba(255, 255, 255, 0.92);
-	--crystal-tint-bottom-hover: rgba(255, 255, 255, 0.74);
-	--crystal-nested: rgba(255, 255, 255, 0.55);
+	/* Cristal de panel: tinte blanco translúcido + reflejos + rim */
+	--crystal-tint-top: rgba(255, 255, 255, 0.58);
+	--crystal-tint-bottom: rgba(255, 255, 255, 0.34);
+	--crystal-tint-top-hover: rgba(255, 255, 255, 0.70);
+	--crystal-tint-bottom-hover: rgba(255, 255, 255, 0.46);
+	--crystal-nested: rgba(255, 255, 255, 0.38);
+	--crystal-lite-top: rgba(255, 255, 255, 0.84);
+	--crystal-lite-bottom: rgba(255, 255, 255, 0.70);
 	--crystal-rim-top: rgba(255, 255, 255, 0.95);
-	--crystal-rim-hairline: rgba(255, 255, 255, 0.55);
-	--crystal-rim-bottom: rgba(15, 23, 42, 0.03);
-	--crystal-border: rgba(15, 23, 42, 0.08);
-	--crystal-border-strong: rgba(15, 23, 42, 0.14);
-	--crystal-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 10px 28px -14px rgba(15, 23, 42, 0.16);
-	--crystal-shadow-hover: 0 2px 4px rgba(15, 23, 42, 0.05), 0 18px 36px -16px rgba(15, 23, 42, 0.24);
-	--crystal-sheen: linear-gradient(165deg, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0) 42%);
-	--crystal-rim: inset 0 1px 0 var(--crystal-rim-top), inset 0 0 0 1px var(--crystal-rim-hairline), inset 0 -1px 0 var(--crystal-rim-bottom);
+	--crystal-rim-hairline: rgba(255, 255, 255, 0.45);
+	--crystal-rim-bottom: rgba(255, 255, 255, 0.30);
+	--crystal-border: rgba(255, 255, 255, 0.72);
+	--crystal-border-strong: rgba(15, 23, 42, 0.12);
+	--crystal-edge: rgba(15, 23, 42, 0.07);
+	--crystal-shadow: 0 1px 1px rgba(15, 23, 42, 0.04), 0 8px 22px -10px rgba(15, 23, 42, 0.14), 0 26px 48px -26px rgba(0, 90, 45, 0.22);
+	--crystal-shadow-hover: 0 2px 3px rgba(15, 23, 42, 0.05), 0 16px 32px -12px rgba(15, 23, 42, 0.20), 0 36px 64px -30px rgba(0, 90, 45, 0.30);
+	/* Reflejos: brillo especular superior-izquierdo + banda superior + filo lateral */
+	--crystal-sheen:
+		radial-gradient(120% 70% at 0% 0%, rgba(255, 255, 255, 0.75) 0%, rgba(255, 255, 255, 0) 55%),
+		linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 28%),
+		linear-gradient(90deg, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0) 6%, rgba(255, 255, 255, 0) 94%, rgba(255, 255, 255, 0.25) 100%);
+	--crystal-rim: inset 0 1px 0 var(--crystal-rim-top), inset 1px 0 0 var(--crystal-rim-hairline), inset -1px 0 0 rgba(255, 255, 255, 0.2), inset 0 -1px 0 var(--crystal-rim-bottom), 0 0 0 1px var(--crystal-edge);
+	--crystal-panel-blur: blur(22px) saturate(170%);
 
 	/* Flotantes (menús, modales, encabezado) */
-	--crystal-float-bg: rgba(255, 255, 255, 0.78);
-	--crystal-menu-bg: rgba(250, 251, 252, 0.88);
-	--crystal-modal-bg: rgba(255, 255, 255, 0.90);
-	--crystal-blur: blur(18px) saturate(160%);
+	--crystal-float-bg: rgba(255, 255, 255, 0.62);
+	--crystal-menu-bg: rgba(250, 252, 251, 0.78);
+	--crystal-modal-bg: rgba(255, 255, 255, 0.80);
+	--crystal-blur: blur(18px) saturate(170%);
 	--crystal-blur-sm: blur(10px) saturate(140%);
 	--crystal-menu-shadow: 0 16px 40px -8px rgba(15, 23, 42, 0.20), 0 4px 12px rgba(15, 23, 42, 0.06);
 	--crystal-scrim: rgba(15, 23, 42, 0.32);
@@ -72,25 +84,51 @@
    Lienzo + fondo ambiental fijo
    -------------------------------------------------------------------------- */
 body.crystal-ui {
-	background: var(--crystal-page) !important;
+	background: #f7fbf8 !important;
 	isolation: isolate;
 }
+/* Capa 1: degradado ambiental menta → blanco → amarillo suave */
 body.crystal-ui::before {
 	content: '';
 	position: fixed;
 	inset: 0;
+	z-index: -2;
+	pointer-events: none;
+	background: var(--crystal-page);
+}
+/* Capa 2: formas difusas detrás de las tarjetas (fijas: no se repintan al desplazar) */
+body.crystal-ui::after {
+	content: '';
+	position: fixed;
+	inset: -10vh -10vw;
 	z-index: -1;
 	pointer-events: none;
 	background:
-		radial-gradient(46rem 34rem at 8% -6%, var(--crystal-mesh-green), transparent 62%),
-		radial-gradient(40rem 32rem at 98% 4%, var(--crystal-mesh-yellow), transparent 60%),
-		radial-gradient(52rem 40rem at 70% 108%, var(--crystal-mesh-mint), transparent 62%),
-		radial-gradient(36rem 30rem at 30% 70%, var(--crystal-mesh-cyan), transparent 64%),
-		radial-gradient(30rem 24rem at 58% 38%, rgba(57, 245, 0, 0.06), transparent 64%);
+		radial-gradient(26rem 22rem at 24% 22%, var(--crystal-blob-mint), transparent 70%),
+		radial-gradient(22rem 18rem at 74% 16%, var(--crystal-blob-yellow), transparent 70%),
+		radial-gradient(30rem 22rem at 58% 62%, var(--crystal-blob-green), transparent 70%),
+		radial-gradient(24rem 20rem at 14% 78%, var(--crystal-blob-deep), transparent 70%),
+		radial-gradient(26rem 20rem at 92% 82%, var(--crystal-blob-cream), transparent 70%),
+		radial-gradient(18rem 16rem at 42% 44%, var(--crystal-blob-sky), transparent 70%);
 }
 body.crystal-ui .content-wrapper,
 body.crystal-ui #page-content,
-body.crystal-ui .crystal-canvas { background-color: transparent !important; }
+body.crystal-ui .crystal-canvas,
+body.crystal-ui .ded-wrapper,
+body.crystal-ui .branch-dash-wrapper,
+body.crystal-ui .sales-hist-wrapper,
+body.crystal-ui .prod-dash-wrapper,
+body.crystal-ui .dept-perf-wrapper,
+body.crystal-ui .daily-dashboard-layout,
+body.crystal-ui .pos-container-wrap,
+body.crystal-ui .pos-ret-container,
+body.crystal-ui .customers-wrapper,
+body.crystal-ui .customers-page-wrapper,
+body.crystal-ui .tab-content,
+body.crystal-ui .tab-pane {
+	background-color: transparent !important;
+	background: transparent !important;
+}
 body.crystal-ui ::selection { background: rgba(0, 200, 59, 0.18); }
 
 /* Anillo de foco de marca (antes azul) */
@@ -101,20 +139,33 @@ body.crystal-ui { --dairy-ring: var(--crystal-ring); --dnav-focus: rgba(0, 142, 
    -------------------------------------------------------------------------- */
 body.crystal-ui #mainNav,
 body.crystal-ui .crystal-header {
-	background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.66)) !important;
+	/* reflejo horizontal superior + tinte translúcido */
+	background:
+		linear-gradient(180deg, rgba(255, 255, 255, 0.75) 0%, rgba(255, 255, 255, 0) 45%),
+		linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.35) 50%, rgba(255, 255, 255, 0) 100%),
+		linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.38)) !important;
 	-webkit-backdrop-filter: var(--crystal-blur);
 	backdrop-filter: var(--crystal-blur);
-	border-bottom: 1px solid var(--crystal-border) !important;
-	box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.7), 0 6px 20px -14px rgba(15, 23, 42, 0.18) !important;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.75) !important;
+	box-shadow: inset 0 1px 0 #fff, 0 1px 0 var(--crystal-edge), 0 10px 30px -16px rgba(0, 90, 45, 0.30) !important;
+}
+/* filo luminoso inferior del encabezado */
+body.crystal-ui #mainNav::after {
+	content: '';
+	position: absolute;
+	left: 0; right: 0; bottom: -1px;
+	height: 1px;
+	pointer-events: none;
+	background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.95) 30%, rgba(57, 245, 0, 0.35) 55%, rgba(255, 255, 255, 0.9) 80%, rgba(255, 255, 255, 0) 100%);
 }
 
 /* CrystalSearch y controles del encabezado */
 body.crystal-ui .dairy-hsearch,
 body.crystal-ui .dairy-hbtn,
 body.crystal-ui .crystal-search {
-	background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7)) !important;
+	background: linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.42)) !important;
 	border: 1px solid var(--crystal-border) !important;
-	box-shadow: inset 0 1px 0 var(--crystal-rim-top), 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+	box-shadow: inset 0 1px 0 #fff, 0 0 0 1px var(--crystal-edge), 0 4px 12px -8px rgba(15, 23, 42, 0.18) !important;
 	transition: box-shadow var(--crystal-dur) var(--crystal-ease), border-color var(--crystal-dur) var(--crystal-ease);
 }
 body.crystal-ui .dairy-hsearch:hover,
@@ -127,7 +178,7 @@ body.crystal-ui .crystal-search:focus-within { border-color: var(--crystal-green
    CrystalSidebar — menú lateral
    -------------------------------------------------------------------------- */
 body.crystal-ui {
-	--dnav-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.46));
+	--dnav-bg: linear-gradient(90deg, rgba(255, 255, 255, 0.62) 0%, rgba(255, 255, 255, 0.40) 100%);
 	--dnav-bg-hover: rgba(0, 142, 72, 0.06);
 	--dnav-active-bg: linear-gradient(180deg, rgba(57, 245, 0, 0.13), rgba(0, 142, 72, 0.09));
 	--dnav-border: var(--crystal-border);
@@ -136,7 +187,20 @@ body.crystal-ui #mainNav.navbar-light .navbar-collapse .navbar-sidenav.dnav,
 body.crystal-ui .crystal-sidebar {
 	-webkit-backdrop-filter: var(--crystal-blur);
 	backdrop-filter: var(--crystal-blur);
-	box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.7);
+	box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.9), 1px 0 0 var(--crystal-edge), 12px 0 32px -24px rgba(0, 90, 45, 0.28) !important;
+}
+/* Secciones del menú separadas por profundidad: la categoría abierta es una lámina elevada */
+body.crystal-ui .dnav-cat.is-open,
+body.crystal-ui .dnav-cat.is-active {
+	background: linear-gradient(180deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.30));
+	border-radius: 14px;
+	box-shadow: inset 0 1px 0 #fff, 0 0 0 1px rgba(255, 255, 255, 0.6), 0 8px 18px -12px rgba(0, 90, 45, 0.30);
+	margin: 4px 2px;
+}
+body.crystal-ui .dnav .dnav-item.is-active > .dnav-link {
+	background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(236, 253, 243, 0.85)) !important;
+	box-shadow: inset 0 1px 0 #fff, 0 0 0 1px rgba(0, 142, 72, 0.14), 0 4px 10px -6px rgba(0, 142, 72, 0.35) !important;
+	border-radius: 10px;
 }
 body.crystal-ui .dnav .dnav-item.is-active > .dnav-link { color: var(--crystal-green-3) !important; font-weight: 600; }
 body.crystal-ui .dnav .dnav-item.is-active > .dnav-link,
@@ -169,10 +233,55 @@ body.crystal-ui .daily-analytics-card,
 body.crystal-ui .daily-table-container-card,
 body.crystal-ui .daily-kpi-card,
 body.crystal-ui .dsm-card,
-body.crystal-ui .dsm-kpi-card {
+body.crystal-ui .dsm-kpi-card,
+body.crystal-ui .ded-card,
+body.crystal-ui .ded-kpi-card:not(.is-highlight),
+body.crystal-ui .branch-card-panel,
+body.crystal-ui .branch-kpi-card:not(.branch-kpi-card-green),
+body.crystal-ui .hist-card-panel,
+body.crystal-ui .hist-search-card,
+body.crystal-ui .hist-kpi-card:not(.hist-kpi-card-green),
+body.crystal-ui .prod-card-panel,
+body.crystal-ui .prod-kpi-card:not(.prod-kpi-highlight):not(.prod-kpi-card-green),
+body.crystal-ui .dept-perf-card,
+body.crystal-ui .dept-perf-kpi-card:not(.dept-kpi-highlight),
+body.crystal-ui .pos-catalog-panel,
+body.crystal-ui .pos-cart-panel,
+body.crystal-ui .pos-totals-section,
+body.crystal-ui .pos-card,
+body.crystal-ui .pos-returns-card,
+body.crystal-ui .pos-returns-panel,
+body.crystal-ui .pos-ret-hero,
+body.crystal-ui .pos-ret-lifecycle-card,
+body.crystal-ui .pos-ret-kpi-card,
+body.crystal-ui .pos-ret-panel,
+body.crystal-ui .pos-ret-table-wrap,
+body.crystal-ui .pos-ret-card,
+body.crystal-ui .customers-kpi-card,
+body.crystal-ui .customers-card,
+body.crystal-ui .customers-card-panel,
+body.crystal-ui .customers-header-banner,
+body.crystal-ui .customers-table-panel,
+body.crystal-ui .customers-filter-bar,
+body.crystal-ui .customers-filters-bar,
+body.crystal-ui .customers-detail-panel,
+body.crystal-ui .customers-mini-kpis,
+body.crystal-ui .daily-dashboard-card,
+body.crystal-ui .daily-dashboard-panel,
+body.crystal-ui .daily-card-panel {
 	background: var(--crystal-sheen), linear-gradient(180deg, var(--crystal-tint-top), var(--crystal-tint-bottom)) !important;
 	border: 1px solid var(--crystal-border) !important;
 	box-shadow: var(--crystal-shadow), var(--crystal-rim) !important;
+	border-radius: var(--crystal-radius, 14px) !important;
+	/* Sin backdrop-filter en tarjetas: es lo que más frena el desplazamiento. Tinte algo más opaco para compensar */
+	--crystal-tint-top: rgba(255, 255, 255, 0.68);
+	--crystal-tint-bottom: rgba(255, 255, 255, 0.48);
+}
+/* Nivel ligero (lo asigna el JS a superficies muy altas o cuando hay muchas): sin blur, más opaco */
+body.crystal-ui .crystal-surface--lite {
+	background: var(--crystal-sheen), linear-gradient(180deg, var(--crystal-lite-top), var(--crystal-lite-bottom)) !important;
+	-webkit-backdrop-filter: none !important;
+	backdrop-filter: none !important;
 }
 body.crystal-ui .card { border-radius: var(--crystal-radius) !important; }
 body.crystal-ui .card-header,
@@ -182,7 +291,8 @@ body.crystal-ui .card-footer { background: transparent !important; border-color:
 body.crystal-ui .crystal-surface--nested,
 body.crystal-ui .card .card {
 	background: var(--crystal-nested) !important;
-	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+	border-color: rgba(255, 255, 255, 0.6) !important;
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85), 0 0 0 1px rgba(15, 23, 42, 0.04) !important;
 	-webkit-backdrop-filter: none !important;
 	backdrop-filter: none !important;
 }
@@ -197,6 +307,12 @@ body.crystal-ui .ep-kpi-card,
 body.crystal-ui .daily-kpi-stat-card,
 body.crystal-ui .daily-kpi-card,
 body.crystal-ui .dsm-kpi-card,
+body.crystal-ui .ded-kpi-card,
+body.crystal-ui .branch-kpi-card,
+body.crystal-ui .hist-kpi-card,
+body.crystal-ui .prod-kpi-card,
+body.crystal-ui .dept-perf-kpi-card,
+body.crystal-ui .customers-kpi-card,
 body.crystal-ui .crystal-surface--interactive {
 	transition: transform var(--crystal-dur) var(--crystal-ease), box-shadow var(--crystal-dur) var(--crystal-ease), border-color var(--crystal-dur) var(--crystal-ease);
 }
@@ -209,19 +325,49 @@ body.crystal-ui .ep-kpi-card:hover,
 body.crystal-ui .daily-kpi-stat-card:hover,
 body.crystal-ui .daily-kpi-card:hover,
 body.crystal-ui .dsm-kpi-card:hover,
+body.crystal-ui .ded-kpi-card:hover,
+body.crystal-ui .branch-kpi-card:hover,
+body.crystal-ui .hist-kpi-card:hover,
+body.crystal-ui .prod-kpi-card:hover,
+body.crystal-ui .dept-perf-kpi-card:hover,
+body.crystal-ui .customers-kpi-card:hover,
 body.crystal-ui .crystal-surface--interactive:hover {
 	transform: translateY(-2px);
-	background: linear-gradient(180deg, var(--crystal-tint-top-hover), var(--crystal-tint-bottom-hover)) !important;
-	border-color: var(--crystal-border-strong) !important;
+	background: var(--crystal-sheen), linear-gradient(180deg, var(--crystal-tint-top-hover), var(--crystal-tint-bottom-hover)) !important;
+	border-color: #fff !important;
 	box-shadow: var(--crystal-shadow-hover), var(--crystal-rim) !important;
 }
 
 /* Superficie flotante/fija (paneles laterales, barras pegajosas) */
 body.crystal-ui .crystal-surface--floating {
 	background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.8)) !important;
-	-webkit-backdrop-filter: var(--crystal-blur);
-	backdrop-filter: var(--crystal-blur);
+	-webkit-backdrop-filter: var(--crystal-blur-sm);
+	backdrop-filter: var(--crystal-blur-sm);
 	box-shadow: var(--crystal-menu-shadow), var(--crystal-rim) !important;
+}
+
+/* Profundidad icono / valor / tendencia dentro del KPI */
+body.crystal-ui [class*="kpi-icon"],
+body.crystal-ui .daily-pulse-indicator {
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85), inset 0 -1px 0 rgba(15, 23, 42, 0.06), 0 6px 14px -8px rgba(15, 23, 42, 0.35) !important;
+}
+body.crystal-ui [class*="kpi-value"] { text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8); }
+
+/* Controles de filtro y pestañas segmentadas: cristal ligero (sin blur, son muchos) */
+body.crystal-ui .today-exec-select-box,
+body.crystal-ui [class*="select-box"],
+body.crystal-ui .daily-segmented-tabs,
+body.crystal-ui .crystal-filters .form-control {
+	background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.50)) !important;
+	border: 1px solid rgba(255, 255, 255, 0.8) !important;
+	box-shadow: inset 0 1px 0 #fff, 0 0 0 1px var(--crystal-edge), 0 4px 12px -8px rgba(15, 23, 42, 0.20) !important;
+}
+body.crystal-ui .daily-segmented-tabs { padding: 4px; border-radius: 14px; }
+body.crystal-ui .daily-segmented-tabs .active,
+body.crystal-ui .daily-segmented-tabs [aria-selected="true"] {
+	background: linear-gradient(180deg, #fff, rgba(255, 255, 255, 0.82)) !important;
+	box-shadow: inset 0 1px 0 #fff, 0 0 0 1px rgba(0, 142, 72, 0.16), 0 6px 14px -8px rgba(0, 90, 45, 0.40) !important;
+	color: var(--crystal-green-3) !important;
 }
 
 /* Encabezado de página */
@@ -244,9 +390,9 @@ body.crystal-ui .table,
 body.crystal-ui .crystal-table { background: transparent !important; }
 body.crystal-ui .table thead th,
 body.crystal-ui .crystal-table thead th {
-	background: rgba(241, 245, 249, 0.82) !important;
+	background: rgba(255, 255, 255, 0.45) !important;
 	color: #475569 !important;
-	border-bottom: 1px solid var(--crystal-border) !important;
+	border-bottom: 1px solid var(--crystal-edge) !important;
 	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 body.crystal-ui .table tbody td { border-top-color: rgba(15, 23, 42, 0.06) !important; }
@@ -482,7 +628,7 @@ body.crystal-ui .dm-bottom-nav {
 	body.crystal-ui #mainNav,
 	body.crystal-ui .crystal-header,
 	body.crystal-ui .dairy-mobile-nav { background: rgba(255, 255, 255, 0.97) !important; }
-	body.crystal-ui { --dnav-bg: #fbfcfc; }
+	body.crystal-ui { --dnav-bg: #fbfcfc; --crystal-tint-top: var(--crystal-lite-top); --crystal-tint-bottom: var(--crystal-lite-bottom); --crystal-nested: rgba(255, 255, 255, 0.6); }
 	body.crystal-ui .dropdown-menu,
 	body.crystal-ui .crystal-dropdown,
 	body.crystal-ui .daterangepicker,
@@ -491,9 +637,234 @@ body.crystal-ui .dm-bottom-nav {
 	body.crystal-ui .modal-content { background: #fff !important; }
 }
 
+/* --------------------------------------------------------------------------
+   Pulido de dashboards (nov-2026): coherencia blanco/verde y legibilidad
+   -------------------------------------------------------------------------- */
+/* Paleta: el morado y el cian/azul eran decorativos (iconos, cifras, botones). El color queda para
+   estado: verde = marca/ok, ámbar = atención, rojo = crítico; "info" pasa a tinta pizarra. */
+body.crystal-ui {
+	--dairy-purple: #00643a; --dairy-purple-dark: #005230; --dairy-purple-bg: #ecfdf3; --dairy-purple-border: #bbf7d0;
+	--dairy-info: #334155; --dairy-info-dark: #1e293b; --dairy-info-bg: #f1f5f9; --dairy-info-border: #cbd5e1;
+	--dsm-purple: #00643a; --ret-purple: #00643a; --rc-purple: #00643a;
+}
+body.crystal-ui .text-info,
+body.crystal-ui .text-purple { color: #334155 !important; }
+body.crystal-ui .badge-info,
+body.crystal-ui .badge-purple { background: #eef2f6 !important; color: #1e293b !important; border: 1px solid #d5dde7; }
+body.crystal-ui .btn-outline-info { color: #00643a !important; border-color: rgba(0, 142, 72, 0.35) !important; background: rgba(255, 255, 255, 0.85) !important; }
+body.crystal-ui .btn-outline-info:hover { background: #ecfdf3 !important; }
+body.crystal-ui .btn-info { background: linear-gradient(180deg, var(--crystal-green-2), var(--crystal-green-3)) !important; border-color: var(--crystal-green-3) !important; color: #fff !important; }
+body.crystal-ui .progress-bar.bg-info { background: var(--crystal-green-3) !important; }
+/* Iconos y acentos de KPI con tono morado/azul/cian → verde de marca (no codifican estado) */
+body.crystal-ui .sales-kpi-icon-box.is-purple,
+body.crystal-ui .sales-kpi-icon-box.is-blue,
+body.crystal-ui .dsp-kpi-icon.is-cyan,
+body.crystal-ui .dsp-kpi-icon.is-purple,
+body.crystal-ui .dsp-kpi-icon.is-blue,
+body.crystal-ui .hr-kpi-icon-purple,
+body.crystal-ui .hr-kpi-icon-blue,
+body.crystal-ui .wms-kpi-icon-purple,
+body.crystal-ui .wms-kpi-icon-blue,
+body.crystal-ui .tone-purple .daily-kpi-h-icon,
+body.crystal-ui .tone-blue .daily-kpi-h-icon,
+body.crystal-ui .today-exec-spark-icon.is-purple,
+body.crystal-ui .today-exec-spark-icon.is-blue { background: #ecfdf3 !important; color: #00643a !important; }
+body.crystal-ui .dsm-kpi-unit-box i.is-purple,
+body.crystal-ui .dsm-kpi-unit-box i.is-blue,
+body.crystal-ui .mc-kpi-trend.text-purple { color: #00643a !important; }
+body.crystal-ui .today-exec-spark-card:has(.today-exec-spark-icon.is-purple),
+body.crystal-ui .today-exec-spark-card:has(.today-exec-spark-icon.is-blue) { --card-accent: #00843f; --card-accent-soft: rgba(0, 142, 72, 0.10); }
+body.crystal-ui .dsm-opp-action-btn.is-purple,
+body.crystal-ui .dsm-opp-action-btn.is-blue,
+body.crystal-ui .dsm-opp-pill.is-blue,
+body.crystal-ui .dsm-days-pill.is-info { color: #00643a !important; border-color: rgba(0, 142, 72, 0.28) !important; background: #f0fdf4 !important; }
+
+/* Enlaces: grocy.css subraya con puntos todo <a>; en controles (píldoras, chips, botones, tarjetas)
+   eso parecía texto roto. Los enlaces de texto conservan un subrayado fino y sólido. */
+body.crystal-ui a:not(.btn):not(.nav-link):not(.dropdown-item):not(.list-group-item) {
+	text-decoration-style: solid;
+	text-decoration-thickness: 1px;
+	text-decoration-color: rgba(15, 23, 42, 0.22);
+	text-underline-offset: 3px;
+}
+body.crystal-ui a:not(.btn):not(.nav-link):not(.dropdown-item):not(.list-group-item):hover { text-decoration-color: currentColor; }
+body.crystal-ui a[class*="pill"],
+body.crystal-ui a[class*="chip"],
+body.crystal-ui a[class*="btn"],
+body.crystal-ui a[class*="card"],
+body.crystal-ui a[class*="tab"],
+body.crystal-ui a[class*="tile"],
+body.crystal-ui a[class*="crystal-surface"],
+body.crystal-ui a.dairy-kpi-link,
+body.crystal-ui a.dairy-related-map,
+body.crystal-ui .dairy-alert-strip li a,
+body.crystal-ui a:has(> .dairy-kpi-card) { text-decoration: none !important; }
+
+/* Selects pequeños: el tema forzaba 7,2 px de relleno vertical en 31 px y cortaba el texto */
+body.crystal-ui select.form-control-sm,
+body.crystal-ui select.custom-select-sm { padding-top: 2px !important; padding-bottom: 2px !important; line-height: 1.5 !important; }
+
+/* Cifras: numerales tabulares y tamaño que se adapta al ancho de la tarjeta (no se montan entre KPI) */
+body.crystal-ui [class*="kpi-value"],
+body.crystal-ui [class*="kpi-val"],
+body.crystal-ui .daily-pulse-metric-value { font-variant-numeric: tabular-nums; }
+body.crystal-ui .dairy-kpi-card { container-type: inline-size; min-width: 0; }
+body.crystal-ui .dairy-kpi-value { font-size: clamp(1.05rem, 12.5cqi, var(--dairy-fs-2xl)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+body.crystal-ui .dairy-kpi-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Sin dato: se lee como estado, no como cifra (lo marca daily_crystal.js) */
+body.crystal-ui .crystal-value--empty { font-size: 1rem !important; font-weight: 600 !important; color: #64748b !important; letter-spacing: 0 !important; line-height: 1.35 !important; }
+
+/* Horarios: botones, insignias y recomendaciones en morado/azul → marca; los colores de turno por
+   departamento (sch-shift-*) se conservan porque codifican el departamento */
+body.crystal-ui .sch-btn-purple { color: #00643a !important; border-color: rgba(0, 142, 72, 0.35) !important; background: rgba(255, 255, 255, 0.85) !important; }
+body.crystal-ui .sch-btn-purple:hover { background: #ecfdf3 !important; }
+body.crystal-ui .sch-btn-purple i { color: inherit !important; }
+body.crystal-ui .sch-badge-purple,
+body.crystal-ui .sch-badge-info { background: #eef2f6 !important; color: #334155 !important; border-color: #d5dde7 !important; }
+body.crystal-ui .sch-kpi-icon.tone-info,
+body.crystal-ui .sch-kpi-icon.tone-purple,
+body.crystal-ui .kx-flow-step-icon.is-blue,
+body.crystal-ui .lp-hero-stat-icon.icon-blue { background: #ecfdf3 !important; color: #00643a !important; }
+body.crystal-ui .sch-emp-hours-rec,
+body.crystal-ui .sch-rec-card-hours { color: #00643a !important; }
+
+/* Encabezado de página único: icono de 44 px (el mismo del menú lateral) + título + subtítulo.
+   Cada módulo tenía su propia escala (22–26,4 px), con o sin icono y con iconos en rojo/morado. */
+body.crystal-ui .daily-head { display: grid !important; grid-template-columns: 44px minmax(0, 1fr); column-gap: 14px; row-gap: 2px; align-items: center; align-content: center; }
+body.crystal-ui .daily-head > .dairy-page-icon { grid-row: 1 / span 3; grid-column: 1; margin: 0 !important; align-self: center; }
+body.crystal-ui .daily-head > :not(.dairy-page-icon) { grid-column: 2; margin-top: 0; }
+body.crystal-ui .dairy-page-icon,
+body.crystal-ui .daily-header-icon-box,
+body.crystal-ui .kx-header-icon { width: 44px !important; height: 44px !important; border-radius: 12px !important; flex-shrink: 0; }
+body.crystal-ui .dairy-page-icon i,
+body.crystal-ui .daily-header-icon-box i,
+body.crystal-ui .kx-header-icon i { color: #00843f !important; font-size: 1.15rem !important; }
+body.crystal-ui .daily-header-icon-box,
+body.crystal-ui .kx-header-icon {
+	background: linear-gradient(150deg, rgba(57, 245, 0, 0.18), rgba(0, 142, 72, 0.12)) !important;
+	border: 1px solid rgba(0, 142, 72, 0.16) !important;
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 4px 12px -6px rgba(0, 142, 72, 0.35) !important;
+}
+body.crystal-ui .dairy-page-title,
+body.crystal-ui .today-exec-title,
+body.crystal-ui .daily-page-title,
+body.crystal-ui .dsm-title,
+body.crystal-ui .kx-header-title,
+body.crystal-ui .sch-main-title,
+body.crystal-ui .lp-hero-title,
+body.crystal-ui .mc-hero-title,
+body.crystal-ui .daily-header-title-group > h1,
+body.crystal-ui .dairy-page-header .dairy-page-icon + div > h1,
+body.crystal-ui .dairy-page-header .dairy-page-icon + div > h4 {
+	/* 22 px: el estándar ya fijado en dairy_glass.css (Etapa 33); aquí se extiende a los módulos que no lo usaban */
+	font-size: 22px !important; font-weight: 700 !important; letter-spacing: -0.025em !important;
+	line-height: 1.2 !important; color: var(--dairy-text-main, #0f172a) !important; margin-bottom: 2px !important; text-wrap: balance;
+}
+body.crystal-ui .dairy-page-subtitle,
+body.crystal-ui .today-exec-subtitle,
+body.crystal-ui .daily-page-subtitle,
+body.crystal-ui .dsm-subtitle,
+body.crystal-ui .kx-header-desc,
+body.crystal-ui .sch-subtitle,
+body.crystal-ui .lp-hero-subtitle,
+body.crystal-ui .mc-hero-subtitle,
+body.crystal-ui .daily-header-subtitle,
+body.crystal-ui .dairy-page-header .dairy-page-icon + div > p {
+	font-size: 14px !important; line-height: 1.45 !important; color: var(--dairy-text-muted, #5b6678) !important; max-width: 72ch; margin-bottom: 0 !important;
+}
+/* Encabezados con foto (Prevención, Mercancías): el texto no debe montarse sobre la imagen */
+body.crystal-ui .lp-hero-left.daily-head { max-width: 470px; padding-right: 8px; }
+body.crystal-ui .mc-hero-info.daily-head { max-width: 480px; flex: 1 1 360px; min-width: 0; }
+body.crystal-ui .mc-hero-banner .btn { white-space: nowrap; }
+@media (max-width: 575.98px) {
+	body.crystal-ui .daily-head { grid-template-columns: 40px minmax(0, 1fr); column-gap: 12px; }
+	body.crystal-ui .daily-head > .dairy-page-icon { width: 40px !important; height: 40px !important; align-self: start; }
+	body.crystal-ui .dairy-page-title, body.crystal-ui .today-exec-title, body.crystal-ui .daily-page-title, body.crystal-ui .dsm-title,
+	body.crystal-ui .kx-header-title, body.crystal-ui .sch-main-title, body.crystal-ui .lp-hero-title, body.crystal-ui .mc-hero-title,
+	body.crystal-ui .daily-header-title-group > h1, body.crystal-ui .dairy-page-header .dairy-page-icon + div > h1,
+	body.crystal-ui .dairy-page-header .dairy-page-icon + div > h4 { font-size: 20px !important; }
+}
+
+/* Iconos de departamento en Stock (antes emoji sobre fondos de 12 colores): un solo trazo y tono */
+body.crystal-ui .dsm-rc-icon-circle { background: #ecfdf3 !important; border: 1px solid rgba(0, 142, 72, 0.16); }
+body.crystal-ui .dsm-rc-icon-circle .dsm-rc-emoji { color: #00843f; font-size: 0.85rem; }
+body.crystal-ui .dsm-dept-emoji { color: #00843f; font-size: 0.8rem; width: 1.1em; text-align: center; }
+body.crystal-ui .dsm-opp-item-emoji { color: #00843f; font-size: 0.95rem; }
+body.crystal-ui .dsm-rc-target-icon { color: #64748b; }
+
+/* Pestañas de nivel (subrayado): el patrón vivía solo en daily_sales.css, así que en /mrp se veían
+   como botones nativos con borde negro. Se define aquí para todos los módulos; activo con contraste AA. */
+body.crystal-ui .daily-level-tabs { display: flex; gap: 20px; overflow-x: auto; scrollbar-width: thin; }
+body.crystal-ui .daily-level-tab {
+	flex-shrink: 0; display: inline-flex; align-items: center; gap: 7px; padding: 10px 4px;
+	font-weight: 600; font-size: 0.85rem; color: #475569; background: transparent; border: none; border-radius: 0;
+	border-bottom: 2.5px solid transparent; cursor: pointer; text-decoration: none; box-shadow: none;
+	transition: color var(--crystal-dur) var(--crystal-ease), border-color var(--crystal-dur) var(--crystal-ease);
+}
+body.crystal-ui .daily-level-tab:hover { color: #0f172a; background: transparent; }
+body.crystal-ui .daily-level-tab.active { color: #00843f; font-weight: 700; border-bottom-color: var(--crystal-green-2); background: transparent; }
+body.crystal-ui .daily-level-badge { font-size: 0.72rem; padding: 1px 7px; border-radius: 9999px; background: #f1f5f9; color: #475569; }
+body.crystal-ui .daily-level-badge.badge-danger { background: #fef0f0; color: #b91c1c; }
+body.crystal-ui .daily-level-tab.active .daily-level-badge:not(.badge-danger) { background: #dcfce7; color: #15803d; }
+
+/* Pestañas tipo píldora: el color es del estado (activa = verde), no de cada pestaña */
+body.crystal-ui .nav-pills .nav-link:not(.active) { color: #334155 !important; }
+body.crystal-ui .nav-pills .nav-link:not(.active):hover { color: #00643a !important; }
+body.crystal-ui .nav-pills .nav-link i[class*="text-"] { color: inherit !important; }
+
+/* Bordes laterales gruesos de color en avisos y tarjetas → contorno completo de 1 px */
+body.crystal-ui .sch-budget-alert-banner { border-left-width: 1px !important; }
+body.crystal-ui .hub-mini-stat { border-left-width: 1px !important; }
+
+/* Teléfono: la franja de alertas del módulo ocupaba la primera pantalla y empujaba el título.
+   Se muestran las 2 primeras; "Abrir en el Centro de Alertas" sigue llevando a la lista completa.
+   Los filtros de HOY se apilaban con anchos distintos: rejilla de dos columnas alineada. */
+@media (max-width: 767.98px) {
+	body.crystal-ui .dairy-alert-strip li:nth-child(n+3) { display: none; }
+	body.crystal-ui .today-exec-filters { display: grid !important; grid-template-columns: 1fr 1fr; gap: 8px; }
+	body.crystal-ui .today-exec-filters > * { width: auto !important; min-width: 0 !important; margin: 0 !important; }
+	body.crystal-ui .today-exec-filters > .today-exec-date-picker { grid-column: 1 / -1; }
+	body.crystal-ui .today-exec-filters select { min-width: 0; max-width: 100%; }
+}
+
+/* Donut de HOY sin departamentos: el gráfico ya dice "Sin información disponible"; el centro "$0 100%" se superponía */
+body.crystal-ui .today-exec-donut-body:not(:has(.today-exec-dept-row)) .today-exec-donut-center { display: none; }
+/* KPI de Mercancías: cifra y tendencia se montaban en tarjetas estrechas */
+body.crystal-ui .mc-kpi-card { min-width: 0; }
+body.crystal-ui .mc-kpi-value-row { flex-wrap: wrap; column-gap: 6px; row-gap: 0; min-width: 0; }
+body.crystal-ui .mc-kpi-icon.icon-blue,
+body.crystal-ui .mc-kpi-icon.icon-purple,
+body.crystal-ui .mc-kpi-icon.icon-cyan { background: #ecfdf3 !important; color: #00643a !important; }
+
+/* Rejillas que desbordaban la página: la columna flexible no puede crecer por su contenido */
+body.crystal-ui .mc-layout-grid { grid-template-columns: minmax(0, 1fr) 340px; }
+body.crystal-ui .mc-layout-grid > * { min-width: 0; }
+body.crystal-ui .dsm-dept-kpi-grid { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+@media (max-width: 1599.98px) {
+	body.crystal-ui .mc-kpis-grid-7 { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+}
+@media (max-width: 1199.98px) {
+	body.crystal-ui .mc-layout-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Barras de pestañas con desplazamiento horizontal: borde que se desvanece indica que hay más */
+body.crystal-ui .dairy-subnav-pills.flex-nowrap,
+body.crystal-ui .lp-tabs-bar,
+body.crystal-ui .dsp-stepper-wrapper,
+body.crystal-ui .dsm-alert-pills-row {
+	-webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 36px), transparent);
+	mask-image: linear-gradient(90deg, #000 calc(100% - 36px), transparent);
+	scrollbar-width: thin;
+	scroll-padding-inline: 24px;
+}
+
+/* Barras de desplazamiento y foco de teclado en la paleta */
+body.crystal-ui * { scrollbar-color: rgba(0, 100, 58, 0.28) transparent; }
+body.crystal-ui :focus-visible { outline: 2px solid var(--crystal-green-3); outline-offset: 2px; }
+
 /* Pantallas táctiles/móvil: menos capas con desenfoque */
 @media (max-width: 767.98px) {
-	body.crystal-ui { --crystal-blur: blur(12px) saturate(150%); }
+	body.crystal-ui { --crystal-blur: blur(16px) saturate(160%); --crystal-panel-blur: blur(14px) saturate(160%); }
 	body.crystal-ui .modal-backdrop.show { -webkit-backdrop-filter: none; backdrop-filter: none; }
 }
 
@@ -513,4 +884,118 @@ body.crystal-ui .dm-bottom-nav {
 	body.crystal-ui::before { display: none; }
 	body.crystal-ui .crystal-surface,
 	body.crystal-ui .card { background: #fff !important; box-shadow: none !important; }
+}
+
+/* ==========================================================================
+   DAILY — COMPONENTE MAESTRO: DailyDashboardLayout
+   ========================================================================== */
+.daily-dashboard-layout {
+	background: transparent !important;
+	padding: 16px 20px 24px 20px;
+	box-sizing: border-box;
+	min-width: 0;
+	font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+	color: #0f172a;
+}
+.daily-dashboard-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: nowrap;
+	gap: 16px;
+	margin-bottom: 12px;
+	min-height: 48px;
+}
+.daily-dashboard-title {
+	font-size: 20px;
+	font-weight: 700;
+	letter-spacing: -0.02em;
+	color: #0f172a;
+	margin: 0;
+	line-height: 1.25;
+}
+.daily-dashboard-subtitle {
+	font-size: 12.5px;
+	color: #64748b;
+	margin: 2px 0 0 0;
+	line-height: 1.35;
+}
+.daily-dashboard-badge {
+	display: inline-flex;
+	align-items: center;
+	padding: 4px 10px;
+	border-radius: 9999px;
+	font-size: 11px;
+	font-weight: 600;
+	background: rgba(255, 255, 255, 0.7);
+	border: 1px solid rgba(226, 232, 240, 0.8);
+	color: #64748b;
+}
+
+/* Skeletons de precarga (cero pantalla blanca) */
+.daily-dashboard-skeleton {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+.daily-dashboard-skeleton .skeleton-card {
+	background: linear-gradient(90deg, rgba(255, 255, 255, 0.4) 25%, rgba(255, 255, 255, 0.7) 50%, rgba(255, 255, 255, 0.4) 75%);
+	background-size: 200% 100%;
+	animation: dailySkeletonPulse 1.5s infinite;
+	border-radius: 12px;
+	height: 120px;
+	border: 1px solid rgba(255, 255, 255, 0.6);
+}
+.daily-dashboard-skeleton .skeleton-header {
+	height: 48px;
+}
+.daily-dashboard-skeleton .skeleton-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+	gap: 16px;
+}
+@keyframes dailySkeletonPulse {
+	0% { background-position: 200% 0; }
+	100% { background-position: -200% 0; }
+}
+
+/* ==========================================================================
+   DAILY — SUPERFICIES TRANSLÚCIDAS EN MODO OSCURO (NIGHT MODE)
+   ========================================================================== */
+.night-mode .daily-dashboard-layout,
+.night-mode .ded-wrapper,
+.night-mode .branch-dash-wrapper,
+.night-mode .sales-hist-wrapper,
+.night-mode .prod-dash-wrapper,
+.night-mode .dept-perf-wrapper {
+	background: transparent !important;
+}
+.night-mode .daily-dashboard-title {
+	color: #f8fafc !important;
+}
+.night-mode .daily-dashboard-subtitle {
+	color: #94a3b8 !important;
+}
+.night-mode .card,
+.night-mode .ded-card,
+.night-mode .branch-card-panel,
+.night-mode .hist-card-panel,
+.night-mode .hist-search-card,
+.night-mode .prod-card-panel,
+.night-mode .dept-perf-card,
+.night-mode .pos-catalog-panel,
+.night-mode .pos-cart-panel,
+.night-mode .customers-card,
+.night-mode .customers-card-panel,
+.night-mode .daily-dashboard-card,
+.night-mode .daily-dashboard-panel,
+.night-mode .branch-kpi-card:not(.branch-kpi-card-green),
+.night-mode .hist-kpi-card:not(.hist-kpi-card-green),
+.night-mode .prod-kpi-card:not(.prod-kpi-highlight):not(.prod-kpi-card-green),
+.night-mode .ded-kpi-card:not(.is-highlight),
+.night-mode .customers-kpi-card {
+	background: rgba(30, 41, 59, 0.72) !important;
+	border: 1px solid rgba(255, 255, 255, 0.10) !important;
+	color: #e2e8f0 !important;
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35) !important;
 }

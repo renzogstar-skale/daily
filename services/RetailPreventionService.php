@@ -1159,4 +1159,140 @@ class RetailPreventionService extends BaseService
 			]
 		];
 	}
+
+	/**
+	 * Asignación de picking/preparación para orden de despacho
+	 */
+	public function AssignPickingOrder(int $orderId, int $pickerUserId, int $userId = 1): array
+	{
+		$db = $this->Db();
+		$stmt = $db->prepare("SELECT * FROM customer_orders WHERE id = :id");
+		$stmt->execute([':id' => $orderId]);
+		$order = $stmt->fetch(\PDO::FETCH_ASSOC);
+		if (!$order)
+		{
+			throw new \Exception("Pedido #$orderId no encontrado.");
+		}
+
+		$upd = $db->prepare("
+			UPDATE customer_orders
+			SET status = 'picking',
+				picked_by_user_id = :picker,
+				picked_at = datetime('now', 'localtime')
+			WHERE id = :id
+		");
+		$upd->execute([
+			':picker' => $pickerUserId,
+			':id' => $orderId
+		]);
+
+		return ['success' => true, 'message' => "Operador asignado a picking para pedido {$order['order_code']}."];
+	}
+
+	/**
+	 * Programación de transporte, vehículo y horario de entrega
+	 */
+	public function ScheduleTransportOrder(int $orderId, array $d, int $userId = 1): array
+	{
+		$db = $this->Db();
+		$stmt = $db->prepare("SELECT * FROM customer_orders WHERE id = :id");
+		$stmt->execute([':id' => $orderId]);
+		$order = $stmt->fetch(\PDO::FETCH_ASSOC);
+		if (!$order)
+		{
+			throw new \Exception("Pedido #$orderId no encontrado.");
+		}
+
+		$carrier = trim(strval($d['carrier_name'] ?? 'Transportista Logística'));
+		$vehicle = trim(strval($d['carrier_vehicle'] ?? ''));
+		$phone = trim(strval($d['carrier_phone'] ?? ''));
+		$tracking = trim(strval($d['carrier_tracking_number'] ?? ('DSP-TRK-' . rand(10000, 99999))));
+		$route = trim(strval($d['route'] ?? 'Ruta Urbana'));
+
+		$upd = $db->prepare("
+			UPDATE customer_orders
+			SET carrier_name = :c,
+				carrier_vehicle = :v,
+				carrier_phone = :ph,
+				carrier_tracking_number = :trk,
+				notes = CASE WHEN notes IS NULL OR notes = '' THEN :route ELSE notes || ' | ' || :route END
+			WHERE id = :id
+		");
+		$upd->execute([
+			':c' => $carrier,
+			':v' => $vehicle,
+			':ph' => $phone,
+			':trk' => $tracking,
+			':route' => "Ruta: $route",
+			':id' => $orderId
+		]);
+
+		return ['success' => true, 'message' => "Transporte y ruta programados para pedido {$order['order_code']}."];
+	}
+
+	/**
+	 * Confirmación de carga y salida de despacho (Registro de Salida)
+	 */
+	public function ConfirmDispatchExit(int $orderId, array $d, int $userId = 1): array
+	{
+		$db = $this->Db();
+		$stmt = $db->prepare("SELECT * FROM customer_orders WHERE id = :id");
+		$stmt->execute([':id' => $orderId]);
+		$order = $stmt->fetch(\PDO::FETCH_ASSOC);
+		if (!$order)
+		{
+			throw new \Exception("Pedido #$orderId no encontrado.");
+		}
+
+		$dispatchDoc = trim(strval($d['dispatch_number'] ?? ('DSP-' . date('Ymd') . '-' . sprintf('%04d', $orderId))));
+
+		$upd = $db->prepare("
+			UPDATE customer_orders
+			SET status = 'dispatched',
+				delivery_status = 'in_transit',
+				departure_time = datetime('now', 'localtime'),
+				dispatched_by_user_id = :u,
+				dispatched_at = datetime('now', 'localtime'),
+				carrier_tracking_number = COALESCE(carrier_tracking_number, :doc)
+			WHERE id = :id
+		");
+		$upd->execute([
+			':u' => $userId,
+			':doc' => $dispatchDoc,
+			':id' => $orderId
+		]);
+
+		return ['success' => true, 'dispatch_number' => $dispatchDoc, 'message' => "Salida confirmada. Pedido {$order['order_code']} en tránsito hacia destino."];
+	}
+
+	/**
+	 * Cancelación autorizada de despacho/pedido
+	 */
+	public function CancelOrder(int $orderId, string $reason, int $userId = 1): array
+	{
+		$db = $this->Db();
+		$stmt = $db->prepare("SELECT * FROM customer_orders WHERE id = :id");
+		$stmt->execute([':id' => $orderId]);
+		$order = $stmt->fetch(\PDO::FETCH_ASSOC);
+		if (!$order)
+		{
+			throw new \Exception("Pedido #$orderId no encontrado.");
+		}
+
+		$upd = $db->prepare("
+			UPDATE customer_orders
+			SET status = 'cancelled',
+				cancel_reason = :r,
+				cancelled_by_user_id = :u,
+				cancelled_at = datetime('now', 'localtime')
+			WHERE id = :id
+		");
+		$upd->execute([
+			':r' => trim($reason) ?: 'Cancelado por operaciones/cliente',
+			':u' => $userId,
+			':id' => $orderId
+		]);
+
+		return ['success' => true, 'message' => "Pedido {$order['order_code']} cancelado correctamente."];
+	}
 }

@@ -1,0 +1,11 @@
+{
+    "Apertura Mañana {0} - {1}": "Morning Opening {0} - {1}",
+    "Cierre Estándar {0} - {1}": "Standard Closing {0} - {1}",
+    "El mes ya está publicado: use el motor de programación para proponer cambios y aprobarlos": "The month is already published: use the scheduling engine to propose changes and approve them",
+    "El nombre y el código de nómina son obligatorios.": "Name and payroll code are required.",
+    "Modificación de turno SAP": "SAP shift change",
+    "Política Oficial Estándar (Ley {0}x{1})": "Official Standard Policy (Law {0}x{1})",
+    "Sincronización bidireccional": "Two-way sync",
+    "Sincronización semanal": "Weekly sync",
+    "TOTAL HORAS": "TOTAL HOURS"
+}

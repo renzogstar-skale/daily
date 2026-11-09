@@ -1,0 +1,10 @@
+{
+    "Dotación mín. seguridad:": "Min. safety staffing:",
+    "En Compensatorio:": "On Comp Time:",
+    "En Vacaciones:": "On Vacation:",
+    "Monitoreo de dotación mínima de seguridad, personal disponible, vacaciones, compensatorios y validación de cobertura cruzada según matriz de habilidades.": "Monitoring of minimum safety staffing, available staff, vacations, comp days and cross-coverage validation according to the skills matrix.",
+    "Semana del": "Week of",
+    "Todas ({0} Áreas)": "All ({0} Areas)",
+    "personas/día": "people/day",
+    "u otras áreas especializadas, el colaborador debe poseer la certificación activa en la Matriz de Habilidades. El sistema bloquea automáticamente asignaciones no autorizadas.": "or other specialized areas, the team member must hold the active certification in the Skills Matrix. The system automatically blocks unauthorized assignments."
+}

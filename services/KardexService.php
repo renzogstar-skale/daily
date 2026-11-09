@@ -183,7 +183,9 @@ class KardexService extends BaseService
 			['transfer', "SELECT receive_transaction_id, id, transfer_code FROM stock_transfers WHERE receive_transaction_id IN ($in)"],
 			['waste', "SELECT transaction_id, id, IFNULL(case_number, 'MRM-' || id) FROM waste_records WHERE transaction_id IN ($in)"],
 			['adjustment', "SELECT adjustment_transaction_id, id, 'AJU-' || strftime('%Y', created_timestamp) || '-' || substr('00000' || id, -5) FROM stock_cycle_counts WHERE adjustment_transaction_id IN ($in)"],
-			['sale', "SELECT si.transaction_id, s.id, s.sale_number FROM sale_items si JOIN sales s ON s.id = si.sale_id WHERE si.transaction_id IN ($in)"]
+			['sale', "SELECT si.transaction_id, s.id, s.sale_number FROM sale_items si JOIN sales s ON s.id = si.sale_id WHERE si.transaction_id IN ($in)"],
+			['return', "SELECT return_code, id, return_code FROM customer_returns_exchanges WHERE return_code IN ($in)"],
+			['return', "SELECT stock_id, id, return_code FROM customer_returns_exchanges WHERE stock_id IN ($in)"]
 		];
 		foreach ($queries as [$type, $sql])
 		{

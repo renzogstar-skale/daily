@@ -174,6 +174,68 @@ class RetailPreventionApiController extends BaseApiController
 		return $this->ApiResponse($response, $res);
 	}
 
+	public function AssignPicking(Request $request, Response $response, array $args): Response
+	{
+		$b = (array)($request->getParsedBody() ?? []);
+		$orderId = intval($b['order_id'] ?? 0);
+		$pickerId = intval($b['picker_user_id'] ?? GROCY_USER_ID);
+		try
+		{
+			$res = $this->Svc()->AssignPickingOrder($orderId, $pickerId, GROCY_USER_ID);
+			return $this->ApiResponse($response, $res);
+		}
+		catch (\Throwable $e)
+		{
+			return $this->GenericErrorResponse($response, $e->getMessage(), 400);
+		}
+	}
+
+	public function ScheduleTransport(Request $request, Response $response, array $args): Response
+	{
+		$b = (array)($request->getParsedBody() ?? []);
+		$orderId = intval($b['order_id'] ?? 0);
+		try
+		{
+			$res = $this->Svc()->ScheduleTransportOrder($orderId, $b, GROCY_USER_ID);
+			return $this->ApiResponse($response, $res);
+		}
+		catch (\Throwable $e)
+		{
+			return $this->GenericErrorResponse($response, $e->getMessage(), 400);
+		}
+	}
+
+	public function ConfirmExit(Request $request, Response $response, array $args): Response
+	{
+		$b = (array)($request->getParsedBody() ?? []);
+		$orderId = intval($b['order_id'] ?? 0);
+		try
+		{
+			$res = $this->Svc()->ConfirmDispatchExit($orderId, $b, GROCY_USER_ID);
+			return $this->ApiResponse($response, $res);
+		}
+		catch (\Throwable $e)
+		{
+			return $this->GenericErrorResponse($response, $e->getMessage(), 400);
+		}
+	}
+
+	public function CancelOrder(Request $request, Response $response, array $args): Response
+	{
+		$b = (array)($request->getParsedBody() ?? []);
+		$orderId = intval($b['order_id'] ?? 0);
+		$reason = strval($b['reason'] ?? 'Cancelado');
+		try
+		{
+			$res = $this->Svc()->CancelOrder($orderId, $reason, GROCY_USER_ID);
+			return $this->ApiResponse($response, $res);
+		}
+		catch (\Throwable $e)
+		{
+			return $this->GenericErrorResponse($response, $e->getMessage(), 400);
+		}
+	}
+
 	/* -------------------------------------------------------------------------
 	 * CUSTOMER RETURNS & EXCHANGES
 	 * ------------------------------------------------------------------------- */

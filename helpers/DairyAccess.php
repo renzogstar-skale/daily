@@ -17,7 +17,6 @@ class DairyAccess
 		'/reports' => [User::PERMISSION_KPIS_VIEW],
 		'/reports/loss-executive' => [User::PERMISSION_LOSS_PREVENTION, User::PERMISSION_KPIS_VIEW],
 		'/cost-centers' => [User::PERMISSION_KPIS_VIEW],
-		'/ai-advisor' => [User::PERMISSION_KPIS_VIEW],
 		'/waste' => [User::PERMISSION_WASTE_REPORT, User::PERMISSION_WASTE_APPROVE],
 		'/waste/tab/{tab}' => [User::PERMISSION_WASTE_REPORT, User::PERMISSION_WASTE_APPROVE],
 		'/waste/report' => [User::PERMISSION_WASTE_REPORT],
@@ -29,8 +28,9 @@ class DairyAccess
 		'/branches' => [User::PERMISSION_BRANCH_MANAGE, User::PERMISSION_KPIS_VIEW],
 		'/branch/{branchId}/stock' => [User::PERMISSION_BRANCH_MANAGE, User::PERMISSION_KPIS_VIEW],
 		'/suppliers' => [User::PERMISSION_PROCUREMENT_MANAGE],
-		'/quality' => [User::PERMISSION_QUALITY_INSPECT, User::PERMISSION_QUALITY_QUARANTINE],
 		'/workforce' => [User::PERMISSION_TASKS],
+		'/hr' => [User::PERMISSION_WORKFORCE_SCHEDULE_MANAGE, User::PERMISSION_WORKFORCE_ATTENDANCE_MANAGE, User::PERMISSION_TASKS, User::PERMISSION_KPIS_VIEW],
+		'/hr/payroll/export' => [User::PERMISSION_WORKFORCE_SCHEDULE_MANAGE, User::PERMISSION_KPIS_VIEW],
 		'/operations/scheduling' => [User::PERMISSION_WORKFORCE_SCHEDULE_MANAGE, User::PERMISSION_TASKS, User::PERMISSION_KPIS_VIEW],
 		'/operations/attendance' => [User::PERMISSION_WORKFORCE_ATTENDANCE_MANAGE, User::PERMISSION_TASKS, User::PERMISSION_KPIS_VIEW],
 		'/users' => [User::PERMISSION_ADMIN, User::PERMISSION_USERS, User::PERMISSION_USERS_READ],
@@ -40,7 +40,9 @@ class DairyAccess
 		'/stockoverview' => [User::PERMISSION_STOCK],
 		'/inventory' => [User::PERMISSION_STOCK_INVENTORY],
 		'/inventory-control' => [User::PERMISSION_STOCK],
+		'/inventory/stockouts' => [User::PERMISSION_STOCK],
 		'/merchandise' => [User::PERMISSION_STOCK, User::PERMISSION_LOSS_PREVENTION, User::PERMISSION_KPIS_VIEW],
+		'/warehouse' => [User::PERMISSION_STOCK, User::PERMISSION_LOSS_PREVENTION, User::PERMISSION_KPIS_VIEW],
 		'/loss-prevention' => [User::PERMISSION_LOSS_PREVENTION, User::PERMISSION_ALERTS_SUPERVISE, User::PERMISSION_KPIS_VIEW],
 		'/loss-prevention/case/{id}' => [User::PERMISSION_LOSS_PREVENTION, User::PERMISSION_ALERTS_SUPERVISE],
 		'/loss-prevention/devices' => [User::PERMISSION_SCAN_OPERATE, User::PERMISSION_STOCK_INVENTORY, User::PERMISSION_LOSS_PREVENTION],
@@ -52,8 +54,10 @@ class DairyAccess
 		'/locations/map' => [User::PERMISSION_STOCK],
 		'/traceability' => [User::PERMISSION_STOCK],
 		'/orders' => [User::PERMISSION_ORDERS_MANAGE, User::PERMISSION_ORDERS_PICK],
+		'/dispatches' => [User::PERMISSION_ORDERS_MANAGE, User::PERMISSION_ORDERS_PICK, User::PERMISSION_STOCK],
 		'/dispatch' => [User::PERMISSION_ORDERS_MANAGE, User::PERMISSION_ORDERS_PICK, User::PERMISSION_STOCK],
 		'/returns' => [User::PERMISSION_STOCK, User::PERMISSION_WASTE_REPORT, User::PERMISSION_SALES_VIEW],
+		'/pos/returns' => [User::PERMISSION_SALES_POS, User::PERMISSION_SALES_VIEW, User::PERMISSION_STOCK, User::PERMISSION_WASTE_REPORT],
 		'/recalls' => [User::PERMISSION_RECALL_MANAGE, User::PERMISSION_QUALITY_QUARANTINE],
 		'/audits' => [User::PERMISSION_AUDIT_PERFORM],
 		'/system-map' => [User::PERMISSION_ADMIN],
@@ -83,11 +87,11 @@ class DairyAccess
 
 	// Rol "demo" (demostración comercial controlada): solo estas páginas web; el resto se oculta y redirige a /sales
 	const DEMO_PAGES = [
-		'/', '/sales', '/pos', '/customers', '/orders',
+		'/', '/sales', '/pos', '/pos/returns', '/customers', '/orders',
 		'/today', '/kpis',
 		'/waste', '/waste/tab/{tab}', '/waste/report',
-		'/stockoverview', '/kardex', '/traceability', '/quality',
-		'/operations/scheduling', '/schedule',
+		'/stockoverview', '/inventory/stockouts', '/kardex', '/traceability', '/warehouse',
+		'/operations/scheduling', '/schedule', '/hr', '/hr/payroll/export',
 		'/login', '/logout', '/daily/set-role'
 	];
 

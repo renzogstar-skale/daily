@@ -1,0 +1,20 @@
+{
+    "Aprobada · por enviar": "Approved · to send",
+    "Cantidades inválidas": "Invalid quantities",
+    "Comprometida en tránsito": "Committed in transit",
+    "Cotización / precio registrado exitosamente": "Quote / price recorded successfully",
+    "Datos de entrega incompletos": "Incomplete delivery data",
+    "El nombre del proveedor es obligatorio": "The supplier name is required",
+    "Indique la fecha de entrega comprometida y la real (AAAA-MM-DD)": "State the committed and actual delivery date (YYYY-MM-DD)",
+    "Indique proveedor, producto y un precio mayor que {0}": "State supplier, product and a price greater than {0}",
+    "Por enviar": "To send",
+    "Proveedor activado": "Supplier activated",
+    "Proveedor desactivado": "Supplier deactivated",
+    "Proveedor guardado exitosamente": "Supplier saved successfully",
+    "Proveedor no encontrado": "Supplier not found",
+    "Proveedor y descripción son obligatorios": "Supplier and description are required",
+    "Proveedor, producto y precio son obligatorios": "Supplier, product and price are required",
+    "Recepción de entrega registrada": "Delivery receipt recorded",
+    "Sin aprobador": "No approver",
+    "Sin stock utilizable.": "No usable stock."
+}

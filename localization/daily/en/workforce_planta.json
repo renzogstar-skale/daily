@@ -1,0 +1,9 @@
+{
+    "Código definitivo": "Final code",
+    "Indique el inicio y el fin de la restricción": "State the start and end of the restriction",
+    "Indique el motivo de la restricción": "State the reason for the restriction",
+    "La restricción nocturna debe decir si prohíbe o habilita": "The night restriction must state whether it prohibits or enables",
+    "La secuencia usa días de {0} (lunes) a {1} (viernes) separados por comas": "The sequence uses days {0} (Monday) to {1} (Friday) separated by commas",
+    "Secuencia de compensatorio": "Comp day sequence",
+    "Tipo de restricción no válido": "Invalid restriction type"
+}

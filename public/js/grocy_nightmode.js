@@ -1,146 +1,86 @@
-﻿
-$("input.user-setting-control:radio[name=night-mode]").on("change", function()
+﻿// Controles heredados de Grocy (Encendido / Sistema / Apagado y horario automático):
+// ahora solo alimentan el tema global DailyTheme (daily_mode.js), que es la única fuente de verdad.
+(function ()
 {
-	Grocy.UserSettings.night_mode = $("input.user-setting-control:radio[name=night-mode]:checked").val();
-	Grocy.FrontendHelpers.SaveUserSetting("night_mode", Grocy.UserSettings.night_mode, true);
-	CheckNightMode();
-});
-
-$("#auto-night-mode-enabled").on("change", function()
-{
-	var value = $(this).is(":checked");
-	$("#auto-night-mode-time-range-from").prop("readonly", !value);
-	$("#auto-night-mode-time-range-to").prop("readonly", !value);
-
-	if (!value && !BoolVal(Grocy.UserSettings.night_mode_enabled_internal))
+	if (!window.DailyTheme)
 	{
-		$("body").removeClass("night-mode");
+		return;
 	}
 
-	// Force disable night mode when auto night mode is enabled
-	if (value)
-	{
-		$("#night-mode-enabled").prop("checked", false);
-		$("#night-mode-enabled").trigger("change");
-	}
-});
+	var toPref = { "on": "dark", "off": "light", "follow-system": "system" };
+	var fromPref = { "dark": "on", "light": "off", "system": "follow-system" };
 
-$(document).on("keyup", "#auto-night-mode-time-range-from, #auto-night-mode-time-range-to", function()
-{
-	var value = $(this).val();
-	var valueIsValid = moment(value, "HH:mm", true).isValid();
-
-	if (valueIsValid)
+	function syncRadios()
 	{
-		$(this).removeClass("bg-danger");
-	}
-	else
-	{
-		$(this).addClass("bg-danger");
+		$("input.user-setting-control:radio[name=night-mode][value=" + fromPref[DailyTheme.preference()] + "]").prop("checked", true);
 	}
 
-	CheckNightMode();
-});
-
-$("#auto-night-mode-time-range-goes-over-midgnight").on("change", function()
-{
-	CheckNightMode();
-});
-
-function CheckNightMode()
-{
-	if (Grocy.UserId === -1) // Not logged in => always use system preferred color scheme
+	$("input.user-setting-control:radio[name=night-mode]").on("change", function ()
 	{
-		Grocy.UserSettings.night_mode = "follow-system";
-	}
+		var value = $("input.user-setting-control:radio[name=night-mode]:checked").val();
+		if (toPref[value])
+		{
+			DailyTheme.set(toPref[value]);
+		}
+	});
 
-	var nightModeEnabledInternalBefore = Grocy.UserSettings.night_mode_enabled_internal;
-
-	if (Grocy.UserSettings.night_mode != "follow-system" && BoolVal(Grocy.UserSettings.auto_night_mode_enabled))
+	$("#auto-night-mode-enabled").on("change", function ()
 	{
-		var start = moment(Grocy.UserSettings.auto_night_mode_time_range_from, "HH:mm", true);
-		var end = moment(Grocy.UserSettings.auto_night_mode_time_range_to, "HH:mm", true);
-		var now = moment();
+		var value = $(this).is(":checked");
+		$("#auto-night-mode-time-range-from").prop("readonly", !value);
+		$("#auto-night-mode-time-range-to").prop("readonly", !value);
+		CheckNightMode();
+	});
 
-		if (!start.isValid() || !end.isValid)
+	$(document).on("keyup", "#auto-night-mode-time-range-from, #auto-night-mode-time-range-to", function ()
+	{
+		$(this).toggleClass("bg-danger", !moment($(this).val(), "HH:mm", true).isValid());
+		CheckNightMode();
+	});
+
+	$("#auto-night-mode-time-range-goes-over-midgnight").on("change", function ()
+	{
+		CheckNightMode();
+	});
+
+	document.addEventListener("daily:modechange", syncRadios);
+
+	// Horario automático: aplica Día/Noche según la hora sin cambiar la preferencia guardada
+	function CheckNightMode()
+	{
+		if (Grocy.UserId === -1 || !BoolVal(Grocy.UserSettings.auto_night_mode_enabled))
 		{
 			return;
 		}
 
+		var start = moment(Grocy.UserSettings.auto_night_mode_time_range_from, "HH:mm", true);
+		var end = moment(Grocy.UserSettings.auto_night_mode_time_range_to, "HH:mm", true);
+		if (!start.isValid() || !end.isValid())
+		{
+			return;
+		}
 		if (BoolVal(Grocy.UserSettings.auto_night_mode_time_range_goes_over_midnight))
 		{
 			end.add(1, "day");
 		}
 
-		if (now.isBetween(start, end)) // We're INSIDE of night mode time range
+		var wanted = moment().isBetween(start, end) ? "dark" : "light";
+		if (DailyTheme.mode() !== wanted)
 		{
-			Grocy.UserSettings.night_mode_enabled_internal = true;
-		}
-		else // We're OUTSIDE of night mode time range
-		{
-			Grocy.UserSettings.night_mode_enabled_internal = false;
+			DailyTheme.set(wanted, { persist: false });
 		}
 	}
-	else
+	window.CheckNightMode = CheckNightMode;
+
+	if (Grocy.UserId !== -1)
 	{
-		if (Grocy.UserSettings.night_mode == "on")
-		{
-			Grocy.UserSettings.night_mode_enabled_internal = true;
-		}
-		else if (Grocy.UserSettings.night_mode == "off")
-		{
-			Grocy.UserSettings.night_mode_enabled_internal = false;
-		}
-		else if (Grocy.UserSettings.night_mode == "follow-system")
-		{
-			Grocy.UserSettings.night_mode_enabled_internal = window.matchMedia("(prefers-color-scheme: dark)").matches;
-		}
+		syncRadios();
+		$("#auto-night-mode-enabled").prop("checked", BoolVal(Grocy.UserSettings.auto_night_mode_enabled));
+		$("#auto-night-mode-time-range-goes-over-midgnight").prop("checked", BoolVal(Grocy.UserSettings.auto_night_mode_time_range_goes_over_midnight));
+		$("#auto-night-mode-time-range-from").val(Grocy.UserSettings.auto_night_mode_time_range_from).prop("readonly", !BoolVal(Grocy.UserSettings.auto_night_mode_enabled));
+		$("#auto-night-mode-time-range-to").val(Grocy.UserSettings.auto_night_mode_time_range_to).prop("readonly", !BoolVal(Grocy.UserSettings.auto_night_mode_enabled));
 	}
 
-	if (BoolVal(nightModeEnabledInternalBefore) != BoolVal(Grocy.UserSettings.night_mode_enabled_internal))
-	{
-		Grocy.FrontendHelpers.SaveUserSetting("night_mode_enabled_internal", BoolVal(Grocy.UserSettings.night_mode_enabled_internal), true);
-	}
-
-	if (BoolVal(Grocy.UserSettings.night_mode_enabled_internal))
-	{
-		if (!$("#night-mode-stylesheet").length)
-		{
-			$("<link>")
-				.appendTo("head")
-				.attr({
-					rel: "stylesheet",
-					href: U("/css/grocy_night_mode.css")
-				});
-		}
-
-		$("body").addClass("night-mode");
-	}
-	else
-	{
-		$("body").removeClass("night-mode");
-	}
-}
-
-if (Grocy.UserId !== -1)
-{
-	$("input.user-setting-control:radio[name=night-mode][value=" + Grocy.UserSettings.night_mode + "]").prop("checked", true);
-	$("#auto-night-mode-enabled").prop("checked", BoolVal(Grocy.UserSettings.auto_night_mode_enabled));
-	$("#auto-night-mode-time-range-goes-over-midgnight").prop("checked", BoolVal(Grocy.UserSettings.auto_night_mode_time_range_goes_over_midnight));
-	$("#auto-night-mode-enabled").trigger("change");
-	$("#auto-night-mode-time-range-from").val(Grocy.UserSettings.auto_night_mode_time_range_from);
-	$("#auto-night-mode-time-range-from").trigger("keyup");
-	$("#auto-night-mode-time-range-to").val(Grocy.UserSettings.auto_night_mode_time_range_to);
-	$("#auto-night-mode-time-range-to").trigger("keyup");
-}
-
-if (Grocy.Mode === "production")
-{
 	setInterval(CheckNightMode, 60000);
-}
-else
-{
-	setInterval(CheckNightMode, 4000);
-}
-
-CheckNightMode();
+	CheckNightMode();
+})();

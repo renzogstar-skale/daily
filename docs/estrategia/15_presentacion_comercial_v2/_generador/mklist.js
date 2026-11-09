@@ -1,0 +1,16 @@
+const L=[];const a=(d,f,u,o={})=>L.push({d,f,u,...o});
+a('01_ejecutivo','kpis','/kpis');a('01_ejecutivo','today','/today');
+const W=['centro-control','clasificacion','ajustes','averias','causales','conteos','perecederos','fefo','robo','recuperacion','investigaciones'];
+for(const t of W)a('02_mermas','waste_'+t,'/waste',{click:`a[href="#tab-${t}"]`});
+a('02_mermas','waste_report','/waste/report');a('02_mermas','waste_approvals','/waste/approvals');a('02_mermas','waste_reasons','/waste/reasons');a('02_mermas','loss_executive','/reports/loss-executive');
+a('03_inventario','stockoverview','/stockoverview');a('03_inventario','kardex','/kardex');a('03_inventario','kardex_producto','/kardex?product_id=175&branch_id=5');
+a('03_inventario','conciliacion_caso','/reconciliation?product_id=175&branch_id=5&case_id=2');a('03_inventario','conciliacion_producto','/reconciliation?product_id=175&branch_id=5');
+a('03_inventario','location_map','/locations/map');a('03_inventario','transfers','/transfers');a('03_inventario','scan','/scan');a('03_inventario','inventory','/inventory');a('03_inventario','inventory_control','/inventory-control');a('03_inventario','traceability','/traceability');
+a('04_calidad','quality','/quality');for(const t of ['cold','quarantine','inspections','predictive'])a('04_calidad','quality_'+t,'/quality',{click:`a[href="#tab-${t}"]`});a('04_calidad','recalls','/recalls');
+a('05_ventas','sales','/sales');a('05_ventas','sales_analisis','/sales',{click:'#pill-analisis'});a('05_ventas','cost_centers','/cost-centers');a('05_ventas','reports','/reports');a('05_ventas','pos','/pos');
+a('06_personal','scheduling','/operations/scheduling');a('06_personal','scheduling_mensual','/operations/scheduling',{click:'#viewPillMonthly'});a('06_personal','attendance','/operations/attendance');a('06_personal','workforce','/workforce');
+a('07_multisucursal','branches','/branches');
+a('08_alertas','alerts','/alerts');
+a('09_compras','mrp','/mrp');a('09_compras','suppliers','/suppliers');a('09_compras','ai_advisor','/ai-advisor');
+for(const [f,h] of [['home','home'],['tasks','tasks'],['scan','scan'],['control','control'],['notifications','notifications'],['inv','inv'],['waste','waste'],['shrink','shrink'],['ops','ops'],['team','team'],['sales','sales']])a('10_movil','m_'+f,'/m#/'+h,{m:1,vp:1,w:3500});
+require('fs').writeFileSync('list.json',JSON.stringify(L));console.log(L.length);

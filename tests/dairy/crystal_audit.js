@@ -2,10 +2,10 @@
 // Uso: node tests/dairy/crystal_audit.js <carpeta_salida> [ruta1,ruta2,...]
 const path = require('path');
 const fs = require('fs');
-const pwDir = process.env.PW_DIR;
+const pwDir = process.env.PW_DIR || 'playwright';
 const { chromium } = require(pwDir);
 
-const ALL = ['/today', '/alerts', '/kpis', '/mrp', '/ai-advisor', '/suppliers', '/branches', '/merchandise', '/scan',
+const ALL = ['/today', '/alerts', '/kpis', '/mrp', '/suppliers', '/branches', '/merchandise', '/scan',
 	'/locations/map', '/stockoverview', '/transfers', '/kardex', '/inventory-control', '/inventory', '/reconciliation',
 	'/sales', '/pos', '/orders', '/customers', '/dispatch', '/returns', '/quality', '/traceability', '/recalls',
 	'/waste', '/waste/report', '/waste/approvals', '/waste/reasons', '/loss-prevention', '/loss-prevention/devices',
