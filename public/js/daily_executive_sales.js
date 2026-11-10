@@ -411,8 +411,9 @@
 				var range = this.getAttribute('data-select-range');
 				var url = new URL(window.location.href);
 				var today = new Date();
+				// Fecha local (toISOString usa UTC y de noche adelantaba un día)
 				var fmt = function (d) {
-					return d.toISOString().split('T')[0];
+					return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 				};
 
 				var from, to;
@@ -433,6 +434,15 @@
 				} else if (range === 'year') {
 					var firstYear = new Date(today.getFullYear(), 0, 1);
 					from = fmt(firstYear);
+				} else if (range === 'today') {
+					from = to;
+				} else if (range === 'yesterday') {
+					var y = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1);
+					from = to = fmt(y);
+				} else if (range === 'week') {
+					from = fmt(new Date(today.getFullYear(), today.getMonth(), today.getDate() - ((today.getDay() + 6) % 7)));
+				} else if (range === 'quarter') {
+					from = fmt(new Date(today.getFullYear(), Math.floor(today.getMonth() / 3) * 3, 1));
 				}
 
 				if (from && to) {

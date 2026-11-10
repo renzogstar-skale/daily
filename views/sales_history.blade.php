@@ -7,6 +7,7 @@
 @push('pageStyles')
 <link href="{{ $U('/css/daily_sales.css?v=', true) }}{{ daily_asset_version('/css/daily_sales.css') }}" rel="stylesheet">
 <link href="{{ $U('/css/daily_sales_dashboard.css?v=', true) }}{{ daily_asset_version('/css/daily_sales_dashboard.css') }}" rel="stylesheet">
+<link href="{{ $U('/css/daily_sales_reports.css?v=', true) }}{{ daily_asset_version('/css/daily_sales_reports.css') }}" rel="stylesheet">
 <link href="{{ $U('/css/daily_ty_ly.css?v=', true) }}{{ daily_asset_version('/css/daily_ty_ly.css') }}" rel="stylesheet">
 <style>
 /* Popover de información de KPI */
@@ -74,6 +75,7 @@
 	$lastMonthStart = date('Y-m-01', strtotime('first day of last month'));
 	$lastMonthEnd = date('Y-m-t', strtotime('last day of last month'));
 	$thisYearStart = date('Y-01-01');
+	$thisQuarterStart = date('Y-') . sprintf('%02d', intdiv(intval(date('n')) - 1, 3) * 3 + 1) . '-01';
 
 	$isPresetActive = function($from, $to) use ($startDate, $endDate) {
 		return $startDate === $from && $endDate === $to;
@@ -293,6 +295,7 @@
 			<a href="{{ $U('/sales?' . $buildRangeQs($lastWeekStart, $lastWeekEnd)) }}" class="sales-period-pill @if($isPresetActive($lastWeekStart, $lastWeekEnd)) is-active @endif">Semana anterior</a>
 			<a href="{{ $U('/sales?' . $buildRangeQs($thisMonthStart, $todayDate)) }}" class="sales-period-pill @if($isPresetActive($thisMonthStart, $todayDate)) is-active @endif">Mes actual</a>
 			<a href="{{ $U('/sales?' . $buildRangeQs($lastMonthStart, $lastMonthEnd)) }}" class="sales-period-pill @if($isPresetActive($lastMonthStart, $lastMonthEnd)) is-active @endif">Mes anterior</a>
+			<a href="{{ $U('/sales?' . $buildRangeQs($thisQuarterStart, $todayDate)) }}" class="sales-period-pill @if($isPresetActive($thisQuarterStart, $todayDate)) is-active @endif">Trimestre actual</a>
 			<a href="{{ $U('/sales?' . $buildRangeQs($thisYearStart, $todayDate)) }}" class="sales-period-pill @if($isPresetActive($thisYearStart, $todayDate)) is-active @endif">Año actual</a>
 			<a href="{{ $U('/sales?' . $rangeQs(30)) }}" class="sales-period-pill @if($isPresetActive(date('Y-m-d', strtotime('-29 days')), $todayDate)) is-active @endif">30 días</a>
 		</div>
@@ -319,7 +322,7 @@
 		</button>
 		<button type="button" class="nav-link daily-level-tab @if($activeTab === 'departamentos') active @endif" data-toggle="pill" data-target="#tab-departamentos" role="tab" id="pill-departamentos" aria-selected="{{ $activeTab === 'departamentos' ? 'true' : 'false' }}">
 			<i class="fa-solid fa-boxes-stacked"></i>
-			<span>Rendimiento por departamento</span>
+			<span>Ventas por departamento</span>
 		</button>
 		<button type="button" class="nav-link daily-level-tab @if($activeTab === 'productos') active @endif" data-toggle="pill" data-target="#tab-productos" role="tab" id="pill-productos" aria-selected="{{ $activeTab === 'productos' ? 'true' : 'false' }}">
 			<i class="fa-solid fa-barcode"></i>
@@ -362,7 +365,7 @@
 </div>
 
 @if($sharedFilters['department'] !== null || $sharedFilters['subcategory'] !== null || $sharedFilters['product'] !== null)
-<p class="sdash-scope-note" data-testid="filter-scope-note"><i class="fa-solid fa-filter"></i> Departamento, subcategoría y producto/SKU se aplican al <strong>Tablero de ventas</strong>. Las demás pestañas aplican sucursal, categoría y fechas.</p>
+<p class="sdash-scope-note" data-testid="filter-scope-note"><i class="fa-solid fa-filter"></i> Departamento, subcategoría y producto/SKU se aplican al <strong>Tablero de ventas</strong>. Las demás pestañas aplican sucursal, categoría y fechas; los informes comerciales al final de cada pestaña aplican todos los filtros.</p>
 @endif
 @endif
 
@@ -374,6 +377,7 @@
 <!-- ============================================================== -->
 <div class="tab-pane fade @if($activeTab === 'resumen' || !$activeTab) show active @endif" id="tab-resumen" role="tabpanel">
 	@include('components.sales.executive_sales_dashboard')
+	@include('components.sales.sales_reports', ['section' => 'dashboard', 'emitData' => true])
 </div>
 
 <!-- ============================================================== -->
@@ -381,6 +385,7 @@
 <!-- ============================================================== -->
 <div class="tab-pane fade @if($activeTab === 'departamentos') show active @endif" id="tab-departamentos" role="tabpanel">
 	@include('components.sales.department_performance')
+	@include('components.sales.sales_reports', ['section' => 'departments'])
 </div>
 
 <!-- ============================================================== -->
@@ -600,6 +605,7 @@
 			</table>
 		</div>
 	</div>
+	@include('components.sales.sales_reports', ['section' => 'profitability'])
 </div>
 
 <!-- ============================================================== -->
@@ -607,6 +613,7 @@
 <!-- ============================================================== -->
 <div class="tab-pane fade @if($activeTab === 'productos') show active @endif" id="tab-productos" role="tabpanel">
 	@include('components.sales.product_catalog_dashboard')
+	@include('components.sales.sales_reports', ['section' => 'products'])
 </div>
 
 <!-- ============================================================== -->
@@ -615,6 +622,7 @@
 <!-- ============================================================== -->
 <div class="tab-pane fade @if($activeTab === 'sucursales') show active @endif" id="tab-sucursales" role="tabpanel">
 	@include('components.sales.branch_supervision_dashboard')
+	@include('components.sales.sales_reports', ['section' => 'branches'])
 </div>
 
 <!-- ============================================================== -->
@@ -989,6 +997,7 @@
 <!-- ============================================================== -->
 <div class="tab-pane fade @if($activeTab === 'detalle') show active @endif" id="tab-detalle" role="tabpanel">
 	@include('components.sales.sales_history_dashboard')
+	@include('components.sales.sales_reports', ['section' => 'history'])
 </div>
 
 
@@ -3294,6 +3303,7 @@ document.addEventListener("DOMContentLoaded", function() {
 @push('pageScripts')
 <script src="{{ $U('/js/lucide.min.js') }}"></script>
 <script src="{{ $U('/js/daily_executive_sales.js?v=', true) }}{{ daily_asset_version('/js/daily_executive_sales.js') }}"></script>
+<script src="{{ $U('/js/daily_sales_reports.js?v=', true) }}{{ daily_asset_version('/js/daily_sales_reports.js') }}"></script>
 <script src="{{ $U('/js/daily_sales_dash.js?v=', true) }}{{ daily_asset_version('/js/daily_sales_dash.js') }}"></script>
 <script src="{{ $U('/js/daily_dept_performance.js?v=', true) }}{{ daily_asset_version('/js/daily_dept_performance.js') }}"></script>
 <script src="{{ $U('/js/daily_ty_ly.js?v=', true) }}{{ daily_asset_version('/js/daily_ty_ly.js') }}"></script>

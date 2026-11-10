@@ -54,7 +54,7 @@
 	     ==================================================================== -->
 	<header class="ded-header">
 		<div class="ded-header-left">
-			<h1 class="ded-title">Rendimiento por Departamento</h1>
+			<h1 class="ded-title">Ventas por departamento</h1>
 			<p class="ded-subtitle">Análisis ejecutivo de rentabilidad, productividad y eficiencia por departamento comercial</p>
 		</div>
 
@@ -154,7 +154,7 @@
 					</div>
 					<div class="dropdown-header text-uppercase font-weight-bold" style="font-size: 10px; color: #64748b; padding: 4px 14px 2px;">Vistas de Ventas</div>
 					<a href="{{ $U('/sales') }}" class="ded-dropdown-item"><i data-lucide="layout-dashboard" style="width:13px;height:13px;margin-right:6px;"></i>Tablero de Ventas</a>
-					<a href="{{ $U('/sales?tab=departamentos') }}" class="ded-dropdown-item is-active"><i data-lucide="layers" style="width:13px;height:13px;margin-right:6px;"></i>Rendimiento por departamento</a>
+					<a href="{{ $U('/sales?tab=departamentos') }}" class="ded-dropdown-item is-active"><i data-lucide="layers" style="width:13px;height:13px;margin-right:6px;"></i>Ventas por departamento</a>
 					<a href="{{ $U('/sales?tab=productos') }}" class="ded-dropdown-item"><i data-lucide="package" style="width:13px;height:13px;margin-right:6px;"></i>Productos</a>
 					<a href="{{ $U('/sales?tab=sucursales') }}" class="ded-dropdown-item"><i data-lucide="store" style="width:13px;height:13px;margin-right:6px;"></i>Sucursales</a>
 					<a href="{{ $U('/sales?tab=detalle') }}" class="ded-dropdown-item"><i data-lucide="receipt" style="width:13px;height:13px;margin-right:6px;"></i>Historial de ventas</a>
@@ -179,7 +179,7 @@
 		</button>
 		<button type="button" class="ded-nav-tab is-active" data-toggle="pill" data-target="#tab-departamentos" role="tab" id="pill-departamentos-dp" aria-selected="true">
 			<i class="fa-solid fa-boxes-stacked mr-1"></i>
-			<span>Rendimiento por departamento</span>
+			<span>Ventas por departamento</span>
 		</button>
 		<button type="button" class="ded-nav-tab" data-toggle="pill" data-target="#tab-productos" role="tab" id="pill-productos-dp">
 			<i class="fa-solid fa-barcode mr-1"></i>

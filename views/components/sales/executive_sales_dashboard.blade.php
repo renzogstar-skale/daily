@@ -134,7 +134,11 @@
 						<span>Últimos 30 días (8 oct – 6 nov)</span>
 						@if($startDate === '2026-10-08' && $endDate === '2026-11-06')<i data-lucide="check" style="width:13px;height:13px;"></i>@endif
 					</a>
+					<a href="#" class="ded-dropdown-item" data-select-range="today">Hoy</a>
+					<a href="#" class="ded-dropdown-item" data-select-range="yesterday">Ayer</a>
+					<a href="#" class="ded-dropdown-item" data-select-range="week">Semana actual</a>
 					<a href="#" class="ded-dropdown-item" data-select-range="month">Este mes en curso</a>
+					<a href="#" class="ded-dropdown-item" data-select-range="quarter">Trimestre actual</a>
 					<a href="#" class="ded-dropdown-item" data-select-range="prev_month">Mes anterior completo</a>
 					<a href="#" class="ded-dropdown-item" data-select-range="year">Año acumulado 2026</a>
 					<div class="dropdown-divider my-1"></div>
@@ -233,7 +237,7 @@
 		</button>
 		<button type="button" class="ded-nav-tab" data-toggle="pill" data-target="#tab-departamentos" role="tab" id="pill-departamentos">
 			<i class="fa-solid fa-boxes-stacked mr-1"></i>
-			<span>Rendimiento por departamento</span>
+			<span>Ventas por departamento</span>
 		</button>
 		<button type="button" class="ded-nav-tab" data-toggle="pill" data-target="#tab-productos" role="tab" id="pill-productos">
 			<i class="fa-solid fa-barcode mr-1"></i>

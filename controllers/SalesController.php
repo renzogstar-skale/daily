@@ -1472,9 +1472,46 @@ class SalesController extends BaseController
 		$salesDash = null;
 		$deptPerformance = null;
 		$deptExec = null;
+		$tyLy = null;
 		$productCatalogDashboard = null;
 		$branchSupervisionDashboard = null;
 		$salesAuditDashboard = null;
+
+		try
+		{
+			$deptPerfService = \Grocy\Services\DepartmentPerformanceService::GetInstance();
+			$deptExec = $deptPerfService->GetExecutiveDashboard($sharedFilters);
+			$tyLy = $deptPerfService->GetTyLyComparison($sharedFilters);
+		}
+		catch (\Throwable $e) {}
+
+		try
+		{
+			$salesDash = \Grocy\Services\SalesDashboardService::GetInstance()->Dashboard($sharedFilters);
+		}
+		catch (\Throwable $e) {}
+
+		try
+		{
+			$productCatalogDashboard = \Grocy\Services\ProductPerformanceService::GetInstance()->GetProductCatalogDashboard($sharedFilters);
+		}
+		catch (\Throwable $e) {}
+
+		try
+		{
+			$branchSupervisionDashboard = \Grocy\Services\BranchSupervisionService::GetInstance()->GetBranchSupervisionDashboard($sharedFilters);
+		}
+		catch (\Throwable $e) {}
+
+		// Informes comerciales de las seis pestañas (una sola definición de venta neta para todos)
+		$salesReports = null;
+		$salesMargins = null;
+		try
+		{
+			$salesReports = \Grocy\Services\SalesReportsService::GetInstance()->Report($sharedFilters, $compareWith);
+			$salesMargins = \Grocy\Services\SalesDashboardService::GetInstance()->Margins($sharedFilters);
+		}
+		catch (\Throwable $e) {}
 
 		// Departamentos ejecutivos para el gráfico de dona
 		$executiveDepartments = [
@@ -1528,14 +1565,15 @@ class SalesController extends BaseController
 			'salesDash' => $salesDash,
 			'deptPerformance' => $deptPerformance,
 			'deptExec' => $deptExec,
-			'tyLy' => null,
+			'tyLy' => $tyLy,
 			'productCatalogDashboard' => $productCatalogDashboard,
 			'branchSupervisionDashboard' => $branchSupervisionDashboard,
 			'salesAuditDashboard' => $salesAuditDashboard,
 			'executiveDepartments' => $executiveDepartments,
 			'alertSummary' => $alertSummary,
 			'executiveObservations' => $executiveObservations,
-			'salesMargins' => null,
+			'salesMargins' => $salesMargins,
+			'salesReports' => $salesReports,
 			'sales' => $sales,
 			'branches' => $branches,
 			'productGroups' => $productGroups,

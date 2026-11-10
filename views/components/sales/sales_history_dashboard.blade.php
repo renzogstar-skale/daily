@@ -40,7 +40,7 @@
 		</button>
 		<button type="button" class="ded-nav-tab" data-toggle="pill" data-target="#tab-departamentos" role="tab" id="pill-departamentos-hist">
 			<i class="fa-solid fa-boxes-stacked mr-1"></i>
-			<span>Rendimiento por departamento</span>
+			<span>Ventas por departamento</span>
 		</button>
 		<button type="button" class="ded-nav-tab" data-toggle="pill" data-target="#tab-productos" role="tab" id="pill-productos-hist">
 			<i class="fa-solid fa-barcode mr-1"></i>
@@ -67,130 +67,6 @@
 			<span>Campañas</span>
 		</button>
 	</nav>
-
-	<!-- ====================================================================
-	     FILA 1 — BUSCADOR UNIVERSAL Y FILTROS AVANZADOS
-	     ==================================================================== -->
-	<div class="sales-hist-search-card mb-3">
-		<!-- Buscador Universal -->
-		<div class="hist-search-box-row mb-2">
-			<div class="hist-search-input-wrap">
-				<i class="fa-solid fa-magnifying-glass hist-search-icon"></i>
-				<input type="text" class="hist-search-input" id="histUniversalSearch"
-					   placeholder="Buscar por ticket, ID de transacción, SKU o referencia de pago autorizada..."
-					   value="">
-			</div>
-			<div class="hist-search-actions">
-				<button type="button" class="btn btn-sm btn-success font-weight-bold" id="btnHistSearch">
-					Buscar
-				</button>
-				<button type="button" class="btn btn-sm btn-light border" id="btnHistSaveSearch">
-					Guardar búsqueda
-				</button>
-			</div>
-		</div>
-
-		<!-- Tira de 12 Filtros Avanzados -->
-		<div class="hist-filters-grid mb-2">
-			<div class="hist-filter-item">
-				<label class="hist-filter-label">Fecha y rango horario</label>
-				<input type="text" class="hist-filter-input" value="08/10 – 06/11 · 00:00–23:59" readonly>
-			</div>
-			<div class="hist-filter-item">
-				<label class="hist-filter-label">Sucursal</label>
-				<select class="hist-filter-select" id="filterHistBranch">
-					<option value="all" selected>Todas</option>
-					<option value="Hallandale">Hallandale Beach</option>
-					<option value="Miami Beach">Miami Beach</option>
-					<option value="Sunny Isles">Sunny Isles</option>
-					<option value="Sucursal 07">Sucursal 07 (Hollywood)</option>
-				</select>
-			</div>
-			<div class="hist-filter-item">
-				<label class="hist-filter-label">Departamento</label>
-				<select class="hist-filter-select" id="filterHistDept">
-					<option value="all" selected>Todos</option>
-					<option value="frozen">90 Frozen</option>
-					<option value="dairy">91 Dairy</option>
-					<option value="pescaderia">92 Pescadería</option>
-					<option value="carnes">93 Carnes</option>
-					<option value="bakery">94 Bakery</option>
-				</select>
-			</div>
-			<div class="hist-filter-item">
-				<label class="hist-filter-label">Caja / terminal POS</label>
-				<select class="hist-filter-select" id="filterHistRegister">
-					<option value="all" selected>Todas</option>
-					<option value="Caja 1">Caja 1</option>
-					<option value="Caja 2">Caja 2</option>
-					<option value="Caja 3">Caja 3</option>
-				</select>
-			</div>
-			<div class="hist-filter-item">
-				<label class="hist-filter-label">Cajero o colaborador</label>
-				<select class="hist-filter-select" id="filterHistCashier">
-					<option value="all" selected>Todos</option>
-					<option value="Cajero 02">Cajero 02</option>
-					<option value="Cajero 03">Cajero 03</option>
-					<option value="Cajero 05">Cajero 05</option>
-					<option value="Cajero 07">Cajero 07</option>
-				</select>
-			</div>
-			<div class="hist-filter-item">
-				<label class="hist-filter-label">Método de pago</label>
-				<select class="hist-filter-select" id="filterHistPayment">
-					<option value="all" selected>Todos</option>
-					<option value="Tarjeta">Tarjeta</option>
-					<option value="Efectivo">Efectivo</option>
-					<option value="Transferencia">Transferencia</option>
-				</select>
-			</div>
-			<div class="hist-filter-item">
-				<label class="hist-filter-label">Estado de transacción</label>
-				<select class="hist-filter-select" id="filterHistStatus">
-					<option value="all" selected>Todos</option>
-					<option value="Completada">Completada</option>
-					<option value="Devuelto parcial">Devuelto parcial</option>
-					<option value="Devuelto total">Devuelto total</option>
-					<option value="Anulado">Anulado</option>
-				</select>
-			</div>
-			<div class="hist-filter-item">
-				<label class="hist-filter-label">Tipo de operación</label>
-				<select class="hist-filter-select" id="filterHistOpType">
-					<option value="all" selected>Todas</option>
-					<option value="Venta">Venta</option>
-					<option value="Devolución">Devolución</option>
-					<option value="Anulación">Anulación</option>
-				</select>
-			</div>
-			<div class="hist-filter-item">
-				<label class="hist-filter-label">N.° de ticket</label>
-				<input type="text" class="hist-filter-input" placeholder="—" id="filterHistTicket">
-			</div>
-			<div class="hist-filter-item">
-				<label class="hist-filter-label">ID transacción</label>
-				<input type="text" class="hist-filter-input" placeholder="—" id="filterHistTxId">
-			</div>
-			<div class="hist-filter-item">
-				<label class="hist-filter-label">SKU / UPC</label>
-				<input type="text" class="hist-filter-input" placeholder="—" id="filterHistSku">
-			</div>
-			<div class="hist-filter-item">
-				<label class="hist-filter-label">Importe mín. y máx.</label>
-				<input type="text" class="hist-filter-input" value="$0 – sin límite" id="filterHistAmount">
-			</div>
-		</div>
-
-		<!-- Búsquedas Guardadas -->
-		<div class="hist-saved-searches-row">
-			<span class="hist-saved-label">Búsquedas guardadas:</span>
-			<button type="button" class="hist-saved-pill" data-preset="diff">Diferencias de conciliación</button>
-			<button type="button" class="hist-saved-pill" data-preset="voids">Anulaciones post-pago</button>
-			<button type="button" class="hist-saved-pill" data-preset="noref">Devoluciones sin referencia</button>
-			<button type="button" class="hist-saved-pill" data-preset="discounts">Descuentos > límite</button>
-		</div>
-	</div>
 
 	<!-- ====================================================================
 	     FILA 2 — SIETE INDICADORES KPI

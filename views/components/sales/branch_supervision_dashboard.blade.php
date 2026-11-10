@@ -38,7 +38,7 @@
 		</button>
 		<button type="button" class="ded-nav-tab" data-toggle="pill" data-target="#tab-departamentos" role="tab" id="pill-departamentos-branch">
 			<i class="fa-solid fa-boxes-stacked mr-1"></i>
-			<span>Rendimiento por departamento</span>
+			<span>Ventas por departamento</span>
 		</button>
 		<button type="button" class="ded-nav-tab" data-toggle="pill" data-target="#tab-productos" role="tab" id="pill-productos-branch">
 			<i class="fa-solid fa-barcode mr-1"></i>
