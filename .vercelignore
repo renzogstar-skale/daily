@@ -1,0 +1,15 @@
+node_modules
+data
+docs
+captures
+scratch
+tests
+test-results
+DailyFotos
+mobile
+references
+changelog
+.claude
+.github
+.impeccable
+.devtools
