@@ -9,7 +9,7 @@
 		"api/index.php": {
 			"runtime": "vercel-php@0.9.0",
 			"maxDuration": 60,
-			"excludeFiles": "{.git/**,.github/**,.claude/**,.impeccable/**,.devtools/**,.vscode/**,docs/**,captures/**,scratch/**,tests/**,test-results/**,DailyFotos/**,mobile/**,references/**,changelog/**,data/**,node_modules/**,public/packages/**,public/img/**,*.png,*.md,package-lock.json,yarn.lock}"
+			"excludeFiles": "{.git/**,.github/**,.claude/**,docs/**,captures/**,scratch/**,tests/**,DailyFotos/**,mobile/**,references/**,changelog/**,data/**,node_modules/**,public/packages/**,public/img/**}"
 		}
 	},
 	"routes": [
