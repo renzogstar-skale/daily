@@ -386,7 +386,12 @@ class MrpService extends BaseService
 			throw new \Exception("Debe seleccionar al menos un producto para generar la orden de reabastecimiento");
 		}
 
-		$dbRaw->beginTransaction();
+		$ownTx = false;
+		if (!$dbRaw->inTransaction())
+		{
+			$dbRaw->beginTransaction();
+			$ownTx = true;
+		}
 		try
 		{
 			$orderCode = 'PO-' . date('Ymd') . '-' . strtoupper(bin2hex(random_bytes(3)));
@@ -437,7 +442,10 @@ class MrpService extends BaseService
 			$stmtUpdate = $dbRaw->prepare("UPDATE procurement_orders SET total_estimated_cost = :cost WHERE id = :id");
 			$stmtUpdate->execute([':cost' => round($totalCost, 2), ':id' => $orderId]);
 
-			$dbRaw->commit();
+			if ($ownTx && $dbRaw->inTransaction())
+			{
+				$dbRaw->commit();
+			}
 
 			return [
 				'id' => $orderId,
@@ -449,7 +457,10 @@ class MrpService extends BaseService
 		}
 		catch (\Exception $e)
 		{
-			$dbRaw->rollBack();
+			if ($ownTx && $dbRaw->inTransaction())
+			{
+				$dbRaw->rollBack();
+			}
 			throw $e;
 		}
 	}
