@@ -1,6 +1,6 @@
 <?php
 
-// Entrada para Vercel: la base demo se copia a /tmp (??nico disco escribible) y se reinicia con cada instancia nueva
+// Entrada para Vercel: la base demo se copia a /tmp (unico disco escribible) y se reinicia con cada instancia nueva
 $seed = __DIR__ . '/../demo-seed';
 $data = '/tmp/data';
 
