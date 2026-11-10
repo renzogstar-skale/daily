@@ -19,7 +19,7 @@
 	<script>document.documentElement.classList.add('js')</script>
 	<link rel="stylesheet" href="{{ $A('/css/daily_site.css') }}">
 	@yield('head')
-	<script type="application/ld+json">{!! json_encode(['@context' => 'https://schema.org', '@type' => 'SoftwareApplication', 'name' => 'DAILY', 'applicationCategory' => 'BusinessApplication', 'operatingSystem' => 'Web', 'inLanguage' => ['es', 'en'], 'description' => $L('Inteligencia y control para cada operación de tu negocio.', 'Intelligence and control for every operation in your business.')], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}</script>
+	<script type="application/ld+json">{!! json_encode(['@' . 'context' => 'https://schema.org', '@type' => 'SoftwareApplication', 'name' => 'DAILY', 'applicationCategory' => 'BusinessApplication', 'operatingSystem' => 'Web', 'inLanguage' => ['es', 'en'], 'description' => $L('Inteligencia y control para cada operación de tu negocio.', 'Intelligence and control for every operation in your business.')], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}</script>
 </head>
 <body>
 	<a class="s-skip" href="#main">{{ $L('Saltar al contenido', 'Skip to content') }}</a>
