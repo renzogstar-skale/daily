@@ -8,9 +8,8 @@
 	"functions": {
 		"api/index.php": {
 			"runtime": "vercel-php@0.9.0",
-			"memory": 1024,
 			"maxDuration": 60,
-			"includeFiles": "{app.php,config-dist.php,routes.php,version.json,grocy.openapi.json,controllers/**,services/**,helpers/**,middleware/**,views/**,localization/**,migrations/**,packages/**,plugins/**,vercel/**}"
+			"excludeFiles": "{.git/**,.github/**,.claude/**,.impeccable/**,.devtools/**,.vscode/**,docs/**,captures/**,scratch/**,tests/**,test-results/**,DailyFotos/**,mobile/**,references/**,changelog/**,data/**,node_modules/**,public/packages/**,public/img/**,*.png,*.md,package-lock.json,yarn.lock}"
 		}
 	},
 	"routes": [
