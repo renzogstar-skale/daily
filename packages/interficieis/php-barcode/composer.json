@@ -1,0 +1,33 @@
+{
+    "name": "interficieis/php-barcode",
+    "description": "Barcode Generation Package inspired by Nicola Asuni.",
+    "keywords": ["barcode","qrcode","QR Code","CODE 128","DATAMATRIX","PDF417","php barcode"],
+    "type": "library",
+    "license": "LGPL-3.0-only",
+    "authors": [
+        {
+            "name": "David Martínez",
+            "email": "david.martinez@interficie.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "php": ">=7.4.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.0"
+    },
+    "scripts": {
+        "post-install-cmd": [
+            "chmod 775 tmp"
+        ],
+        "post-update-cmd": [
+            "chmod 775 tmp"
+        ]
+    },
+    "autoload": {
+        "psr-4": {
+            "jucksearm\\barcode\\": ""
+        }
+    }
+}

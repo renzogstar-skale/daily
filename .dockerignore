@@ -1,7 +1,5 @@
-.git
+﻿.git
 node_modules
-packages
-public/packages
 data/*
 !data/.htaccess
 captures

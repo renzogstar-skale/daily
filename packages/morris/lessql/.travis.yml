@@ -1,0 +1,35 @@
+language: php
+php:
+  - "7.2"
+  - "7.1"
+  - "7.0"
+  - "5.6"
+
+services:
+  - mysql
+  - postgresql
+
+env:
+  global:
+    - CC_TEST_REPORTER_ID=124a2eea947ebf489472697ed6889cc33201950876b202b50ef6a39862ff01b1
+  matrix:
+    - BOOTSTRAP=sqlite
+    - BOOTSTRAP=mysql
+    - BOOTSTRAP=postgresql
+
+before_install:
+  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+  - chmod +x ./cc-test-reporter
+
+before_script:
+  - composer self-update
+  - composer install --prefer-dist
+  - mysql -e 'create database test;'
+  - psql -c 'create database test;' -U postgres
+  - ./cc-test-reporter before-build
+
+script:
+  - vendor/bin/phpunit --bootstrap=tests/$BOOTSTRAP.php --coverage-clover=build/logs/clover.xml tests
+
+after_script:
+    - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT

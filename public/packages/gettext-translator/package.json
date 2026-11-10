@@ -1,0 +1,33 @@
+{
+  "name": "gettext-translator",
+  "version": "3.0.1",
+  "description": "Javascript gettext translator",
+  "main": "dist/translator.js",
+  "module": "src/translator.js",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "test": "mocha --require @babel/register tests/test.js",
+    "build": "babel src --out-dir dist",
+    "prettier": "prettier src/*.js tests/*.js --single-quote --tab-width 4 --write --print-width 120"
+  },
+  "keywords": [
+    "gettext",
+    "i18n",
+    "translator"
+  ],
+  "author": "oscarotero <oom@oscarotero.com>",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "@babel/cli": "^7.6.4",
+    "@babel/core": "^7.6.4",
+    "@babel/plugin-transform-modules-umd": "^7.7.4",
+    "@babel/preset-env": "^7.6.3",
+    "@babel/register": "^7.6.2",
+    "mocha": "^6.2.2",
+    "prettier": "^1.18.2"
+  }
+}
