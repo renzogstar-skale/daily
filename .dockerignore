@@ -1,0 +1,13 @@
+.git
+node_modules
+packages
+public/packages
+data/*
+!data/.htaccess
+captures
+docs
+tests
+.claude
+.github
+.impeccable
+.playwright-cli
