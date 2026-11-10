@@ -1,7 +1,7 @@
 <?php
 
-// Entrada para Vercel: la base demo se copia a /tmp (único disco escribible) y se reinicia con cada instancia nueva
-$seed = __DIR__ . '/../vercel/data';
+// Entrada para Vercel: la base demo se copia a /tmp (??nico disco escribible) y se reinicia con cada instancia nueva
+$seed = __DIR__ . '/../demo-seed';
 $data = '/tmp/data';
 
 if (!file_exists($data . '/grocy_es.db'))
