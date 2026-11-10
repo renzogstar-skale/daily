@@ -12,6 +12,8 @@ RUN install-php-extensions gd intl zip @composer \
 WORKDIR /var/www/html
 COPY composer.json composer.lock* package.json yarn.lock .yarnrc ./
 RUN git config --global url."https://github.com/".insteadOf "ssh://git@github.com/" \
+	&& git config --global --add url."https://github.com/".insteadOf "git@github.com:" \
+	&& sed -i 's#git+ssh://git@github.com/#git+https://github.com/#g' yarn.lock \
 	&& composer install --no-dev --no-interaction --no-scripts --prefer-dist \
 	&& yarn install --frozen-lockfile
 
