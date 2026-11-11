@@ -2,9 +2,11 @@
 
 namespace Grocy\Controllers;
 
+use Grocy\Controllers\Users\User;
 use Grocy\Helpers\DairyAccess;
 use Grocy\Services\BranchService;
 use Grocy\Services\HrService;
+use Grocy\Services\WorkforceScheduleService;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
@@ -12,6 +14,10 @@ class HrController extends BaseController
 {
 	public function Dashboard(Request $request, Response $response, array $args)
 	{
+		if (DairyAccess::GetSimulatedRole() === 'empleado' || !DairyAccess::HasAny([User::PERMISSION_WORKFORCE_SCHEDULE_MANAGE, User::PERMISSION_KPIS_VIEW, User::PERMISSION_ADMIN]))
+		{
+			throw new \Grocy\Middleware\PermissionMissingException($request, User::PERMISSION_WORKFORCE_SCHEDULE_MANAGE);
+		}
 		$hrService = HrService::GetInstance();
 		$branchService = BranchService::GetInstance();
 
@@ -36,6 +42,9 @@ class HrController extends BaseController
 		$productivity = $hrService->GetProductivityData($selectedBranchId);
 		$training = $hrService->GetTrainingData($selectedBranchId);
 		$communications = $hrService->GetCommunicationsData($selectedBranchId);
+		$schedSvc = WorkforceScheduleService::GetInstance();
+		$compensatoryLedger = $schedSvc->GetCompensatoryLedger($selectedBranchId);
+		$vacationBalances = $schedSvc->GetVacationBalances($selectedBranchId);
 
 		return $this->RenderPage($response, 'hr_dashboard', [
 			'branches' => $branches,
@@ -51,11 +60,17 @@ class HrController extends BaseController
 			'productivity' => $productivity,
 			'training' => $training,
 			'communications' => $communications,
+			'compensatoryLedger' => $compensatoryLedger,
+			'vacationBalances' => $vacationBalances,
 		]);
 	}
 
 	public function ExportPayrollCsv(Request $request, Response $response, array $args)
 	{
+		if (DairyAccess::GetSimulatedRole() === 'empleado' || !DairyAccess::HasAny([User::PERMISSION_WORKFORCE_SCHEDULE_MANAGE, User::PERMISSION_KPIS_VIEW, User::PERMISSION_ADMIN]))
+		{
+			throw new \Grocy\Middleware\PermissionMissingException($request, User::PERMISSION_WORKFORCE_SCHEDULE_MANAGE);
+		}
 		$hrService = HrService::GetInstance();
 		$q = $request->getQueryParams();
 		$branchId = isset($q['branch_id']) ? intval($q['branch_id']) : 1;

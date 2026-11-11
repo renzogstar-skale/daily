@@ -1,0 +1,550 @@
+/**
+ * DAILY — Efecto Hover Verde Unificado en TODAS las Tarjetas KPI
+ *
+ * Transición suave de 200 ms:
+ * - Todas las tarjetas KPI son blancas (o superficie crystal/glass) por defecto.
+ * - Al pasar el ratón (:hover), cambian de inmediato al degradado verde de "Ventas netas".
+ * - Títulos, valores numéricos, porcentajes, etiquetas e iconos se tornan blancos.
+ * - Al retirar el cursor, regresan suavemente a su estado original blanco.
+ * - Especificidad garantizada (:not(#_)) sobre crystal-ui, crystal-surface--interactive, dark mode y Tailwind.
+ */
+
+:root {
+	--daily-kpi-hover-gradient: linear-gradient(135deg, #059669 0%, #10b981 100%);
+	--daily-kpi-hover-shadow: 0 6px 18px rgba(16, 185, 129, 0.35);
+	--daily-kpi-hover-border: rgba(255, 255, 255, 0.25);
+	--daily-kpi-hover-time: 200ms;
+}
+
+/* ==========================================================================
+   1. TRANSICIONES BASE (200 ms estrictos de entrada y salida)
+   ========================================================================== */
+html body :is(
+	.ded-kpi-card,
+	.dkpi,
+	.today-exec-kpi-card,
+	.today-exec-spark-card,
+	.sch-kpi-card,
+	.hr-kpi-card,
+	.dw-kpi-card,
+	.dsp-kpi-card,
+	.dw-side-kpi-block,
+	.daily-kpi-card-h,
+	.prod-kpi-card,
+	.branch-kpi-card,
+	.hist-kpi-card,
+	.dept-perf-kpi-card,
+	.pos-ret-kpi-card,
+	.customers-kpi-card,
+	.customers-mini-kpi,
+	.crm-kpi,
+	.crystal-kpi,
+	.dairy-kpi-accent,
+	.dairy-kpi-card,
+	.daily-kpi-card,
+	.daily-kpi-stat-card,
+	.cc-kpi,
+	.ep-kpi-card,
+	.dsm-kpi-card,
+	.dsm-dept-kpi-card,
+	.dsm-alert-kpi-box,
+	.orders-kpi-card,
+	.wms-kpi-card,
+	.tr-kpi-card,
+	.mc-kpi-card,
+	.lp-kpi-card,
+	.rc-kpi-card,
+	.daily-rc-kpi-card,
+	.ret-kpi-card,
+	.dv-kpi-card,
+	.dp-kpi-card,
+	.daily-locmap-kpi-card,
+	.dh-kpi,
+	.lv-kpi,
+	.daily-censo-kpi-card,
+	.daily-eco-kpi-card,
+	.daily-fin-kpi-card,
+	.daily-theft-kpi-card,
+	.daily-aj-kpi-card,
+	.daily-an-kpi-card,
+	.daily-av-kpi-card,
+	.daily-inv-kpi-card,
+	.daily-rec-kpi-card,
+	.daily-rebajas-kpi-card,
+	.daily-social-kpi-card,
+	.daily-bk-kpi-card,
+	.daily-intel-kpi-card,
+	.daily-appr-kpi-card,
+	.daily-kpi-compact,
+	.daily-kpi-interactive,
+	.dlx-kpi,
+	[data-kpi-hover]
+):not(#_) {
+	transition: background 200ms ease, background-color 200ms ease, border-color 200ms ease, box-shadow 200ms ease, color 200ms ease, transform 200ms ease !important;
+}
+
+html body :is(
+	.ded-kpi-card,
+	.dkpi,
+	.today-exec-kpi-card,
+	.today-exec-spark-card,
+	.sch-kpi-card,
+	.hr-kpi-card,
+	.dw-kpi-card,
+	.dsp-kpi-card,
+	.dw-side-kpi-block,
+	.daily-kpi-card-h,
+	.prod-kpi-card,
+	.branch-kpi-card,
+	.hist-kpi-card,
+	.dept-perf-kpi-card,
+	.pos-ret-kpi-card,
+	.customers-kpi-card,
+	.customers-mini-kpi,
+	.crm-kpi,
+	.crystal-kpi,
+	.dairy-kpi-accent,
+	.dairy-kpi-card,
+	.daily-kpi-card,
+	.daily-kpi-stat-card,
+	.cc-kpi,
+	.ep-kpi-card,
+	.dsm-kpi-card,
+	.dsm-dept-kpi-card,
+	.dsm-alert-kpi-box,
+	.orders-kpi-card,
+	.wms-kpi-card,
+	.tr-kpi-card,
+	.mc-kpi-card,
+	.lp-kpi-card,
+	.rc-kpi-card,
+	.daily-rc-kpi-card,
+	.ret-kpi-card,
+	.dv-kpi-card,
+	.dp-kpi-card,
+	.daily-locmap-kpi-card,
+	.dh-kpi,
+	.lv-kpi,
+	.daily-censo-kpi-card,
+	.daily-eco-kpi-card,
+	.daily-fin-kpi-card,
+	.daily-theft-kpi-card,
+	.daily-aj-kpi-card,
+	.daily-an-kpi-card,
+	.daily-av-kpi-card,
+	.daily-inv-kpi-card,
+	.daily-rec-kpi-card,
+	.daily-rebajas-kpi-card,
+	.daily-social-kpi-card,
+	.daily-bk-kpi-card,
+	.daily-intel-kpi-card,
+	.daily-appr-kpi-card,
+	.daily-kpi-compact,
+	.daily-kpi-interactive,
+	.dlx-kpi,
+	[data-kpi-hover]
+):not(#_) :is(
+	span, div, p, i, svg, small, b, strong, label, dt, dd, a, circle, path
+) {
+	transition: color 200ms ease, fill 200ms ease, stroke 200ms ease, background-color 200ms ease, border-color 200ms ease, opacity 200ms ease !important;
+}
+
+/* ==========================================================================
+   2. ESTADO HOVER: DEGRADADO VERDE (#059669 -> #10b981) + SOMBRA SUTIL
+   ========================================================================== */
+html body :is(
+	.ded-kpi-card,
+	.dkpi,
+	.today-exec-kpi-card,
+	.today-exec-spark-card,
+	.sch-kpi-card,
+	.hr-kpi-card,
+	.dw-kpi-card,
+	.dsp-kpi-card,
+	.dw-side-kpi-block,
+	.daily-kpi-card-h,
+	.prod-kpi-card,
+	.branch-kpi-card,
+	.hist-kpi-card,
+	.dept-perf-kpi-card,
+	.pos-ret-kpi-card,
+	.customers-kpi-card,
+	.customers-mini-kpi,
+	.crm-kpi,
+	.crystal-kpi,
+	.dairy-kpi-accent,
+	.dairy-kpi-card,
+	.daily-kpi-card,
+	.daily-kpi-stat-card,
+	.cc-kpi,
+	.ep-kpi-card,
+	.dsm-kpi-card,
+	.dsm-dept-kpi-card,
+	.dsm-alert-kpi-box,
+	.orders-kpi-card,
+	.wms-kpi-card,
+	.tr-kpi-card,
+	.mc-kpi-card,
+	.lp-kpi-card,
+	.rc-kpi-card,
+	.daily-rc-kpi-card,
+	.ret-kpi-card,
+	.dv-kpi-card,
+	.dp-kpi-card,
+	.daily-locmap-kpi-card,
+	.dh-kpi,
+	.lv-kpi,
+	.daily-censo-kpi-card,
+	.daily-eco-kpi-card,
+	.daily-fin-kpi-card,
+	.daily-theft-kpi-card,
+	.daily-aj-kpi-card,
+	.daily-an-kpi-card,
+	.daily-av-kpi-card,
+	.daily-inv-kpi-card,
+	.daily-rec-kpi-card,
+	.daily-rebajas-kpi-card,
+	.daily-social-kpi-card,
+	.daily-bk-kpi-card,
+	.daily-intel-kpi-card,
+	.daily-appr-kpi-card,
+	.daily-kpi-compact,
+	.daily-kpi-interactive,
+	.dlx-kpi,
+	[data-kpi-hover]
+):hover:not(#_) {
+	background: var(--daily-kpi-hover-gradient) !important;
+	border-color: var(--daily-kpi-hover-border) !important;
+	box-shadow: var(--daily-kpi-hover-shadow) !important;
+	color: #ffffff !important;
+	cursor: pointer;
+	transform: translateY(-2px);
+}
+
+/* ==========================================================================
+   3. ELEMENTOS INTERNOS EN HOVER A COLOR BLANCO
+   ========================================================================== */
+
+/* A. Títulos, etiquetas y encabezados a blanco */
+html body :is(
+	.ded-kpi-card, .dkpi, .today-exec-kpi-card, .today-exec-spark-card, .sch-kpi-card, .hr-kpi-card, .dw-kpi-card,
+	.dsp-kpi-card, .dw-side-kpi-block, .daily-kpi-card-h, .prod-kpi-card, .branch-kpi-card,
+	.hist-kpi-card, .dept-perf-kpi-card, .pos-ret-kpi-card, .customers-kpi-card, .customers-mini-kpi,
+	.crm-kpi, .crystal-kpi, .dairy-kpi-accent, .dairy-kpi-card, .daily-kpi-card, .daily-kpi-stat-card,
+	.cc-kpi, .ep-kpi-card, .dsm-kpi-card, .dsm-dept-kpi-card, .dsm-alert-kpi-box, .orders-kpi-card, .wms-kpi-card,
+	.tr-kpi-card, .mc-kpi-card, .lp-kpi-card, .rc-kpi-card, .daily-rc-kpi-card, .ret-kpi-card, .dv-kpi-card, .dp-kpi-card,
+	.daily-locmap-kpi-card, .dh-kpi, .lv-kpi, .daily-censo-kpi-card, .daily-eco-kpi-card,
+	.daily-fin-kpi-card, .daily-theft-kpi-card, .daily-aj-kpi-card, .daily-an-kpi-card,
+	.daily-av-kpi-card, .daily-inv-kpi-card, .daily-rec-kpi-card, .daily-rebajas-kpi-card,
+	.daily-social-kpi-card, .daily-bk-kpi-card, .daily-intel-kpi-card, .daily-appr-kpi-card,
+	.daily-kpi-compact, .daily-kpi-interactive, .dlx-kpi, [data-kpi-hover]
+):hover:not(#_) :is(
+	.ded-kpi-label, .today-exec-kpi-label, .sch-kpi-title, .hr-kpi-label, .dw-kpi-label,
+	.dsp-kpi-title, .prod-kpi-label, .branch-kpi-title, .hist-kpi-title, .dkpi-name,
+	.customers-kpi-label, .cc-kpi-label, .daily-kpi-label, .daily-kpi-title, .ep-kpi-title,
+	.orders-kpi-label, .pos-ret-kpi-label, .rc-kpi-label, .wms-kpi-label, .tr-kpi-label,
+	.mc-kpi-label, .lp-kpi-title, .dsm-kpi-label, .dp-kpi-label, .dh-kpi-label,
+	.dairy-kpi-title, .daily-kpi-compact-title, .daily-kpi-h-title, .daily-locmap-kpi-label,
+	.daily-rec-kpi-lbl, .daily-fin-kpi-lbl, .daily-inv-kpi-lbl, .daily-censo-kpi-title,
+	.daily-theft-kpi-title, .daily-eco-kpi-title, .daily-aj-kpi-lbl, .daily-an-kpi-lbl,
+	.daily-av-kpi-lbl, .daily-intel-kpi-label, .daily-appr-kpi-label, .crm-kpi-label,
+	.ded-highlight-brand, .ded-highlight-brand span, h1, h2, h3, h4, h5, h6, dt
+) {
+	color: #ffffff !important;
+}
+
+/* B. Valores numéricos, cifras monetarias y porcentajes a blanco puro */
+html body :is(
+	.ded-kpi-card, .dkpi, .today-exec-kpi-card, .today-exec-spark-card, .sch-kpi-card, .hr-kpi-card, .dw-kpi-card,
+	.dsp-kpi-card, .dw-side-kpi-block, .daily-kpi-card-h, .prod-kpi-card, .branch-kpi-card,
+	.hist-kpi-card, .dept-perf-kpi-card, .pos-ret-kpi-card, .customers-kpi-card, .customers-mini-kpi,
+	.crm-kpi, .crystal-kpi, .dairy-kpi-accent, .dairy-kpi-card, .daily-kpi-card, .daily-kpi-stat-card,
+	.cc-kpi, .ep-kpi-card, .dsm-kpi-card, .dsm-dept-kpi-card, .dsm-alert-kpi-box, .orders-kpi-card, .wms-kpi-card,
+	.tr-kpi-card, .mc-kpi-card, .lp-kpi-card, .rc-kpi-card, .daily-rc-kpi-card, .ret-kpi-card, .dv-kpi-card, .dp-kpi-card,
+	.daily-locmap-kpi-card, .dh-kpi, .lv-kpi, .daily-censo-kpi-card, .daily-eco-kpi-card,
+	.daily-fin-kpi-card, .daily-theft-kpi-card, .daily-aj-kpi-card, .daily-an-kpi-card,
+	.daily-av-kpi-card, .daily-inv-kpi-card, .daily-rec-kpi-card, .daily-rebajas-kpi-card,
+	.daily-social-kpi-card, .daily-bk-kpi-card, .daily-intel-kpi-card, .daily-appr-kpi-card,
+	.daily-kpi-compact, .daily-kpi-interactive, .dlx-kpi, [data-kpi-hover]
+):hover:not(#_) :is(
+	.ded-kpi-val, .today-exec-kpi-value, .sch-kpi-value, .hr-kpi-value, .dw-kpi-val,
+	.dsp-kpi-val, .prod-kpi-val, .branch-kpi-value, .hist-kpi-value, .dkpi-value,
+	.customers-kpi-val, .cc-kpi-value, .daily-kpi-val, .daily-kpi-value, .daily-kpi-big-number,
+	.ep-kpi-value, .orders-kpi-value, .pos-ret-kpi-val, .rc-kpi-value, .wms-kpi-value,
+	.tr-kpi-value, .mc-kpi-value, .lp-kpi-value, .dsm-kpi-val, .dsm-kpi-value,
+	.dp-kpi-val, .dh-kpi-value, .dairy-kpi-value, .daily-kpi-compact-val, .daily-kpi-h-val,
+	.daily-kpi-h-money, .daily-locmap-kpi-val, .daily-rec-kpi-val, .daily-fin-kpi-val,
+	.daily-inv-kpi-val, .daily-censo-kpi-val, .daily-theft-kpi-val, .daily-eco-kpi-val,
+	.daily-aj-kpi-val, .daily-an-kpi-val, .daily-av-kpi-val, .daily-intel-kpi-val,
+	.daily-appr-kpi-val, .crm-kpi-val, .ret-kpi-value, .ded-progress-ring-text
+) {
+	color: #ffffff !important;
+	fill: #ffffff !important;
+}
+
+/* C. Subtítulos, descripciones secundarias, comparaciones y deltas positivos a blanco */
+html body :is(
+	.ded-kpi-card, .dkpi, .today-exec-kpi-card, .today-exec-spark-card, .sch-kpi-card, .hr-kpi-card, .dw-kpi-card,
+	.dsp-kpi-card, .dw-side-kpi-block, .daily-kpi-card-h, .prod-kpi-card, .branch-kpi-card,
+	.hist-kpi-card, .dept-perf-kpi-card, .pos-ret-kpi-card, .customers-kpi-card, .customers-mini-kpi,
+	.crm-kpi, .crystal-kpi, .dairy-kpi-accent, .dairy-kpi-card, .daily-kpi-card, .daily-kpi-stat-card,
+	.cc-kpi, .ep-kpi-card, .dsm-kpi-card, .dsm-dept-kpi-card, .dsm-alert-kpi-box, .orders-kpi-card, .wms-kpi-card,
+	.tr-kpi-card, .mc-kpi-card, .lp-kpi-card, .rc-kpi-card, .daily-rc-kpi-card, .ret-kpi-card, .dv-kpi-card, .dp-kpi-card,
+	.daily-locmap-kpi-card, .dh-kpi, .lv-kpi, .daily-censo-kpi-card, .daily-eco-kpi-card,
+	.daily-fin-kpi-card, .daily-theft-kpi-card, .daily-aj-kpi-card, .daily-an-kpi-card,
+	.daily-av-kpi-card, .daily-inv-kpi-card, .daily-rec-kpi-card, .daily-rebajas-kpi-card,
+	.daily-social-kpi-card, .daily-bk-kpi-card, .daily-intel-kpi-card, .daily-appr-kpi-card,
+	.daily-kpi-compact, .daily-kpi-interactive, .dlx-kpi, [data-kpi-hover]
+):hover:not(#_) :is(
+	.ded-kpi-sub, .today-exec-kpi-sub, .today-exec-kpi-sub span, .sch-kpi-sub, .sch-kpi-delta,
+	.hr-kpi-footer, .dw-kpi-sub, .dw-kpi-subtext, .dsp-kpi-sub, .dsp-kpi-foot, .dsp-kpi-foot span,
+	.prod-kpi-sub, .branch-kpi-sub, .hist-kpi-sub, .dkpi-comp, .dkpi-meta, .customers-kpi-sub,
+	.cc-kpi-sub, .daily-kpi-sub, .daily-kpi-subtext, .ep-kpi-sub, .orders-kpi-sub, .pos-ret-kpi-sub,
+	.rc-kpi-sub, .wms-kpi-trend, .tr-kpi-sub, .mc-kpi-subtext, .dsm-kpi-sub, .dp-kpi-sub,
+	.dh-kpi-sub, .dairy-kpi-footer, .daily-kpi-compact-sub, .daily-locmap-kpi-sub,
+	.daily-rec-kpi-sub, .daily-fin-kpi-sub, .daily-inv-kpi-sub, .daily-censo-kpi-sub,
+	.daily-theft-kpi-sub, .daily-eco-kpi-sub, .daily-aj-kpi-sub, .daily-an-kpi-sub,
+	.daily-av-kpi-sub, .daily-intel-kpi-sub, .daily-appr-kpi-sub, .ded-kpi-sub-highlight,
+	.srep-acc span, .srep-acc strong, .delta-up, .text-success, .text-muted, small, dd
+):not(.text-danger):not(.ded-pill-red):not(.is-down):not(.delta-down):not(.tone-danger):not(.bad):not(.dsp-badge-delta) {
+	color: rgba(255, 255, 255, 0.95) !important;
+}
+
+/* D. Iconos a blanco y trazo blanco */
+html body :is(
+	.ded-kpi-card, .dkpi, .today-exec-kpi-card, .today-exec-spark-card, .sch-kpi-card, .hr-kpi-card, .dw-kpi-card,
+	.dsp-kpi-card, .dw-side-kpi-block, .daily-kpi-card-h, .prod-kpi-card, .branch-kpi-card,
+	.hist-kpi-card, .dept-perf-kpi-card, .pos-ret-kpi-card, .customers-kpi-card, .customers-mini-kpi,
+	.crm-kpi, .crystal-kpi, .dairy-kpi-accent, .dairy-kpi-card, .daily-kpi-card, .daily-kpi-stat-card,
+	.cc-kpi, .ep-kpi-card, .dsm-kpi-card, .dsm-dept-kpi-card, .dsm-alert-kpi-box, .orders-kpi-card, .wms-kpi-card,
+	.tr-kpi-card, .mc-kpi-card, .lp-kpi-card, .rc-kpi-card, .daily-rc-kpi-card, .ret-kpi-card, .dv-kpi-card, .dp-kpi-card,
+	.daily-locmap-kpi-card, .dh-kpi, .lv-kpi, .daily-censo-kpi-card, .daily-eco-kpi-card,
+	.daily-fin-kpi-card, .daily-theft-kpi-card, .daily-aj-kpi-card, .daily-an-kpi-card,
+	.daily-av-kpi-card, .daily-inv-kpi-card, .daily-rec-kpi-card, .daily-rebajas-kpi-card,
+	.daily-social-kpi-card, .daily-bk-kpi-card, .daily-intel-kpi-card, .daily-appr-kpi-card,
+	.daily-kpi-compact, .daily-kpi-interactive, .dlx-kpi, [data-kpi-hover]
+):hover:not(#_) :is(
+	i, svg, [data-lucide]
+):not(.text-danger):not(.is-red) {
+	color: #ffffff !important;
+	stroke: #ffffff !important;
+}
+
+/* E. Cajas contenedoras de iconos y píldoras decorativas */
+html body :is(
+	.ded-kpi-card, .dkpi, .today-exec-kpi-card, .today-exec-spark-card, .sch-kpi-card, .hr-kpi-card, .dw-kpi-card,
+	.dsp-kpi-card, .dw-side-kpi-block, .daily-kpi-card-h, .prod-kpi-card, .branch-kpi-card,
+	.hist-kpi-card, .dept-perf-kpi-card, .pos-ret-kpi-card, .customers-kpi-card, .customers-mini-kpi,
+	.crm-kpi, .crystal-kpi, .dairy-kpi-accent, .dairy-kpi-card, .daily-kpi-card, .daily-kpi-stat-card,
+	.cc-kpi, .ep-kpi-card, .dsm-kpi-card, .dsm-dept-kpi-card, .dsm-alert-kpi-box, .orders-kpi-card, .wms-kpi-card,
+	.tr-kpi-card, .mc-kpi-card, .lp-kpi-card, .rc-kpi-card, .daily-rc-kpi-card, .ret-kpi-card, .dv-kpi-card, .dp-kpi-card,
+	.daily-locmap-kpi-card, .dh-kpi, .lv-kpi, .daily-censo-kpi-card, .daily-eco-kpi-card,
+	.daily-fin-kpi-card, .daily-theft-kpi-card, .daily-aj-kpi-card, .daily-an-kpi-card,
+	.daily-av-kpi-card, .daily-inv-kpi-card, .daily-rec-kpi-card, .daily-rebajas-kpi-card,
+	.daily-social-kpi-card, .daily-bk-kpi-card, .daily-intel-kpi-card, .daily-appr-kpi-card,
+	.daily-kpi-compact, .daily-kpi-interactive, .dlx-kpi, [data-kpi-hover]
+):hover:not(#_) :is(
+	.ded-kpi-icon, .today-exec-kpi-icon, .sch-kpi-icon, .hr-kpi-icon, .dw-kpi-icon,
+	.dsp-kpi-icon, .branch-kpi-icon, .hist-kpi-icon, .pos-ret-kpi-icon-box,
+	.ep-kpi-icon-box, .rc-kpi-icon-box, .wms-kpi-icon, .tr-kpi-icon-wrap,
+	.mc-kpi-icon, .lp-kpi-circle-icon, .dsm-kpi-icon, .dp-kpi-icon-box,
+	.dh-kpi-icon, .dairy-kpi-icon-box, .daily-kpi-icon-pill, .daily-kpi-icon-box,
+	.daily-censo-kpi-icon, .daily-eco-kpi-icon, .daily-aj-kpi-icon, .daily-an-kpi-icon,
+	.daily-av-kpi-icon, .daily-inv-kpi-icon, .daily-theft-kpi-icon, .ded-highlight-spark-box
+) {
+	background: rgba(255, 255, 255, 0.22) !important;
+	border-color: rgba(255, 255, 255, 0.35) !important;
+	color: #ffffff !important;
+}
+
+/* F. Badges estándar y positivos a estilo traslúcido legible */
+html body :is(
+	.ded-kpi-card, .dkpi, .today-exec-kpi-card, .today-exec-spark-card, .sch-kpi-card, .hr-kpi-card, .dw-kpi-card,
+	.dsp-kpi-card, .dw-side-kpi-block, .daily-kpi-card-h, .prod-kpi-card, .branch-kpi-card,
+	.hist-kpi-card, .dept-perf-kpi-card, .pos-ret-kpi-card, .customers-kpi-card, .customers-mini-kpi,
+	.crm-kpi, .crystal-kpi, .dairy-kpi-accent, .dairy-kpi-card, .daily-kpi-card, .daily-kpi-stat-card,
+	.cc-kpi, .ep-kpi-card, .dsm-kpi-card, .dsm-dept-kpi-card, .dsm-alert-kpi-box, .orders-kpi-card, .wms-kpi-card,
+	.tr-kpi-card, .mc-kpi-card, .lp-kpi-card, .rc-kpi-card, .daily-rc-kpi-card, .ret-kpi-card, .dv-kpi-card, .dp-kpi-card,
+	.daily-locmap-kpi-card, .dh-kpi, .lv-kpi, .daily-censo-kpi-card, .daily-eco-kpi-card,
+	.daily-fin-kpi-card, .daily-theft-kpi-card, .daily-aj-kpi-card, .daily-an-kpi-card,
+	.daily-av-kpi-card, .daily-inv-kpi-card, .daily-rec-kpi-card, .daily-rebajas-kpi-card,
+	.daily-social-kpi-card, .daily-bk-kpi-card, .daily-intel-kpi-card, .daily-appr-kpi-card,
+	.daily-kpi-compact, .daily-kpi-interactive, .dlx-kpi, [data-kpi-hover]
+):hover:not(#_) :is(
+	.ded-kpi-badge-green, .dkpi-unit, .dkpi-delta.is-up, .hr-kpi-trend, .badge-light,
+	.badge-success, .badge-secondary, .badge-info, .dsp-badge-delta.is-good
+) {
+	background: rgba(255, 255, 255, 0.22) !important;
+	color: #ffffff !important;
+	border-color: rgba(255, 255, 255, 0.30) !important;
+}
+
+/* G. Indicador de anillo circular (.ded-progress-ring-box) en Horas trabajadas */
+html body :is(
+	.ded-kpi-card, .dkpi, .sch-kpi-card, .hr-kpi-card
+):hover:not(#_) .ded-progress-ring-track {
+	stroke: rgba(255, 255, 255, 0.35) !important;
+}
+html body :is(
+	.ded-kpi-card, .dkpi, .sch-kpi-card, .hr-kpi-card
+):hover:not(#_) .ded-progress-ring-value {
+	stroke: #ffffff !important;
+}
+html body :is(
+	.ded-kpi-card, .dkpi, .sch-kpi-card, .hr-kpi-card
+):hover:not(#_) .ded-progress-ring-text {
+	fill: #ffffff !important;
+	color: #ffffff !important;
+}
+
+/* H. Divisores y líneas internas a tono sutil blanco */
+html body :is(
+	.ded-kpi-card, .dkpi, .today-exec-kpi-card, .today-exec-spark-card, .sch-kpi-card, .hr-kpi-card, .dw-kpi-card,
+	.dsp-kpi-card, .dw-side-kpi-block, .daily-kpi-card-h, .prod-kpi-card, .branch-kpi-card,
+	.hist-kpi-card, .dept-perf-kpi-card, .pos-ret-kpi-card, .customers-kpi-card, .customers-mini-kpi,
+	.crm-kpi, .crystal-kpi, .dairy-kpi-accent, .dairy-kpi-card, .daily-kpi-card, .daily-kpi-stat-card,
+	.cc-kpi, .ep-kpi-card, .dsm-kpi-card, .dsm-dept-kpi-card, .dsm-alert-kpi-box, .orders-kpi-card, .wms-kpi-card,
+	.tr-kpi-card, .mc-kpi-card, .lp-kpi-card, .rc-kpi-card, .daily-rc-kpi-card, .ret-kpi-card, .dv-kpi-card, .dp-kpi-card,
+	.daily-locmap-kpi-card, .dh-kpi, .lv-kpi, .daily-censo-kpi-card, .daily-eco-kpi-card,
+	.daily-fin-kpi-card, .daily-theft-kpi-card, .daily-aj-kpi-card, .daily-an-kpi-card,
+	.daily-av-kpi-card, .daily-inv-kpi-card, .daily-rec-kpi-card, .daily-rebajas-kpi-card,
+	.daily-social-kpi-card, .daily-bk-kpi-card, .daily-intel-kpi-card, .daily-appr-kpi-card,
+	.daily-kpi-compact, .daily-kpi-interactive, .dlx-kpi, [data-kpi-hover]
+):hover:not(#_) :is(
+	.dkpi-meta, .dsp-kpi-foot, hr, .border-top, .border-bottom, .dropdown-divider
+) {
+	border-color: rgba(255, 255, 255, 0.20) !important;
+}
+
+/* I. Sparklines SVG en blanco */
+html body :is(
+	.ded-kpi-card, .dkpi, .today-exec-kpi-card, .today-exec-spark-card, .sch-kpi-card, .hr-kpi-card, .dw-kpi-card,
+	.dsp-kpi-card, .dw-side-kpi-block, .daily-kpi-card-h, .prod-kpi-card, .branch-kpi-card,
+	.hist-kpi-card, .dept-perf-kpi-card, .pos-ret-kpi-card, .customers-kpi-card, .customers-mini-kpi,
+	.crm-kpi, .crystal-kpi, .dairy-kpi-accent, .dairy-kpi-card, .daily-kpi-card, .daily-kpi-stat-card,
+	.cc-kpi, .ep-kpi-card, .dsm-kpi-card, .dsm-dept-kpi-card, .dsm-alert-kpi-box, .orders-kpi-card, .wms-kpi-card,
+	.tr-kpi-card, .mc-kpi-card, .lp-kpi-card, .rc-kpi-card, .daily-rc-kpi-card, .ret-kpi-card, .dv-kpi-card, .dp-kpi-card,
+	.daily-locmap-kpi-card, .dh-kpi, .lv-kpi, .daily-censo-kpi-card, .daily-eco-kpi-card,
+	.daily-fin-kpi-card, .daily-theft-kpi-card, .daily-aj-kpi-card, .daily-an-kpi-card,
+	.daily-av-kpi-card, .daily-inv-kpi-card, .daily-rec-kpi-card, .daily-rebajas-kpi-card,
+	.daily-social-kpi-card, .daily-bk-kpi-card, .daily-intel-kpi-card, .daily-appr-kpi-card,
+	.daily-kpi-compact, .daily-kpi-interactive, .dlx-kpi, [data-kpi-hover]
+):hover:not(#_) svg:not([data-lucide]) path[stroke]:not([stroke="none"]) {
+	stroke: rgba(255, 255, 255, 0.95) !important;
+}
+
+html body :is(
+	.ded-kpi-card, .dkpi, .today-exec-kpi-card, .today-exec-spark-card, .sch-kpi-card, .hr-kpi-card, .dw-kpi-card,
+	.dsp-kpi-card, .dw-side-kpi-block, .daily-kpi-card-h, .prod-kpi-card, .branch-kpi-card,
+	.hist-kpi-card, .dept-perf-kpi-card, .pos-ret-kpi-card, .customers-kpi-card, .customers-mini-kpi,
+	.crm-kpi, .crystal-kpi, .dairy-kpi-accent, .dairy-kpi-card, .daily-kpi-card, .daily-kpi-stat-card,
+	.cc-kpi, .ep-kpi-card, .dsm-kpi-card, .dsm-dept-kpi-card, .dsm-alert-kpi-box, .orders-kpi-card, .wms-kpi-card,
+	.tr-kpi-card, .mc-kpi-card, .lp-kpi-card, .rc-kpi-card, .daily-rc-kpi-card, .ret-kpi-card, .dv-kpi-card, .dp-kpi-card,
+	.daily-locmap-kpi-card, .dh-kpi, .lv-kpi, .daily-censo-kpi-card, .daily-eco-kpi-card,
+	.daily-fin-kpi-card, .daily-theft-kpi-card, .daily-aj-kpi-card, .daily-an-kpi-card,
+	.daily-av-kpi-card, .daily-inv-kpi-card, .daily-rec-kpi-card, .daily-rebajas-kpi-card,
+	.daily-social-kpi-card, .daily-bk-kpi-card, .daily-intel-kpi-card, .daily-appr-kpi-card,
+	.daily-kpi-compact, .daily-kpi-interactive, .dlx-kpi, [data-kpi-hover]
+):hover:not(#_) svg:not([data-lucide]) circle[fill]:not([fill="none"]) {
+	fill: rgba(255, 255, 255, 0.95) !important;
+}
+
+/* ==========================================================================
+   4. PRESERVACIÓN DE COLORES SEMÁNTICOS (Alertas críticas y advertencias)
+   ========================================================================== */
+html body :is(
+	.ded-kpi-card, .dkpi, .today-exec-kpi-card, .today-exec-spark-card, .sch-kpi-card, .hr-kpi-card, .dw-kpi-card,
+	.dsp-kpi-card, .dw-side-kpi-block, .daily-kpi-card-h, .prod-kpi-card, .branch-kpi-card,
+	.hist-kpi-card, .dept-perf-kpi-card, .pos-ret-kpi-card, .customers-kpi-card, .customers-mini-kpi,
+	.crm-kpi, .crystal-kpi, .dairy-kpi-accent, .dairy-kpi-card, .daily-kpi-card, .daily-kpi-stat-card,
+	.cc-kpi, .ep-kpi-card, .dsm-kpi-card, .dsm-dept-kpi-card, .dsm-alert-kpi-box, .orders-kpi-card, .wms-kpi-card,
+	.tr-kpi-card, .mc-kpi-card, .lp-kpi-card, .rc-kpi-card, .daily-rc-kpi-card, .ret-kpi-card, .dv-kpi-card, .dp-kpi-card,
+	.daily-locmap-kpi-card, .dh-kpi, .lv-kpi, .daily-censo-kpi-card, .daily-eco-kpi-card,
+	.daily-fin-kpi-card, .daily-theft-kpi-card, .daily-aj-kpi-card, .daily-an-kpi-card,
+	.daily-av-kpi-card, .daily-inv-kpi-card, .daily-rec-kpi-card, .daily-rebajas-kpi-card,
+	.daily-social-kpi-card, .daily-bk-kpi-card, .daily-intel-kpi-card, .daily-appr-kpi-card,
+	.daily-kpi-compact, .daily-kpi-interactive, .dlx-kpi, [data-kpi-hover]
+):hover:not(#_) :is(
+	.text-danger, .is-down, .sch-kpi-delta.is-down, .sch-kpi-delta.bad, .sch-kpi-delta.warning, .hr-kpi-trend.down, .dkpi-delta.is-down, .delta-down
+) {
+	color: #fee2e2 !important;
+}
+
+html body :is(
+	.ded-kpi-card, .dkpi, .today-exec-kpi-card, .today-exec-spark-card, .sch-kpi-card, .hr-kpi-card, .dw-kpi-card,
+	.dsp-kpi-card, .dw-side-kpi-block, .daily-kpi-card-h, .prod-kpi-card, .branch-kpi-card,
+	.hist-kpi-card, .dept-perf-kpi-card, .pos-ret-kpi-card, .customers-kpi-card, .customers-mini-kpi,
+	.crm-kpi, .crystal-kpi, .dairy-kpi-accent, .dairy-kpi-card, .daily-kpi-card, .daily-kpi-stat-card,
+	.cc-kpi, .ep-kpi-card, .dsm-kpi-card, .dsm-dept-kpi-card, .dsm-alert-kpi-box, .orders-kpi-card, .wms-kpi-card,
+	.tr-kpi-card, .mc-kpi-card, .lp-kpi-card, .rc-kpi-card, .daily-rc-kpi-card, .ret-kpi-card, .dv-kpi-card, .dp-kpi-card,
+	.daily-locmap-kpi-card, .dh-kpi, .lv-kpi, .daily-censo-kpi-card, .daily-eco-kpi-card,
+	.daily-fin-kpi-card, .daily-theft-kpi-card, .daily-aj-kpi-card, .daily-an-kpi-card,
+	.daily-av-kpi-card, .daily-inv-kpi-card, .daily-rec-kpi-card, .daily-rebajas-kpi-card,
+	.daily-social-kpi-card, .daily-bk-kpi-card, .daily-intel-kpi-card, .daily-appr-kpi-card,
+	.daily-kpi-compact, .daily-kpi-interactive, .dlx-kpi, [data-kpi-hover]
+):hover:not(#_) :is(
+	.ded-pill-red, .badge-danger, .ded-alert-badge-p1, .dsp-badge-delta.is-bad
+) {
+	background: rgba(254, 226, 226, 0.95) !important;
+	color: #dc2626 !important;
+	font-weight: 700 !important;
+	border-color: #fca5a5 !important;
+}
+
+html body :is(
+	.ded-kpi-card, .dkpi, .today-exec-kpi-card, .today-exec-spark-card, .sch-kpi-card, .hr-kpi-card, .dw-kpi-card,
+	.dsp-kpi-card, .dw-side-kpi-block, .daily-kpi-card-h, .prod-kpi-card, .branch-kpi-card,
+	.hist-kpi-card, .dept-perf-kpi-card, .pos-ret-kpi-card, .customers-kpi-card, .customers-mini-kpi,
+	.crm-kpi, .crystal-kpi, .dairy-kpi-accent, .dairy-kpi-card, .daily-kpi-card, .daily-kpi-stat-card,
+	.cc-kpi, .ep-kpi-card, .dsm-kpi-card, .dsm-dept-kpi-card, .dsm-alert-kpi-box, .orders-kpi-card, .wms-kpi-card,
+	.tr-kpi-card, .mc-kpi-card, .lp-kpi-card, .rc-kpi-card, .daily-rc-kpi-card, .ret-kpi-card, .dv-kpi-card, .dp-kpi-card,
+	.daily-locmap-kpi-card, .dh-kpi, .lv-kpi, .daily-censo-kpi-card, .daily-eco-kpi-card,
+	.daily-fin-kpi-card, .daily-theft-kpi-card, .daily-aj-kpi-card, .daily-an-kpi-card,
+	.daily-av-kpi-card, .daily-inv-kpi-card, .daily-rec-kpi-card, .daily-rebajas-kpi-card,
+	.daily-social-kpi-card, .daily-bk-kpi-card, .daily-intel-kpi-card, .daily-appr-kpi-card,
+	.daily-kpi-compact, .daily-kpi-interactive, .dlx-kpi, [data-kpi-hover]
+):hover:not(#_) :is(
+	.text-warning, .hr-kpi-trend.amber
+) {
+	color: #fef08a !important;
+}
+
+html body :is(
+	.ded-kpi-card, .dkpi, .today-exec-kpi-card, .today-exec-spark-card, .sch-kpi-card, .hr-kpi-card, .dw-kpi-card,
+	.dsp-kpi-card, .dw-side-kpi-block, .daily-kpi-card-h, .prod-kpi-card, .branch-kpi-card,
+	.hist-kpi-card, .dept-perf-kpi-card, .pos-ret-kpi-card, .customers-kpi-card, .customers-mini-kpi,
+	.crm-kpi, .crystal-kpi, .dairy-kpi-accent, .dairy-kpi-card, .daily-kpi-card, .daily-kpi-stat-card,
+	.cc-kpi, .ep-kpi-card, .dsm-kpi-card, .dsm-dept-kpi-card, .dsm-alert-kpi-box, .orders-kpi-card, .wms-kpi-card,
+	.tr-kpi-card, .mc-kpi-card, .lp-kpi-card, .rc-kpi-card, .daily-rc-kpi-card, .ret-kpi-card, .dv-kpi-card, .dp-kpi-card,
+	.daily-locmap-kpi-card, .dh-kpi, .lv-kpi, .daily-censo-kpi-card, .daily-eco-kpi-card,
+	.daily-fin-kpi-card, .daily-theft-kpi-card, .daily-aj-kpi-card, .daily-an-kpi-card,
+	.daily-av-kpi-card, .daily-inv-kpi-card, .daily-rec-kpi-card, .daily-rebajas-kpi-card,
+	.daily-social-kpi-card, .daily-bk-kpi-card, .daily-intel-kpi-card, .daily-appr-kpi-card,
+	.daily-kpi-compact, .daily-kpi-interactive, .dlx-kpi, [data-kpi-hover]
+):hover:not(#_) :is(
+	.badge-warning, .ded-alert-badge-p2
+) {
+	background: rgba(254, 243, 199, 0.95) !important;
+	color: #d97706 !important;
+	font-weight: 700 !important;
+	border-color: #fde68a !important;
+}
+
+/* ==========================================================================
+   5. PREVENCIÓN DE ESTADOS PEGAJOSOS POR CLIC / FOCUS
+   ========================================================================== */
+html body :is(
+	.ded-kpi-card, .dkpi, .today-exec-kpi-card, .today-exec-spark-card, .sch-kpi-card, .hr-kpi-card, .dw-kpi-card,
+	.dsp-kpi-card, .dw-side-kpi-block, .daily-kpi-card-h, .prod-kpi-card, .branch-kpi-card,
+	.hist-kpi-card, .dept-perf-kpi-card, .pos-ret-kpi-card, .customers-kpi-card, .customers-mini-kpi,
+	.crm-kpi, .crystal-kpi, .dairy-kpi-accent, .dairy-kpi-card, .daily-kpi-card, .daily-kpi-stat-card,
+	.cc-kpi, .ep-kpi-card, .dsm-kpi-card, .dsm-dept-kpi-card, .dsm-alert-kpi-box, .orders-kpi-card, .wms-kpi-card,
+	.tr-kpi-card, .mc-kpi-card, .lp-kpi-card, .rc-kpi-card, .daily-rc-kpi-card, .ret-kpi-card, .dv-kpi-card, .dp-kpi-card,
+	.daily-locmap-kpi-card, .dh-kpi, .lv-kpi, .daily-censo-kpi-card, .daily-eco-kpi-card,
+	.daily-fin-kpi-card, .daily-theft-kpi-card, .daily-aj-kpi-card, .daily-an-kpi-card,
+	.daily-av-kpi-card, .daily-inv-kpi-card, .daily-rec-kpi-card, .daily-rebajas-kpi-card,
+	.daily-social-kpi-card, .daily-bk-kpi-card, .daily-intel-kpi-card, .daily-appr-kpi-card,
+	.daily-kpi-compact, .daily-kpi-interactive, .dlx-kpi, [data-kpi-hover]
+):focus {
+	outline: none;
+}

@@ -79,12 +79,19 @@
 					tooltips: {
 						mode: 'index',
 						intersect: false,
-						backgroundColor: '#0f172a',
-						titleFontSize: 11,
+						backgroundColor: 'rgba(15, 23, 42, 0.94)',
+						titleFontColor: '#ffffff',
+						titleFontStyle: 'bold',
+						titleFontSize: 12,
+						bodyFontColor: '#ffffff',
 						bodyFontSize: 11,
-						cornerRadius: 6,
-						xPadding: 10,
-						yPadding: 8
+						footerFontColor: '#e2e8f0',
+						borderColor: 'rgba(255, 255, 255, 0.15)',
+						borderWidth: 1,
+						cornerRadius: 8,
+						xPadding: 12,
+						yPadding: 10,
+						displayColors: true
 					},
 					scales: {
 						xAxes: [{
@@ -132,8 +139,19 @@
 					cutoutPercentage: 74,
 					legend: { display: false },
 					tooltips: {
-						backgroundColor: '#0f172a',
-						cornerRadius: 6,
+						backgroundColor: 'rgba(15, 23, 42, 0.94)',
+						titleFontColor: '#ffffff',
+						titleFontStyle: 'bold',
+						titleFontSize: 12,
+						bodyFontColor: '#ffffff',
+						bodyFontSize: 11,
+						footerFontColor: '#e2e8f0',
+						borderColor: 'rgba(255, 255, 255, 0.15)',
+						borderWidth: 1,
+						cornerRadius: 8,
+						xPadding: 12,
+						yPadding: 10,
+						displayColors: true,
 						callbacks: {
 							label: function (item, data) {
 								var label = data.labels[item.index] || '';
@@ -189,8 +207,19 @@
 					tooltips: {
 						mode: 'index',
 						intersect: false,
-						backgroundColor: '#0f172a',
-						cornerRadius: 6
+						backgroundColor: 'rgba(15, 23, 42, 0.94)',
+						titleFontColor: '#ffffff',
+						titleFontStyle: 'bold',
+						titleFontSize: 12,
+						bodyFontColor: '#ffffff',
+						bodyFontSize: 11,
+						footerFontColor: '#e2e8f0',
+						borderColor: 'rgba(255, 255, 255, 0.15)',
+						borderWidth: 1,
+						cornerRadius: 8,
+						xPadding: 12,
+						yPadding: 10,
+						displayColors: true
 					},
 					scales: {
 						xAxes: [{
@@ -878,7 +907,23 @@
 		return {
 			responsive: true, maintainAspectRatio: false,
 			legend: { display: true, position: 'bottom', labels: { boxWidth: 10, fontSize: 10 } },
-			tooltips: { mode: 'index', intersect: false, backgroundColor: '#0f172a', cornerRadius: 6 },
+			tooltips: {
+				mode: 'index',
+				intersect: false,
+				backgroundColor: 'rgba(15, 23, 42, 0.94)',
+				titleFontColor: '#ffffff',
+				titleFontStyle: 'bold',
+				titleFontSize: 12,
+				bodyFontColor: '#ffffff',
+				bodyFontSize: 11,
+				footerFontColor: '#e2e8f0',
+				borderColor: 'rgba(255, 255, 255, 0.15)',
+				borderWidth: 1,
+				cornerRadius: 8,
+				xPadding: 12,
+				yPadding: 10,
+				displayColors: true
+			},
 			scales: {
 				xAxes: [{ stacked: !!stacked, gridLines: { display: false }, ticks: { fontSize: 10, fontColor: '#64748b' } }],
 				yAxes: [{ stacked: !!stacked, gridLines: GRID, ticks: TICK }]
@@ -1699,44 +1744,117 @@
 		});
 	});
 
+	$('#policyJurisdictionSelect').on('change', function () {
+		var opt = this.options[this.selectedIndex];
+		if (!opt) return;
+		var d = opt.dataset || {};
+		if (d.country) $('#policyCountryCode').val(d.country);
+		if (d.weekly) $('#policyMaxHoursInput').val(d.weekly);
+		if (d.daily) $('#policyMaxDailyInput').val(d.daily);
+		if (d.rest) $('#policyMinRestInput').val(d.rest);
+		if (d.sunday) $('#policySundayTypeSelect').val(d.sunday);
+		if (d.nightStart) $('#policyNightStartInput').val(d.nightStart);
+		if (d.nightEnd) $('#policyNightEndInput').val(d.nightEnd);
+		if (d.ref) $('#policyJurLegalRef').text(d.ref);
+	});
+
 	$('#btnSaveCompanyPolicyAction').on('click', function () {
 		var companyId = $('#policyCompanyId').val() || 1;
+		var branchId = $('#policyBranchId').val() || S.branchId || 1;
+		var jurCode = $('#policyJurisdictionSelect').val() || 'CO-GEN';
+		var countryCode = $('#policyCountryCode').val() || 'CO';
 		var pName = $('#policyNameInput').val();
 		var effDate = $('#policyEffectiveDateInput').val();
 		var sunRule = $('#policySundayTypeSelect').val();
 		var rotRule = $('#policyRotationTypeSelect').val();
 		var maxNights = parseInt($('#policyMaxNightsInput').val(), 10) || 1;
 		var maxHours = parseFloat($('#policyMaxHoursInput').val()) || 42.0;
+		var maxDaily = parseFloat($('#policyMaxDailyInput').val()) || 8.0;
 		var minRest = parseFloat($('#policyMinRestInput').val()) || 12.0;
+		var nightStart = parseInt($('#policyNightStartInput').val(), 10) || 21;
+		var nightEnd = parseInt($('#policyNightEndInput').val(), 10) || 6;
 
 		if (!pName || !effDate) {
 			toastr.error('Por favor indique el nombre y la fecha de vigencia de la política.');
 			return;
 		}
 
-		toastr.info('Guardando y versionando política laboral de empresa...');
+		toastr.info('Guardando y versionando política laboral y jurisdicción...');
 		$.ajax({
 			url: U('/api/schedule/policies'),
 			type: 'POST',
 			contentType: 'application/json',
 			data: JSON.stringify({
 				company_id: companyId,
+				branch_id: parseInt(branchId, 10) || 1,
+				country_code: countryCode,
+				jurisdiction_code: jurCode,
 				policy_name: pName,
 				effective_date: effDate,
 				sunday_rule_type: sunRule,
 				rotation_rule_type: rotRule,
 				max_nights_per_day: maxNights,
 				max_weekly_hours: maxHours,
+				max_daily_hours: maxDaily,
 				min_rest_hours: minRest,
+				night_start_hour: nightStart,
+				night_end_hour: nightEnd,
 				compensatory_enabled: 1,
 				compensatory_days_rule: 'MON_FRI_NO_HOLIDAYS'
 			}),
 			success: function (res) {
-				toastr.success('Política laboral v' + (res.version || '') + ' guardada y versionada exitosamente para la empresa.');
+				toastr.success('Política ' + jurCode + ' v' + (res.version || '') + ' guardada y aplicada.');
 				$('#modalCompanyLaborPolicies').modal('hide');
+				setTimeout(function () { window.location.reload(); }, 600);
 			},
 			error: function (xhr) {
 				toastr.error('Error al guardar política: ' + errMsg(xhr));
+			}
+		});
+	});
+
+	$('#swapTargetEmpId').on('change', function () {
+		var empId = $(this).val();
+		$('#swapTargetShiftId option').each(function () {
+			var optEmp = $(this).attr('data-emp');
+			if (!optEmp || !empId || optEmp === empId) {
+				$(this).show();
+			} else {
+				$(this).hide();
+			}
+		});
+		$('#swapTargetShiftId').val('');
+	});
+
+	$('#formRequestSwap').on('submit', function (e) {
+		e.preventDefault();
+		var shiftId = parseInt($('#swapSourceShiftId').val(), 10);
+		var toEmpId = parseInt($('#swapTargetEmpId').val(), 10);
+		var targetShiftId = parseInt($('#swapTargetShiftId').val(), 10) || null;
+		var notes = $('#swapNotesInput').val() || '';
+
+		if (!shiftId || !toEmpId) {
+			toastr.warning('Seleccione el turno origen y el colaborador receptor.');
+			return;
+		}
+
+		$.ajax({
+			url: U('/api/schedule/swaps'),
+			type: 'POST',
+			contentType: 'application/json',
+			data: JSON.stringify({
+				shift_id: shiftId,
+				to_employee_id: toEmpId,
+				target_shift_id: targetShiftId,
+				notes: notes
+			}),
+			success: function () {
+				toastr.success('Solicitud de cambio/permuta registrada y validada.');
+				$('#modalRequestSwap').modal('hide');
+				setTimeout(function () { window.location.reload(); }, 700);
+			},
+			error: function (xhr) {
+				toastr.error(errMsg(xhr));
 			}
 		});
 	});

@@ -58,7 +58,7 @@ class DailyFilters
 		return [
 			'company_id' => !empty($q['company_id']) ? intval($q['company_id']) : null,
 			'branch_id' => $branchId,
-			'department' => isset(DailyMetricsService::DEPARTMENTS[$dept]) ? $dept : null,
+			'department' => isset(DailyMetricsService::Departments()[$dept]) ? $dept : null,
 			'group_id' => isset($q['group_id']) && $q['group_id'] !== '' ? intval($q['group_id']) : null,
 			'subcategory' => trim((string) ($q['subcategory'] ?? '')) ?: null,
 			'product' => trim((string) ($q['product'] ?? '')) ?: null,
@@ -133,7 +133,7 @@ class DailyFilters
 		// Solo departamentos con productos activos: cada cliente ve su propia clasificación
 		$present = array_flip(array_filter($db->query('SELECT DISTINCT IFNULL(department, \'\') FROM products WHERE active = 1')->fetchAll(\PDO::FETCH_COLUMN)));
 		$departments = [];
-		foreach (DailyMetricsService::DEPARTMENTS as $key => [$name, $color, $values])
+		foreach (DailyMetricsService::Departments() as $key => [$name, $color, $values])
 		{
 			if ($values === null || array_intersect_key($present, array_flip($values)))
 			{
@@ -171,7 +171,7 @@ class DailyFilters
 		return [
 			'company' => $f['company_id'] !== null ? $find($options['companies'], $f['company_id']) : 'Todas',
 			'branch' => $f['branch_id'] !== null ? ($find($options['branches'], $f['branch_id']) ?? 'Sucursal ' . $f['branch_id']) : 'Todas las sucursales',
-			'department' => $f['department'] !== null ? DailyMetricsService::DEPARTMENTS[$f['department']][0] : 'Todos los departamentos',
+			'department' => $f['department'] !== null ? DailyMetricsService::Departments()[$f['department']][0] : 'Todos los departamentos',
 			'group' => $f['group_id'] !== null ? ($find($options['groups'], $f['group_id']) ?? 'Sin categoría') : 'Todas las categorías',
 			'subcategory' => $f['subcategory'] ?? 'Todas',
 			'product' => $f['product'],

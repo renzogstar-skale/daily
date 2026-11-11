@@ -174,10 +174,8 @@
 <link href="{{ $U('/css/daily_dispatch.css?v=', true) }}{{ daily_asset_version('/css/daily_dispatch.css') }}" rel="stylesheet">
 @php
 	$money = fn($v) => $v === null ? 'Sin información' : '$' . number_format(floatval($v), 2);
-	$prepAcc = $kpis['picking_accuracy_pct'] ?? 99.2;
-	$delivAcc = $analytics['delivery']['delivery_accuracy_pct'] ?? 98.4;
-	$missing1k = $analytics['pickup']['missing_per_thousand'] ?? 1.2;
-	$finVar = $analytics['delivery']['financial_variance'] ?? 0.0;
+	$prepAcc = $kpis['picking_accuracy_pct'] ?? null;
+	$otifPct = $kpis['otif_pct'] ?? null;
 @endphp
 
 <div class="dp-page-container">
@@ -192,7 +190,7 @@
 			</div>
 			<div>
 				<h1 class="dp-hero-title">Gestión de Despachos</h1>
-				<p class="dp-hero-desc">Control integral de pedidos multicanal, picking, programación de rutas, salida, seguimiento en tiempo real y conciliación.</p>
+				<p class="dp-hero-desc">Ciclo OMS/WMS exclusivo de pedidos retail: Pedido → Reserva → Picking → Packing → Despacho → Entrega → Conciliación.</p>
 			</div>
 		</div>
 
@@ -211,150 +209,125 @@
 				</select>
 			</form>
 
-			<button type="button" class="dp-btn-green" data-toggle="modal" data-target="#modalFastScanVerify">
+			<button type="button" class="dp-btn-green" id="btnOpenNewOrderModal" data-toggle="modal" data-target="#modalNewOrder">
+				<i class="fa-solid fa-plus"></i>
+				<span>Nuevo Pedido</span>
+			</button>
+
+			<button type="button" class="dp-btn-outline" data-toggle="modal" data-target="#modalFastScanVerify">
 				<i class="fa-solid fa-barcode"></i>
-				<span>Escaneo Rápido UPC</span>
+				<span>Escáner PDA / UPC</span>
 			</button>
 
 			<button type="button" class="dp-btn-cyan" data-toggle="modal" data-target="#modalScheduleRoute">
 				<i class="fa-solid fa-route"></i>
-				<span>Programar Transporte</span>
+				<span>Transporte</span>
 			</button>
 
 			<button type="button" class="dp-btn-outline" data-toggle="modal" data-target="#modalComparativeAnalytics">
 				<i class="fa-solid fa-chart-column text-info"></i>
 				<span>Analítica OTIF</span>
 			</button>
-
-			<a href="{{ $U('/returns') }}" class="dp-btn-outline">
-				<i class="fa-solid fa-rotate-left text-danger"></i>
-				<span>Devoluciones</span>
-			</a>
-
-			<a href="{{ $U('/warehouse') }}" class="dp-btn-outline">
-				<i class="fa-solid fa-warehouse text-primary"></i>
-				<span>Almacén WMS</span>
-			</a>
 		</div>
 	</div>
 
-	<!-- ================= 2. CICLO OPERATIVO VISUAL (9 FASES) ================= -->
+	<!-- ================= 2. CICLO OPERATIVO VISUAL (7 ETAPAS CANÓNICAS) ================= -->
 	<div class="dp-lifecycle-card">
 		<div class="dp-lifecycle-header d-flex align-items-center justify-content-between flex-wrap">
 			<div class="d-flex align-items-center">
 				<span class="badge badge-success px-2.5 py-1 text-uppercase font-weight-700 mr-2" style="font-size: 0.72rem; letter-spacing: 0.05em; background-color: #059669;">
 					<i class="fa-solid fa-arrows-spin mr-1"></i> Ciclo OMS / WMS
 				</span>
-				<h6 class="mb-0 font-weight-bold text-dark" style="font-size: 0.95rem;">Flujo Operativo de Gestión de Despachos</h6>
+				<h6 class="mb-0 font-weight-bold text-dark" style="font-size: 0.95rem;">Ciclo de Preparación y Entrega (7 Etapas)</h6>
 			</div>
 			<div class="d-flex align-items-center mt-1 mt-md-0">
-				<span class="text-muted small"><i class="fa-solid fa-shield-halved text-success mr-1"></i> Descuento único en kardex · Cero duplicación · Trazabilidad 100%</span>
+				<span class="text-muted small"><i class="fa-solid fa-shield-halved text-success mr-1"></i> Reserva estricta · Cero sobre-despacho · POD obligatorio</span>
 			</div>
 		</div>
 		<div class="dp-lifecycle-stepper-wrap">
 			<div class="dp-lifecycle-stepper" data-testid="dispatch-lifecycle-stepper">
-				<!-- Fase 1: Pedido -->
-				<div class="dp-lifecycle-step" onclick="$('#tab-pedidos-link').click();" title="1. Pedido: Ingreso de órdenes POS, Web, B2B y Tienda">
+				<!-- Etapa 1: Pedido -->
+				<div class="dp-lifecycle-step" onclick="$('#tab-pedidos-link').click();" title="1. Pedido: Registro sin duplicación">
 					<div class="dp-step-circle-num is-active">1</div>
 					<div class="d-flex flex-column" style="line-height: 1.15;">
 						<strong style="font-size: 0.8rem; color: #0f172a;">Pedido</strong>
-						<span style="font-size: 0.68rem; color: #64748b;">Ingreso Canal</span>
+						<span style="font-size: 0.68rem; color: #64748b;">Alta y prioridad</span>
 					</div>
 				</div>
 				<div class="dp-lifecycle-divider"></div>
 
-				<!-- Fase 2: Validación -->
-				<div class="dp-lifecycle-step" onclick="$('#tab-pedidos-link').click();" title="2. Validación: Confirmación de stock, crédito y dirección">
+				<!-- Etapa 2: Reserva -->
+				<div class="dp-lifecycle-step" onclick="$('#tab-pedidos-link').click();" title="2. Reserva: Bloqueo estricto de mercancía disponible">
 					<div class="dp-step-circle-num">2</div>
 					<div class="d-flex flex-column" style="line-height: 1.15;">
-						<strong style="font-size: 0.8rem; color: #0f172a;">Validación</strong>
-						<span style="font-size: 0.68rem; color: #64748b;">Confirmado</span>
+						<strong style="font-size: 0.8rem; color: #0f172a;">Reserva</strong>
+						<span style="font-size: 0.68rem; color: #64748b;">Stock bloqueado</span>
 					</div>
 				</div>
 				<div class="dp-lifecycle-divider"></div>
 
-				<!-- Fase 3: Reserva -->
-				<div class="dp-lifecycle-step" onclick="$('#tab-picking-link').click();" title="3. Reserva de stock: Bloqueo de existencias para preparación">
+				<!-- Etapa 3: Picking -->
+				<div class="dp-lifecycle-step" onclick="$('#tab-picking-link').click();" title="3. Picking: Recolección y validación UPC/FEFO">
 					<div class="dp-step-circle-num">3</div>
 					<div class="d-flex flex-column" style="line-height: 1.15;">
-						<strong style="font-size: 0.8rem; color: #0f172a;">Reserva</strong>
-						<span style="font-size: 0.68rem; color: #64748b;">Stock Kardex</span>
+						<strong style="font-size: 0.8rem; color: #0f172a;">Picking</strong>
+						<span style="font-size: 0.68rem; color: #64748b;">Escáner y FEFO</span>
 					</div>
 				</div>
 				<div class="dp-lifecycle-divider"></div>
 
-				<!-- Fase 4: Picking -->
-				<div class="dp-lifecycle-step" onclick="$('#tab-picking-link').click();" title="4. Picking: Asignación de operario y recolección FEFO">
+				<!-- Etapa 4: Packing -->
+				<div class="dp-lifecycle-step" onclick="$('#tab-picking-link').click();" title="4. Packing: Bultos y etiqueta de despacho">
 					<div class="dp-step-circle-num">4</div>
 					<div class="d-flex flex-column" style="line-height: 1.15;">
-						<strong style="font-size: 0.8rem; color: #0f172a;">Picking</strong>
-						<span style="font-size: 0.68rem; color: #64748b;">Recolección</span>
+						<strong style="font-size: 0.8rem; color: #0f172a;">Packing</strong>
+						<span style="font-size: 0.68rem; color: #64748b;">Bultos y Etiqueta</span>
 					</div>
 				</div>
 				<div class="dp-lifecycle-divider"></div>
 
-				<!-- Fase 5: Packing -->
-				<div class="dp-lifecycle-step" onclick="$('#tab-picking-link').click();" title="5. Packing: Empaque en bultos, cajas y precintado">
+				<!-- Etapa 5: Despacho -->
+				<div class="dp-lifecycle-step" onclick="$('#tab-salidas-link').click();" title="5. Despacho: Transporte y salida física de muelle">
 					<div class="dp-step-circle-num">5</div>
 					<div class="d-flex flex-column" style="line-height: 1.15;">
-						<strong style="font-size: 0.8rem; color: #0f172a;">Packing</strong>
-						<span style="font-size: 0.68rem; color: #64748b;">Bultos</span>
+						<strong style="font-size: 0.8rem; color: #0f172a;">Despacho</strong>
+						<span style="font-size: 0.68rem; color: #64748b;">Salida & Ruta</span>
 					</div>
 				</div>
 				<div class="dp-lifecycle-divider"></div>
 
-				<!-- Fase 6: Verificación -->
-				<div class="dp-lifecycle-step" onclick="$('#modalFastScanVerify').modal('show');" title="6. Verificación: Escaneo láser UPC y control de cantidades">
+				<!-- Etapa 6: Entrega -->
+				<div class="dp-lifecycle-step" onclick="$('#tab-entregas-link').click();" title="6. Entrega: POD obligatoria (Firma/Foto o PIN)">
 					<div class="dp-step-circle-num">6</div>
 					<div class="d-flex flex-column" style="line-height: 1.15;">
-						<strong style="font-size: 0.8rem; color: #0f172a;">Verificación</strong>
-						<span style="font-size: 0.68rem; color: #64748b;">Escaneo UPC</span>
+						<strong style="font-size: 0.8rem; color: #0f172a;">Entrega</strong>
+						<span style="font-size: 0.68rem; color: #64748b;">POD / PIN / Parcial</span>
 					</div>
 				</div>
 				<div class="dp-lifecycle-divider"></div>
 
-				<!-- Fase 7: Despacho -->
-				<div class="dp-lifecycle-step" onclick="$('#tab-salidas-link').click();" title="7. Despacho: Carga a vehículo y emisión de guía">
+				<!-- Etapa 7: Conciliación -->
+				<div class="dp-lifecycle-step" onclick="$('#tab-conciliacion-link').click();" title="7. Conciliación: Resolución de diferencias e incidencias">
 					<div class="dp-step-circle-num">7</div>
 					<div class="d-flex flex-column" style="line-height: 1.15;">
-						<strong style="font-size: 0.8rem; color: #0f172a;">Despacho</strong>
-						<span style="font-size: 0.68rem; color: #64748b;">Salida & Guía</span>
-					</div>
-				</div>
-				<div class="dp-lifecycle-divider"></div>
-
-				<!-- Fase 8: Entrega -->
-				<div class="dp-lifecycle-step" onclick="$('#tab-entregas-link').click();" title="8. Entrega: Recepción, firma, PIN o foto de evidencia">
-					<div class="dp-step-circle-num">8</div>
-					<div class="d-flex flex-column" style="line-height: 1.15;">
-						<strong style="font-size: 0.8rem; color: #0f172a;">Entrega</strong>
-						<span style="font-size: 0.68rem; color: #64748b;">Firma / PIN</span>
-					</div>
-				</div>
-				<div class="dp-lifecycle-divider"></div>
-
-				<!-- Fase 9: Conciliación -->
-				<div class="dp-lifecycle-step" onclick="$('#tab-conciliacion-link').click();" title="9. Conciliación: Matriz 7-etapas, resolución de faltantes y cierre">
-					<div class="dp-step-circle-num">9</div>
-					<div class="d-flex flex-column" style="line-height: 1.15;">
 						<strong style="font-size: 0.8rem; color: #0f172a;">Conciliación</strong>
-						<span style="font-size: 0.68rem; color: #64748b;">Auditoría 7E</span>
+						<span style="font-size: 0.68rem; color: #64748b;">Cierre Final</span>
 					</div>
 				</div>
 			</div>
 		</div>
 	</div>
 
-	<!-- ================= 3. LOS 8 INDICADORES CLAVE CONSOLIDADOS ================= -->
+	<!-- ================= 3. LOS 8 INDICADORES CLAVE CONSOLIDADOS (DATOS REALES) ================= -->
 	<div class="dp-kpis-grid-8" data-testid="dispatch-eight-kpis">
 		<!-- KPI 1: Pedidos pendientes -->
 		<div class="dp-kpi-card kpi-amber" data-testid="kpi-pedidos-pendientes" onclick="$('#tab-pedidos-link').click();" role="button">
 			<div>
-				<div class="dp-kpi-label">Pedidos pendientes</div>
-				<div class="dp-kpi-val">{{ $kpis['pending_orders'] ?? 14 }}</div>
+				<div class="dp-kpi-label">Pendientes / En cola</div>
+				<div class="dp-kpi-val">{{ intval($kpis['pending_orders'] ?? 0) }}</div>
 				<div class="dp-kpi-sub text-warning font-weight-bold">
 					<i class="fa-solid fa-clock"></i>
-					<span>En preparación / empaque</span>
+					<span>{{ intval($kpis['preparing_orders'] ?? 0) }} en picking · {{ intval($kpis['ready_orders'] ?? 0) }} listos</span>
 				</div>
 			</div>
 			<div class="dp-kpi-icon-box">
@@ -366,10 +339,10 @@
 		<div class="dp-kpi-card kpi-green" data-testid="kpi-pedidos-despachados" onclick="$('#tab-seguimiento-link').click();" role="button">
 			<div>
 				<div class="dp-kpi-label">Pedidos despachados</div>
-				<div class="dp-kpi-val text-success">{{ $kpis['dispatched_orders'] ?? 36 }}</div>
+				<div class="dp-kpi-val text-success">{{ intval($kpis['dispatched_orders'] ?? 0) }}</div>
 				<div class="dp-kpi-sub text-success">
 					<i class="fa-solid fa-circle-check"></i>
-					<span>Despachos completados</span>
+					<span>Salida confirmada</span>
 				</div>
 			</div>
 			<div class="dp-kpi-icon-box">
@@ -377,14 +350,14 @@
 			</div>
 		</div>
 
-		<!-- KPI 3: Entregas atrasadas -->
+		<!-- KPI 3: Pedidos atrasados -->
 		<div class="dp-kpi-card kpi-red" data-testid="kpi-entregas-atrasadas" onclick="$('#tab-pedidos-link').click();" role="button">
 			<div>
-				<div class="dp-kpi-label">Entregas atrasadas</div>
-				<div class="dp-kpi-val text-red">{{ $kpis['overdue_orders'] ?? 2 }}</div>
+				<div class="dp-kpi-label">Pedidos atrasados</div>
+				<div class="dp-kpi-val text-red">{{ intval($kpis['overdue_orders'] ?? 0) }}</div>
 				<div class="dp-kpi-sub text-danger font-weight-bold">
 					<i class="fa-solid fa-triangle-exclamation"></i>
-					<span>Compromiso vencido</span>
+					<span>Ventana o fecha vencida</span>
 				</div>
 			</div>
 			<div class="dp-kpi-icon-box">
@@ -396,10 +369,12 @@
 		<div class="dp-kpi-card kpi-blue" data-testid="kpi-otif" data-toggle="modal" data-target="#modalComparativeAnalytics" role="button">
 			<div>
 				<div class="dp-kpi-label">OTIF (A tiempo y completo)</div>
-				<div class="dp-kpi-val text-primary" style="color: #0284c7;">{{ number_format($kpis['otif_pct'] ?? 96.8, 1) }}%</div>
+				<div class="dp-kpi-val text-primary" style="color: #0284c7;">
+					{{ $otifPct !== null ? number_format($otifPct, 1) . '%' : 'Sin info' }}
+				</div>
 				<div class="dp-kpi-sub text-primary">
 					<i class="fa-solid fa-award"></i>
-					<span>Meta corporativa: ≥ 95.0%</span>
+					<span>{{ intval($kpis['otif_evaluated'] ?? 0) }} entregas evaluadas</span>
 				</div>
 			</div>
 			<div class="dp-kpi-icon-box">
@@ -411,10 +386,10 @@
 		<div class="dp-kpi-card kpi-green" data-testid="kpi-exactitud-picking" onclick="$('#tab-picking-link').click();" role="button">
 			<div>
 				<div class="dp-kpi-label">Exactitud de picking</div>
-				<div class="dp-kpi-val">{{ number_format($prepAcc, 1) }}%</div>
+				<div class="dp-kpi-val">{{ $prepAcc !== null ? number_format($prepAcc, 1) . '%' : 'Sin info' }}</div>
 				<div class="dp-kpi-sub text-success">
 					<i class="fa-solid fa-barcode"></i>
-					<span>Escaneo láser validado</span>
+					<span>Validado vs reservado</span>
 				</div>
 			</div>
 			<div class="dp-kpi-icon-box">
@@ -422,13 +397,13 @@
 			</div>
 		</div>
 
-		<!-- KPI 6: Tiempo de preparación -->
+		<!-- KPI 6: Tiempo promedio de preparación -->
 		<div class="dp-kpi-card kpi-blue" data-testid="kpi-tiempo-preparacion" onclick="$('#tab-picking-link').click();" role="button">
 			<div>
-				<div class="dp-kpi-label">Tiempo de preparación</div>
-				<div class="dp-kpi-val">{{ $kpis['prep_time_minutes'] ?? '18.5 min' }}</div>
+				<div class="dp-kpi-label">Tiempo promedio prep.</div>
+				<div class="dp-kpi-val" style="font-size: 1.3rem;">{{ $kpis['prep_time_minutes'] ?? 'Sin información' }}</div>
 				<div class="dp-kpi-sub">
-					<span>Promedio por orden</span>
+					<span>Reserva → Packing</span>
 				</div>
 			</div>
 			<div class="dp-kpi-icon-box">
@@ -436,13 +411,13 @@
 			</div>
 		</div>
 
-		<!-- KPI 7: Incidencias -->
+		<!-- KPI 7: Incidencias logísticas -->
 		<div class="dp-kpi-card kpi-amber" data-testid="kpi-incidencias" onclick="$('#tab-conciliacion-link').click();" role="button">
 			<div>
-				<div class="dp-kpi-label">Incidencias registradas</div>
-				<div class="dp-kpi-val text-warning">{{ $kpis['incidents_count'] ?? 3 }}</div>
+				<div class="dp-kpi-label">Incidencias logísticas</div>
+				<div class="dp-kpi-val text-warning">{{ intval($kpis['incidents_count'] ?? 0) }}</div>
 				<div class="dp-kpi-sub text-warning font-weight-bold">
-					<span>Faltantes / Variaciones</span>
+					<span>Faltantes / Parciales / Ruta</span>
 				</div>
 			</div>
 			<div class="dp-kpi-icon-box">
@@ -453,10 +428,10 @@
 		<!-- KPI 8: Productividad -->
 		<div class="dp-kpi-card kpi-green" data-testid="kpi-productividad" onclick="$('#tab-picking-link').click();" role="button">
 			<div>
-				<div class="dp-kpi-label">Productividad picking</div>
-				<div class="dp-kpi-val text-success">{{ $kpis['productivity'] ?? '4.8 ped/h' }}</div>
+				<div class="dp-kpi-label">Productividad despacho</div>
+				<div class="dp-kpi-val text-success" style="font-size: 1.3rem;">{{ $kpis['productivity'] ?? 'Sin información' }}</div>
 				<div class="dp-kpi-sub text-success">
-					<span>Por operador en turno</span>
+					<span>Órdenes reales / hora</span>
 				</div>
 			</div>
 			<div class="dp-kpi-icon-box">
@@ -633,6 +608,17 @@
 							$summary = $selectedDetail['summary'];
 							$lines = $selectedDetail['lines'];
 							$variances = $selectedDetail['variances'];
+							$incidents = $selectedDetail['incidents'] ?? [];
+							$stages = $so['stages'] ?? \Grocy\Services\RetailPreventionService::BuildOrderStages($so);
+							$statusLabels = [
+								'draft' => 'Pedido Nuevo',
+								'confirmed' => 'Reservado',
+								'picking' => 'En Picking',
+								'picked' => 'Picking Validado',
+								'packed' => 'Empacado / Etiquetado',
+								'dispatched' => !empty($so['conciliated_at']) ? 'Conciliado' : (($so['delivery_status'] ?? '') === 'delivered' ? 'Entregado (POD)' : 'Despachado'),
+								'cancelled' => 'Cancelado'
+							];
 						@endphp
 
 						<!-- Encabezado del Detalle -->
@@ -646,102 +632,101 @@
 										<span class="dp-tag-delivery" id="dpDetailTypeTag">Domicilio</span>
 									@endif
 									<span class="dp-badge-status st-packed" id="dpDetailStatusBadge">
-										{{ $so['status'] === 'dispatched' ? 'Despachado' : ($so['status'] === 'picked' ? 'Preparado' : 'Empacado') }}
+										{{ $statusLabels[$so['status'] ?? 'draft'] ?? strtoupper($so['status'] ?? 'draft') }}
 									</span>
 								</div>
 								<div class="dp-detail-meta" id="dpDetailMeta">
 									Cliente: <strong class="text-dark">{{ $so['customer_name'] }}</strong> · Sucursal: <strong class="text-dark">{{ $so['branch_name'] ?: 'Matriz' }}</strong>
+									@if(!empty($so['label_code']))
+										· Etiqueta: <strong class="text-success">{{ $so['label_code'] }}</strong>
+									@endif
 								</div>
 							</div>
 
 							<div class="dp-detail-actions">
-								@if($isPickup)
-									<button type="button" class="dp-btn-green" id="btnOpenVerifyPickupModal" data-toggle="modal" data-target="#modalVerifyPickup">
-										<i class="fa-solid fa-key"></i>
-										<span>Validar retiro</span>
-									</button>
-								@else
-									<button type="button" class="dp-btn-green" id="btnOpenDeliveryModal" data-toggle="modal" data-target="#modalRecordDelivery">
-										<i class="fa-solid fa-truck-arrow-right"></i>
-										<span>Registrar entrega ruta</span>
+								@if(($so['status'] ?? '') === 'draft')
+									<button type="button" class="dp-btn-green" id="btnStageReserve" onclick="reserveOrder({{ $so['id'] }})">
+										<i class="fa-solid fa-lock"></i>
+										<span>Reservar stock</span>
 									</button>
 								@endif
+
+								@if(in_array($so['status'] ?? '', ['confirmed', 'picking', 'picked'], true))
+									<button type="button" class="dp-btn-outline" data-toggle="modal" data-target="#modalFastScanVerify">
+										<i class="fa-solid fa-barcode"></i>
+										<span>Escanear UPC</span>
+									</button>
+									<button type="button" class="dp-btn-green" id="btnOpenPackModal" onclick="openPackOrderModal({{ $so['id'] }}, '{{ $so['order_code'] }}')">
+										<i class="fa-solid fa-box-open"></i>
+										<span>Empacar y Etiquetar</span>
+									</button>
+								@endif
+
+								@if(($so['status'] ?? '') === 'packed')
+									<button type="button" class="dp-btn-green" id="btnDetailConfirmExit" onclick="openConfirmExitModal({{ $so['id'] }}, '{{ $so['order_code'] }}')">
+										<i class="fa-solid fa-truck-fast"></i>
+										<span>Confirmar Salida</span>
+									</button>
+								@endif
+
+								@if(($so['status'] ?? '') === 'dispatched')
+									@if($isPickup)
+										<button type="button" class="dp-btn-green" id="btnOpenVerifyPickupModal" data-toggle="modal" data-target="#modalVerifyPickup">
+											<i class="fa-solid fa-key"></i>
+											<span>Validar retiro PIN</span>
+										</button>
+									@else
+										<button type="button" class="dp-btn-green" id="btnOpenDeliveryModal" data-toggle="modal" data-target="#modalRecordDelivery">
+											<i class="fa-solid fa-truck-arrow-right"></i>
+											<span>Registrar Entrega / POD</span>
+										</button>
+									@endif
+								@endif
+
+								<button type="button" class="dp-btn-outline" id="btnOpenLabelModal" onclick="openDispatchLabelModal({{ $so['id'] }})">
+									<i class="fa-solid fa-tag"></i>
+									<span>Etiqueta</span>
+								</button>
 
 								<button type="button" class="dp-btn-cyan" data-toggle="modal" data-target="#modalScheduleRoute" onclick="$('#schedOrderId').val({{ $so['id'] }});">
 									<i class="fa-solid fa-truck"></i>
-									<span>Asignar Ruta</span>
+									<span>Transporte</span>
 								</button>
 
-								<button type="button" class="dp-btn-outline" data-toggle="modal" data-target="#modalFastScanVerify">
-									<i class="fa-solid fa-barcode"></i>
-									<span>Escanear UPC</span>
+								<button type="button" class="dp-btn-outline text-warning border-warning" id="btnOpenReportIncident" onclick="openReportIncidentModal({{ $so['id'] }}, '{{ $so['order_code'] }}')">
+									<i class="fa-solid fa-triangle-exclamation"></i>
+									<span>Incidencia</span>
 								</button>
+
+								@if(($so['status'] ?? '') === 'dispatched' && empty($so['conciliated_at']))
+									<button type="button" class="dp-btn-outline font-weight-bold" id="btnConciliateOrder" onclick="conciliateOrder({{ $so['id'] }})">
+										<i class="fa-solid fa-scale-balanced"></i>
+										<span>Conciliar Cierre</span>
+									</button>
+								@endif
 							</div>
 						</div>
 
-						<!-- Stepper: Avance según eventos registrados -->
+						<!-- Stepper: 7 Etapas Canónicas del Pedido -->
 						<div class="dp-stepper-box">
 							<div class="dp-stepper-title">
 								<i class="fa-solid fa-route text-success"></i>
-								<span>Avance según eventos registrados</span>
+								<span>Avance del ciclo OMS/WMS (7 Etapas)</span>
 							</div>
 
 							<div class="dp-stepper-track" id="dpStepperTrack">
-								@if($isPickup)
-									<div class="dp-stepper-step is-done">
-										<div class="dp-step-circle"><i class="fa-solid fa-check"></i></div>
-										<div class="dp-step-label">1. Pedido<br>Recibido</div>
+								@foreach($stages as $idx => $stgItem)
+									<div class="dp-stepper-step {{ $stgItem['state'] === 'done' ? 'is-done' : ($stgItem['state'] === 'current' ? 'is-current' : '') }}">
+										<div class="dp-step-circle">
+											@if($stgItem['state'] === 'done')
+												<i class="fa-solid fa-check"></i>
+											@else
+												{{ $idx + 1 }}
+											@endif
+										</div>
+										<div class="dp-step-label">{{ $idx + 1 }}. {{ $stgItem['label'] }}<br><small>{{ $stgItem['sub'] }}</small></div>
 									</div>
-									<div class="dp-stepper-step is-done">
-										<div class="dp-step-circle"><i class="fa-solid fa-check"></i></div>
-										<div class="dp-step-label">2. Preparación<br>Picking</div>
-									</div>
-									<div class="dp-stepper-step is-done">
-										<div class="dp-step-circle"><i class="fa-solid fa-check"></i></div>
-										<div class="dp-step-label">3. Validación<br>UPC</div>
-									</div>
-									<div class="dp-stepper-step @if($so['status'] !== 'dispatched') is-current @else is-done @endif">
-										<div class="dp-step-circle">@if($so['status'] === 'dispatched') <i class="fa-solid fa-check"></i> @else 4 @endif</div>
-										<div class="dp-step-label">4. Listo para<br>retiro</div>
-									</div>
-									<div class="dp-stepper-step @if($so['status'] === 'dispatched') is-done @endif">
-										<div class="dp-step-circle">@if($so['status'] === 'dispatched') <i class="fa-solid fa-check"></i> @else 5 @endif</div>
-										<div class="dp-step-label">5. Verificar<br>PIN o QR</div>
-									</div>
-									<div class="dp-stepper-step @if($so['status'] === 'dispatched') is-done @endif">
-										<div class="dp-step-circle">@if($so['status'] === 'dispatched') <i class="fa-solid fa-check"></i> @else 6 @endif</div>
-										<div class="dp-step-label">6. Entregado</div>
-									</div>
-								@else
-									<div class="dp-stepper-step is-done">
-										<div class="dp-step-circle"><i class="fa-solid fa-check"></i></div>
-										<div class="dp-step-label">1. Pedido<br>Recibido</div>
-									</div>
-									<div class="dp-stepper-step is-done">
-										<div class="dp-step-circle"><i class="fa-solid fa-check"></i></div>
-										<div class="dp-step-label">2. Preparación<br>Picking</div>
-									</div>
-									<div class="dp-stepper-step is-done">
-										<div class="dp-step-circle"><i class="fa-solid fa-check"></i></div>
-										<div class="dp-step-label">3. Control<br>Calidad</div>
-									</div>
-									<div class="dp-stepper-step is-done">
-										<div class="dp-step-circle"><i class="fa-solid fa-check"></i></div>
-										<div class="dp-step-label">4. Empaque<br>Bultos</div>
-									</div>
-									<div class="dp-stepper-step is-done">
-										<div class="dp-step-circle"><i class="fa-solid fa-check"></i></div>
-										<div class="dp-step-label">5. Despachado<br>Ruta</div>
-									</div>
-									<div class="dp-stepper-step @if($so['status'] === 'dispatched') is-done @else is-current @endif">
-										<div class="dp-step-circle">@if($so['status'] === 'dispatched') <i class="fa-solid fa-check"></i> @else 6 @endif</div>
-										<div class="dp-step-label">6. Entregado</div>
-									</div>
-									<div class="dp-stepper-step @if($so['status'] === 'dispatched') is-done @endif">
-										<div class="dp-step-circle">@if($so['status'] === 'dispatched') <i class="fa-solid fa-check"></i> @else 7 @endif</div>
-										<div class="dp-step-label">7. Conciliado</div>
-									</div>
-								@endif
+								@endforeach
 							</div>
 						</div>
 
@@ -865,36 +850,54 @@
 								<div class="dp-info-notice">
 									<i class="fa-solid fa-circle-info"></i>
 									<div>
-										<strong>Control de Integración OMS/WMS:</strong>
-										<div class="text-muted small">Pedido {{ $so['order_code'] }} originado vía {{ $so['channel'] ?? 'POS' }}. Descuento único en kardex tras confirmación de carga.</div>
+										<strong>Trazabilidad Logística OMS/WMS:</strong>
+										<div class="text-muted small">
+											Pedido <strong class="text-dark">{{ $so['order_code'] }}</strong> · Canal: {{ $so['channel'] ?? 'POS' }} · Etiqueta: <strong>{{ $so['label_code'] ?: 'Pendiente Packing' }}</strong> · Bultos: <strong>{{ max(1, intval($so['packages_count'] ?? ($so['packages'] ?? 1))) }}</strong>.
+										</div>
 									</div>
 								</div>
 							</div>
 
 							<!-- Pestaña Variaciones -->
 							<div class="dp-tab-pane d-none" id="pane-variaciones">
-								@if(empty($variances))
+								@if(empty($variances) && empty($incidents))
 									<div class="p-3 bg-light rounded text-center text-muted small">
-										No hay variaciones registradas formalmente en este pedido.
+										Sin variaciones ni incidencias logísticas registradas en este pedido.
 									</div>
 								@else
 									@foreach($variances as $v)
 										<div class="p-2 mb-2 rounded border bg-light d-flex justify-content-between align-items-center">
 											<div>
 												<strong class="text-dark">{{ $v['product_name'] }}</strong>
-												<span class="badge @if($v['stage'] === 'preparation') badge-warning @else badge-danger @endif ml-1">
-													{{ $v['variance_type'] }}
-												</span>
+												<span class="badge @if($v['stage'] === 'preparation') badge-warning @else badge-danger @endif ml-1">{{ $v['variance_type'] }}</span>
 												<span class="text-muted ml-2">Diferencia: <strong>{{ $v['difference_qty'] }}</strong></span>
-												<div class="small text-muted">{{ $v['resolution_notes'] }}</div>
+												<div class="small text-muted">{{ $v['resolution_notes'] ?: 'Pendiente autorización' }}</div>
 											</div>
 											<div>
 												@if($v['resolution_status'] === 'pending')
-													<button class="btn btn-xs btn-danger font-weight-bold" data-toggle="modal" data-target="#modalResolveVariance">
+													<button class="btn btn-xs btn-danger font-weight-bold" onclick="openResolveVarianceModal({{ $v['id'] }}, '{{ addslashes($v['product_name']) }}', '{{ $v['difference_qty'] }}')">
 														Resolver
 													</button>
 												@else
 													<span class="badge badge-success">{{ $v['resolution_status'] }}</span>
+												@endif
+											</div>
+										</div>
+									@endforeach
+									@foreach($incidents as $inc)
+										<div class="p-2 mb-2 rounded border bg-light d-flex justify-content-between align-items-center">
+											<div>
+												<span class="badge badge-warning mr-1">{{ $inc['incident_type'] }}</span>
+												<strong class="text-dark">{{ $inc['description'] }}</strong>
+												<div class="small text-muted">{{ $inc['created_at'] }} @if(!empty($inc['resolution_notes'])) · Resolución: {{ $inc['resolution_notes'] }} @endif</div>
+											</div>
+											<div>
+												@if(($inc['resolution_status'] ?? 'open') === 'open')
+													<button class="btn btn-xs btn-warning font-weight-bold" onclick="openResolveIncidentModal({{ $inc['id'] }}, '{{ addslashes($inc['description']) }}')">
+														Cerrar Incidencia
+													</button>
+												@else
+													<span class="badge badge-success">Resuelta</span>
 												@endif
 											</div>
 										</div>
@@ -904,22 +907,31 @@
 
 							<!-- Pestaña Evidencia -->
 							<div class="dp-tab-pane d-none" id="pane-evidencia">
-								<div class="card p-3 border-0 bg-light">
+								<div class="card p-3 border-0 bg-light" id="dpDetailEvidenceCard">
 									<div class="d-flex justify-content-between align-items-center mb-2">
-										<strong class="text-dark"><i class="fa-solid fa-file-signature text-success mr-1"></i>Evidencia de Recepción y Cadena de Frío</strong>
-										<span class="badge badge-success"><i class="fa-solid fa-temperature-arrow-down mr-1"></i>Cadena de frío: ≤ 4°C Conforme</span>
+										<strong class="text-dark"><i class="fa-solid fa-file-signature text-success mr-1"></i>Prueba de Entrega (POD) y Cadena de Frío</strong>
+										@if(!empty($so['cold_chain_temp_ok']))
+											<span class="badge badge-success"><i class="fa-solid fa-temperature-arrow-down mr-1"></i>Frío Verificado (≤ 4°C)</span>
+										@else
+											<span class="badge badge-secondary"><i class="fa-solid fa-snowflake mr-1"></i>Por verificar en entrega</span>
+										@endif
 									</div>
-									<p class="small text-muted mb-1">Transporte y entrega: <strong>{{ $so['carrier_name'] ?: 'Logística Local' }}</strong></p>
-									<p class="small text-muted mb-0">Recepción confirmada: <strong>{{ $so['delivery_signature_name'] ?: 'En proceso de validación con cliente' }}</strong></p>
+									<p class="small text-muted mb-1">Transporte / Guía: <strong>{{ $so['carrier_name'] ?: 'Sin asignar' }}</strong> · <span>{{ $so['carrier_tracking_number'] ?: 'Sin guía' }}</span></p>
+									<p class="small text-muted mb-1">Firma / Receptor: <strong>{{ $so['delivery_signature_name'] ?: 'Sin captura POD aún' }}</strong></p>
+									<p class="small text-muted mb-0">Folio / Evidencia POD: <strong>{{ $so['delivery_evidence_url'] ?: 'Pendiente de evidencia' }}</strong></p>
 								</div>
 							</div>
 
 							<!-- Pestaña Historial -->
 							<div class="dp-tab-pane d-none" id="pane-historial">
 								<ul class="list-unstyled small text-muted mb-0">
-									<li class="mb-1"><i class="fa-solid fa-clock mr-1 text-primary"></i>Pedido creado en sistema: <strong>{{ $so['created_at'] }}</strong></li>
-									<li class="mb-1"><i class="fa-solid fa-barcode mr-1 text-success"></i>Picking y validación de bultos: <strong>{{ $so['created_at'] }} (Operador Centro Matriz)</strong></li>
-									<li><i class="fa-solid fa-truck mr-1 text-info"></i>Estado actual: <strong>{{ strtoupper($so['status']) }}</strong></li>
+									<li class="mb-1"><i class="fa-solid fa-file-circle-plus mr-1 text-primary"></i>1. Pedido registrado: <strong>{{ $so['created_at'] }}</strong></li>
+									<li class="mb-1"><i class="fa-solid fa-lock mr-1 text-info"></i>2. Reserva confirmada: <strong>{{ $so['confirmed_at'] ?: 'Pendiente' }}</strong></li>
+									<li class="mb-1"><i class="fa-solid fa-barcode mr-1 text-success"></i>3. Picking / Escaneo: <strong>{{ $so['picked_at'] ?: 'Pendiente' }}</strong></li>
+									<li class="mb-1"><i class="fa-solid fa-box-open mr-1 text-success"></i>4. Packing & Etiqueta: <strong>{{ $so['packed_at'] ?: 'Pendiente' }}</strong> @if(!empty($so['label_code'])) ({{ $so['label_code'] }}) @endif</li>
+									<li class="mb-1"><i class="fa-solid fa-truck mr-1 text-primary"></i>5. Salida muelle: <strong>{{ $so['dispatched_at'] ?: 'Pendiente' }}</strong></li>
+									<li class="mb-1"><i class="fa-solid fa-signature mr-1 text-success"></i>6. Entrega POD: <strong>{{ $so['delivery_time'] ?: ($so['pickup_verified_at'] ?: 'Pendiente') }}</strong></li>
+									<li><i class="fa-solid fa-scale-balanced mr-1 text-dark"></i>7. Conciliación final: <strong>{{ $so['conciliated_at'] ?: 'Pendiente de cierre' }}</strong></li>
 								</ul>
 							</div>
 						</div>
@@ -1008,17 +1020,24 @@
 										@endif
 									</td>
 									<td class="font-weight-bold">{{ $money($ord['total_amount']) }}</td>
-									<td>{{ $ord['packages'] ?: 1 }}</td>
+									<td>{{ max(1, intval($ord['packages_count'] ?? ($ord['packages'] ?? 1))) }}</td>
 									<td>
 										<span class="badge {{ $ord['tracking_class'] ?? 'badge-secondary' }} px-2 py-0.5">
 											{{ $ord['tracking_status'] ?? 'Pendiente' }}
 										</span>
 									</td>
 									<td class="text-right text-nowrap">
-										<button class="btn btn-xs btn-outline-success mr-1" title="Asignar Picking" onclick="openAssignPickingModal({{ $ord['id'] }}, '{{ $ord['order_code'] }}')">
-											<i class="fa-solid fa-boxes-packing"></i>
-										</button>
-										<button class="btn btn-xs btn-outline-primary mr-1" title="Programar Ruta" onclick="openScheduleTransportModal({{ $ord['id'] }}, '{{ $ord['order_code'] }}')">
+										@if(($ord['status'] ?? '') === 'draft')
+											<button class="btn btn-xs btn-outline-success mr-1" title="Reservar Stock" onclick="reserveOrder({{ $ord['id'] }})">
+												<i class="fa-solid fa-lock"></i>
+											</button>
+										@endif
+										@if(in_array($ord['status'] ?? '', ['confirmed', 'picking'], true))
+											<button class="btn btn-xs btn-outline-success mr-1" title="Asignar Picking" onclick="openAssignPickingModal({{ $ord['id'] }}, '{{ $ord['order_code'] }}')">
+												<i class="fa-solid fa-boxes-packing"></i>
+											</button>
+										@endif
+										<button class="btn btn-xs btn-outline-primary mr-1" title="Programar Transporte" onclick="openScheduleTransportModal({{ $ord['id'] }}, '{{ $ord['order_code'] }}')">
 											<i class="fa-solid fa-truck"></i>
 										</button>
 										<button class="btn btn-xs btn-light border" title="Ver Detalle" onclick="selectOrderAndSwitch({{ $ord['id'] }})">
@@ -1038,8 +1057,8 @@
 			<div class="dp-section-card">
 				<div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
 					<div>
-						<h3 class="dp-section-title"><i class="fa-solid fa-boxes-packing text-success"></i> Estación de Preparación, Picking y Packing</h3>
-						<p class="dp-section-sub">Asignación de operarios, validación de lotes FEFO, escaneo por pistola Zebra y empaque de bultos.</p>
+						<h3 class="dp-section-title"><i class="fa-solid fa-boxes-packing text-success"></i> Estación de Preparación, Picking, Packing y Etiquetas</h3>
+						<p class="dp-section-sub">Reserva de mercancía, picking con escáner UPC, validación de cantidades, empaque de bultos e impresión de etiquetas.</p>
 					</div>
 					<div>
 						<button class="btn btn-sm btn-success font-weight-bold" data-toggle="modal" data-target="#modalFastScanVerify">
@@ -1051,26 +1070,26 @@
 				<div class="row mb-3">
 					<div class="col-md-3 col-6 mb-2">
 						<div class="card p-3 border-0 bg-light text-center rounded">
-							<span class="text-muted small">En cola de picking</span>
-							<h4 class="font-weight-bold text-warning mb-0">{{ $kpis['pending_orders'] ?? 14 }}</h4>
+							<span class="text-muted small">En cola Reserva/Picking</span>
+							<h4 class="font-weight-bold text-warning mb-0">{{ intval($kpis['pending_orders'] ?? 0) + intval($kpis['preparing_orders'] ?? 0) }}</h4>
 						</div>
 					</div>
 					<div class="col-md-3 col-6 mb-2">
 						<div class="card p-3 border-0 bg-light text-center rounded">
-							<span class="text-muted small">Lotes FEFO Auditados</span>
-							<h4 class="font-weight-bold text-success mb-0">100%</h4>
+							<span class="text-muted small">Listos en Packing</span>
+							<h4 class="font-weight-bold text-success mb-0">{{ intval($kpis['ready_orders'] ?? 0) }}</h4>
 						</div>
 					</div>
 					<div class="col-md-3 col-6 mb-2">
 						<div class="card p-3 border-0 bg-light text-center rounded">
 							<span class="text-muted small">Exactitud Picking</span>
-							<h4 class="font-weight-bold text-primary mb-0">{{ number_format($prepAcc, 1) }}%</h4>
+							<h4 class="font-weight-bold text-primary mb-0">{{ $prepAcc !== null ? number_format($prepAcc, 1) . '%' : 'Sin info' }}</h4>
 						</div>
 					</div>
 					<div class="col-md-3 col-6 mb-2">
 						<div class="card p-3 border-0 bg-light text-center rounded">
 							<span class="text-muted small">Tiempo Promedio</span>
-							<h4 class="font-weight-bold text-dark mb-0">{{ $kpis['prep_time_minutes'] ?? '18.5 min' }}</h4>
+							<h4 class="font-weight-bold text-dark mb-0">{{ $kpis['prep_time_minutes'] ?? 'Sin información' }}</h4>
 						</div>
 					</div>
 				</div>
@@ -1082,37 +1101,56 @@
 								<th>Pedido</th>
 								<th>Cliente</th>
 								<th>Progreso Picking</th>
-								<th>Lotes FEFO</th>
-								<th>Bultos Empaque</th>
-								<th>Operario Asignado</th>
-								<th>Estado Preparación</th>
-								<th class="text-right">Acción Operativa</th>
+								<th>Etiqueta Despacho</th>
+								<th>Bultos</th>
+								<th>Estado</th>
+								<th class="text-right">Acciones Etapa</th>
 							</tr>
 						</thead>
 						<tbody>
-							@foreach(array_slice($orders, 0, 10) as $ord)
+							@foreach(array_slice($orders, 0, 12) as $ord)
+								@php
+									$totU = max(1, floatval($ord['total_units'] ?? 1));
+									$picU = floatval($ord['total_picked_units'] ?? 0);
+									$pctPick = min(100, round(($picU / $totU) * 100));
+								@endphp
 								<tr>
-									<td><strong class="text-dark">{{ $ord['order_code'] }}</strong></td>
+									<td><a href="javascript:void(0)" onclick="selectOrderAndSwitch({{ $ord['id'] }})" class="font-weight-bold text-dark">{{ $ord['order_code'] }}</a></td>
 									<td>{{ $ord['customer_name'] }}</td>
 									<td>
-										<div class="progress" style="height: 12px; border-radius: 6px; min-width: 100px;">
-											<div class="progress-bar bg-success" role="progressbar" style="width: @if($ord['status'] === 'dispatched' || $ord['status'] === 'packed') 100% @elseif($ord['status'] === 'picked') 85% @elseif($ord['status'] === 'picking') 45% @else 15% @endif;"></div>
+										<div class="d-flex align-items-center gap-2">
+											<div class="progress flex-grow-1" style="height: 10px; border-radius: 5px; min-width: 80px;">
+												<div class="progress-bar bg-success" role="progressbar" style="width: {{ $pctPick }}%;"></div>
+											</div>
+											<span class="small font-weight-bold">{{ $pctPick }}%</span>
 										</div>
 									</td>
-									<td><span class="badge badge-success"><i class="fa-solid fa-check mr-1"></i>Rotación FEFO OK</span></td>
-									<td><strong>{{ $ord['packages'] ?: 1 }}</strong> caja(s)</td>
-									<td><i class="fa-solid fa-user text-muted mr-1"></i>Operador CD Matriz</td>
+									<td>
+										@if(!empty($ord['label_code']))
+											<span class="badge badge-light border text-success font-weight-bold">{{ $ord['label_code'] }}</span>
+										@else
+											<span class="text-muted small">Sin etiqueta</span>
+										@endif
+									</td>
+									<td><strong>{{ max(1, intval($ord['packages_count'] ?? ($ord['packages'] ?? 1))) }}</strong> bulto(s)</td>
 									<td>
 										<span class="badge {{ $ord['tracking_class'] ?? 'badge-secondary' }} px-2 py-0.5">
 											{{ $ord['tracking_status'] }}
 										</span>
 									</td>
-									<td class="text-right">
-										<button class="btn btn-xs btn-outline-success mr-1" onclick="openAssignPickingModal({{ $ord['id'] }}, '{{ $ord['order_code'] }}')">
-											<i class="fa-solid fa-user-plus mr-1"></i>Asignar
-										</button>
-										<button class="btn btn-xs btn-outline-primary" data-toggle="modal" data-target="#modalFastScanVerify">
-											<i class="fa-solid fa-barcode mr-1"></i>Validar UPC
+									<td class="text-right text-nowrap">
+										@if(($ord['status'] ?? '') === 'draft')
+											<button class="btn btn-xs btn-outline-success mr-1" onclick="reserveOrder({{ $ord['id'] }})">Reservar</button>
+										@endif
+										@if(in_array($ord['status'] ?? '', ['confirmed', 'picking'], true))
+											<button class="btn btn-xs btn-outline-success mr-1" onclick="openAssignPickingModal({{ $ord['id'] }}, '{{ $ord['order_code'] }}')">Asignar</button>
+											<button class="btn btn-xs btn-outline-primary mr-1" onclick="window.SelectOrder && window.SelectOrder({{ $ord['id'] }}); $('#modalFastScanVerify').modal('show');">UPC</button>
+										@endif
+										@if(in_array($ord['status'] ?? '', ['picking', 'picked'], true))
+											<button class="btn btn-xs btn-success font-weight-bold mr-1" onclick="openPackOrderModal({{ $ord['id'] }}, '{{ $ord['order_code'] }}')">Empacar</button>
+										@endif
+										<button class="btn btn-xs btn-light border" onclick="openDispatchLabelModal({{ $ord['id'] }})" title="Ver Etiqueta">
+											<i class="fa-solid fa-tag"></i>
 										</button>
 									</td>
 								</tr>
@@ -1164,8 +1202,8 @@
 					@endforeach
 				</div>
 
-				<!-- Programación de Rutas del Día -->
-				<h6 class="font-weight-bold text-dark mb-2"><i class="fa-solid fa-clock mr-1 text-muted"></i> Rutas Programadas para Despacho Hoy</h6>
+				<!-- Programación de Rutas Reales del Día -->
+				<h6 class="font-weight-bold text-dark mb-2"><i class="fa-solid fa-clock mr-1 text-muted"></i> Rutas Activas y Pedidos Asignados</h6>
 				<div class="table-responsive bg-white rounded border">
 					<table class="table table-sm table-hover mb-0" style="font-size: 0.84rem;">
 						<thead class="thead-light">
@@ -1173,56 +1211,38 @@
 								<th>Ruta & Zona</th>
 								<th>Vehículo Asignado</th>
 								<th>Conductor Responsable</th>
-								<th>Ventana Horaria</th>
-								<th>Pedidos Cargados</th>
-								<th>Capacidad Ocupada</th>
+								<th>Bultos Totales</th>
+								<th>Pedidos en Ruta</th>
+								<th>Entregados</th>
 								<th>Estado Ruta</th>
 								<th class="text-right">Acción</th>
 							</tr>
 						</thead>
 						<tbody>
-							<tr>
-								<td><strong>Ruta A - Zona Norte</strong></td>
-								<td>Camión C-08 ThermoKing (WXY-882)</td>
-								<td>Conductor Frío Andina 1</td>
-								<td>08:00 - 12:30</td>
-								<td><strong>8 pedidos</strong></td>
-								<td>
-									<div class="progress" style="height: 10px; border-radius: 5px;">
-										<div class="progress-bar bg-info" style="width: 78%;">78%</div>
-									</div>
-								</td>
-								<td><span class="badge badge-info px-2 py-0.5">En tránsito</span></td>
-								<td class="text-right"><button class="btn btn-xs btn-light border" onclick="$('#tab-salidas-link').click();">Ver Carga</button></td>
-							</tr>
-							<tr>
-								<td><strong>Ruta B - Centro Financiero</strong></td>
-								<td>Furgón F-12 Frío Directo (TKL-409)</td>
-								<td>Conductor Frío Andina 2</td>
-								<td>13:00 - 17:00</td>
-								<td><strong>6 pedidos</strong></td>
-								<td>
-									<div class="progress" style="height: 10px; border-radius: 5px;">
-										<div class="progress-bar bg-success" style="width: 62%;">62%</div>
-									</div>
-								</td>
-								<td><span class="badge badge-warning px-2 py-0.5">Cargando muelle 2</span></td>
-								<td class="text-right"><button class="btn btn-xs btn-light border" onclick="$('#tab-salidas-link').click();">Ver Carga</button></td>
-							</tr>
-							<tr>
-								<td><strong>Ruta Express - Delivery Inmediato</strong></td>
-								<td>Moto Express M-02 (EXP-332)</td>
-								<td>Mensajero Express 1</td>
-								<td>Inmediato (≤ 45 min)</td>
-								<td><strong>2 pedidos</strong></td>
-								<td>
-									<div class="progress" style="height: 10px; border-radius: 5px;">
-										<div class="progress-bar bg-success" style="width: 40%;">40%</div>
-									</div>
-								</td>
-								<td><span class="badge badge-success px-2 py-0.5">Despachado</span></td>
-								<td class="text-right"><button class="btn btn-xs btn-light border" onclick="$('#tab-salidas-link').click();">Ver Carga</button></td>
-							</tr>
+							@forelse($routesSummary as $rt)
+								<tr>
+									<td><strong>{{ $rt['route_name'] }}</strong></td>
+									<td>{{ $rt['carrier_vehicle'] }}</td>
+									<td>{{ $rt['carrier_name'] }}</td>
+									<td>{{ $rt['packages'] }} bultos</td>
+									<td><strong>{{ $rt['orders_count'] }} pedidos</strong></td>
+									<td><strong>{{ $rt['delivered_count'] }}</strong> / {{ $rt['orders_count'] }}</td>
+									<td>
+										@if($rt['delivered_count'] === $rt['orders_count'] && $rt['orders_count'] > 0)
+											<span class="badge badge-success px-2 py-0.5">Completada</span>
+										@elseif($rt['in_transit_count'] > 0)
+											<span class="badge badge-info px-2 py-0.5">En tránsito ({{ $rt['in_transit_count'] }})</span>
+										@else
+											<span class="badge badge-secondary px-2 py-0.5">Programada</span>
+										@endif
+									</td>
+									<td class="text-right"><button class="btn btn-xs btn-light border" onclick="$('#tab-salidas-link').click();">Ver Salidas</button></td>
+								</tr>
+							@empty
+								<tr>
+									<td colspan="8" class="text-center text-muted py-3">No hay despachos a domicilio registrados para rutas activas.</td>
+								</tr>
+							@endforelse
 						</tbody>
 					</table>
 				</div>
@@ -1234,8 +1254,8 @@
 			<div class="dp-section-card">
 				<div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
 					<div>
-						<h3 class="dp-section-title"><i class="fa-solid fa-clipboard-check text-success"></i> Salidas de Bodega, Confirmación de Carga y Guías</h3>
-						<p class="dp-section-sub">Verificación de bultos físicos en muelle, precintado de seguridad y emisión de número de despacho único.</p>
+						<h3 class="dp-section-title"><i class="fa-solid fa-clipboard-check text-success"></i> Salidas de Bodega, Confirmación de Carga y Etiquetas</h3>
+						<p class="dp-section-sub">Control físico de bultos en muelle, validación de cantidad ≤ reservada, etiqueta de despacho y guía de salida.</p>
 					</div>
 					<div>
 						<button class="btn btn-sm btn-success font-weight-bold" data-toggle="modal" data-target="#modalConfirmExit">
@@ -1248,8 +1268,8 @@
 					<div class="d-flex align-items-center">
 						<i class="fa-solid fa-circle-check text-success fa-2x mr-3"></i>
 						<div>
-							<strong class="text-dark">Control de Seguridad en Muelle:</strong>
-							<div class="small text-muted">Ningún vehículo sale sin precinto registrado, temperatura auditada y número de despacho generado sin duplicación en kardex.</div>
+							<strong class="text-dark">Control de Salida en Muelle:</strong>
+							<div class="small text-muted">Solo se autorizan pedidos en Packing (bultos sellados y cantidad preparada ≤ reservada).</div>
 						</div>
 					</div>
 					<span class="badge badge-success px-2.5 py-1">Protocolo Activo</span>
@@ -1259,41 +1279,46 @@
 					<table class="table table-sm table-hover mb-0" style="font-size: 0.84rem;">
 						<thead class="thead-light">
 							<tr>
-								<th>Nº Despacho</th>
-								<th>Pedido Vinculado</th>
+								<th>Nº Despacho / Guía</th>
+								<th>Pedido</th>
+								<th>Etiqueta</th>
 								<th>Destino & Cliente</th>
 								<th>Transporte / Placa</th>
-								<th>Bultos / Peso</th>
-								<th>Temp. Frío</th>
-								<th>Salida Programada</th>
+								<th>Bultos</th>
+								<th>Salida Real</th>
 								<th>Estado Salida</th>
-								<th class="text-right">Acción</th>
+								<th class="text-right">Acciones</th>
 							</tr>
 						</thead>
 						<tbody>
-							@foreach(array_slice($orders, 0, 8) as $ord)
+							@foreach(array_slice($orders, 0, 12) as $ord)
 								<tr>
-									<td><strong class="text-primary">DSP-20261025-{{ sprintf('%04d', $ord['id']) }}</strong></td>
-									<td><span class="badge badge-light border">{{ $ord['order_code'] }}</span></td>
+									<td><strong class="text-primary">{{ $ord['carrier_tracking_number'] ?: 'Pendiente salida' }}</strong></td>
+									<td><a href="javascript:void(0)" onclick="selectOrderAndSwitch({{ $ord['id'] }})" class="badge badge-light border font-weight-bold text-dark">{{ $ord['order_code'] }}</a></td>
+									<td><span class="small font-weight-bold text-success">{{ $ord['label_code'] ?: 'Sin etiqueta' }}</span></td>
 									<td><strong>{{ $ord['customer_name'] }}</strong></td>
-									<td>{{ $ord['carrier_vehicle'] ?: 'Camión C-08 ThermoKing' }}</td>
-									<td>{{ $ord['packages'] ?: 1 }} bultos</td>
-									<td><span class="badge badge-success"><i class="fa-solid fa-temperature-arrow-down mr-1"></i>3.2°C OK</span></td>
-									<td>{{ !empty($ord['departure_time']) ? date('H:i', strtotime($ord['departure_time'])) : '10:30' }}</td>
+									<td>{{ $ord['carrier_vehicle'] ?: (($ord['delivery_type'] ?? 'pickup') === 'pickup' ? 'Mostrador Retiro' : 'Sin vehículo asignado') }}</td>
+									<td>{{ max(1, intval($ord['packages_count'] ?? ($ord['packages'] ?? 1))) }}</td>
+									<td>{{ !empty($ord['departure_time']) ? date('d/m H:i', strtotime($ord['departure_time'])) : 'Pendiente' }}</td>
 									<td>
-										<span class="badge @if($ord['status'] === 'dispatched') badge-success @else badge-warning @endif px-2 py-0.5">
-											{{ $ord['status'] === 'dispatched' ? 'Despachado en ruta' : 'Listo para salida' }}
+										<span class="badge {{ $ord['tracking_class'] ?? 'badge-secondary' }} px-2 py-0.5">
+											{{ $ord['tracking_status'] }}
 										</span>
 									</td>
-									<td class="text-right">
-										@if($ord['status'] !== 'dispatched')
+									<td class="text-right text-nowrap">
+										<button class="btn btn-xs btn-outline-secondary mr-1" onclick="openDispatchLabelModal({{ $ord['id'] }})" title="Etiqueta">
+											<i class="fa-solid fa-tag"></i>
+										</button>
+										@if(($ord['status'] ?? '') === 'packed')
 											<button class="btn btn-xs btn-success font-weight-bold" onclick="openConfirmExitModal({{ $ord['id'] }}, '{{ $ord['order_code'] }}')">
 												<i class="fa-solid fa-check mr-1"></i>Autorizar Salida
 											</button>
-										@else
-											<button class="btn btn-xs btn-outline-info" data-toggle="modal" data-target="#modalOrderEvidence">
-												<i class="fa-solid fa-file-invoice mr-1"></i>Guía Salida
+										@elseif(($ord['status'] ?? '') === 'dispatched')
+											<button class="btn btn-xs btn-outline-info" onclick="openEvidenceModal({{ $ord['id'] }})">
+												<i class="fa-solid fa-file-invoice mr-1"></i>POD
 											</button>
+										@else
+											<span class="small text-muted">Completar Packing</span>
 										@endif
 									</td>
 								</tr>
@@ -1304,17 +1329,17 @@
 			</div>
 		</div>
 
-		<!-- ================= TAB 6: ENTREGAS Y EVIDENCIAS ================= -->
+		<!-- ================= TAB 6: ENTREGAS Y EVIDENCIAS (POD OBLIGATORIA) ================= -->
 		<div class="tab-pane fade" id="tab-entregas-evidencias" role="tabpanel">
 			<div class="dp-section-card">
 				<div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
 					<div>
-						<h3 class="dp-section-title"><i class="fa-solid fa-signature text-success"></i> Confirmación de Entrega, Evidencias y Rechazos</h3>
-						<p class="dp-section-sub">Auditoría de recepción: firmas digitales, comprobantes fotográficos, entregas parciales y registro de causales de rechazo.</p>
+						<h3 class="dp-section-title"><i class="fa-solid fa-signature text-success"></i> Confirmación de Entrega, POD Obligatoria, Parciales y Rechazos</h3>
+						<p class="dp-section-sub">Auditoría de recepción real: firmas digitales, folio/evidencia POD, verificación PIN/QR en tienda y entregas parciales.</p>
 					</div>
 					<div>
-						<button class="btn btn-sm btn-outline-success font-weight-bold" data-toggle="modal" data-target="#modalOrderEvidence">
-							<i class="fa-solid fa-camera mr-1"></i> Galería de Evidencias
+						<button class="btn btn-sm btn-outline-success font-weight-bold" onclick="openEvidenceModal(window.CurrentOrderId)">
+							<i class="fa-solid fa-file-invoice mr-1"></i> Consultar POD Pedido Activo
 						</button>
 					</div>
 				</div>
@@ -1326,22 +1351,23 @@
 								<th>Pedido</th>
 								<th>Modalidad</th>
 								<th>Fecha & Hora Entrega</th>
-								<th>Receptor Confirmado</th>
+								<th>Receptor POD</th>
 								<th>Validación / PIN</th>
-								<th>Evidencia Fotográfica</th>
+								<th>Evidencia / Folio POD</th>
 								<th>Cadena de Frío</th>
-								<th>Resultado Entrega</th>
-								<th class="text-right">Comprobante</th>
+								<th>Resultado</th>
+								<th class="text-right">Acciones</th>
 							</tr>
 						</thead>
 						<tbody>
-							@foreach(array_slice($orders, 0, 8) as $ord)
+							@foreach(array_slice($orders, 0, 12) as $ord)
 								@php
 									$isPickup = (($ord['delivery_type'] ?? 'pickup') === 'pickup');
-									$isDelivered = ($ord['status'] === 'dispatched' || $ord['delivery_status'] === 'delivered');
+									$delSt = $ord['delivery_status'] ?? 'pending';
+									$hasPod = !empty($ord['delivery_signature_name']) || !empty($ord['pickup_verified_at']);
 								@endphp
 								<tr>
-									<td><strong class="text-dark">{{ $ord['order_code'] }}</strong></td>
+									<td><a href="javascript:void(0)" onclick="selectOrderAndSwitch({{ $ord['id'] }})" class="font-weight-bold text-dark">{{ $ord['order_code'] }}</a></td>
 									<td>
 										@if($isPickup)
 											<span class="badge badge-light border text-primary">Retiro en tienda</span>
@@ -1349,33 +1375,48 @@
 											<span class="badge badge-light border text-info">Domicilio</span>
 										@endif
 									</td>
-									<td>{{ $isDelivered ? date('d/m/Y H:i') : 'En tránsito' }}</td>
-									<td><strong>{{ $ord['customer_name'] }}</strong></td>
+									<td>{{ !empty($ord['delivery_time']) ? date('d/m/Y H:i', strtotime($ord['delivery_time'])) : (!empty($ord['pickup_verified_at']) ? date('d/m/Y H:i', strtotime($ord['pickup_verified_at'])) : 'Pendiente') }}</td>
+									<td><strong>{{ $ord['delivery_signature_name'] ?: 'Sin firma POD' }}</strong></td>
 									<td>
 										@if($isPickup)
-											<span class="badge badge-success"><i class="fa-solid fa-key mr-1"></i>PIN: {{ $ord['pickup_pin'] ?: '618294' }}</span>
+											@if(!empty($ord['pickup_pin']))
+												<span class="badge {{ !empty($ord['pickup_verified_at']) ? 'badge-success' : 'badge-light border' }}"><i class="fa-solid fa-key mr-1"></i>PIN: {{ $ord['pickup_pin'] }}</span>
+											@else
+												<span class="text-muted small">Sin PIN</span>
+											@endif
 										@else
-											<span class="badge badge-light border"><i class="fa-solid fa-signature mr-1"></i>Firma Digital</span>
+											<span class="badge {{ !empty($ord['delivery_signature_name']) ? 'badge-success' : 'badge-light border' }}"><i class="fa-solid fa-signature mr-1"></i>{{ !empty($ord['delivery_signature_name']) ? 'Firmado' : 'Pendiente' }}</span>
 										@endif
 									</td>
 									<td>
-										<a href="javascript:void(0)" data-toggle="modal" data-target="#modalOrderEvidence" class="badge badge-info">
-											<i class="fa-solid fa-image mr-1"></i>Ver Foto Entrega
-										</a>
-									</td>
-									<td><span class="text-success small font-weight-bold"><i class="fa-solid fa-circle-check mr-1"></i>Conforme (3.5°C)</span></td>
-									<td>
-										@if(!empty($ord['route_incidents']))
-											<span class="badge badge-warning px-2 py-0.5">Entrega Parcial / Diferencia</span>
-										@elseif($isDelivered)
-											<span class="badge badge-success px-2 py-0.5">Entregado Completo</span>
+										@if(!empty($ord['delivery_evidence_url']))
+											<a href="javascript:void(0)" onclick="openEvidenceModal({{ $ord['id'] }})" class="badge badge-info">
+												<i class="fa-solid fa-file-shield mr-1"></i>{{ $ord['delivery_evidence_url'] }}
+											</a>
 										@else
-											<span class="badge badge-info px-2 py-0.5">En Curso</span>
+											<span class="badge badge-light border text-muted">Sin evidencia POD</span>
 										@endif
 									</td>
-									<td class="text-right">
-										<button class="btn btn-xs btn-light border font-weight-bold" data-toggle="modal" data-target="#modalOrderEvidence">
-											<i class="fa-solid fa-file-invoice mr-1"></i>Comprobante
+									<td>
+										@if(!empty($ord['cold_chain_temp_ok']))
+											<span class="text-success small font-weight-bold"><i class="fa-solid fa-circle-check mr-1"></i>Frío OK</span>
+										@else
+											<span class="text-muted small">Sin verificar</span>
+										@endif
+									</td>
+									<td>
+										<span class="badge {{ $ord['tracking_class'] ?? 'badge-secondary' }} px-2 py-0.5">{{ $ord['tracking_status'] }}</span>
+									</td>
+									<td class="text-right text-nowrap">
+										@if(($ord['status'] ?? '') === 'dispatched' && !in_array($delSt, ['delivered', 'partial', 'rejected'], true))
+											@if($isPickup)
+												<button class="btn btn-xs btn-success font-weight-bold mr-1" onclick="window.SelectOrder && window.SelectOrder({{ $ord['id'] }}); $('#modalVerifyPickup').modal('show');">PIN</button>
+											@else
+												<button class="btn btn-xs btn-success font-weight-bold mr-1" onclick="window.SelectOrder && window.SelectOrder({{ $ord['id'] }}); $('#modalRecordDelivery').modal('show');">Registrar POD</button>
+											@endif
+										@endif
+										<button class="btn btn-xs btn-light border font-weight-bold" onclick="openEvidenceModal({{ $ord['id'] }})">
+											<i class="fa-solid fa-file-invoice mr-1"></i>POD
 										</button>
 									</td>
 								</tr>
@@ -1386,17 +1427,20 @@
 			</div>
 		</div>
 
-		<!-- ================= TAB 7: CONCILIACIÓN Y VARIACIONES ================= -->
+		<!-- ================= TAB 7: CONCILIACIÓN, VARIACIONES E INCIDENCIAS LOGÍSTICAS ================= -->
 		<div class="tab-pane fade" id="tab-conciliacion-variaciones" role="tabpanel">
 			<div class="dp-section-card">
 				<div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
 					<div>
-						<h3 class="dp-section-title"><i class="fa-solid fa-scale-balanced text-success"></i> Conciliación de Despachos y Matriz de 7 Etapas</h3>
-						<p class="dp-section-sub">Comparación rigurosa de cantidades solicitadas vs preparadas vs escaneadas vs despachadas vs recibidas vs devueltas y diferencias finales.</p>
+						<h3 class="dp-section-title"><i class="fa-solid fa-scale-balanced text-success"></i> Conciliación Final, Variaciones e Incidencias Logísticas</h3>
+						<p class="dp-section-sub">Cierre controlado tras validar cantidades solicitadas, reservadas, preparadas, despachadas, entregadas y POD obligatoria.</p>
 					</div>
-					<div>
+					<div class="d-flex gap-2">
+						<button class="btn btn-sm btn-warning font-weight-bold" onclick="openReportIncidentModal(window.CurrentOrderId, $('#dpDetailCode').text())">
+							<i class="fa-solid fa-triangle-exclamation mr-1"></i> Reportar Incidencia
+						</button>
 						<button class="btn btn-sm btn-danger font-weight-bold" data-toggle="modal" data-target="#modalResolveVariance">
-							<i class="fa-solid fa-gavel mr-1"></i> Resolver Variaciones Pendientes
+							<i class="fa-solid fa-gavel mr-1"></i> Resolver Variación
 						</button>
 					</div>
 				</div>
@@ -1405,15 +1449,15 @@
 					<div class="d-flex align-items-center">
 						<i class="fa-solid fa-shield-halved text-primary fa-2x mr-3"></i>
 						<div>
-							<strong class="text-dark">Principio de No Doble Contabilización:</strong>
-							<div class="small text-muted">Las diferencias conciliadas en despacho no se descuentan dos veces de kardex ni generan cargos repetidos a clientes. Toda merma requiere autorización gerencial expresa.</div>
+							<strong class="text-dark">Regla de Cierre Logístico Obligatorio:</strong>
+							<div class="small text-muted">Ningún despacho se concilia sin Prueba de Entrega (POD / PIN) ni con diferencias o incidencias abiertas pendientes de dictamen.</div>
 						</div>
 					</div>
-					<span class="badge badge-primary px-2.5 py-1">Segregación Estricta</span>
+					<span class="badge badge-primary px-2.5 py-1">Auditoría 7 Etapas</span>
 				</div>
 
-				<!-- Matriz de las 7 Cantidades Obligatorias -->
-				<h6 class="font-weight-bold text-dark mb-2"><i class="fa-solid fa-table-list text-muted mr-1"></i> Matriz de Cantidades por Pedido</h6>
+				<!-- Matriz de las 7 Cantidades -->
+				<h6 class="font-weight-bold text-dark mb-2"><i class="fa-solid fa-table-list text-muted mr-1"></i> Matriz de Conciliación por Pedido</h6>
 				<div class="table-responsive bg-white rounded border mb-4">
 					<table class="table table-sm table-hover mb-0" style="font-size: 0.84rem;">
 						<thead class="thead-light">
@@ -1427,18 +1471,19 @@
 								<th>5. Recibida</th>
 								<th>6. Devuelta</th>
 								<th>7. Dif. Final</th>
-								<th>Variación Monetaria</th>
-								<th class="text-right">Dictamen</th>
+								<th>POD</th>
+								<th class="text-right">Dictamen / Cierre</th>
 							</tr>
 						</thead>
 						<tbody>
-							@foreach(array_slice($orders, 0, 8) as $ord)
+							@foreach(array_slice($orders, 0, 12) as $ord)
 								@php
 									$d = $ordersDetailMap[$ord['id']]['summary'] ?? null;
+									$hasPod = !empty($ord['delivery_signature_name']) || !empty($ord['pickup_verified_at']);
 								@endphp
 								@if($d)
 									<tr>
-										<td><strong class="text-dark">{{ $ord['order_code'] }}</strong></td>
+										<td><a href="javascript:void(0)" onclick="selectOrderAndSwitch({{ $ord['id'] }})" class="font-weight-bold text-dark">{{ $ord['order_code'] }}</a></td>
 										<td>{{ $ord['customer_name'] }}</td>
 										<td class="font-weight-bold">{{ $d['total_requested'] }}</td>
 										<td>{{ $d['total_prepared'] }}</td>
@@ -1449,19 +1494,89 @@
 										<td class="@if($d['total_final_diff'] != 0) text-danger font-weight-bold @else text-success @endif">
 											{{ $d['total_final_diff'] }}
 										</td>
-										<td class="font-weight-bold text-danger">{{ $money($ord['variance_total_cost'] ?? 0) }}</td>
-										<td class="text-right">
+										<td>
+											@if($hasPod)
+												<span class="badge badge-success"><i class="fa-solid fa-check mr-1"></i>POD</span>
+											@else
+												<span class="badge badge-light border text-muted">Sin POD</span>
+											@endif
+										</td>
+										<td class="text-right text-nowrap">
 											@if(intval($ord['pending_variances_count']) > 0)
 												<button class="btn btn-xs btn-danger font-weight-bold" data-toggle="modal" data-target="#modalResolveVariance">
-													Resolver ({{ $ord['pending_variances_count'] }})
+													Variación ({{ $ord['pending_variances_count'] }})
+												</button>
+											@elseif(!empty($ord['conciliated_at']))
+												<span class="badge badge-success"><i class="fa-solid fa-check-double mr-1"></i>Conciliado</span>
+											@elseif(($ord['status'] ?? '') === 'dispatched')
+												<button class="btn btn-xs btn-outline-success font-weight-bold" onclick="conciliateOrder({{ $ord['id'] }})">
+													Conciliar Cierre
 												</button>
 											@else
-												<span class="badge badge-success"><i class="fa-solid fa-check mr-1"></i>Conciliado</span>
+												<span class="badge badge-light border text-muted">{{ $ord['tracking_status'] }}</span>
 											@endif
 										</td>
 									</tr>
 								@endif
 							@endforeach
+						</tbody>
+					</table>
+				</div>
+
+				<!-- Incidencias Logísticas -->
+				<h6 class="font-weight-bold text-dark mb-2"><i class="fa-solid fa-triangle-exclamation text-warning mr-1"></i> Registro de Incidencias Logísticas</h6>
+				<div class="table-responsive bg-white rounded border">
+					<table class="table table-sm table-hover mb-0" style="font-size: 0.84rem;">
+						<thead class="thead-light">
+							<tr>
+								<th>#</th>
+								<th>Pedido</th>
+								<th>Cliente</th>
+								<th>Tipo</th>
+								<th>Severidad</th>
+								<th>Detalle</th>
+								<th>Estado</th>
+								<th class="text-right">Acción</th>
+							</tr>
+						</thead>
+						<tbody>
+							@forelse($openIncidents as $inc)
+								<tr>
+									<td>#{{ $inc['id'] }}</td>
+									<td><strong>{{ $inc['order_code'] }}</strong></td>
+									<td>{{ $inc['customer_name'] ?: '-' }}</td>
+									<td><span class="badge badge-light border">{{ $inc['incident_type'] }}</span></td>
+									<td>
+										<span class="badge @if(in_array($inc['severity'], ['high','critical'])) badge-danger @elseif($inc['severity']==='medium') badge-warning @else badge-secondary @endif">{{ $inc['severity'] }}</span>
+									</td>
+									<td>
+										<div>{{ $inc['description'] }}</div>
+										@if(!empty($inc['resolution_notes']))
+											<small class="text-success">Resolución: {{ $inc['resolution_notes'] }}</small>
+										@endif
+									</td>
+									<td>
+										@if(($inc['resolution_status'] ?? 'open') === 'open')
+											<span class="badge badge-warning">Abierta</span>
+										@else
+											<span class="badge badge-success">Resuelta</span>
+										@endif
+									</td>
+									<td class="text-right">
+										@if(($inc['resolution_status'] ?? 'open') === 'open')
+											<button class="btn btn-xs btn-outline-success font-weight-bold" onclick="openResolveIncidentModal({{ $inc['id'] }}, '{{ addslashes($inc['description']) }}')">
+												Resolver
+											</button>
+										@else
+											<span class="small text-muted">{{ $inc['resolved_at'] }}</span>
+										@endif
+									</td>
+								</tr>
+							@empty
+								<tr>
+									<td colspan="8" class="text-center text-muted py-3">Sin incidencias logísticas registradas.</td>
+								</tr>
+							@endforelse
 						</tbody>
 					</table>
 				</div>
@@ -1472,62 +1587,62 @@
 
 	<!-- ================= 5. TARJETAS OPERATIVAS INFERIORES ================= -->
 	<div class="dp-bottom-grid">
-		<!-- Tarjeta 1: Cambios y devoluciones -->
-		<a href="{{ $U('/returns') }}" class="dp-bottom-card">
+		<!-- Tarjeta 1: Etiquetas de despacho -->
+		<a href="javascript:void(0)" class="dp-bottom-card" onclick="openDispatchLabelModal(window.CurrentOrderId)">
 			<div>
 				<div class="dp-bottom-card-top">
 					<div class="dp-bottom-icon-box">
-						<i class="fa-solid fa-rotate-left"></i>
+						<i class="fa-solid fa-tag"></i>
 					</div>
 					<div>
-						<h6 class="dp-bottom-card-title">Cambios y devoluciones</h6>
-						<p class="dp-bottom-card-desc">Consulta o inicia el flujo vinculado al pedido según permisos.</p>
+						<h6 class="dp-bottom-card-title">Etiquetas de despacho</h6>
+						<p class="dp-bottom-card-desc">Genera e imprime rótulos de envío con bultos, ruta y código de barras.</p>
 					</div>
 				</div>
 			</div>
-			<img src="/img/control_center/dispatch_card_boxes.jpg" alt="Cambios y devoluciones" class="dp-bottom-card-img">
+			<img src="/img/control_center/dispatch_card_boxes.jpg" alt="Etiquetas de despacho" class="dp-bottom-card-img">
 			<div class="dp-bottom-card-link">
-				<span>Abrir módulo</span>
+				<span>Imprimir etiqueta</span>
 				<i class="fa-solid fa-arrow-right"></i>
 			</div>
 		</a>
 
 		<!-- Tarjeta 2: Comprobante de entrega -->
-		<a href="javascript:void(0)" class="dp-bottom-card" data-toggle="modal" data-target="#modalOrderEvidence">
+		<a href="javascript:void(0)" class="dp-bottom-card" onclick="openEvidenceModal(window.CurrentOrderId)">
 			<div>
 				<div class="dp-bottom-card-top">
 					<div class="dp-bottom-icon-box">
 						<i class="fa-solid fa-file-invoice"></i>
 					</div>
 					<div>
-						<h6 class="dp-bottom-card-title">Comprobante de entrega</h6>
-						<p class="dp-bottom-card-desc">Consulta evidencias disponibles del pedido.</p>
+						<h6 class="dp-bottom-card-title">Comprobante de entrega (POD)</h6>
+						<p class="dp-bottom-card-desc">Verifica receptor, folio de evidencia y validación PIN/QR del pedido.</p>
 					</div>
 				</div>
 			</div>
 			<img src="/img/control_center/dispatch_card_doc.jpg" alt="Comprobante de entrega" class="dp-bottom-card-img">
 			<div class="dp-bottom-card-link">
-				<span>Consultar evidencias</span>
+				<span>Consultar POD</span>
 				<i class="fa-solid fa-arrow-right"></i>
 			</div>
 		</a>
 
-		<!-- Tarjeta 3: Trazabilidad de cantidades -->
-		<a href="{{ $U('/kardex') }}" class="dp-bottom-card">
+		<!-- Tarjeta 3: Conciliación e Incidencias -->
+		<a href="javascript:void(0)" class="dp-bottom-card" onclick="$('#tab-conciliacion-link').click();">
 			<div>
 				<div class="dp-bottom-card-top">
 					<div class="dp-bottom-icon-box">
-						<i class="fa-solid fa-layer-group"></i>
+						<i class="fa-solid fa-scale-balanced"></i>
 					</div>
 					<div>
-						<h6 class="dp-bottom-card-title">Trazabilidad de cantidades</h6>
-						<p class="dp-bottom-card-desc">Revisa los movimientos por etapa del pedido.</p>
+						<h6 class="dp-bottom-card-title">Conciliación logística</h6>
+						<p class="dp-bottom-card-desc">Audita las 7 etapas, incidencias en ruta y cierre final de pedidos.</p>
 					</div>
 				</div>
 			</div>
-			<img src="/img/control_center/transfer_truck_hero.jpg" alt="Trazabilidad" class="dp-bottom-card-img">
+			<img src="/img/control_center/transfer_truck_hero.jpg" alt="Conciliación" class="dp-bottom-card-img">
 			<div class="dp-bottom-card-link">
-				<span>Ver movimientos</span>
+				<span>Ir a Conciliación</span>
 				<i class="fa-solid fa-arrow-right"></i>
 			</div>
 		</a>
@@ -1540,38 +1655,50 @@
 	<div class="modal-dialog modal-lg modal-dialog-centered" role="document">
 		<div class="modal-content border-0 shadow-lg" style="border-radius: 12px; overflow: hidden;">
 			<div class="modal-header bg-dark text-white">
-				<h5 class="modal-title font-weight-bold"><i class="fa-solid fa-chart-pie mr-2 text-info"></i>Comparación Analítica: Retiro en Tienda vs. Despacho a Domicilio</h5>
+				<h5 class="modal-title font-weight-bold"><i class="fa-solid fa-chart-pie mr-2 text-info"></i>Comparación Analítica Real: Retiro en Tienda vs. Domicilio</h5>
 				<button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
 			</div>
 			<div class="modal-body p-4 bg-light">
-				<p class="text-muted small">Evaluación de eficiencia operativa, exactitud, faltantes y tasa de reclamos por modalidad de entrega.</p>
+				<p class="text-muted small">Métricas calculadas en tiempo real sobre pedidos efectivos, preparación, POD y tiempo entre Reserva y Packing.</p>
 				<div class="table-responsive bg-white rounded border">
 					<table class="table table-sm table-hover mb-0" style="font-size: 0.84rem;">
 						<thead class="thead-light">
 							<tr>
 								<th>Métrica Operativa</th>
-								<th class="text-center">Retiro en Tienda (Pick-up)</th>
-								<th class="text-center">Despacho a Domicilio (Delivery)</th>
-								<th class="text-center">Objetivo Corporativo</th>
+								<th class="text-center">Retiro en Tienda ({{ intval($analytics['pickup']['orders_count'] ?? 0) }})</th>
+								<th class="text-center">Domicilio ({{ intval($analytics['delivery']['orders_count'] ?? 0) }})</th>
+								<th class="text-center">Meta OMS</th>
 							</tr>
 						</thead>
 						<tbody>
 							<tr>
+								<td><strong>OTIF Real (A tiempo y completo)</strong></td>
+								<td class="text-center font-weight-bold text-primary">{{ $analytics['pickup']['otif_pct'] !== null ? number_format($analytics['pickup']['otif_pct'], 1).'%' : 'Sin info' }}</td>
+								<td class="text-center font-weight-bold text-primary">{{ $analytics['delivery']['otif_pct'] !== null ? number_format($analytics['delivery']['otif_pct'], 1).'%' : 'Sin info' }}</td>
+								<td class="text-center text-muted">≥ 95.0%</td>
+							</tr>
+							<tr>
 								<td><strong>Exactitud de Preparación</strong></td>
-								<td class="text-center font-weight-bold text-success">{{ number_format($analytics['pickup']['prep_accuracy_pct'] ?? 99.4, 1) }}%</td>
-								<td class="text-center font-weight-bold text-success">{{ number_format($analytics['delivery']['prep_accuracy_pct'] ?? 99.1, 1) }}%</td>
+								<td class="text-center font-weight-bold text-success">{{ $analytics['pickup']['prep_accuracy_pct'] !== null ? number_format($analytics['pickup']['prep_accuracy_pct'], 1).'%' : 'Sin info' }}</td>
+								<td class="text-center font-weight-bold text-success">{{ $analytics['delivery']['prep_accuracy_pct'] !== null ? number_format($analytics['delivery']['prep_accuracy_pct'], 1).'%' : 'Sin info' }}</td>
 								<td class="text-center text-muted">≥ 99.0%</td>
 							</tr>
 							<tr>
 								<td><strong>Exactitud de Entrega</strong></td>
-								<td class="text-center font-weight-bold text-primary">{{ number_format($analytics['pickup']['delivery_accuracy_pct'] ?? 99.8, 1) }}%</td>
-								<td class="text-center font-weight-bold text-primary">{{ number_format($analytics['delivery']['delivery_accuracy_pct'] ?? 98.4, 1) }}%</td>
+								<td class="text-center font-weight-bold text-primary">{{ $analytics['pickup']['delivery_accuracy_pct'] !== null ? number_format($analytics['pickup']['delivery_accuracy_pct'], 1).'%' : 'Sin info' }}</td>
+								<td class="text-center font-weight-bold text-primary">{{ $analytics['delivery']['delivery_accuracy_pct'] !== null ? number_format($analytics['delivery']['delivery_accuracy_pct'], 1).'%' : 'Sin info' }}</td>
 								<td class="text-center text-muted">≥ 98.0%</td>
 							</tr>
 							<tr>
+								<td><strong>Tiempo Promedio de Preparación</strong></td>
+								<td class="text-center font-weight-bold">{{ $analytics['pickup']['avg_validation_minutes'] !== null ? $analytics['pickup']['avg_validation_minutes'].' min' : 'Sin info' }}</td>
+								<td class="text-center font-weight-bold">{{ $analytics['delivery']['avg_validation_minutes'] !== null ? $analytics['delivery']['avg_validation_minutes'].' min' : 'Sin info' }}</td>
+								<td class="text-center text-muted">≤ 30 min</td>
+							</tr>
+							<tr>
 								<td><strong>Faltantes por 1.000 un.</strong></td>
-								<td class="text-center font-weight-bold text-warning">{{ number_format($analytics['pickup']['missing_per_thousand'] ?? 0.6, 1) }} un.</td>
-								<td class="text-center font-weight-bold text-warning">{{ number_format($analytics['delivery']['missing_per_thousand'] ?? 1.8, 1) }} un.</td>
+								<td class="text-center font-weight-bold text-warning">{{ number_format($analytics['pickup']['missing_per_thousand'] ?? 0, 1) }} un.</td>
+								<td class="text-center font-weight-bold text-warning">{{ number_format($analytics['delivery']['missing_per_thousand'] ?? 0, 1) }} un.</td>
 								<td class="text-center text-muted">≤ 2.0 un.</td>
 							</tr>
 							<tr>
@@ -1581,9 +1708,9 @@
 								<td class="text-center text-muted">$0.00</td>
 							</tr>
 							<tr>
-								<td><strong>Tasa de Reclamos</strong></td>
-								<td class="text-center">{{ number_format($analytics['pickup']['claims_rate_pct'] ?? 0.8, 1) }}%</td>
-								<td class="text-center">{{ number_format($analytics['delivery']['claims_rate_pct'] ?? 2.1, 1) }}%</td>
+								<td><strong>Tasa de Incidencias</strong></td>
+								<td class="text-center">{{ number_format($analytics['pickup']['claims_rate_pct'] ?? 0, 1) }}%</td>
+								<td class="text-center">{{ number_format($analytics['delivery']['claims_rate_pct'] ?? 0, 1) }}%</td>
 								<td class="text-center text-muted">≤ 2.5%</td>
 							</tr>
 						</tbody>
@@ -1608,18 +1735,22 @@
 			<div class="modal-body p-4 bg-light">
 				<div class="alert alert-info py-2 small mb-3">
 					<i class="fa-solid fa-circle-info mr-1"></i>
-					Solicite al cliente el PIN de 6 dígitos enviado por SMS/Email o escanee el token QR.
+					Solicite al cliente el PIN de 6 dígitos o token QR y registre quién retira el pedido como POD.
 				</div>
 
 				<div class="form-group mb-3 text-center">
-					<label class="font-weight-bold small text-dark d-block">Ingrese el PIN de retiro:</label>
-					<input type="text" id="inputPickupPinCode" class="form-control form-control-lg text-center font-weight-bold text-dark" placeholder="0 0 0 0 0 0" maxlength="6" style="letter-spacing: 0.25em; font-size: 1.5rem;" autofocus>
+					<label class="font-weight-bold small text-dark d-block">PIN de retiro (6 dígitos):</label>
+					<input type="text" id="inputPickupPinCode" class="form-control form-control-lg text-center font-weight-bold text-dark" placeholder="000000" maxlength="16" style="letter-spacing: 0.2em; font-size: 1.4rem;" autofocus>
+				</div>
+				<div class="form-group mb-0">
+					<label class="font-weight-bold small text-dark">Nombre / Documento de quien retira (POD):</label>
+					<input type="text" id="inputPickupReceiverName" class="form-control form-control-sm" placeholder="Ej. María Gómez · CI 8812...">
 				</div>
 			</div>
 			<div class="modal-footer bg-white border-top py-2">
 				<button type="button" class="btn btn-sm btn-light border" data-dismiss="modal">Cancelar</button>
 				<button type="button" class="btn btn-sm btn-success font-weight-bold" id="btnSubmitVerifyPickup">
-					<i class="fa-solid fa-check mr-1"></i>Confirmar y Entregar Pedido
+					<i class="fa-solid fa-check mr-1"></i>Confirmar Retiro y POD
 				</button>
 			</div>
 		</div>
@@ -1631,31 +1762,35 @@
 	<div class="modal-dialog modal-dialog-centered" role="document">
 		<div class="modal-content border-0 shadow-lg" style="border-radius: 12px; overflow: hidden;">
 			<div class="modal-header bg-dark text-white">
-				<h5 class="modal-title font-weight-bold"><i class="fa-solid fa-truck-arrow-right mr-2 text-success"></i>Registro de Entrega en Ruta</h5>
+				<h5 class="modal-title font-weight-bold"><i class="fa-solid fa-truck-arrow-right mr-2 text-success"></i>Registro de Entrega y POD Obligatoria</h5>
 				<button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
 			</div>
 			<div class="modal-body p-4 bg-light">
 				<div class="form-group mb-2">
-					<label class="font-weight-bold small text-dark">Nombre de quien recibe:</label>
-					<input type="text" id="inputDeliverySignature" class="form-control form-control-sm" placeholder="Ej. Juan Pérez (Titular / Conserje)">
-				</div>
-				<div class="form-group mb-2">
-					<label class="font-weight-bold small text-dark">Transportista / Conductor:</label>
-					<input type="text" id="inputCarrierName" class="form-control form-control-sm" value="Transporte Logística Propia">
-				</div>
-				<div class="form-group mb-2">
 					<label class="font-weight-bold small text-dark">Resultado de la entrega:</label>
 					<select id="selDeliveryStatus" class="form-control form-control-sm font-weight-bold">
 						<option value="delivered" selected>Entregado Conforme (Completo)</option>
-						<option value="partial">Entrega Parcial (Con faltante o daño)</option>
+						<option value="partial">Entrega Parcial (Genera incidencia logística)</option>
 						<option value="rejected">Rechazado por el cliente</option>
 					</select>
 				</div>
 				<div class="form-group mb-2">
-					<label class="font-weight-bold small text-dark">Incidencias o notas de ruta:</label>
-					<textarea id="txtRouteIncidents" class="form-control form-control-sm" rows="2" placeholder="Observaciones de la entrega..."></textarea>
+					<label class="font-weight-bold small text-dark">Nombre y firma de quien recibe (POD obligatorio):</label>
+					<input type="text" id="inputDeliverySignature" class="form-control form-control-sm" placeholder="Ej. Juan Pérez (Titular / Conserjería)">
 				</div>
-				<div class="custom-control custom-checkbox mb-2">
+				<div class="form-group mb-2">
+					<label class="font-weight-bold small text-dark">Folio o referencia de evidencia fotográfica POD (obligatorio):</label>
+					<input type="text" id="inputDeliveryEvidenceUrl" class="form-control form-control-sm" placeholder="Ej. POD-GUIA-9941 o URL foto recepción">
+				</div>
+				<div class="form-group mb-2">
+					<label class="font-weight-bold small text-dark">Transportista / Conductor:</label>
+					<input type="text" id="inputCarrierName" class="form-control form-control-sm" placeholder="Conductor asignado en ruta">
+				</div>
+				<div class="form-group mb-2">
+					<label class="font-weight-bold small text-dark">Incidencias o detalle de entrega parcial / rechazo:</label>
+					<textarea id="txtRouteIncidents" class="form-control form-control-sm" rows="2" placeholder="Obligatorio si la entrega es parcial o rechazada..."></textarea>
+				</div>
+				<div class="custom-control custom-checkbox mb-0">
 					<input type="checkbox" class="custom-control-input" id="chkColdChainOk" checked>
 					<label class="custom-control-label small font-weight-bold text-dark" for="chkColdChainOk">
 						<i class="fa-solid fa-snowflake text-info mr-1"></i>Cadena de frío verificada en entrega (≤ 4°C)
@@ -1665,7 +1800,7 @@
 			<div class="modal-footer bg-white border-top py-2">
 				<button type="button" class="btn btn-sm btn-light border" data-dismiss="modal">Cancelar</button>
 				<button type="button" class="btn btn-sm btn-success font-weight-bold" id="btnSubmitRecordDelivery">
-					<i class="fa-solid fa-check mr-1"></i>Registrar Entrega
+					<i class="fa-solid fa-check mr-1"></i>Registrar Entrega POD
 				</button>
 			</div>
 		</div>
@@ -1677,18 +1812,20 @@
 	<div class="modal-dialog modal-dialog-centered" role="document">
 		<div class="modal-content border-0 shadow-lg" style="border-radius: 12px; overflow: hidden;">
 			<div class="modal-header bg-dark text-white">
-				<h5 class="modal-title font-weight-bold"><i class="fa-solid fa-barcode mr-2 text-warning"></i>Verificación Rápida por Escáner UPC</h5>
+				<h5 class="modal-title font-weight-bold"><i class="fa-solid fa-barcode mr-2 text-warning"></i>Picking y Validación con Escáner PDA / UPC</h5>
 				<button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
 			</div>
 			<div class="modal-body p-4 bg-light">
 				<div class="card p-3 border mb-3 bg-white text-center">
-					<label class="font-weight-bold small text-dark mb-1">Escanee el código de barras o ingrese el UPC:</label>
-					<div class="input-group">
-						<input type="text" id="inputFastScanBarcode" class="form-control font-weight-bold" placeholder="Escanee con pistola Zebra o cámara..." autofocus>
+					<label class="font-weight-bold small text-dark mb-1">Escanee código de barras UPC o SKU (cantidad por escaneo):</label>
+					<div class="input-group mb-2">
+						<input type="text" id="inputFastScanBarcode" class="form-control form-control-lg font-weight-bold" placeholder="Escanee código o presione Enter..." autofocus>
+						<input type="number" id="inputFastScanQty" class="form-control form-control-lg font-weight-bold" value="1" min="0.1" step="1" style="max-width: 85px;" title="Cantidad">
 						<div class="input-group-append">
-							<button class="btn btn-primary" type="button" id="btnTriggerFastScan"><i class="fa-solid fa-magnifying-glass"></i></button>
+							<button class="btn btn-success font-weight-bold" type="button" id="btnTriggerFastScan"><i class="fa-solid fa-check"></i></button>
 						</div>
 					</div>
+					<small class="text-muted">Bloquea automáticamente sobrantes mayores a la cantidad reservada.</small>
 				</div>
 
 				<!-- Live Result Alert Banner -->
@@ -1705,66 +1842,74 @@
 	</div>
 </div>
 
-<!-- ================= MODAL: RESOLVER VARIACIÓN ================= -->
+<!-- ================= MODAL: RESOLVER VARIACIÓN LOGÍSTICA ================= -->
 <div class="modal fade" id="modalResolveVariance" tabindex="-1" role="dialog" aria-hidden="true">
 	<div class="modal-dialog modal-dialog-centered" role="document">
 		<div class="modal-content border-0 shadow-lg" style="border-radius: 12px; overflow: hidden;">
 			<div class="modal-header text-white" style="background: #dc2626;">
-				<h5 class="modal-title font-weight-bold"><i class="fa-solid fa-gavel mr-2"></i>Resolución y Autorización de Variación</h5>
+				<h5 class="modal-title font-weight-bold"><i class="fa-solid fa-gavel mr-2"></i>Resolución Logística de Variación</h5>
 				<button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
 			</div>
 			<div class="modal-body p-4 bg-light">
-				<input type="hidden" id="resolveVarianceId" value="1">
+				<input type="hidden" id="resolveVarianceId" value="0">
 				<div class="card p-3 border mb-3 bg-white">
-					<strong class="text-dark" id="resolveVarianceProductName">Conciliación de faltantes en preparación</strong>
-					<span class="text-danger font-weight-bold" id="resolveVarianceDiffQty">Leche descremada (-4) · Crema de leche (-4)</span>
+					<strong class="text-dark" id="resolveVarianceProductName">Seleccione una variación pendiente</strong>
+					<span class="text-danger font-weight-bold" id="resolveVarianceDiffQty">-</span>
 				</div>
 				<div class="form-group mb-3">
-					<label class="font-weight-bold small text-dark">Tipo de resolución autorizada:</label>
+					<label class="font-weight-bold small text-dark">Dictamen logístico autorizado:</label>
 					<select class="form-control form-control-sm font-weight-bold" id="selResolutionStatus">
-						<option value="authorized_exception">Excepción autorizada por Gerencia de Operaciones</option>
-						<option value="waste_recorded">Registrar merma operativa (Avería o faltante)</option>
-						<option value="credited">Generar Nota de Crédito / Reembolso al cliente</option>
-						<option value="resolved">Aclarado con inventario físico en góndola</option>
+						<option value="authorized_exception">Excepción autorizada en despacho</option>
+						<option value="shortage_confirmed">Faltante logístico confirmado en salida/ruta</option>
+						<option value="partial_credit">Ajuste por entrega parcial al cliente</option>
+						<option value="credited">Nota de crédito logística aprobada</option>
+						<option value="resolved">Diferencia aclarada en verificación física</option>
 					</select>
 				</div>
 				<div class="form-group mb-2">
-					<label class="font-weight-bold small text-dark">Justificación y evidencia:</label>
-					<textarea class="form-control form-control-sm" id="txtResolutionNotes" rows="2" placeholder="Motivo de la aprobación de diferencia..."></textarea>
+					<label class="font-weight-bold small text-dark">Justificación logística obligatoria:</label>
+					<textarea class="form-control form-control-sm" id="txtResolutionNotes" rows="2" placeholder="Motivo de la resolución antes de conciliación..."></textarea>
 				</div>
 			</div>
 			<div class="modal-footer bg-white border-top py-2">
 				<button type="button" class="btn btn-sm btn-light border" data-dismiss="modal">Cancelar</button>
 				<button type="button" class="btn btn-sm btn-danger font-weight-bold" id="btnSubmitResolveVariance">
-					<i class="fa-solid fa-check mr-1"></i>Autorizar y Resolver Variación
+					<i class="fa-solid fa-check mr-1"></i>Autorizar y Resolver
 				</button>
 			</div>
 		</div>
 	</div>
 </div>
 
-<!-- ================= MODAL: COMPROBANTE DE ENTREGA Y EVIDENCIAS ================= -->
+<!-- ================= MODAL: COMPROBANTE DE ENTREGA POD ================= -->
 <div class="modal fade" id="modalOrderEvidence" tabindex="-1" role="dialog" aria-hidden="true">
 	<div class="modal-dialog modal-dialog-centered" role="document">
 		<div class="modal-content border-0 shadow-lg" style="border-radius: 12px; overflow: hidden;">
 			<div class="modal-header bg-dark text-white">
-				<h5 class="modal-title font-weight-bold"><i class="fa-solid fa-file-invoice mr-2 text-success"></i>Comprobante de Entrega y Evidencia</h5>
+				<h5 class="modal-title font-weight-bold"><i class="fa-solid fa-file-invoice mr-2 text-success"></i>Prueba de Entrega (POD) · <span id="eviOrderCode">-</span></h5>
 				<button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
 			</div>
-			<div class="modal-body p-4 bg-light text-center">
-				<img src="/img/control_center/dispatch_card_doc.jpg" alt="Comprobante" class="img-fluid rounded border mb-3 shadow-sm" style="max-height: 280px;">
-				<div class="text-left bg-white p-3 rounded border">
-					<div class="d-flex justify-content-between mb-1">
-						<span class="text-muted small">Estado:</span>
-						<span class="badge badge-success">Documento verificado</span>
+			<div class="modal-body p-4 bg-light">
+				<div class="bg-white p-3 rounded border">
+					<div class="d-flex justify-content-between mb-2">
+						<span class="text-muted small">Estado POD:</span>
+						<span class="badge badge-secondary" id="eviStatus">Pendiente</span>
 					</div>
-					<div class="d-flex justify-content-between mb-1">
-						<span class="text-muted small">Receptor:</span>
-						<span class="font-weight-bold small" id="lblEvidenceReceiver">Representante autorizado del cliente</span>
+					<div class="d-flex justify-content-between mb-2">
+						<span class="text-muted small">Receptor / Firma:</span>
+						<span class="font-weight-bold small" id="eviReceiver">Sin registro</span>
+					</div>
+					<div class="d-flex justify-content-between mb-2">
+						<span class="text-muted small">Referencia / Folio Evidencia:</span>
+						<span class="font-weight-bold small text-primary" id="eviPodRef">-</span>
+					</div>
+					<div class="d-flex justify-content-between mb-2">
+						<span class="text-muted small">Fecha & Hora Entrega:</span>
+						<span class="small font-weight-bold" id="eviDeliveryTime">-</span>
 					</div>
 					<div class="d-flex justify-content-between">
 						<span class="text-muted small">Cadena de Frío:</span>
-						<span class="text-success font-weight-bold small"><i class="fa-solid fa-circle-check mr-1"></i>Preservada ≤ 4°C</span>
+						<span class="small font-weight-bold" id="eviColdChain">Sin verificar</span>
 					</div>
 				</div>
 			</div>
@@ -1899,9 +2044,254 @@
 	</div>
 </div>
 
+<!-- ================= MODAL: NUEVO PEDIDO DE DESPACHO ================= -->
+<div class="modal fade" id="modalNewOrder" tabindex="-1" role="dialog" aria-hidden="true">
+	<div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+		<div class="modal-content border-0 shadow-lg" style="border-radius: 12px; overflow: hidden;">
+			<div class="modal-header bg-dark text-white">
+				<h5 class="modal-title font-weight-bold"><i class="fa-solid fa-plus mr-2 text-success"></i>Nuevo Pedido de Despacho</h5>
+				<button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+			</div>
+			<div class="modal-body p-4 bg-light">
+				<input type="hidden" id="newOrderIdempotencyKey" value="">
+				<div class="row">
+					<div class="col-md-6 form-group mb-2">
+						<label class="font-weight-bold small text-dark">Cliente:</label>
+						<select id="selNewOrderCustomer" class="form-control form-control-sm font-weight-bold">
+							@foreach($customers as $c)
+								<option value="{{ $c['id'] }}">{{ $c['name'] }}</option>
+							@endforeach
+						</select>
+					</div>
+					<div class="col-md-6 form-group mb-2">
+						<label class="font-weight-bold small text-dark">Sucursal de Origen:</label>
+						<select id="selNewOrderBranch" class="form-control form-control-sm">
+							@foreach($branches as $b)
+								<option value="{{ $b->id }}" @if($selectedBranchId == $b->id) selected @endif>{{ $b->name }}</option>
+							@endforeach
+						</select>
+					</div>
+					<div class="col-md-4 form-group mb-2">
+						<label class="font-weight-bold small text-dark">Modalidad:</label>
+						<select id="selNewOrderType" class="form-control form-control-sm font-weight-bold">
+							<option value="delivery">Despacho a Domicilio</option>
+							<option value="pickup">Retiro en Tienda (Click & Collect)</option>
+						</select>
+					</div>
+					<div class="col-md-4 form-group mb-2">
+						<label class="font-weight-bold small text-dark">Fecha Comprometida:</label>
+						<input type="date" id="inputNewOrderDate" class="form-control form-control-sm" value="{{ date('Y-m-d') }}">
+					</div>
+					<div class="col-md-4 form-group mb-2">
+						<label class="font-weight-bold small text-dark">Ruta (opcional):</label>
+						<input type="text" id="inputNewOrderRoute" class="form-control form-control-sm" placeholder="Ej. Ruta Norte">
+					</div>
+				</div>
+
+				<div class="card p-3 border bg-white mt-2">
+					<div class="d-flex justify-content-between align-items-center mb-2">
+						<strong class="small text-dark">Productos solicitados (Sin líneas duplicadas):</strong>
+						<button type="button" class="btn btn-xs btn-outline-success font-weight-bold" id="btnAddNewOrderLine">
+							<i class="fa-solid fa-plus mr-1"></i>Agregar Línea
+						</button>
+					</div>
+					<div id="newOrderLinesWrap">
+						<div class="form-row align-items-center mb-2 dp-new-order-line">
+							<div class="col-7">
+								<select class="form-control form-control-sm sel-new-prod">
+									@foreach($sellableProducts as $sp)
+										<option value="{{ $sp['id'] }}" data-price="{{ number_format(floatval($sp['ref_price'] > 0 ? $sp['ref_price'] : 1), 2, '.', '') }}">
+											{{ $sp['name'] }} (SKU: {{ $sp['sku'] }} · Disp: {{ number_format(floatval($sp['stock_avail']), 0) }})
+										</option>
+									@endforeach
+								</select>
+							</div>
+							<div class="col-3">
+								<input type="number" class="form-control form-control-sm inp-new-qty" value="1" min="0.1" step="1" placeholder="Cant.">
+							</div>
+							<div class="col-2 text-right">
+								<button type="button" class="btn btn-xs btn-light border btn-remove-line"><i class="fa-solid fa-trash text-danger"></i></button>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="custom-control custom-checkbox mt-2">
+					<input type="checkbox" class="custom-control-input" id="chkNewOrderReserveNow" checked>
+					<label class="custom-control-label small font-weight-bold text-dark" for="chkNewOrderReserveNow">
+						Reservar mercancía automáticamente tras crear el pedido
+					</label>
+				</div>
+			</div>
+			<div class="modal-footer bg-white border-top py-2">
+				<button type="button" class="btn btn-sm btn-light border" data-dismiss="modal">Cancelar</button>
+				<button type="button" class="btn btn-sm btn-success font-weight-bold" id="btnSubmitNewOrder">
+					<i class="fa-solid fa-check mr-1"></i>Crear Pedido
+				</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- ================= MODAL: PACKING Y ETIQUETA ================= -->
+<div class="modal fade" id="modalPackOrder" tabindex="-1" role="dialog" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered" role="document">
+		<div class="modal-content border-0 shadow-lg" style="border-radius: 12px; overflow: hidden;">
+			<div class="modal-header bg-dark text-white">
+				<h5 class="modal-title font-weight-bold"><i class="fa-solid fa-box-open mr-2 text-success"></i>Empaque (Packing) y Etiqueta</h5>
+				<button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+			</div>
+			<div class="modal-body p-4 bg-light">
+				<input type="hidden" id="packOrderId" value="{{ $selectedOrderId ?: 0 }}">
+				<div class="card p-2 bg-white border mb-3">
+					<span class="small text-muted">Pedido en empaque:</span>
+					<strong class="text-dark" id="lblPackOrderCode">-</strong>
+				</div>
+				<div class="form-group mb-2">
+					<label class="font-weight-bold small text-dark">Número de bultos / cajas selladas:</label>
+					<input type="number" id="inputPackBoxes" class="form-control form-control-sm font-weight-bold" value="1" min="1" step="1">
+				</div>
+				<div class="form-group mb-0">
+					<label class="font-weight-bold small text-dark">Notas de empaque / precinto:</label>
+					<input type="text" id="inputPackNotes" class="form-control form-control-sm" placeholder="Ej. Precinto #441 · Fragilidad controlada">
+				</div>
+			</div>
+			<div class="modal-footer bg-white border-top py-2">
+				<button type="button" class="btn btn-sm btn-light border" data-dismiss="modal">Cancelar</button>
+				<button type="button" class="btn btn-sm btn-success font-weight-bold" id="btnSubmitPackOrder">
+					<i class="fa-solid fa-tag mr-1"></i>Cerrar Packing y Generar Etiqueta
+				</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- ================= MODAL: ETIQUETA DE DESPACHO IMPRIMIBLE ================= -->
+<div class="modal fade" id="modalDispatchLabel" tabindex="-1" role="dialog" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered" role="document">
+		<div class="modal-content border-0 shadow-lg" style="border-radius: 12px; overflow: hidden;">
+			<div class="modal-header bg-dark text-white">
+				<h5 class="modal-title font-weight-bold"><i class="fa-solid fa-tag mr-2 text-success"></i>Etiqueta de Despacho</h5>
+				<button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+			</div>
+			<div class="modal-body p-4 bg-light">
+				<div id="dpPrintableLabel" class="bg-white p-4 rounded border" style="border: 2px dashed #0f172a !important;">
+					<div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2">
+						<div>
+							<strong class="text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.08em;">DAILY LOGISTICS OMS/WMS</strong>
+							<h5 class="mb-0 font-weight-bold text-dark" id="lblTagCode">ETQ-PED</h5>
+						</div>
+						<span class="badge badge-dark px-2 py-1" id="lblTagPackages">1 BULTO</span>
+					</div>
+					<div class="small mb-2">
+						<div><span class="text-muted">Pedido:</span> <strong id="lblTagOrderCode">-</strong> · <span id="lblTagModality">-</span></div>
+						<div><span class="text-muted">Origen:</span> <strong id="lblTagBranch">-</strong></div>
+						<div><span class="text-muted">Destino / Cliente:</span> <strong id="lblTagCustomer">-</strong></div>
+						<div><span class="text-muted">Dirección / Ruta:</span> <span id="lblTagRoute">-</span></div>
+						<div><span class="text-muted">Unidades / Ítems:</span> <strong id="lblTagUnits">-</strong></div>
+						<div id="lblTagPinWrap" class="d-none text-success font-weight-bold">PIN Retiro: <span id="lblTagPin">-</span></div>
+					</div>
+					<div class="text-center border-top pt-2 mt-2">
+						<div style="font-family: monospace; font-size: 1.15rem; letter-spacing: 0.25em; font-weight: 800;" id="lblTagBarcode">*ETQ*</div>
+					</div>
+				</div>
+			</div>
+			<div class="modal-footer bg-white border-top py-2">
+				<button type="button" class="btn btn-sm btn-light border" data-dismiss="modal">Cerrar</button>
+				<button type="button" class="btn btn-sm btn-success font-weight-bold" onclick="window.print()">
+					<i class="fa-solid fa-print mr-1"></i>Imprimir Etiqueta
+				</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- ================= MODAL: REPORTAR INCIDENCIA LOGÍSTICA ================= -->
+<div class="modal fade" id="modalReportIncident" tabindex="-1" role="dialog" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered" role="document">
+		<div class="modal-content border-0 shadow-lg" style="border-radius: 12px; overflow: hidden;">
+			<div class="modal-header bg-warning text-dark">
+				<h5 class="modal-title font-weight-bold"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Registrar Incidencia Logística</h5>
+				<button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+			</div>
+			<div class="modal-body p-4 bg-light">
+				<input type="hidden" id="incidentOrderId" value="{{ $selectedOrderId ?: 0 }}">
+				<div class="card p-2 bg-white border mb-2">
+					<span class="small text-muted">Pedido afectado:</span>
+					<strong class="text-dark" id="lblIncidentOrderCode">-</strong>
+				</div>
+				<div class="form-group mb-2">
+					<label class="font-weight-bold small text-dark">Tipo de incidencia:</label>
+					<select id="selIncidentType" class="form-control form-control-sm font-weight-bold">
+						<option value="atraso_ruta">Atraso en tránsito / tráfico</option>
+						<option value="entrega_parcial">Entrega parcial de bultos</option>
+						<option value="rechazo_cliente">Rechazo parcial o total del cliente</option>
+						<option value="averia_transito">Embalaje averiado en transporte</option>
+						<option value="direccion_erronea">Dirección incompleta / acceso cerrado</option>
+						<option value="faltante_empaque">Faltante detectado en carga</option>
+					</select>
+				</div>
+				<div class="form-group mb-2">
+					<label class="font-weight-bold small text-dark">Severidad:</label>
+					<select id="selIncidentSeverity" class="form-control form-control-sm">
+						<option value="low">Baja</option>
+						<option value="medium" selected>Media</option>
+						<option value="high">Alta</option>
+						<option value="critical">Crítica</option>
+					</select>
+				</div>
+				<div class="form-group mb-0">
+					<label class="font-weight-bold small text-dark">Descripción:</label>
+					<textarea id="txtIncidentDesc" class="form-control form-control-sm" rows="2" placeholder="Detalle logístico ocurrido..."></textarea>
+				</div>
+			</div>
+			<div class="modal-footer bg-white border-top py-2">
+				<button type="button" class="btn btn-sm btn-light border" data-dismiss="modal">Cancelar</button>
+				<button type="button" class="btn btn-sm btn-warning font-weight-bold" id="btnSubmitReportIncident">
+					<i class="fa-solid fa-check mr-1"></i>Guardar Incidencia
+				</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- ================= MODAL: RESOLVER INCIDENCIA LOGÍSTICA ================= -->
+<div class="modal fade" id="modalResolveIncident" tabindex="-1" role="dialog" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered" role="document">
+		<div class="modal-content border-0 shadow-lg" style="border-radius: 12px; overflow: hidden;">
+			<div class="modal-header bg-dark text-white">
+				<h5 class="modal-title font-weight-bold"><i class="fa-solid fa-check-circle mr-2 text-success"></i>Resolver Incidencia Logística</h5>
+				<button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+			</div>
+			<div class="modal-body p-4 bg-light">
+				<input type="hidden" id="resolveIncidentId" value="0">
+				<div class="card p-2 bg-white border mb-2">
+					<strong class="small text-dark" id="lblResolveIncidentDesc">-</strong>
+				</div>
+				<div class="form-group mb-0">
+					<label class="font-weight-bold small text-dark">Acción resolutiva / cierre:</label>
+					<textarea id="txtResolveIncidentNotes" class="form-control form-control-sm" rows="2" placeholder="Ej. Re-programado en segundo viaje / autorizado por cliente"></textarea>
+				</div>
+			</div>
+			<div class="modal-footer bg-white border-top py-2">
+				<button type="button" class="btn btn-sm btn-light border" data-dismiss="modal">Cancelar</button>
+				<button type="button" class="btn btn-sm btn-success font-weight-bold" id="btnSubmitResolveIncident">
+					<i class="fa-solid fa-check mr-1"></i>Resolver Incidencia
+				</button>
+			</div>
+		</div>
+	</div>
+</div>
+
 <script>
 window.CurrentOrderId = {{ $selectedOrderId ?: 0 }};
 window.DispatchOrdersMap = {!! $ordersDetailMapJson !!};
+
+function extractErr(xhr, fallback) {
+	if (xhr && xhr.responseJSON) {
+		return xhr.responseJSON.error_message || xhr.responseJSON.message || fallback;
+	}
+	return fallback;
+}
 
 function selectOrderAndSwitch(orderId) {
 	$('#tab-seguimiento-link').click();
@@ -1923,6 +2313,12 @@ function openScheduleTransportModal(orderId, orderCode) {
 	$('#modalScheduleRoute').modal('show');
 }
 
+function openPackOrderModal(orderId, orderCode) {
+	$('#packOrderId').val(orderId);
+	$('#lblPackOrderCode').text(orderCode || '');
+	$('#modalPackOrder').modal('show');
+}
+
 function openConfirmExitModal(orderId, orderCode) {
 	$('#exitOrderId').val(orderId);
 	$('#lblExitOrderCode').text(orderCode);
@@ -1930,7 +2326,179 @@ function openConfirmExitModal(orderId, orderCode) {
 	$('#modalConfirmExit').modal('show');
 }
 
+function openReportIncidentModal(orderId, orderCode) {
+	$('#incidentOrderId').val(orderId || window.CurrentOrderId);
+	$('#lblIncidentOrderCode').text(orderCode || ('#' + (orderId || window.CurrentOrderId)));
+	$('#txtIncidentDesc').val('');
+	$('#modalReportIncident').modal('show');
+}
+
+function openResolveIncidentModal(incidentId, desc) {
+	$('#resolveIncidentId').val(incidentId);
+	$('#lblResolveIncidentDesc').text(desc || ('Incidencia #' + incidentId));
+	$('#txtResolveIncidentNotes').val('');
+	$('#modalResolveIncident').modal('show');
+}
+
+function openResolveVarianceModal(varianceId, prodName, diffQty) {
+	$('#resolveVarianceId').val(varianceId);
+	$('#resolveVarianceProductName').text(prodName || 'Variación #' + varianceId);
+	$('#resolveVarianceDiffQty').text('Diferencia: ' + diffQty);
+	$('#txtResolutionNotes').val('');
+	$('#modalResolveVariance').modal('show');
+}
+
+function openEvidenceModal(orderId) {
+	var oid = orderId || window.CurrentOrderId;
+	var d = window.DispatchOrdersMap ? window.DispatchOrdersMap[oid] : null;
+	if (d && d.order) {
+		var o = d.order;
+		$('#eviOrderCode').text(o.order_code || '-');
+		var isDelivered = (o.delivery_status === 'delivered' || o.delivery_status === 'partial');
+		$('#eviStatus')
+			.removeClass('badge-secondary badge-success badge-warning badge-danger')
+			.addClass(o.delivery_status === 'delivered' ? 'badge-success' : (o.delivery_status === 'partial' ? 'badge-warning' : (o.delivery_status === 'rejected' ? 'badge-danger' : 'badge-secondary')))
+			.text(o.delivery_status === 'delivered' ? 'Entregado POD OK' : (o.delivery_status === 'partial' ? 'Entrega Parcial' : (o.delivery_status === 'rejected' ? 'Rechazado' : 'Pendiente POD')));
+		$('#eviReceiver').text(o.delivery_signature_name || 'Sin receptor registrado');
+		$('#eviPodRef').text(o.delivery_evidence_url || (o.pickup_verified_at ? ('PIN Verificado: ' + (o.pickup_pin || 'OK')) : 'Sin folio POD'));
+		$('#eviDeliveryTime').text(o.delivery_time || o.pickup_verified_at || 'Pendiente');
+		$('#eviColdChain').text(parseInt(o.cold_chain_temp_ok || 0, 10) === 1 ? 'Verificada ≤ 4°C' : 'No verificada');
+	}
+	$('#modalOrderEvidence').modal('show');
+}
+
+function openDispatchLabelModal(orderId) {
+	var oid = orderId || window.CurrentOrderId;
+	if (!oid) { toastr.warning('Seleccione un pedido primero.'); return; }
+	$.get(U('/api/retail/dispatch/orders/' + oid + '/label'), function (res) {
+		$('#lblTagCode').text(res.label_code || ('ETQ-' + res.order_code));
+		$('#lblTagOrderCode').text(res.order_code || '-');
+		$('#lblTagModality').text(res.delivery_type === 'pickup' ? 'RETIRO EN TIENDA' : 'DOMICILIO');
+		$('#lblTagBranch').text(res.branch_name || '-');
+		$('#lblTagCustomer').text(res.customer_name || '-');
+		$('#lblTagRoute').text((res.delivery_address || '-') + ' · ' + (res.route_name || '-'));
+		$('#lblTagPackages').text((res.packages_count || 1) + ' BULTO(S)');
+		$('#lblTagUnits').text((res.items_count || 0) + ' SKU(s) · ' + (res.total_units || 0) + ' u.');
+		$('#lblTagBarcode').text('*' + (res.barcode_value || res.order_code) + '*');
+		if (res.pickup_pin) {
+			$('#lblTagPinWrap').removeClass('d-none');
+			$('#lblTagPin').text(res.pickup_pin);
+		} else {
+			$('#lblTagPinWrap').addClass('d-none');
+		}
+		$('#modalDispatchLabel').modal('show');
+	}).fail(function (xhr) {
+		toastr.error(extractErr(xhr, 'No se pudo cargar la etiqueta de despacho.'));
+	});
+}
+
+function reserveOrder(orderId) {
+	$.ajax({
+		url: U('/api/retail/dispatch/reserve-order'),
+		type: 'POST',
+		contentType: 'application/json',
+		data: JSON.stringify({ order_id: orderId }),
+		success: function (res) {
+			toastr.success(res.message || 'Stock reservado correctamente.');
+			setTimeout(function () { location.reload(); }, 500);
+		},
+		error: function (xhr) {
+			toastr.error(extractErr(xhr, 'No se pudo reservar el pedido.'));
+		}
+	});
+}
+
+function conciliateOrder(orderId) {
+	$.ajax({
+		url: U('/api/retail/dispatch/conciliate'),
+		type: 'POST',
+		contentType: 'application/json',
+		data: JSON.stringify({ order_id: orderId }),
+		success: function (res) {
+			toastr.success(res.message || 'Pedido conciliado y cerrado.');
+			setTimeout(function () { location.reload(); }, 600);
+		},
+		error: function (xhr) {
+			toastr.error(extractErr(xhr, 'No se pudo conciliar el pedido.'));
+		}
+	});
+}
+
 document.addEventListener('DOMContentLoaded', function () {
+	$('#modalNewOrder').on('show.bs.modal', function () {
+		$('#newOrderIdempotencyKey').val('ord-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8));
+	});
+
+	$('#btnAddNewOrderLine').on('click', function () {
+		var firstLine = $('#newOrderLinesWrap .dp-new-order-line').first().clone();
+		firstLine.find('.inp-new-qty').val('1');
+		$('#newOrderLinesWrap').append(firstLine);
+	});
+
+	$(document).on('click', '.btn-remove-line', function () {
+		if ($('#newOrderLinesWrap .dp-new-order-line').length > 1) {
+			$(this).closest('.dp-new-order-line').remove();
+		}
+	});
+
+	$('#btnSubmitNewOrder').on('click', function () {
+		var btn = $(this).prop('disabled', true);
+		var items = [];
+		$('#newOrderLinesWrap .dp-new-order-line').each(function () {
+			var sel = $(this).find('.sel-new-prod option:selected');
+			var pid = parseInt(sel.val(), 10);
+			var qty = parseFloat($(this).find('.inp-new-qty').val());
+			if (pid && qty > 0) {
+				items.push({ product_id: pid, amount: qty });
+			}
+		});
+		$.ajax({
+			url: U('/api/retail/dispatch/create-order'),
+			type: 'POST',
+			contentType: 'application/json',
+			data: JSON.stringify({
+				idempotency_key: $('#newOrderIdempotencyKey').val(),
+				customer_id: parseInt($('#selNewOrderCustomer').val(), 10),
+				branch_id: parseInt($('#selNewOrderBranch').val(), 10),
+				delivery_type: $('#selNewOrderType').val(),
+				requested_date: $('#inputNewOrderDate').val(),
+				route_name: $('#inputNewOrderRoute').val(),
+				confirm: $('#chkNewOrderReserveNow').is(':checked') ? 1 : 0,
+				items: items
+			}),
+			success: function (res) {
+				toastr.success(res.message || 'Pedido creado.');
+				$('#modalNewOrder').modal('hide');
+				setTimeout(function () { location.reload(); }, 600);
+			},
+			error: function (xhr) {
+				btn.prop('disabled', false);
+				toastr.error(extractErr(xhr, 'Error al registrar pedido.'));
+			}
+		});
+	});
+
+	$('#btnSubmitPackOrder').on('click', function () {
+		$.ajax({
+			url: U('/api/retail/dispatch/pack-order'),
+			type: 'POST',
+			contentType: 'application/json',
+			data: JSON.stringify({
+				order_id: parseInt($('#packOrderId').val(), 10),
+				packages_count: parseInt($('#inputPackBoxes').val(), 10) || 1,
+				notes: $('#inputPackNotes').val()
+			}),
+			success: function (res) {
+				toastr.success(res.message || 'Packing cerrado.');
+				$('#modalPackOrder').modal('hide');
+				setTimeout(function () { location.reload(); }, 600);
+			},
+			error: function (xhr) {
+				toastr.error(extractErr(xhr, 'Error en Packing.'));
+			}
+		});
+	});
+
 	// Submit Assign Picking
 	$('#btnSubmitAssignPicking').on('click', function () {
 		var oid = $('#pickingOrderId').val();
@@ -1945,8 +2513,8 @@ document.addEventListener('DOMContentLoaded', function () {
 				$('#modalAssignPicking').modal('hide');
 				setTimeout(function () { location.reload(); }, 600);
 			},
-			error: function () {
-				toastr.error('Error al asignar picking.');
+			error: function (xhr) {
+				toastr.error(extractErr(xhr, 'Error al asignar picking.'));
 			}
 		});
 	});
@@ -1975,8 +2543,8 @@ document.addEventListener('DOMContentLoaded', function () {
 				$('#modalScheduleRoute').modal('hide');
 				setTimeout(function () { location.reload(); }, 600);
 			},
-			error: function () {
-				toastr.error('Error al programar transporte.');
+			error: function (xhr) {
+				toastr.error(extractErr(xhr, 'Error al programar transporte.'));
 			}
 		});
 	});
@@ -1996,8 +2564,52 @@ document.addEventListener('DOMContentLoaded', function () {
 				$('#modalConfirmExit').modal('hide');
 				setTimeout(function () { location.reload(); }, 600);
 			},
-			error: function () {
-				toastr.error('Error al confirmar salida.');
+			error: function (xhr) {
+				toastr.error(extractErr(xhr, 'Error al confirmar salida.'));
+			}
+		});
+	});
+
+	// Submit Logistics Incident
+	$('#btnSubmitReportIncident').on('click', function () {
+		$.ajax({
+			url: U('/api/retail/dispatch/report-incident'),
+			type: 'POST',
+			contentType: 'application/json',
+			data: JSON.stringify({
+				order_id: parseInt($('#incidentOrderId').val(), 10),
+				incident_type: $('#selIncidentType').val(),
+				severity: $('#selIncidentSeverity').val(),
+				description: $('#txtIncidentDesc').val()
+			}),
+			success: function (res) {
+				toastr.success(res.message || 'Incidencia registrada.');
+				$('#modalReportIncident').modal('hide');
+				setTimeout(function () { location.reload(); }, 600);
+			},
+			error: function (xhr) {
+				toastr.error(extractErr(xhr, 'Error al registrar incidencia.'));
+			}
+		});
+	});
+
+	// Submit Resolve Incident
+	$('#btnSubmitResolveIncident').on('click', function () {
+		$.ajax({
+			url: U('/api/retail/dispatch/resolve-incident'),
+			type: 'POST',
+			contentType: 'application/json',
+			data: JSON.stringify({
+				incident_id: parseInt($('#resolveIncidentId').val(), 10),
+				resolution_notes: $('#txtResolveIncidentNotes').val()
+			}),
+			success: function (res) {
+				toastr.success(res.message || 'Incidencia resuelta.');
+				$('#modalResolveIncident').modal('hide');
+				setTimeout(function () { location.reload(); }, 600);
+			},
+			error: function (xhr) {
+				toastr.error(extractErr(xhr, 'Error al resolver incidencia.'));
 			}
 		});
 	});

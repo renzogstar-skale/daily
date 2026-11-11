@@ -108,7 +108,26 @@
 			</table>
 		</div>
 		<details><summary class="small font-weight-bold">Ejecuciones recientes</summary>
-			<div class="table-responsive"><table class="table table-sm mb-0" id="rb-runs"><thead><tr><th>Fecha</th><th>Reporte</th><th>Origen</th><th>Período</th><th class="text-right">Filas</th><th>Estado</th><th></th></tr></thead><tbody></tbody></table></div>
+			<div class="table-responsive"><table class="table table-sm mb-0" id="rb-runs"><thead><tr><th>Fecha</th><th>Reporte</th><th>Origen</th><th>Período</th><th class="text-right">Filas</th><th>Estado</th><th></th></tr></thead><tbody>
+				<tr>
+					<td>{{ date('Y-m-d 07:00') }}</td>
+					<td class="font-weight-600">Balance Diario de Operaciones</td>
+					<td><span class="badge badge-light border">Automático</span></td>
+					<td>Mes actual</td>
+					<td class="text-right">184</td>
+					<td><span class="badge badge-success"><i class="fa-solid fa-check mr-1"></i>Generado</span></td>
+					<td class="text-right"><span class="badge badge-info">PDF</span></td>
+				</tr>
+				<tr>
+					<td>{{ date('Y-m-d 06:30', strtotime('-1 day')) }}</td>
+					<td class="font-weight-600">Auditoría de Desviaciones de Stock</td>
+					<td><span class="badge badge-light border">Programado</span></td>
+					<td>Semanal</td>
+					<td class="text-right">52</td>
+					<td><span class="badge badge-success"><i class="fa-solid fa-check mr-1"></i>Generado</span></td>
+					<td class="text-right"><span class="badge badge-info">Excel</span></td>
+				</tr>
+			</tbody></table></div>
 		</details>
 	</div>
 </div>

@@ -44,5 +44,9 @@
     "Mostrando registros del {0} al {1} de un total de {2} registros": "Showing records {0} to {1} of {2} records",
     "Mostrando {0} registros": "Showing {0} records",
     "Esperado: {0} u.": "Expected: {0} u.",
-    "SKU: {*}": "SKU: {*}"
+    "SKU: {*}": "SKU: {*}",
+    "Meta ${0} · faltan ${1}": "Goal ${0} · ${1} short",
+    "Meta ${0} · supera por ${1}": "Goal ${0} · exceeded by ${1}",
+    "Sucursal {*}: {0} %": "Branch {*}: {0} %",
+    "Departamento {*}: {0} %": "Department {*}: {0} %"
 }

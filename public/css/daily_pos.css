@@ -1189,3 +1189,29 @@
 	line-height: 1.35;
 	border-radius: 4px;
 }
+
+/* POS: estado del turno y de la conexión, autorización, arqueo y recibo */
+.pos-shift-pill, .pos-net-pill { display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 600; border: 1px solid var(--ded-border-subtle, #e2e8f0); }
+.pos-shift-pill svg, .pos-net-pill svg { width: 13px; height: 13px; }
+.pos-shift-pill.is-open { color: #047857; background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.35); }
+.pos-shift-pill.is-closed, .pos-net-pill.is-offline { color: #b91c1c; background: rgba(239, 68, 68, 0.08); border-color: rgba(239, 68, 68, 0.3); }
+.pos-net-pill { color: #475569; }
+.pos-auth-chip { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; color: #047857; background: rgba(16, 185, 129, 0.1); border-radius: 999px; padding: 1px 6px; }
+.pos-denoms { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 6px; }
+.pos-denom { display: flex; flex-direction: column; gap: 2px; font-size: 11px; color: var(--ded-text-muted, #64748b); margin: 0; }
+.pos-denom input { width: 100%; height: 30px; font-size: 13px; padding: 2px 6px; border: 1px solid #cbd5e1; border-radius: 6px; }
+.pos-receipt { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; max-width: 340px; margin: 0 auto; color: #0f172a; }
+.pos-rc-head { text-align: center; border-bottom: 1px dashed #94a3b8; padding-bottom: 8px; margin-bottom: 8px; line-height: 1.45; }
+.pos-rc-copy { font-weight: 700; letter-spacing: .08em; margin-top: 4px; }
+.pos-rc-lines { width: 100%; }
+.pos-rc-lines td { padding: 3px 0; vertical-align: top; }
+.pos-rc-tot { border-top: 1px dashed #94a3b8; margin-top: 8px; padding-top: 6px; }
+.pos-rc-tot > div { display: flex; justify-content: space-between; }
+.pos-rc-tot .is-total { font-weight: 700; font-size: 14px; margin: 4px 0; }
+.pos-rc-foot { border-top: 1px dashed #94a3b8; margin-top: 8px; padding-top: 6px; text-align: center; font-size: 11px; }
+html.daily-dark .pos-receipt { color: #e2e8f0; }
+@media print {
+	body * { visibility: hidden !important; }
+	#pos-receipt, #pos-receipt * { visibility: visible !important; color: #000 !important; }
+	#pos-receipt { position: absolute; left: 0; top: 0; width: 80mm; }
+}

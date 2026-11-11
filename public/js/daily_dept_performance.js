@@ -114,11 +114,18 @@
 				tooltips: {
 					mode: 'index',
 					intersect: false,
-					backgroundColor: 'rgba(15, 23, 42, 0.92)',
+					backgroundColor: 'rgba(15, 23, 42, 0.94)',
+					titleFontColor: '#ffffff',
+					titleFontStyle: 'bold',
 					titleFontSize: 12,
+					bodyFontColor: '#ffffff',
 					bodyFontSize: 11,
+					footerFontColor: '#e2e8f0',
+					borderColor: 'rgba(255, 255, 255, 0.15)',
+					borderWidth: 1,
 					cornerRadius: 8,
-					padding: 9,
+					padding: 10,
+					displayColors: true,
 					callbacks: {
 						label: function (tooltipItem, chartData) {
 							var ds = chartData.datasets[tooltipItem.datasetIndex];
@@ -274,11 +281,18 @@
 				tooltips: {
 					mode: 'index',
 					intersect: false,
-					backgroundColor: 'rgba(15, 23, 42, 0.92)',
+					backgroundColor: 'rgba(15, 23, 42, 0.94)',
+					titleFontColor: '#ffffff',
+					titleFontStyle: 'bold',
 					titleFontSize: 12,
+					bodyFontColor: '#ffffff',
 					bodyFontSize: 11,
+					footerFontColor: '#e2e8f0',
+					borderColor: 'rgba(255, 255, 255, 0.15)',
+					borderWidth: 1,
 					cornerRadius: 8,
-					padding: 9,
+					padding: 10,
+					displayColors: true,
 					callbacks: {
 						label: function (tooltipItem, chartData) {
 							var ds = chartData.datasets[tooltipItem.datasetIndex];

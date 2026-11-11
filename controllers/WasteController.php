@@ -48,7 +48,7 @@ class WasteController extends BaseController
 		);
 
 		$analytics = $wasteService->GetWasteAnalytics($branchId, $period, $startDate, $endDate);
-		$reasons = $wasteService->GetWasteReasons(false);
+		$reasons = $wasteService->GetWasteReasons(false, null, null, null, true);
 		$categories = $wasteService->GetWasteCategories();
 		$branches = $branchService->GetBranches();
 		$users = $this->DB->users()->orderBy('username')->fetchAll();
@@ -59,9 +59,11 @@ class WasteController extends BaseController
 		$censoShrink = $akcalService->GetCensoShrinkBreakdown($branchId, $period, $startDate, $endDate);
 		$dbRaw = DatabaseService::GetInstance()->GetDbConnectionRaw();
 
-		// Products for Quick Registration in Tab 3
+		// Products for Quick Registration in Tab 3 (incluye código de barras primario para escáner UPC)
 		$products = $dbRaw->query("
-			SELECT p.id, p.name, IFNULL(p.sku, '—') as sku, qu.name as qu_name,
+			SELECT p.id, p.name, IFNULL(p.sku, '—') as sku,
+				   (SELECT pb.barcode FROM product_barcodes pb WHERE pb.product_id = p.id ORDER BY pb.id ASC LIMIT 1) as barcode,
+				   qu.name as qu_name,
 				   COALESCE((SELECT price FROM stock_log WHERE product_id = p.id AND transaction_type = 'purchase' ORDER BY id DESC LIMIT 1), 
 							(SELECT price FROM stock_log WHERE product_id = p.id ORDER BY id DESC LIMIT 1), 
 							p.sale_price, 0) as last_price,
@@ -76,22 +78,23 @@ class WasteController extends BaseController
 		$locations = $this->DB->locations()->orderBy('name')->fetchAll();
 		$quantityUnits = $this->DB->quantity_units()->orderBy('name')->fetchAll();
 
-		// Centro de Control: datos reales del período y sucursal seleccionados
+		// Centro de Control: datos reales del período, departamento y sucursal seleccionados (fuente única)
 		$photoKpis = $akcalService->GetControlCenterData($branchId, $startDate, $endDate);
 		$lf = LossIntelligenceService::Filters($params);
 		$lf['branch_id'] = $branchId;
 		$lossSummary = LossIntelligenceService::GetInstance()->Summary($lf, $startDate, $endDate);
 		$wasteExec = \Grocy\Services\WasteExecutiveControlCenterService::GetInstance()->GetExecutiveData(
 			$branchId,
-			!empty($params['date']) ? $params['date'] : date('Y-m-d'),
+			!empty($params['date']) ? $params['date'] : $endDate,
 			!empty($params['department']) ? $params['department'] : null,
 			!empty($params['causal']) ? $params['causal'] : null,
-			!empty($params['metric']) ? $params['metric'] : 'pct'
+			!empty($params['metric']) ? $params['metric'] : 'pct',
+			$startDate,
+			$endDate
 		);
 
-				$rawDb = \Grocy\Services\DatabaseService::GetInstance()->GetDbConnectionRaw();
-		$damagedProducts = $rawDb->query("SELECT * FROM daily_damaged_products ORDER BY id DESC")->fetchAll(\PDO::FETCH_ASSOC);
-		$smartAudits = $rawDb->query("SELECT * FROM daily_smart_audits ORDER BY id DESC")->fetchAll(\PDO::FETCH_ASSOC);
+		$rawDb = \Grocy\Services\DatabaseService::GetInstance()->GetDbConnectionRaw();
+		$plansMatrix = $akcalService->GetActionPlansMatrix($branchId);
 		$lpSummary = null;
 		try
 		{
@@ -99,14 +102,15 @@ class WasteController extends BaseController
 		}
 		catch (\Throwable $e)
 		{
-			$lpSummary = ['open_cases' => 8, 'open_value' => 14250.00, 'pending_counts' => 3];
+			$lpSummary = ['open_cases' => 0, 'open_value' => 0.0, 'pending_counts' => 0];
 		}
 
 		return $this->RenderPage($response, 'waste_overview', [
 			'lpSummary' => $lpSummary,
+			'plansKpis' => $plansMatrix['kpis'] ?? [],
 			'wasteExec' => $wasteExec,
-			'damagedProducts' => $damagedProducts,
-			'smartAudits' => $smartAudits,
+			'selectedDepartment' => $params['department'] ?? 'todos',
+			'selectedCausal' => $params['causal'] ?? 'todas',
 			'wasteRecords' => $wasteRecords,
 			'analytics' => $analytics,
 			'summary' => $analytics['summary'],
@@ -153,6 +157,7 @@ class WasteController extends BaseController
 		switch ($args['tab'])
 		{
 			case 'planes':
+			case 'acciones':
 			case 'investigaciones':
 				$matrix = $akcalService->GetActionPlansMatrix($branchId);
 				$data['actionPlans'] = $matrix['plans'];
@@ -170,11 +175,13 @@ class WasteController extends BaseController
 					LEFT JOIN users u ON wr.investigator_user_id = u.id
 					LEFT JOIN waste_reasons r ON wr.waste_reason_id = r.id
 					LEFT JOIN loss_causes lc ON r.loss_cause_code = lc.code
-					WHERE wr.workflow_status IN ('investigating', 'reviewing') $branchSql
+					WHERE wr.workflow_status IN ('investigating', 'reviewing')
+					  AND IFNULL(r.censo_category, '') NOT IN ('robo_interno', 'robo_externo')
+					  AND UPPER(IFNULL(r.code, '')) NOT IN ('M03', 'M04', 'FPO01', 'FEL01') $branchSql
 					ORDER BY wr.id DESC
 				")->fetchAll(\PDO::FETCH_ASSOC);
 				$data['users'] = $dbRaw->query("SELECT id, username, first_name, last_name FROM users ORDER BY username")->fetchAll(\PDO::FETCH_ASSOC);
-				$data['reasons'] = $dbRaw->query("SELECT id, code, name FROM waste_reasons WHERE active = 1 ORDER BY code")->fetchAll(\PDO::FETCH_ASSOC);
+				$data['reasons'] = $dbRaw->query("SELECT id, code, name FROM waste_reasons WHERE active = 1 AND IFNULL(censo_category, '') NOT IN ('robo_interno', 'robo_externo') AND UPPER(IFNULL(code, '')) NOT IN ('M03', 'M04', 'FPO01', 'FEL01') ORDER BY code")->fetchAll(\PDO::FETCH_ASSOC);
 				$data['branches'] = DairyAccess::FilterBranches($dbRaw->query('SELECT id, name FROM branches WHERE active = 1 ORDER BY id')->fetchAll(\PDO::FETCH_ASSOC), 'id');
 				$data['canInvestigate'] = DairyAccess::HasAny([User::PERMISSION_LOSS_PREVENTION, User::PERMISSION_WASTE_APPROVE, User::PERMISSION_ADMIN]);
 				$data['canPlan'] = DairyAccess::HasAny([User::PERMISSION_WASTE_REASONS_EDIT, User::PERMISSION_LOSS_PREVENTION, User::PERMISSION_ADMIN]);
@@ -268,7 +275,7 @@ class WasteController extends BaseController
 					WHERE p.active = 1
 					ORDER BY p.name ASC
 				")->fetchAll(\PDO::FETCH_OBJ);
-				$data['reasons'] = \Grocy\Services\WasteService::GetInstance()->GetWasteReasons(true);
+				$data['reasons'] = \Grocy\Services\WasteService::GetInstance()->GetWasteReasons(true, null, null, null, true);
 				$data['branches'] = \Grocy\Services\BranchService::GetInstance()->GetBranches();
 				$data['locations'] = $this->DB->locations()->orderBy('name');
 				$data['quantityUnits'] = $this->DB->quantity_units()->orderBy('name');
@@ -381,7 +388,7 @@ class WasteController extends BaseController
 				return $response->withStatus(404);
 		}
 
-		$targetView = ($args['tab'] === 'planes') ? 'investigaciones' : $args['tab'];
+		$targetView = in_array($args['tab'], ['planes', 'acciones'], true) ? 'investigaciones' : $args['tab'];
 		return $this->Render($response, 'components.waste_tabs.' . $targetView, $data);
 	}
 
@@ -424,7 +431,7 @@ class WasteController extends BaseController
 
 		return $this->RenderPage($response, 'waste_report', [
 			'products' => $products,
-			'reasons' => $wasteService->GetWasteReasons(true),
+			'reasons' => $wasteService->GetWasteReasons(true, null, null, null, true),
 			'branches' => $branchService->GetBranches(),
 			'locations' => $this->DB->locations()->orderBy('name'),
 			'quantityUnits' => $this->DB->quantity_units()->orderBy('name'),
@@ -465,7 +472,7 @@ class WasteController extends BaseController
 		$showAll = isset($params['all']) ? true : false;
 
 		$wasteService = WasteService::GetInstance();
-		$reasons = $wasteService->GetWasteReasons(!$showAll, $category, $riskLevel, $area);
+		$reasons = $wasteService->GetWasteReasons(!$showAll, $category, $riskLevel, $area, true);
 		$categories = $wasteService->GetWasteCategories();
 		$areas = $wasteService->GetResponsibleAreas();
 

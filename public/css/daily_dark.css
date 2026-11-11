@@ -207,7 +207,7 @@ html.daily-dark .dnav-link, html.daily-dark .dnav-group-btn, html.daily-dark .dn
 html.daily-dark .dnav-link:hover, html.daily-dark .dnav-group-btn:hover, html.daily-dark .dnav-cat-btn:hover { color: var(--dk-text) !important; }
 
 /* Superficies (tarjetas, KPI, paneles) */
-html.daily-dark body.crystal-ui :is(.card, .crystal-card, .crystal-panel, .crystal-kpi, .crystal-surface, .dairy-kpi-accent, .dairy-kpi-card, .dairy-card-table, .today-exec-card, .today-exec-kpi-card, .today-exec-spark-card, .cc-card, .ep-card-box, .ep-kpi-card, .daily-kpi-stat-card, .daily-analytics-card, .daily-table-container-card, .daily-kpi-card, .dsm-card, .dsm-kpi-card, .ded-card, .ded-kpi-card:not(.is-highlight), .branch-card-panel, .branch-kpi-card:not(.branch-kpi-card-green), .hist-card-panel, .hist-search-card, .hist-kpi-card:not(.hist-kpi-card-green), .prod-card-panel, .prod-kpi-card:not(.prod-kpi-highlight):not(.prod-kpi-card-green), .dept-perf-card, .dept-perf-kpi-card:not(.dept-kpi-highlight), .pos-catalog-panel, .pos-cart-panel, .pos-totals-section, .pos-card, .pos-returns-card, .pos-returns-panel, .pos-ret-hero, .pos-ret-lifecycle-card, .pos-ret-kpi-card, .pos-ret-panel, .pos-ret-table-wrap, .pos-ret-card, .customers-kpi-card, .customers-card, .customers-card-panel, .customers-header-banner, .customers-table-panel, .customers-filter-bar, .customers-filters-bar, .customers-detail-panel, .customers-mini-kpis, .daily-dashboard-card, .daily-dashboard-panel, .daily-card-panel),
+html.daily-dark body.crystal-ui :is(.card, .crystal-card, .crystal-panel, .crystal-kpi, .crystal-surface, .dairy-kpi-accent, .dairy-kpi-card, .dairy-card-table, .today-exec-card, .today-exec-kpi-card, .today-exec-spark-card, .today-process-card, .daily-pulse-banner, .cc-card, .cc-kpi, .ep-card-box, .ep-kpi-card, .daily-kpi-stat-card, .daily-analytics-card, .daily-table-container-card, .daily-kpi-card, .dsm-card, .dsm-kpi-card, .ded-card, .ded-kpi-card:not(.is-highlight), .branch-card-panel, .branch-kpi-card, .hist-card-panel, .hist-search-card, .hist-kpi-card, .prod-card-panel, .prod-kpi-card, .dept-perf-card, .dept-perf-kpi-card, .pos-catalog-panel, .pos-cart-panel, .pos-totals-section, .pos-card, .pos-returns-card, .pos-returns-panel, .pos-ret-hero, .pos-ret-lifecycle-card, .pos-ret-kpi-card, .pos-ret-panel, .pos-ret-table-wrap, .pos-ret-card, .customers-kpi-card, .customers-card, .customers-card-panel, .customers-header-banner, .customers-table-panel, .customers-filter-bar, .customers-filters-bar, .customers-detail-panel, .customers-mini-kpis, .daily-dashboard-card, .daily-dashboard-panel, .daily-card-panel),
 html.daily-dark .card {
 	background: var(--crystal-sheen), linear-gradient(180deg, var(--crystal-tint-top), var(--crystal-tint-bottom)) !important;
 	background-color: var(--dk-surface-solid) !important;
@@ -225,6 +225,12 @@ html.daily-dark .card .card {
 	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03) !important;
 }
 html.daily-dark .card-header, html.daily-dark .card-footer { background: transparent !important; border-color: var(--dk-border) !important; color: var(--dk-text); }
+html.daily-dark .daily-pulse-banner { --daily-text-main: var(--dk-text); --daily-text-muted: var(--dk-muted); }
+html.daily-dark .daily-pulse-status { border-right-color: var(--dk-border) !important; }
+html.daily-dark .daily-segmented-tabs { background: rgba(15, 23, 42, 0.72) !important; border-color: var(--dk-border) !important; }
+html.daily-dark .daily-tab-btn { color: var(--dk-muted) !important; }
+html.daily-dark .daily-tab-btn:hover { background: rgba(148, 163, 184, 0.12) !important; color: var(--dk-text) !important; }
+html.daily-dark .daily-tab-btn.active { background: rgba(30, 41, 59, 0.95) !important; border-color: rgba(52, 211, 153, 0.35) !important; color: var(--dk-text) !important; }
 
 /* Tablas */
 html.daily-dark .table { color: var(--dk-text-2); --bs-table-bg: transparent; }

@@ -22,12 +22,6 @@
 			$markdownCostEstimated += $amt * ($lp - $mp);
 		}
 	}
-	
-	// Si el valor da 900.00 exacto según los 4 productos con precio
-	if ($recEstimated == 0 && $totalListed > 0) {
-		$recEstimated = 900.00;
-		$markdownCostEstimated = 304.84;
-	}
 
 	// Mapeo de fotos para productos prioritarios
 	$prodImages = [

@@ -237,7 +237,7 @@
 
 @section('content')
 @include('components.loss_strip')
-@include('components.alert_strip', ['alertCategories' => ['waste', 'security']])
+@include('components.alert_strip', ['alertCategories' => ['waste']])
 <!-- ==========================================================================
      CABECERA DEL MÓDULO — CONTROL Y PREVENCIÓN DE MERMAS
      ========================================================================== -->
@@ -268,18 +268,24 @@
 				<i class="fa-solid fa-bolt text-primary mr-1"></i>Acciones Rápidas
 			</button>
 			<div class="dropdown-menu dropdown-menu-right shadow-sm border-0 dairy-radius-md dairy-fs-base">
-				<a class="dropdown-item" href="javascript:void(0)" onclick="$('#tab-conteos-link').click();">
-					<i class="fa-solid fa-barcode text-info mr-2"></i>Iniciar Conteo Cíclico
+				<a class="dropdown-item" href="javascript:void(0)" onclick="$('#tab-registro-link').click();">
+					<i class="fa-solid fa-barcode text-success mr-2"></i>Escanear UPC y Registrar Merma
+				</a>
+				<a class="dropdown-item" href="{{ $U('/waste/approvals') }}">
+					<i class="fa-solid fa-stamp text-primary mr-2"></i>Bandeja de Aprobaciones
 				</a>
 				<a class="dropdown-item" href="javascript:void(0)" onclick="$('#tab-fefo-link').click();">
-					<i class="fa-solid fa-snowflake text-primary mr-2"></i>Revisión de Cadena de Frío
+					<i class="fa-solid fa-snowflake text-primary mr-2"></i>Vencimientos y Control FEFO
 				</a>
-				<a class="dropdown-item" href="javascript:void(0)" onclick="$('#tab-fefo-link').click();">
-					<i class="fa-solid fa-lock text-danger mr-2"></i>Bloquear Lote en Riesgo
+				<a class="dropdown-item" href="javascript:void(0)" onclick="$('#tab-acciones-link').click();">
+					<i class="fa-solid fa-list-check text-warning mr-2"></i>Acciones Correctivas de Merma
 				</a>
 				<div class="dropdown-divider"></div>
 				<a class="dropdown-item" href="javascript:void(0)" onclick="$('#tab-recuperacion-link').click();">
 					<i class="fa-solid fa-hand-holding-dollar text-success mr-2"></i>Gestionar Reclamo a Proveedor
+				</a>
+				<a class="dropdown-item text-muted" href="{{ $U('/loss-prevention') }}">
+					<i class="fa-solid fa-shield-halved text-primary mr-2"></i>Ir a Prevención de Pérdidas (Seguridad)
 				</a>
 			</div>
 		</div>
@@ -330,13 +336,16 @@
 			<!-- Departamento -->
 			<div class="col-xl-2 col-lg-3 col-md-6 col-12 mb-1 mb-lg-0">
 				<label class="small text-muted font-weight-700 text-uppercase mb-0 d-block" style="font-size: 0.68rem; letter-spacing: 0.04em;">Departamento</label>
-				<select name="department_id" class="form-control form-control-sm border font-weight-600 text-dark" style="border-radius: 6px; font-size: 0.82rem;" onchange="this.form.submit()">
-					<option value="">Todos los departamentos</option>
-					<option value="perecederos" selected>Fruver y Carnes (Perecederos)</option>
-					<option value="abarrotes">Abarrotes y Secos</option>
-					<option value="lacteos">Lácteos y Fiambrería</option>
-					<option value="panaderia">Panadería y Masas</option>
-					<option value="bebidas">Bebidas y Licores</option>
+				<select name="department" class="form-control form-control-sm border font-weight-600 text-dark" style="border-radius: 6px; font-size: 0.82rem;" onchange="this.form.submit()">
+					@php $selDept = $selectedDepartment ?? 'todos'; @endphp
+					<option value="" {{ ($selDept === '' || $selDept === 'todos') ? 'selected' : '' }}>Todos los departamentos</option>
+					<option value="fruver" {{ $selDept === 'fruver' ? 'selected' : '' }}>Frutas y verduras</option>
+					<option value="dairy" {{ $selDept === 'dairy' ? 'selected' : '' }}>Lácteos y derivados</option>
+					<option value="carnes" {{ $selDept === 'carnes' ? 'selected' : '' }}>Carnes y proteína</option>
+					<option value="bakery" {{ $selDept === 'bakery' ? 'selected' : '' }}>Panadería</option>
+					<option value="preparadas" {{ $selDept === 'preparadas' ? 'selected' : '' }}>Comidas preparadas</option>
+					<option value="bebidas" {{ $selDept === 'bebidas' ? 'selected' : '' }}>Bebidas</option>
+					<option value="otros" {{ $selDept === 'otros' ? 'selected' : '' }}>Otros</option>
 				</select>
 			</div>
 
@@ -344,20 +353,22 @@
 			<div class="col-xl-3 col-lg-3 col-md-6 col-12 mb-1 mb-lg-0">
 				<label class="small text-muted font-weight-700 text-uppercase mb-0 d-block" style="font-size: 0.68rem; letter-spacing: 0.04em;">Rango de Fechas</label>
 				<div class="input-group input-group-sm">
-					<input type="date" name="start_date" class="form-control form-control-sm border font-weight-500" value="{{ $startDate ?? date('Y-m-01') }}" style="border-radius: 6px 0 0 6px; font-size: 0.8rem;">
+					<input type="date" name="start_date" id="globalFilterStartDate" class="form-control form-control-sm border font-weight-500" value="{{ $startDate ?? date('Y-m-01') }}" style="border-radius: 6px 0 0 6px; font-size: 0.8rem;">
 					<div class="input-group-prepend input-group-append"><span class="input-group-text px-1 bg-light border-left-0 border-right-0" style="font-size: 0.72rem;">a</span></div>
-					<input type="date" name="end_date" class="form-control form-control-sm border font-weight-500" value="{{ $endDate ?? date('Y-m-d') }}" style="border-radius: 0 6px 6px 0; font-size: 0.8rem;" onchange="this.form.submit()">
+					<input type="date" name="end_date" id="globalFilterEndDate" class="form-control form-control-sm border font-weight-500" value="{{ $endDate ?? date('Y-m-d') }}" style="border-radius: 0 6px 6px 0; font-size: 0.8rem;" onchange="this.form.submit()">
 				</div>
 			</div>
 
-			<!-- Comparación de períodos -->
+			<!-- Causal / Clasificación -->
 			<div class="col-xl-3 col-lg-3 col-md-6 col-12 mb-1 mb-lg-0">
-				<label class="small text-muted font-weight-700 text-uppercase mb-0 d-block" style="font-size: 0.68rem; letter-spacing: 0.04em;">Comparación de Períodos</label>
-				<select name="period_compare" class="form-control form-control-sm border font-weight-600 text-dark" style="border-radius: 6px; font-size: 0.82rem;" onchange="this.form.submit()">
-					<option value="prev_year" selected>vs. Mismo período año anterior</option>
-					<option value="prev_month">vs. Mes anterior</option>
-					<option value="budget">vs. Presupuesto / Tolerancia</option>
-					<option value="none">Sin comparación</option>
+				<label class="small text-muted font-weight-700 text-uppercase mb-0 d-block" style="font-size: 0.68rem; letter-spacing: 0.04em;">Tipo / Causal</label>
+				@php $selCausal = $selectedCausal ?? 'todas'; @endphp
+				<select name="causal" class="form-control form-control-sm border font-weight-600 text-dark" style="border-radius: 6px; font-size: 0.82rem;" onchange="this.form.submit()">
+					<option value="" {{ ($selCausal === '' || $selCausal === 'todas') ? 'selected' : '' }}>Todas (Merma física real)</option>
+					<option value="operativa" {{ $selCausal === 'operativa' ? 'selected' : '' }}>Merma operativa</option>
+					<option value="comercial" {{ $selCausal === 'comercial' ? 'selected' : '' }}>Comercial y vencimientos</option>
+					<option value="averia" {{ $selCausal === 'averia' ? 'selected' : '' }}>Averías y roturas</option>
+					<option value="ajuste" {{ $selCausal === 'ajuste' ? 'selected' : '' }}>Solo ajustes contables</option>
 				</select>
 			</div>
 
@@ -377,80 +388,58 @@
 <!-- ==========================================================================
      SUB-NAVEGACIÓN EN 10 PESTAÑAS (PILLS STYLE)
      ========================================================================== -->
-<!-- Centro de Control: 13 secciones (1–13) + utilidades. Desplazable en pantallas angostas. -->
+<!-- Centro de Control especializado exclusivamente en Shrink Retail. Desplazable en pantallas angostas. -->
 <div class="dairy-subnav-container mb-3 dlx-subnav">
 	<ul class="nav dairy-subnav-pills flex-nowrap w-100 mb-0" id="wasteModuleNav" role="tablist" data-dairy-scroll-x>
 		<li class="nav-item">
-			<a class="nav-link active dairy-fs-sm dairy-tab-link text-nowrap" id="tab-centro-control-link" data-toggle="pill" href="#tab-centro-control" role="tab"><span class="dlx-num">1</span>Cuadro de Control de Mermas</a>
+			<a class="nav-link active dairy-fs-sm dairy-tab-link text-nowrap" id="tab-centro-control-link" data-toggle="pill" href="#tab-centro-control" role="tab"><span class="dlx-num">1</span>Centro de Control</a>
 		</li>
 		<li class="nav-item">
-			<a class="nav-link dairy-fs-sm dairy-tab-link text-nowrap" id="tab-clasificacion-link" data-toggle="pill" href="#tab-clasificacion" role="tab"><span class="dlx-num">2</span>Operativa y comercial</a>
+			<a class="nav-link dairy-fs-sm dairy-tab-link text-nowrap" id="tab-registro-link" data-toggle="pill" href="#tab-registro" role="tab"><span class="dlx-num">2</span>Registrar (UPC / Foto)</a>
 		</li>
 		<li class="nav-item">
-			<a class="nav-link dairy-fs-sm dairy-tab-link text-nowrap" id="tab-ajustes-link" data-toggle="pill" href="#tab-ajustes" role="tab"><span class="dlx-num">3</span>Ajustes</a>
+			<a class="nav-link dairy-fs-sm dairy-tab-link text-nowrap" id="tab-clasificacion-link" data-toggle="pill" href="#tab-clasificacion" role="tab"><span class="dlx-num">3</span>Operativa y Comercial</a>
 		</li>
 		<li class="nav-item">
-			<a class="nav-link dairy-fs-sm dairy-tab-link text-nowrap" id="tab-averias-link" data-toggle="pill" href="#tab-averias" role="tab"><span class="dlx-num">4</span>Averías y roturas</a>
+			<a class="nav-link dairy-fs-sm dairy-tab-link text-nowrap" id="tab-ajustes-link" data-toggle="pill" href="#tab-ajustes" role="tab"><span class="dlx-num">4</span>Ajustes Contables</a>
 		</li>
 		<li class="nav-item">
-			<a class="nav-link dairy-fs-sm dairy-tab-link text-nowrap" id="tab-anual-link" data-toggle="pill" href="#tab-anual" role="tab"><span class="dlx-num">5</span>Comparativo anual</a>
+			<a class="nav-link dairy-fs-sm dairy-tab-link text-nowrap" id="tab-averias-link" data-toggle="pill" href="#tab-averias" role="tab"><span class="dlx-num">5</span>Averías y Roturas</a>
 		</li>
 		<li class="nav-item">
-			<a class="nav-link dairy-fs-sm dairy-tab-link text-nowrap" id="tab-causales-link" data-toggle="pill" href="#tab-causales" role="tab"><span class="dlx-num">6</span>Causales</a>
+			<a class="nav-link dairy-fs-sm dairy-tab-link text-nowrap" id="tab-fefo-link" data-toggle="pill" href="#tab-fefo" role="tab"><span class="dlx-num">6</span>Vencimientos y FEFO</a>
 		</li>
 		<li class="nav-item">
-			<a class="nav-link dairy-fs-sm dairy-tab-link text-nowrap" id="tab-conteos-link" data-toggle="pill" href="#tab-conteos" role="tab"><span class="dlx-num">7</span>Selectivos y sensibles</a>
+			<a class="nav-link dairy-fs-sm dairy-tab-link text-nowrap" id="tab-causales-link" data-toggle="pill" href="#tab-causales" role="tab"><span class="dlx-num">7</span>Causales y Pareto</a>
 		</li>
 		<li class="nav-item">
-			<a class="nav-link dairy-fs-sm dairy-tab-link text-nowrap" id="tab-precios-link" data-toggle="pill" href="#tab-precios" role="tab"><span class="dlx-num">8</span>Precios y marcación</a>
+			<a class="nav-link dairy-fs-sm dairy-tab-link text-nowrap" id="tab-errores-link" data-toggle="pill" href="#tab-errores" role="tab"><span class="dlx-num">8</span>Errores de Procedimiento</a>
 		</li>
 		<li class="nav-item">
-			<a class="nav-link dairy-fs-sm dairy-tab-link text-nowrap" id="tab-perecederos-link" data-toggle="pill" href="#tab-perecederos" role="tab"><span class="dlx-num">9</span>Fruver y carnes</a>
+			<a class="nav-link dairy-fs-sm dairy-tab-link text-nowrap" id="tab-anual-link" data-toggle="pill" href="#tab-anual" role="tab"><span class="dlx-num">9</span>Tendencia Histórica</a>
 		</li>
 		<li class="nav-item">
-			<a class="nav-link dairy-fs-sm dairy-tab-link text-nowrap" id="tab-fefo-link" data-toggle="pill" href="#tab-fefo" role="tab"><span class="dlx-num">10</span>Frío y vencimientos</a>
+			<a class="nav-link dairy-fs-sm dairy-tab-link text-nowrap" id="tab-perecederos-link" data-toggle="pill" href="#tab-perecederos" role="tab"><span class="dlx-num">10</span>Perecederos</a>
 		</li>
 		<li class="nav-item">
-			<a class="nav-link dairy-fs-sm dairy-tab-link text-nowrap" id="tab-robo-link" data-toggle="pill" href="#tab-robo" role="tab"><span class="dlx-num">11</span>Robo interno/externo</a>
+			<a class="nav-link dairy-fs-sm dairy-tab-link text-nowrap" id="tab-recuperacion-link" data-toggle="pill" href="#tab-recuperacion" role="tab"><span class="dlx-num">11</span>Recuperación Financiera</a>
 		</li>
 		<li class="nav-item">
-			<a class="nav-link dairy-fs-sm dairy-tab-link text-nowrap" id="tab-recuperacion-link" data-toggle="pill" href="#tab-recuperacion" role="tab"><span class="dlx-num">12</span>Impacto y recuperación</a>
+			<a class="nav-link dairy-fs-sm dairy-tab-link text-nowrap" id="tab-acciones-link" data-toggle="pill" href="#tab-acciones" role="tab"><span class="dlx-num">12</span>Acciones Correctivas</a>
 		</li>
 		<li class="nav-item">
-			<a class="nav-link dairy-fs-sm dairy-tab-link text-nowrap" id="tab-investigaciones-link" data-toggle="pill" href="#tab-investigaciones" role="tab"><span class="dlx-num">13</span>Investigación y planes</a>
+			<a class="nav-link dairy-fs-sm dairy-tab-link text-nowrap" id="tab-prevencion-link" data-toggle="pill" href="#tab-prevencion" role="tab"><span class="dlx-num">13</span>Rebajas Preventivas</a>
 		</li>
 		<li class="nav-item">
-			<a class="nav-link dairy-fs-sm dairy-tab-link text-nowrap" id="tab-censo-link" data-toggle="pill" href="#tab-censo" role="tab"><span class="dlx-num">14</span>Estructura y tolerancia</a>
+			<a class="nav-link dairy-fs-sm dairy-tab-link text-nowrap" id="tab-censo-link" data-toggle="pill" href="#tab-censo" role="tab"><span class="dlx-num">14</span>Censo y Tolerancias</a>
 		</li>
 		<li class="nav-item">
-			<a class="nav-link dairy-fs-sm dairy-tab-link text-nowrap" id="tab-errores-link" data-toggle="pill" href="#tab-errores" role="tab"><span class="dlx-num">15</span>Errores administrativos</a>
+			<a class="nav-link dairy-fs-sm dairy-tab-link text-nowrap" id="tab-controles-link" data-toggle="pill" href="#tab-controles" role="tab"><span class="dlx-num">15</span>Controles y Reducción</a>
 		</li>
 		<li class="nav-item">
-			<a class="nav-link dairy-fs-sm dairy-tab-link text-nowrap" id="tab-controles-link" data-toggle="pill" href="#tab-controles" role="tab"><span class="dlx-num">16</span>Controles e impacto</a>
+			<a class="nav-link dairy-fs-sm dairy-tab-link text-nowrap" id="tab-auditoria-link" data-toggle="pill" href="#tab-auditoria" role="tab"><span class="dlx-num">16</span>Auditoría Trazable</a>
 		</li>
-		<li class="nav-item">
-			<a class="nav-link dairy-fs-sm dairy-tab-link text-nowrap font-weight-bold" id="tab-bakery-link" data-toggle="pill" href="#tab-bakery" role="tab" style="color: #b45309;"><span class="dlx-num" style="background:#f59e0b; color:#fff;"><i class="fa-solid fa-bread-slice"></i></span>Bakery & Panadería</a>
-		</li>
-		<li class="nav-item">
-			<a class="nav-link dairy-fs-sm dairy-tab-link text-nowrap" id="tab-prevencion-link" data-toggle="pill" href="#tab-prevencion" role="tab">Rebajas <i class="fa-solid fa-caret-down ml-1 dairy-fs-xs"></i></a>
-		</li>
-		<li class="nav-item">
-			<a class="nav-link dairy-fs-sm dairy-tab-link text-nowrap" id="tab-registro-link" data-toggle="pill" href="#tab-registro" role="tab">Registrar merma</a>
-		</li>
-		<li class="nav-item">
-			<a class="nav-link dairy-fs-sm dairy-tab-link text-nowrap" id="tab-auditoria-link" data-toggle="pill" href="#tab-auditoria" role="tab">Auditoría</a>
-		</li>
-			<li class="nav-item">
-			<a class="nav-link dairy-fs-sm dairy-tab-link text-nowrap font-weight-bold" id="tab-damaged-goods-link" data-toggle="pill" href="#tab-damaged-goods" role="tab" style="color: #dc2626;">
-				<span class="dlx-num" style="background:#dc2626; color:#fff;"><i class="fa-solid fa-camera"></i></span>Productos Dañados
-			</a>
-		</li>
-		<li class="nav-item">
-			<a class="nav-link dairy-fs-sm dairy-tab-link text-nowrap font-weight-bold" id="tab-smart-audits-link" data-toggle="pill" href="#tab-smart-audits" role="tab" style="color: #2563eb;">
-				<span class="dlx-num" style="background:#008e48; color:#fff;"><i class="fa-solid fa-magnifying-glass-chart"></i></span>Auditorías Inteligentes
-			</a>
-		</li>
-</ul>
+	</ul>
 </div>
 
 <!-- ==========================================================================
@@ -458,133 +447,127 @@
      ========================================================================== -->
 @php
 	$execKpis = $wasteExec['kpis'] ?? [];
-	$totWasteVal = $execKpis['total_waste']['value'] ?? '$28,450';
-	$totWasteDelta = $execKpis['total_waste']['delta'] ?? '↓ -0.15 pp';
-	
-	$wasteSalesPct = $execKpis['waste_sales']['value'] ?? '1.84%';
-	$wasteSalesTarget = number_format($wasteExec['target_pct'] ?? 2.0, 2) . '%';
-	$wasteSalesDelta = $execKpis['waste_sales']['delta'] ?? '↓ -0.12 pp';
+	$redMetrics = $wasteExec['reduction_metrics'] ?? [];
+	$totWasteVal = $execKpis['total_waste']['value'] ?? '$0.00';
+	$totWasteUnits = number_format(floatval($execKpis['total_waste']['units'] ?? 0), 1) . ' un.';
+	$totWasteDelta = $execKpis['total_waste']['delta'] ?? '';
 
-	$topProduct = ($wasteExec['top_products'] ?? [])[0] ?? [
-		'name' => 'Leche Entera 1L',
-		'sku' => 'SKU-1002',
-		'amount' => '$1,820',
-		'pct_sales' => '3.4%'
-	];
-	$topSkuLabel = ($topProduct['name'] ?? 'Producto') . ' (' . ($topProduct['sku'] ?? 'SKU-001') . ')';
-	$topSkuAmount = $topProduct['amount'] ?? '$1,820';
+	$wasteSalesPct = $execKpis['waste_sales']['value'] ?? 'Sin información';
+	$wasteSalesTarget = number_format($wasteExec['target_pct'] ?? 2.5, 2) . '%';
+	$wasteSalesDelta = $execKpis['waste_sales']['delta'] ?? '';
 
-	$casesCount = $lpSummary['open_cases'] ?? 8;
-	$casesVal = isset($lpSummary['open_value']) ? '$' . number_format($lpSummary['open_value'], 0) : '$14,250';
+	$topProduct = ($wasteExec['top_products'] ?? [])[0] ?? null;
+	$topSkuLabel = $topProduct ? (($topProduct['name'] ?? 'Producto') . ' (' . ($topProduct['sku'] ?? '—') . ')') : 'Sin registros en período';
+	$topSkuAmount = $topProduct['amount'] ?? '$0.00';
+	$topSkuSalesPct = $topProduct['pct_sales'] ?? '—';
 
-	$recoveryVal = $wasteExec['recovery']['recovered_amount'] ?? '$8,320';
-	$recoveryRate = ($wasteExec['recovery']['recovery_rate'] ?? 82) . '%';
+	$pendingApprovalCount = intval($execKpis['total_waste']['pending_count'] ?? 0);
+	$pendingApprovalVal = '$' . number_format(floatval($execKpis['total_waste']['pending_cost'] ?? 0), 2);
+	$openActionPlansCount = intval($plansKpis['open'] ?? $plansKpis['pending'] ?? (($redMetrics['plans_total'] ?? 0) - ($redMetrics['plans_closed'] ?? 0)));
 
-	$fefoPct = ($photoKpis['fefo']['score'] ?? 94) . '%';
-	$resolutionDays = '3.8 días';
+	$recoveryVal = $wasteExec['recovery']['recovered_amount'] ?? '$0.00';
+	$recoveryRateVal = $wasteExec['recovery']['recovery_rate'] ?? null;
+	$recoveryRate = $recoveryRateVal !== null ? ($recoveryRateVal . '%') : 'Sin reclamos';
+
+	$fefoPct = isset($photoKpis['fefo']['score']) ? ($photoKpis['fefo']['score'] . '%') : '—';
+	$resolutionDays = isset($redMetrics['avg_resolution_days']) && $redMetrics['avg_resolution_days'] !== null ? number_format(floatval($redMetrics['avg_resolution_days']), 1) . ' días' : 'Sin datos';
 	$resolutionSla = 'SLA: ≤ 5.0 d';
-	$reincidenceRate = '4.2%';
-	$reincidenceLimit = 'Límite: ≤ 6.0%';
+	$reincidenceRate = isset($redMetrics['reincidence_rate_pct']) && $redMetrics['reincidence_rate_pct'] !== null ? number_format(floatval($redMetrics['reincidence_rate_pct']), 1) . '%' : 'Sin datos';
+	$reincidenceLimit = 'Límite: ≤ 15.0%';
 @endphp
-<div class="daily-shrink-prevention-hub" id="dailyShrinkPreventionHub" role="region" aria-label="Hub Integral de Mermas y Prevención">
-	<!-- 1. FLUJO OPERATIVO (9 PASOS OBLIGATORIOS) -->
+<div class="daily-shrink-prevention-hub" id="dailyShrinkPreventionHub" role="region" aria-label="Hub Integral de Control de Mermas">
+	<!-- 1. CICLO ESPECIALIZADO DE MERMAS (8 ETAPAS OBLIGATORIAS) -->
 	<div class="dsp-lifecycle-card">
 		<div class="dsp-lifecycle-header">
 			<div class="d-flex align-items-center flex-wrap justify-content-between">
 				<div class="d-flex align-items-center">
 					<span class="badge badge-primary px-2.5 py-1 text-uppercase font-weight-700 mr-2" style="font-size: 0.72rem; letter-spacing: 0.05em; border-radius: 6px; background-color: #2563eb;">
-						<i class="fa-solid fa-arrows-spin mr-1"></i> Ciclo Operativo 360°
+						<i class="fa-solid fa-arrows-spin mr-1"></i> Ciclo de Control de Mermas
 					</span>
-					<h6 class="mb-0 font-weight-bold text-dark" style="font-size: 0.95rem;">Flujo Operativo de Mermas y Prevención</h6>
+					<h6 class="mb-0 font-weight-bold text-dark" style="font-size: 0.95rem;">Detectar → Registrar → Clasificar → Validar → Aprobar → Ajustar → Analizar → Prevenir</h6>
 				</div>
 				<div class="d-flex align-items-center mt-1 mt-md-0">
-					<a href="{{ $U('/loss-prevention') }}" class="btn btn-xs btn-outline-primary font-weight-600 mr-2" style="font-size: 0.76rem; border-radius: 6px; padding: 3px 10px;">
-						<i class="fa-solid fa-shield-halved mr-1"></i> Prevención de Pérdidas (/loss-prevention)
+					<a href="{{ $U('/waste/reasons') }}" class="btn btn-xs btn-outline-secondary font-weight-600 mr-2" style="font-size: 0.76rem; border-radius: 6px; padding: 3px 10px;">
+						<i class="fa-solid fa-tags mr-1"></i> Causales
 					</a>
-					<span class="text-muted small"><i class="fa-solid fa-lock text-success mr-1"></i> Control dual · Cero duplicación</span>
+					<a href="{{ $U('/loss-prevention') }}" class="btn btn-xs btn-outline-primary font-weight-600 mr-2" style="font-size: 0.76rem; border-radius: 6px; padding: 3px 10px;">
+						<i class="fa-solid fa-shield-halved mr-1"></i> Seguridad / Robos (/loss-prevention)
+					</a>
+					<span class="text-muted small"><i class="fa-solid fa-lock text-success mr-1"></i> Control dual · Sin ajustes mezclados</span>
 				</div>
 			</div>
 		</div>
 		<div class="dsp-stepper-wrapper">
 			<div class="dsp-stepper" data-testid="waste-flow-stepper">
-				<!-- Paso 1: Detectar -->
-				<div class="dsp-step-item" onclick="$('#tab-conteos-link').click();" role="button" title="Conteos cíclicos, alertas tempranas y detección de anomalías">
+				<!-- 1. Detectar -->
+				<div class="dsp-step-item" onclick="$('#tab-fefo-link').click();" role="button" title="Detección temprana de lotes próximos a vencer, cadena de frío y anomalías de merma">
 					<div class="dsp-step-circle">1</div>
 					<div class="dsp-step-content">
 						<span class="dsp-step-title">Detectar</span>
-						<span class="dsp-step-desc">Conteos / Alertas</span>
+						<span class="dsp-step-desc">FEFO y Alertas</span>
 					</div>
 				</div>
 				<div class="dsp-step-divider"></div>
-				<!-- Paso 2: Registrar -->
-				<div class="dsp-step-item" onclick="$('#tab-registro-link').click();" role="button" title="Registro detallado de SKU, unidades, costo, causa y evidencia fotográfica">
+				<!-- 2. Registrar -->
+				<div class="dsp-step-item" onclick="$('#tab-registro-link').click();" role="button" title="Registro mediante escáner UPC, cantidad, causal obligatoria y foto de evidencia">
 					<div class="dsp-step-circle">2</div>
 					<div class="dsp-step-content">
 						<span class="dsp-step-title">Registrar</span>
-						<span class="dsp-step-desc">SKU y Evidencia</span>
+						<span class="dsp-step-desc">UPC y Evidencia</span>
 					</div>
 				</div>
 				<div class="dsp-step-divider"></div>
-				<!-- Paso 3: Clasificar -->
-				<div class="dsp-step-item" onclick="$('#tab-clasificacion-link').click();" role="button" title="Operativa, comercial, averías, vencimientos y diferencias">
+				<!-- 3. Clasificar -->
+				<div class="dsp-step-item" onclick="$('#tab-clasificacion-link').click();" role="button" title="Operativa, comercial, vencimientos, averías y errores de procedimiento">
 					<div class="dsp-step-circle">3</div>
 					<div class="dsp-step-content">
 						<span class="dsp-step-title">Clasificar</span>
-						<span class="dsp-step-desc">Categoría y Causa</span>
+						<span class="dsp-step-desc">Causal y Tipo</span>
 					</div>
 				</div>
 				<div class="dsp-step-divider"></div>
-				<!-- Paso 4: Investigar -->
-				<div class="dsp-step-item" onclick="$('#tab-investigaciones-link').click();" role="button" title="Expedientes de pérdida, análisis pericial y trazabilidad">
+				<!-- 4. Validar -->
+				<div class="dsp-step-item" onclick="$('#tab-auditoria-link').click();" role="button" title="Validación de evidencia obligatoria, duplicados y trazabilidad del caso">
 					<div class="dsp-step-circle">4</div>
 					<div class="dsp-step-content">
-						<span class="dsp-step-title">Investigar</span>
-						<span class="dsp-step-desc">Expedientes 360°</span>
+						<span class="dsp-step-title">Validar</span>
+						<span class="dsp-step-desc">Foto y Reglas</span>
 					</div>
 				</div>
 				<div class="dsp-step-divider"></div>
-				<!-- Paso 5: Aprobar -->
-				<a href="{{ $U('/waste/approvals') }}" class="dsp-step-item text-decoration-none" title="Doble autorización para bajas y ajustes de inventario">
+				<!-- 5. Aprobar -->
+				<a href="{{ $U('/waste/approvals') }}" class="dsp-step-item text-decoration-none" title="Aprobación por rol y segregación de funciones antes de descargar stock">
 					<div class="dsp-step-circle is-highlight">5</div>
 					<div class="dsp-step-content">
 						<span class="dsp-step-title">Aprobar</span>
-						<span class="dsp-step-desc">Doble Control</span>
+						<span class="dsp-step-desc">Autorización Rol</span>
 					</div>
 				</a>
 				<div class="dsp-step-divider"></div>
-				<!-- Paso 6: Corregir -->
-				<div class="dsp-step-item" onclick="$('#tab-ajustes-link').click();" role="button" title="Ajuste autorizado en kardex sin doble deducción">
+				<!-- 6. Ajustar -->
+				<div class="dsp-step-item" onclick="$('#tab-ajustes-link').click();" role="button" title="Descarga exacta en inventario (kardex) separada de ajustes contables">
 					<div class="dsp-step-circle">6</div>
 					<div class="dsp-step-content">
-						<span class="dsp-step-title">Corregir</span>
-						<span class="dsp-step-desc">Ajuste de Stock</span>
+						<span class="dsp-step-title">Ajustar</span>
+						<span class="dsp-step-desc">Inventario y NC</span>
 					</div>
 				</div>
 				<div class="dsp-step-divider"></div>
-				<!-- Paso 7: Recuperar -->
-				<div class="dsp-step-item" onclick="$('#tab-recuperacion-link').click();" role="button" title="Reclamos a proveedores, notas de crédito y garantías">
+				<!-- 7. Analizar -->
+				<div class="dsp-step-item" onclick="$('#tab-causales-link').click();" role="button" title="Pareto de causales, tendencia histórica, sucursales y SKUs críticos">
 					<div class="dsp-step-circle">7</div>
 					<div class="dsp-step-content">
-						<span class="dsp-step-title">Recuperar</span>
-						<span class="dsp-step-desc">Notas de Crédito</span>
+						<span class="dsp-step-title">Analizar</span>
+						<span class="dsp-step-desc">Pareto y Tendencia</span>
 					</div>
 				</div>
 				<div class="dsp-step-divider"></div>
-				<!-- Paso 8: Cerrar -->
-				<a href="{{ $U('/loss-prevention#tab-expedientes') }}" class="dsp-step-item text-decoration-none" title="Cierre formal de expedientes e imputación contable">
-					<div class="dsp-step-circle">8</div>
-					<div class="dsp-step-content">
-						<span class="dsp-step-title">Cerrar</span>
-						<span class="dsp-step-desc">Resolución Final</span>
-					</div>
-				</a>
-				<div class="dsp-step-divider"></div>
-				<!-- Paso 9: Prevenir -->
-				<div class="dsp-step-item" onclick="$('#tab-prevencion-link').click();" role="button" title="Planes de acción correctiva, causas raíz y blindaje operativo">
-					<div class="dsp-step-circle is-success">9</div>
+				<!-- 8. Prevenir -->
+				<div class="dsp-step-item" onclick="$('#tab-acciones-link').click();" role="button" title="Acciones correctivas, rebajas preventivas y métricas de reducción de pérdidas">
+					<div class="dsp-step-circle is-success">8</div>
 					<div class="dsp-step-content">
 						<span class="dsp-step-title">Prevenir</span>
-						<span class="dsp-step-desc">Planes de Acción</span>
+						<span class="dsp-step-desc">Planes y Reducción</span>
 					</div>
 				</div>
 			</div>
@@ -593,25 +576,27 @@
 
 	<!-- 2. OCHO INDICADORES CLAVE CONSOLIDADOS -->
 	<div class="dsp-kpis-grid mb-3" data-testid="waste-eight-kpis">
-		<!-- KPI 1: Merma en valor ($) -->
+		<!-- KPI 1: Merma en valor ($) y unidades -->
 		<div class="dsp-kpi-card tone-red" onclick="$('#tab-centro-control-link').click();" role="button" data-testid="kpi-merma-valor">
 			<div class="dsp-kpi-head">
-				<span class="dsp-kpi-title">Merma en valor</span>
+				<span class="dsp-kpi-title">Merma física real</span>
 				<span class="dsp-kpi-icon is-red"><i class="fa-solid fa-dollar-sign"></i></span>
 			</div>
 			<div class="dsp-kpi-body">
 				<div class="dsp-kpi-val text-danger">{{ $totWasteVal }}</div>
 				<div class="dsp-kpi-sub">
-					<span class="dsp-badge-delta is-good">{{ $totWasteDelta }}</span>
-					<span class="text-muted ml-1">vs. mes ant.</span>
+					<span class="badge badge-light border text-dark font-weight-700">{{ $totWasteUnits }}</span>
+					@if($totWasteDelta !== '')
+					<span class="dsp-badge-delta is-good ml-1">{{ $totWasteDelta }}</span>
+					@endif
 				</div>
 			</div>
 			<div class="dsp-kpi-foot">
-				<span class="text-muted small">Pérdida neta acumulada</span>
+				<span class="text-muted small">Sin ajustes contables ni hurtos</span>
 			</div>
 		</div>
 
-		<!-- KPI 2: Merma porcentual (% sobre ventas) -->
+		<!-- KPI 2: Merma porcentual (% sobre ventas netas) -->
 		<div class="dsp-kpi-card tone-amber" onclick="$('#tab-centro-control-link').click();" role="button" data-testid="kpi-merma-porcentual">
 			<div class="dsp-kpi-head">
 				<span class="dsp-kpi-title">Merma porcentual</span>
@@ -638,29 +623,29 @@
 				<div class="dsp-kpi-val text-truncate text-primary" style="font-size: 1.02rem; font-weight: 700;" title="{{ $topSkuLabel }}">{{ $topSkuLabel }}</div>
 				<div class="dsp-kpi-sub">
 					<span class="text-danger font-weight-700">{{ $topSkuAmount }}</span>
-					<span class="text-muted ml-1">({{ $topProduct['pct_sales'] ?? '3.4%' }} vtas)</span>
+					<span class="text-muted ml-1">({{ $topSkuSalesPct }} vtas)</span>
 				</div>
 			</div>
 			<div class="dsp-kpi-foot">
-				<span class="text-muted small">Causa principal de merma</span>
+				<span class="text-muted small">Mayor merma del período</span>
 			</div>
 		</div>
 
-		<!-- KPI 4: Casos abiertos de investigación -->
-		<a href="{{ $U('/loss-prevention#tab-expedientes') }}" class="dsp-kpi-card tone-purple text-decoration-none" data-testid="kpi-casos-investigacion">
+		<!-- KPI 4: Pendientes de aprobación -->
+		<a href="{{ $U('/waste/approvals') }}" class="dsp-kpi-card tone-purple text-decoration-none" data-testid="kpi-casos-investigacion">
 			<div class="dsp-kpi-head">
-				<span class="dsp-kpi-title">Casos de investigación</span>
-				<span class="dsp-kpi-icon is-purple"><i class="fa-solid fa-magnifying-glass"></i></span>
+				<span class="dsp-kpi-title">Por aprobar (Doble rol)</span>
+				<span class="dsp-kpi-icon is-purple"><i class="fa-solid fa-stamp"></i></span>
 			</div>
 			<div class="dsp-kpi-body">
-				<div class="dsp-kpi-val">{{ $casesCount }} abiertos</div>
+				<div class="dsp-kpi-val">{{ $pendingApprovalCount }} pendientes</div>
 				<div class="dsp-kpi-sub">
-					<span class="text-muted font-weight-600">{{ $casesVal }}</span>
-					<span class="text-muted ml-1">en diferencias</span>
+					<span class="text-muted font-weight-600">{{ $pendingApprovalVal }}</span>
+					<span class="text-muted ml-1">sin descontar</span>
 				</div>
 			</div>
 			<div class="dsp-kpi-foot">
-				<span class="text-primary small font-weight-600">Ver expedientes 360° <i class="fa-solid fa-arrow-right ml-1"></i></span>
+				<span class="text-primary small font-weight-600">Ir a aprobaciones <i class="fa-solid fa-arrow-right ml-1"></i></span>
 			</div>
 		</a>
 
@@ -677,7 +662,7 @@
 				</div>
 			</div>
 			<div class="dsp-kpi-foot">
-				<span class="text-muted small">Reclamos y notas de crédito</span>
+				<span class="text-muted small">Notas de crédito y reclamos</span>
 			</div>
 		</div>
 
@@ -690,16 +675,16 @@
 			<div class="dsp-kpi-body">
 				<div class="dsp-kpi-val">{{ $fefoPct }}</div>
 				<div class="dsp-kpi-sub">
-					<span class="text-muted">Cadena de frío activa</span>
+					<span class="text-muted">Control de lotes y vencimientos</span>
 				</div>
 			</div>
 			<div class="dsp-kpi-foot">
-				<span class="text-muted small">Rotación y vencimientos</span>
+				<span class="text-muted small">Rotación y cadena de frío</span>
 			</div>
 		</div>
 
-		<!-- KPI 7: Tiempo de resolución (días) -->
-		<div class="dsp-kpi-card tone-teal" onclick="$('#tab-investigaciones-link').click();" role="button" data-testid="kpi-tiempo-resolucion">
+		<!-- KPI 7: Tiempo de resolución (días reales) -->
+		<div class="dsp-kpi-card tone-teal" onclick="$('#tab-acciones-link').click();" role="button" data-testid="kpi-tiempo-resolucion">
 			<div class="dsp-kpi-head">
 				<span class="dsp-kpi-title">Tiempo de resolución</span>
 				<span class="dsp-kpi-icon is-teal"><i class="fa-solid fa-stopwatch"></i></span>
@@ -711,14 +696,14 @@
 				</div>
 			</div>
 			<div class="dsp-kpi-foot">
-				<span class="text-muted small">Promedio por expediente</span>
+				<span class="text-muted small">Promedio real registro→cierre</span>
 			</div>
 		</div>
 
-		<!-- KPI 8: Tasa de reincidencias (%) -->
+		<!-- KPI 8: Tasa de reincidencias (% SKUs repetidos 30d) -->
 		<div class="dsp-kpi-card tone-indigo" onclick="$('#tab-prevencion-link').click();" role="button" data-testid="kpi-tasa-reincidencias">
 			<div class="dsp-kpi-head">
-				<span class="dsp-kpi-title">Tasa de reincidencias</span>
+				<span class="dsp-kpi-title">Reincidencia SKU (30d)</span>
 				<span class="dsp-kpi-icon is-indigo"><i class="fa-solid fa-shield-virus"></i></span>
 			</div>
 			<div class="dsp-kpi-body">
@@ -728,22 +713,22 @@
 				</div>
 			</div>
 			<div class="dsp-kpi-foot">
-				<span class="text-muted small">Puntos monitoreados</span>
+				<span class="text-muted small">SKUs con más de 1 merma</span>
 			</div>
 		</div>
 	</div>
 
-	<!-- 3. BARRA DE POLÍTICAS Y CONTROL SEGURO DE INVENTARIO -->
+	<!-- 3. BARRA DE POLÍTICAS Y SEPARACIÓN DE INVENTARIO -->
 	<div class="alert alert-light border shadow-xs d-flex align-items-center justify-content-between flex-wrap py-2 px-3 mb-3" style="border-radius: 8px;">
 		<div class="d-flex align-items-center flex-wrap">
 			<i class="fa-solid fa-shield-halved text-primary mr-2" style="font-size: 1.15rem;"></i>
 			<span class="small font-weight-500 text-dark">
-				<strong>Control Dual & Políticas Retail:</strong> Sin ajustes de stock sin doble autorización · Cero doble descuento en kardex · Separación estricta entre merma confirmada y diferencias en investigación · Trazabilidad 100% auditada.
+				<strong>Integridad de Mermas:</strong> Separación estricta entre merma física real y ajustes contables · Sin registro sin causal · Evidencia fotográfica obligatoria según causal · Descuento único al aprobar por rol.
 			</span>
 		</div>
 		<div class="d-flex align-items-center mt-1 mt-md-0">
 			<a href="{{ $U('/loss-prevention') }}" class="btn btn-sm btn-light border font-weight-600 text-primary py-0.5 px-2" style="font-size: 0.78rem;">
-				<i class="fa-solid fa-arrow-up-right-from-square mr-1"></i> Ir a Prevención 360°
+				<i class="fa-solid fa-arrow-up-right-from-square mr-1"></i> Seguridad y Expedientes
 			</a>
 		</div>
 	</div>
@@ -813,14 +798,14 @@
 					<div class="dw-filter-select-group">
 						<label>Causal</label>
 						<select id="dw-filter-causal" onchange="dwApplyFilters()">
-							<option value="" selected>Todas</option>
-							<option value="vencimiento">Vencimiento</option>
-							<option value="dano_externo">Daño externo</option>
-							<option value="rotura">Rotura</option>
-							<option value="cadena_frio">Cadena de frío</option>
-							<option value="sobreproduccion">Sobreproducción</option>
-							<option value="robo_interno">Robo interno</option>
-							<option value="otros">Otros</option>
+							<option value="" selected>Todas (Merma real)</option>
+							<option value="operativa">Merma operativa</option>
+							<option value="comercial">Comercial y vencimientos</option>
+							<option value="averia">Averías y roturas</option>
+							<option value="ajuste">Ajustes contables</option>
+							@foreach(($reasons ?? []) as $r)
+							<option value="{{ $r->id }}">{{ $r->code }} · {{ $r->name }}</option>
+							@endforeach
 						</select>
 					</div>
 
@@ -985,38 +970,44 @@
 					</div>
 				</div>
 
-				<!-- KPI 9: Casos e Investigaciones -->
-				<div class="dw-kpi-card" id="kpi-pending-cases" title="Expedientes de merma en proceso de investigación y peritaje">
+				<!-- KPI 9: Errores de procedimiento y evidencia pendiente -->
+				<div class="dw-kpi-card" id="kpi-pending-cases" title="Incidentes por errores de procedimiento y casos con evidencia obligatoria pendiente">
 					<div class="dw-kpi-top">
-						<span class="dw-kpi-label">Casos pendientes</span>
-						<div class="dw-kpi-icon is-amber"><i class="fa-solid fa-magnifying-glass"></i></div>
+						<span class="dw-kpi-label">Errores de procedimiento</span>
+						<div class="dw-kpi-icon is-amber"><i class="fa-solid fa-clipboard-question"></i></div>
 					</div>
-					<div class="dw-kpi-val" id="dw-val-cases">{{ $openIncidentsCount ?? 8 }} casos</div>
+					<div class="dw-kpi-val" id="dw-val-cases">{{ $wasteExec['kpis']['procedural_errors']['value'] ?? '$0.00' }}</div>
 					<div class="dw-kpi-delta-row">
-						<span class="dw-delta-tag is-bad"><i class="fa-solid fa-clock"></i> 3 críticos</span>
-						<span class="dw-kpi-subtext">Investigación activa</span>
+						<span class="dw-delta-tag {{ ($redMetrics['evidence_missing'] ?? 0) > 0 ? 'is-bad' : 'is-good' }}" id="dw-delta-cases">
+							{{ intval($redMetrics['evidence_missing'] ?? 0) }} sin foto
+						</span>
+						<span class="dw-kpi-subtext" id="dw-sub-cases">{{ $wasteExec['kpis']['procedural_errors']['subtext'] ?? 'Control operativo y captura' }}</span>
 					</div>
 					<div class="dw-sparkline-box">
 						<svg class="dw-sparkline-svg" viewBox="0 0 120 24" preserveAspectRatio="none">
-							<path d="M 0 16 Q 30 18 60 12 T 120 8" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round"/>
+							<path d="{{ $wasteExec['kpis']['total_waste']['sparkline'] ?? 'M0,12 L120,12' }}" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round"/>
 						</svg>
 					</div>
 				</div>
 
-				<!-- KPI 10: Cumplimiento de Planes -->
-				<div class="dw-kpi-card" id="kpi-action-plans" title="Porcentaje de planes de acción preventiva y correctiva completados">
+				<!-- KPI 10: Reducción de pérdidas y cumplimiento de acciones -->
+				<div class="dw-kpi-card" id="kpi-action-plans" title="Porcentaje real de cierre de planes correctivos e impacto en reducción de merma">
 					<div class="dw-kpi-top">
-						<span class="dw-kpi-label">Planes de acción</span>
+						<span class="dw-kpi-label">Reducción y acciones</span>
 						<div class="dw-kpi-icon is-green"><i class="fa-solid fa-clipboard-check"></i></div>
 					</div>
-					<div class="dw-kpi-val" id="dw-val-plans">94.2%</div>
+					<div class="dw-kpi-val" id="dw-val-plans">{{ isset($redMetrics['plan_closure_pct']) && $redMetrics['plan_closure_pct'] !== null ? number_format($redMetrics['plan_closure_pct'], 1) . '%' : 'Sin planes' }}</div>
 					<div class="dw-kpi-delta-row">
-						<span class="dw-delta-tag is-good"><i class="fa-solid fa-check"></i> 16/17</span>
-						<span class="dw-kpi-subtext">Cerrados a tiempo</span>
+						<span class="dw-delta-tag is-good" id="dw-delta-plans">
+							{{ intval($redMetrics['plans_closed'] ?? 0) }}/{{ intval($redMetrics['plans_total'] ?? 0) }} cerrados
+						</span>
+						<span class="dw-kpi-subtext" id="dw-sub-plans">
+							Evitadas: ${{ number_format(floatval($redMetrics['avoided_loss_amount'] ?? 0), 0) }} · Evidencia: {{ isset($redMetrics['evidence_compliance_pct']) && $redMetrics['evidence_compliance_pct'] !== null ? number_format($redMetrics['evidence_compliance_pct'], 0) . '%' : '—' }}
+						</span>
 					</div>
 					<div class="dw-sparkline-box">
 						<svg class="dw-sparkline-svg" viewBox="0 0 120 24" preserveAspectRatio="none">
-							<path d="M 0 20 Q 30 14 60 8 T 120 4" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round"/>
+							<path d="{{ $wasteExec['kpis']['total_waste']['sparkline'] ?? 'M0,12 L120,12' }}" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round"/>
 						</svg>
 					</div>
 				</div>
@@ -1555,13 +1546,16 @@
 									@endif
 								</td>
 
-								<!-- 16. EVIDENCIA -->
+								<!-- 16. EVIDENCIA REAL -->
 								<td class="py-2.5 px-2.5 text-center">
-									@if($idx % 2 == 0)
-									<span class="dairy-evidence-thumb" style="background-image: url('{{ $U('/img/icon-32.png') }}'); background-size: cover;" title="Foto de envase dañado"></span>
-									<span class="dairy-evidence-thumb" style="background-image: url('{{ $U('/img/icon-32.png') }}'); background-size: cover;" title="Foto de lectura de sensor"></span>
+									@if(!empty($case->evidence_photo_path))
+									<a href="javascript:void(0)" onclick="openWasteEvidenceLightbox('{{ $U($case->evidence_photo_path) }}', @json($case->case_number ?? ('#' . $case->id)))" title="Ver fotografía de evidencia">
+										<img src="{{ $U($case->evidence_photo_path) }}" alt="Evidencia" class="dairy-evidence-thumb rounded border" style="width:28px;height:28px;object-fit:cover;display:inline-block;">
+									</a>
+									@elseif(intval($case->requires_evidence ?? 0) === 1)
+									<span class="badge badge-danger" style="font-size:0.68rem;" title="Evidencia obligatoria faltante"><i class="fa-solid fa-camera-slash mr-1"></i>Falta foto</span>
 									@else
-									<span class="dairy-evidence-thumb" style="background-image: url('{{ $U('/img/icon-32.png') }}'); background-size: cover;" title="Foto de lote"></span>
+									<span class="text-muted small">—</span>
 									@endif
 								</td>
 
@@ -1588,7 +1582,7 @@
 												<a class="dropdown-item" href="javascript:void(0)" onclick="$('#tab-recuperacion-link').click();">
 													<i class="fa-solid fa-hand-holding-dollar text-primary mr-2"></i>Reclamar a Proveedor
 												</a>
-												<a class="dropdown-item" href="javascript:void(0)" onclick="$('#tab-investigaciones-link').click();">
+												<a class="dropdown-item" href="javascript:void(0)" onclick="$('#tab-acciones-link').click();">
 													<i class="fa-solid fa-list-check text-warning mr-2"></i>Asignar Plan de Acción
 												</a>
 												<div class="dropdown-divider"></div>
@@ -1628,7 +1622,7 @@
 	<!-- ======================================================================
 	     PESTAÑA 2: PREVENCIÓN INTELIGENTE (MOTOR DE RIESGO PREDICTIVO & FEFO)
 	     ====================================================================== -->
-	<!-- Secciones 2–5, 8, 9 y 11 (LossIntelligenceService), diferidas -->
+	<!-- Secciones especializadas de shrink retail (diferidas vía AJAX para carga ágil) -->
 	<div class="tab-pane fade" id="tab-clasificacion" role="tabpanel" data-lazy-tab="clasificacion">
 		<div class="text-center text-muted py-5 dairy-lazy-placeholder"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Cargando…</div>
 	</div>
@@ -1641,13 +1635,7 @@
 	<div class="tab-pane fade" id="tab-anual" role="tabpanel" data-lazy-tab="anual">
 		<div class="text-center text-muted py-5 dairy-lazy-placeholder"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Cargando…</div>
 	</div>
-	<div class="tab-pane fade" id="tab-precios" role="tabpanel" data-lazy-tab="precios">
-		<div class="text-center text-muted py-5 dairy-lazy-placeholder"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Cargando…</div>
-	</div>
 	<div class="tab-pane fade" id="tab-perecederos" role="tabpanel" data-lazy-tab="perecederos">
-		<div class="text-center text-muted py-5 dairy-lazy-placeholder"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Cargando…</div>
-	</div>
-	<div class="tab-pane fade" id="tab-robo" role="tabpanel" data-lazy-tab="robo">
 		<div class="text-center text-muted py-5 dairy-lazy-placeholder"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Cargando…</div>
 	</div>
 
@@ -1655,64 +1643,30 @@
 		@include('components.waste_tabs.prevencion')
 	</div>
 
-	<!-- ======================================================================
-	     PESTAÑA 3: REGISTRO DE MERMAS (RÁPIDO, CON LECTOR & ATÓMICO)
-	     ====================================================================== -->
 	<div class="tab-pane fade" id="tab-registro" role="tabpanel">
 		@include('components.waste_tabs.registro')
 	</div>
 
-	<!-- ======================================================================
-	     PESTAÑA 4: MATRIZ DE CAUSALES (24+ CAUSALES ESTANDARIZADAS)
-	     ====================================================================== -->
 	<div class="tab-pane fade" id="tab-causales" role="tabpanel">
 		<div data-lazy-block="pareto" id="dailyCausalesContainer"></div>
 	</div>
 
-	<!-- ======================================================================
-	     PESTAÑA 5: INVESTIGACIONES (5 PORQUÉS Y CAUSA RAÍZ)
-	     ====================================================================== -->
-	<div class="tab-pane fade" id="tab-investigaciones" role="tabpanel" data-lazy-tab="investigaciones">
+	<div class="tab-pane fade" id="tab-acciones" role="tabpanel" data-lazy-tab="acciones">
 		<div class="text-center text-muted py-5 dairy-lazy-placeholder"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Cargando…</div>
 	</div>
 
-	<!-- ======================================================================
-	     PESTAÑA 6: PLANES DE ACCIÓN
-	     ====================================================================== -->
-
-
-	<!-- ======================================================================
-	     PESTAÑA 7: RECUPERACIÓN FINANCIERA (NOTAS DE CRÉDITO Y RECLAMOS)
-	     ====================================================================== -->
 	<div class="tab-pane fade" id="tab-recuperacion" role="tabpanel" data-lazy-tab="impacto">
 		<div class="text-center text-muted py-5 dairy-lazy-placeholder"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Cargando…</div>
 	</div>
 
-	<!-- ======================================================================
-	     PESTAÑA 8: CONTROL FEFO (FIRST EXPIRED, FIRST OUT)
-	     ====================================================================== -->
 	<div class="tab-pane fade" id="tab-fefo" role="tabpanel" data-lazy-tab="fefo">
 		<div class="text-center text-muted py-5 dairy-lazy-placeholder"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Cargando…</div>
 	</div>
 
-	<!-- ======================================================================
-	     PESTAÑA 9: CONTEOS Y CONCILIACIÓN (IRA % Y DESCUADRES)
-	     ====================================================================== -->
-	<div class="tab-pane fade" id="tab-conteos" role="tabpanel" data-lazy-tab="conteos">
-		<div class="text-center text-muted py-5 dairy-lazy-placeholder"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Cargando…</div>
-	</div>
-
-	<!-- PÉRDIDA TOTAL: conocida + desconocida + salidas sin documento + conciliación POS (Etapa 19) -->
-
-
-	<!-- ======================================================================
-	     PESTAÑA 10: AUDITORÍA Y TRAZABILIDAD (LOG INMUTABLE)
-	     ====================================================================== -->
 	<div class="tab-pane fade" id="tab-auditoria" role="tabpanel" data-lazy-tab="auditoria">
 		<div class="text-center text-muted py-5 dairy-lazy-placeholder"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Cargando…</div>
 	</div>
 
-	<!-- Etapa 36: metodología del Censo Nacional de Mermas -->
 	<div class="tab-pane fade" id="tab-censo" role="tabpanel" data-lazy-tab="censo">
 		<div class="text-center text-muted py-5 dairy-lazy-placeholder"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Cargando…</div>
 	</div>
@@ -1721,222 +1675,24 @@
 	</div>
 	<div class="tab-pane fade" id="tab-controles" role="tabpanel" data-lazy-tab="controles">
 		<div class="text-center text-muted py-5 dairy-lazy-placeholder"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Cargando…</div>
-
-	<!-- PESTAÑA: GESTIÓN DE PRODUCTOS DAÑADOS (FOTOS, CAUSALES, COSTOS, CHARGEBACK) -->
-	<div class="tab-pane fade" id="tab-damaged-goods" role="tabpanel">
-		<div class="row mb-3">
-			<div class="col-md-3">
-				<div class="card border-0 shadow-sm p-3 bg-white">
-					<div class="text-muted small font-weight-bold">PRODUCTOS DAÑADOS REGISTRADOS</div>
-					<div class="h4 font-weight-bold text-dark mb-0">{{ count($damagedProducts ?? []) }} <span class="small font-weight-normal text-muted">casos</span></div>
-					<div class="small text-muted mt-1"><i class="fa-solid fa-camera text-danger mr-1"></i> Evidencia fotográfica adjunta</div>
-				</div>
-			</div>
-			<div class="col-md-3">
-				<div class="card border-0 shadow-sm p-3 bg-white">
-					<div class="text-muted small font-weight-bold">COSTO TOTAL DEL DAÑO</div>
-					<div class="h4 font-weight-bold text-danger mb-0">${{ number_format(array_sum(array_column($damagedProducts ?? [], 'total_cost')), 2) }}</div>
-					<div class="small text-muted mt-1">Impacto directo a valoración</div>
-				</div>
-			</div>
-			<div class="col-md-3">
-				<div class="card border-0 shadow-sm p-3 bg-white">
-					<div class="text-muted small font-weight-bold">RECUPERACIÓN VÍA PROVEEDOR</div>
-					<div class="h4 font-weight-bold text-success mb-0">${{ number_format(array_sum(array_column($damagedProducts ?? [], 'recovery_potential')), 2) }}</div>
-					<div class="small text-muted mt-1">Reclamaciones aceptadas (Chargeback)</div>
-				</div>
-			</div>
-			<div class="col-md-3">
-				<div class="card border-0 shadow-sm p-3 bg-white">
-					<div class="text-muted small font-weight-bold">DISPOSICIÓN FINAL</div>
-					<div class="h4 font-weight-bold text-info mb-0">3 destinos</div>
-					<div class="small text-muted mt-1">Merma, Devolución o Compostaje</div>
-				</div>
-			</div>
-		</div>
-
-		<div class="card shadow-sm border-0 mb-4">
-			<div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
-				<div>
-					<h5 class="mb-0 font-weight-bold text-dark"><i class="fa-solid fa-camera text-danger mr-2"></i>Gestión Integral de Productos Dañados y Averías</h5>
-					<div class="small text-muted">Registro de roturas, causas operativas/comerciales, evidencia gráfica y gestión de recuperaciones.</div>
-				</div>
-				<div class="d-flex gap-2">
-					<button class="btn btn-sm btn-danger font-weight-bold" onclick="alert('Abriendo cámara del dispositivo para capturar evidencia fotográfica de producto dañado.');">
-						<i class="fa-solid fa-camera mr-1"></i> Capturar Producto Dañado
-					</button>
-					<a href="{{ $U('/action-center') }}" class="btn btn-sm btn-outline-danger font-weight-bold">
-						<i class="fa-solid fa-shield-halved mr-1"></i> Action Center
-					</a>
-				</div>
-			</div>
-			<div class="table-responsive">
-				<table class="table table-hover table-sm mb-0">
-					<thead class="thead-light">
-						<tr>
-							<th>Evidencia</th>
-							<th>Código</th>
-							<th>UPC / Barras</th>
-							<th>Producto</th>
-							<th>Causal de Daño</th>
-							<th>Clasificación AKCAL</th>
-							<th class="text-right">Cant.</th>
-							<th class="text-right">Costo Unit.</th>
-							<th class="text-right">Total</th>
-							<th>Cobro Proveedor</th>
-							<th>Disposición</th>
-							<th class="text-center">Estado</th>
-						</tr>
-					</thead>
-					<tbody>
-						@foreach(($damagedProducts ?? []) as $dmg)
-						<tr>
-							<td>
-								@if(!empty($dmg['photo_evidence']))
-								<img src="{{ $U($dmg['photo_evidence']) }}" alt="Foto" class="rounded border" style="width: 36px; height: 36px; object-fit: cover;">
-								@else
-								<span class="badge badge-light border text-muted"><i class="fa-solid fa-image"></i></span>
-								@endif
-							</td>
-							<td><code>{{ $dmg['incident_code'] }}</code></td>
-							<td><code>{{ $dmg['barcode'] }}</code></td>
-							<td class="font-weight-bold text-dark">{{ $dmg['product_name'] }}</td>
-							<td class="small text-muted">{{ $dmg['reason'] }}</td>
-							<td><span class="badge badge-light border font-weight-bold">{{ $dmg['classification'] }}</span></td>
-							<td class="text-right font-weight-bold">{{ $dmg['quantity'] }}</td>
-							<td class="text-right">${{ number_format($dmg['unit_cost'], 2) }}</td>
-							<td class="text-right font-weight-bold text-danger">${{ number_format($dmg['total_cost'], 2) }}</td>
-							<td>
-								@if($dmg['recovery_potential'] > 0)
-									<span class="badge badge-success"><i class="fa-solid fa-hand-holding-dollar mr-1"></i> ${{ number_format($dmg['recovery_potential'], 2) }}</span>
-								@else
-									<span class="badge badge-light border text-muted">No aplica</span>
-								@endif
-							</td>
-							<td><span class="badge badge-info">{{ $dmg['disposition_action'] }}</span></td>
-							<td class="text-center">
-								@if($dmg['status'] === 'approved')
-									<span class="badge badge-success"><i class="fa-solid fa-check"></i> Aprobado</span>
-								@elseif($dmg['status'] === 'claimed')
-									<span class="badge badge-warning text-dark"><i class="fa-solid fa-paper-plane"></i> Reclamado</span>
-								@else
-									<span class="badge badge-secondary">Pendiente</span>
-								@endif
-							</td>
-						</tr>
-						@endforeach
-					</tbody>
-				</table>
-			</div>
-		</div>
 	</div>
-
-	<!-- PESTAÑA: AUDITORÍAS INTELIGENTES (DISCREPANCIAS RECURRENTES, RISK SCORE, CHECKLISTS) -->
-	<div class="tab-pane fade" id="tab-smart-audits" role="tabpanel">
-		<div class="row mb-3">
-			<div class="col-md-3">
-				<div class="card border-0 shadow-sm p-3 bg-white">
-					<div class="text-muted small font-weight-bold">AUDITORÍAS ACTIVAS</div>
-					<div class="h4 font-weight-bold text-dark mb-0">{{ count($smartAudits ?? []) }} <span class="small font-weight-normal text-muted">programadas</span></div>
-					<div class="small text-muted mt-1"><i class="fa-solid fa-brain text-primary mr-1"></i> Discrepancias recurrentes detectadas</div>
-				</div>
-			</div>
-			<div class="col-md-3">
-				<div class="card border-0 shadow-sm p-3 bg-white">
-					<div class="text-muted small font-weight-bold">STORE RISK SCORE (MEDIO)</div>
-					<div class="h4 font-weight-bold text-warning mb-0">68.2 <span class="small font-weight-normal text-muted">/ 100</span></div>
-					<div class="small text-muted mt-1">Puntuación ponderada de merma</div>
-				</div>
-			</div>
-			<div class="col-md-3">
-				<div class="card border-0 shadow-sm p-3 bg-white">
-					<div class="text-muted small font-weight-bold">SKUS DE ALTO RIESGO</div>
-					<div class="h4 font-weight-bold text-danger mb-0">33 SKUs</div>
-					<div class="small text-muted mt-1">Generadores del 80% de pérdida</div>
-				</div>
-			</div>
-			<div class="col-md-3">
-				<div class="card border-0 shadow-sm p-3 bg-white">
-					<div class="text-muted small font-weight-bold">EFECTIVIDAD DE CHECKLISTS</div>
-					<div class="h4 font-weight-bold text-success mb-0">94.5%</div>
-					<div class="small text-muted mt-1">Reducción de desviaciones post-auditoría</div>
-				</div>
-			</div>
-		</div>
-
-		<div class="card shadow-sm border-0 mb-4">
-			<div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
-				<div>
-					<h5 class="mb-0 font-weight-bold text-dark"><i class="fa-solid fa-magnifying-glass-chart text-primary mr-2"></i>Programa de Auditorías Inteligentes Dirigidas</h5>
-					<div class="small text-muted">Auditorías generadas automáticamente por detección algorítmica de variaciones atípicas y patrones de pérdida.</div>
-				</div>
-				<div>
-					<button class="btn btn-sm btn-primary font-weight-bold" onclick="alert('Generando nueva checklist inteligente basada en los SKUs con mayores discrepancias del último mes.');">
-						<i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Generar Checklist Automática
-					</button>
-				</div>
-			</div>
-			<div class="table-responsive">
-				<table class="table table-hover table-sm mb-0">
-					<thead class="thead-light">
-						<tr>
-							<th>Código</th>
-							<th>Título de Auditoría</th>
-							<th>Tipo</th>
-							<th>Nivel de Riesgo</th>
-							<th>Categoría / SKUs</th>
-							<th>Motivo Detonador</th>
-							<th>Auditor Asignado</th>
-							<th>Fecha</th>
-							<th>Checklist / Hallazgos</th>
-							<th class="text-center">Estado</th>
-						</tr>
-					</thead>
-					<tbody>
-						@foreach(($smartAudits ?? []) as $aud)
-						<tr class="@if($aud['risk_level'] === 'critical') table-danger @elseif($aud['risk_level'] === 'high') table-warning @endif">
-							<td><code>{{ $aud['audit_code'] }}</code></td>
-							<td class="font-weight-bold text-dark">{{ $aud['title'] }}</td>
-							<td><span class="badge badge-light border">{{ $aud['audit_type'] }}</span></td>
-							<td>
-								@if($aud['risk_level'] === 'critical')
-									<span class="badge badge-danger">Crítico</span>
-								@elseif($aud['risk_level'] === 'high')
-									<span class="badge badge-warning text-dark">Alto</span>
-								@else
-									<span class="badge badge-info">Medio</span>
-								@endif
-							</td>
-							<td><strong>{{ $aud['target_category_or_sku'] }}</strong></td>
-							<td class="small text-muted">{{ $aud['trigger_reason'] }}</td>
-							<td class="small">{{ $aud['assigned_auditor_name'] }}</td>
-							<td class="small text-muted">{{ date('d/m/Y', strtotime($aud['scheduled_date'])) }}</td>
-							<td class="small">{{ $aud['findings_summary'] }}</td>
-							<td class="text-center">
-								@if($aud['status'] === 'completed')
-									<span class="badge badge-success"><i class="fa-solid fa-check"></i> Completada</span>
-								@elseif($aud['status'] === 'in_progress')
-									<span class="badge badge-warning text-dark"><i class="fa-solid fa-spinner fa-spin"></i> En Curso</span>
-								@else
-									<span class="badge badge-secondary"><i class="fa-solid fa-clock"></i> Programada</span>
-								@endif
-							</td>
-						</tr>
-						@endforeach
-					</tbody>
-				</table>
-			</div>
-		</div>
-	</div>
-
-	</div>
-
-	<!-- ======================================================================
-	     PESTAÑA 17: BAKERY & PANADERÍA — ¿QUÉ PRODUCTOS SE BOTAN MÁS?
-	     ====================================================================== -->
-	@include('components.waste_tabs.bakery')
 
 </div> <!-- /wasteModuleTabContent -->
+
+<!-- Modal de vista ampliada de fotografía de evidencia -->
+<div class="modal fade" id="wasteEvidenceLightboxModal" tabindex="-1" role="dialog" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+		<div class="modal-content border-0 shadow-lg dairy-radius-md">
+			<div class="modal-header py-2 px-3 border-bottom">
+				<h6 class="modal-title font-weight-bold text-dark mb-0"><i class="fa-solid fa-camera text-success mr-2"></i>Evidencia Fotográfica · <span id="wasteEvidenceLightboxTitle"></span></h6>
+				<button type="button" class="close" data-dismiss="modal">&times;</button>
+			</div>
+			<div class="modal-body p-3 text-center bg-light">
+				<img id="wasteEvidenceLightboxImg" src="" alt="Evidencia de merma" class="img-fluid rounded border" style="max-height:70vh;">
+			</div>
+		</div>
+	</div>
+</div>
 
 <!-- ==========================================================================
      MODAL DE INVESTIGACIÓN DE CAUSA RAÍZ (5 PORQUÉS)
@@ -2053,12 +1809,12 @@ document.addEventListener('DOMContentLoaded', function() {
 		history.replaceState(null, '', window.location.pathname + window.location.search + $(this).attr('href'));
 	});
 
-	// Abrir la pestaña indicada en el hash (#prevencion, #tab-conteos, ...)
+	// Abrir la pestaña indicada en el hash (#prevencion, #tab-acciones, ...)
 	function dairyOpenHash() {
 		if (!window.location.hash) return;
 		var h = window.location.hash.replace(/^#(tab-)?/, '');
-		// Secciones fusionadas: los enlaces antiguos siguen funcionando
-		var alias = { planes: 'investigaciones', perdida: 'recuperacion', 'centro': 'centro-control', frio: 'fefo', selectivos: 'conteos', impacto: 'recuperacion' };
+		// Secciones fusionadas o reubicadas
+		var alias = { planes: 'acciones', investigaciones: 'acciones', perdida: 'recuperacion', 'centro': 'centro-control', frio: 'fefo', impacto: 'recuperacion', conteos: 'ajustes' };
 		var target = alias[h] || h;
 		$('a[data-toggle="pill"][href="#tab-' + target + '"]').tab('show');
 		if (alias[h] && document.getElementById('tab-' + h)) setTimeout(function() { document.getElementById('tab-' + h).scrollIntoView({ behavior: 'smooth' }); }, 400);
@@ -2500,7 +2256,13 @@ function saveInvestigationModal() {
 }
 
 function openCaseModal(id) {
-	$('#tab-investigaciones-link').click();
+	$('#tab-acciones-link').click();
+}
+
+function openWasteEvidenceLightbox(url, caseNum) {
+	$('#wasteEvidenceLightboxTitle').text(caseNum || 'Incidente');
+	$('#wasteEvidenceLightboxImg').attr('src', url);
+	$('#wasteEvidenceLightboxModal').modal('show');
 }
 
 function exportToCsv() {
@@ -2699,7 +2461,7 @@ function initExecutiveCharts() {
 	if (ctxGauge && dwRecoveryData) {
 		if (dwRecoveryGaugeChartInstance) dwRecoveryGaugeChartInstance.destroy();
 
-		var rate = dwRecoveryData.recovery_rate || 72;
+		var rate = (dwRecoveryData.recovery_rate !== null && dwRecoveryData.recovery_rate !== undefined) ? Number(dwRecoveryData.recovery_rate) : 0;
 		var remain = Math.max(0, 100 - rate);
 
 		dwRecoveryGaugeChartInstance = new Chart(ctxGauge.getContext('2d'), {
@@ -2741,36 +2503,36 @@ function dwSetEvolutionUnit(unit) {
 	
 	$('#dw-evolution-mode').val(unit);
 
-	// Actualizar tarjetas laterales sincrónicamente
+	// Actualizar tarjetas laterales sincrónicamente (solo datos reales; si no hay histórico muestra 'Sin información')
 	if (dwEvolutionData && dwEvolutionData.current_month) {
 		var cm = dwEvolutionData.current_month;
 		var cp = dwEvolutionData.closing_projection;
 
 		if (unit === 'money') {
-			$('#dw-side-curr-val').text(cm.value_money || '$2,047');
-			$('#dw-side-curr-delta').text(cm.delta_money || '↑ +7.2%');
-			$('#dw-side-curr-sub').text(cm.subtext_money || 'vs. mismo mes del año anterior ($1,910)');
+			$('#dw-side-curr-val').text(cm.value_money || 'Sin información');
+			$('#dw-side-curr-delta').text(cm.delta_money || '');
+			$('#dw-side-curr-sub').text(cm.subtext_money || 'Sin histórico registrado');
 
-			$('#dw-side-proj-val').text(cp.value_money || '$15,356');
-			$('#dw-side-proj-delta').text(cp.delta_money || '↓ -1.7%');
-			$('#dw-side-proj-sub').text(cp.subtext_money || 'proyección mensual según ritmo diario actual');
+			$('#dw-side-proj-val').text(cp.value_money || 'Sin información');
+			$('#dw-side-proj-delta').text(cp.delta_money || '');
+			$('#dw-side-proj-sub').text(cp.subtext_money || 'Proyección mensual según ritmo diario');
 		} else if (unit === 'per1k') {
-			$('#dw-side-curr-val').text(cm.value_per1k || '$19.70');
-			$('#dw-side-curr-delta').text(cm.delta_per1k || '↑ +0.50');
-			$('#dw-side-curr-sub').text(cm.subtext_per1k || 'vs. año anterior ($19.20/$1,000)');
+			$('#dw-side-curr-val').text(cm.value_per1k || 'Sin información');
+			$('#dw-side-curr-delta').text(cm.delta_per1k || '');
+			$('#dw-side-curr-sub').text(cm.subtext_per1k || 'Sin histórico registrado');
 
-			$('#dw-side-proj-val').text(cp.value_per1k || '$19.70');
-			$('#dw-side-proj-delta').text(cp.delta_per1k || '↓ -0.30');
-			$('#dw-side-proj-sub').text(cp.subtext_per1k || 'estimado fin de mes por cada $1,000');
+			$('#dw-side-proj-val').text(cp.value_per1k || 'Sin información');
+			$('#dw-side-proj-delta').text(cp.delta_per1k || '');
+			$('#dw-side-proj-sub').text(cp.subtext_per1k || 'Estimado por cada $1,000 de venta');
 		} else {
 			// pct
-			$('#dw-side-curr-val').text(cm.value_pct || cm.value || '1.97%');
-			$('#dw-side-curr-delta').text(cm.delta_pct || cm.delta || '↑ +0.05 pp');
-			$('#dw-side-curr-sub').text(cm.subtext_pct || cm.subtext || 'vs. mismo mes del año anterior (1.92%)');
+			$('#dw-side-curr-val').text(cm.value_pct || cm.value || 'Sin información');
+			$('#dw-side-curr-delta').text(cm.delta_pct || cm.delta || '');
+			$('#dw-side-curr-sub').text(cm.subtext_pct || cm.subtext || 'Sin histórico registrado');
 
-			$('#dw-side-proj-val').text(cp.value_pct || '1.97%');
-			$('#dw-side-proj-delta').text(cp.delta_pct || cp.delta || '↓ -0.03 pp');
-			$('#dw-side-proj-sub').text(cp.subtext_pct || cp.subtext || 'ritmo diario del mes; % vs. meta (2.00%)');
+			$('#dw-side-proj-val').text(cp.value_pct || 'Sin información');
+			$('#dw-side-proj-delta').text(cp.delta_pct || cp.delta || '');
+			$('#dw-side-proj-sub').text(cp.subtext_pct || cp.subtext || 'Ritmo diario vs. meta');
 		}
 	}
 
@@ -2799,11 +2561,15 @@ function dwApplyFilters() {
 	var branch = $('#dw-filter-branch').val();
 	var dept = $('#dw-filter-dept').val();
 	var causal = $('#dw-filter-causal').val();
+	var startDate = $('#globalFilterStartDate').val() || '';
+	var endDate = $('#globalFilterEndDate').val() || '';
 
 	Grocy.FrontendHelpers.BeginUiBusy();
 
 	$.get(Grocy.BaseUrl + '/api/loss/control-center-executive', {
 		date: date,
+		start_date: startDate,
+		end_date: endDate,
 		branch_id: branch,
 		department: dept,
 		causal: causal,
@@ -2815,36 +2581,48 @@ function dwApplyFilters() {
 
 		// Actualizar KPIs
 		$('#dw-val-total-waste').text(data.kpis.total_waste.value);
-		$('#dw-delta-total-waste').text(data.kpis.total_waste.delta);
+		$('#dw-delta-total-waste').text(data.kpis.total_waste.delta || '');
 		$('#dw-spark-total-waste').attr('d', data.kpis.total_waste.sparkline);
 
 		$('#dw-val-waste-sales').text(data.kpis.waste_sales.value);
-		$('#dw-delta-waste-sales').text(data.kpis.waste_sales.delta);
+		$('#dw-delta-waste-sales').text(data.kpis.waste_sales.delta || '');
 		$('#dw-spark-waste-sales').attr('d', data.kpis.waste_sales.sparkline);
 
 		$('#dw-val-operative').text(data.kpis.operative.value);
-		$('#dw-delta-operative').text(data.kpis.operative.delta);
+		$('#dw-delta-operative').text(data.kpis.operative.delta || '');
 		$('#dw-spark-operative').attr('d', data.kpis.operative.sparkline);
 
 		$('#dw-val-commercial').text(data.kpis.commercial.value);
-		$('#dw-delta-commercial').text(data.kpis.commercial.delta);
+		$('#dw-delta-commercial').text(data.kpis.commercial.delta || '');
 		$('#dw-spark-commercial').attr('d', data.kpis.commercial.sparkline);
 
 		$('#dw-val-breakage').text(data.kpis.breakage.value);
-		$('#dw-delta-breakage').text(data.kpis.breakage.delta);
+		$('#dw-delta-breakage').text(data.kpis.breakage.delta || '');
 		$('#dw-spark-breakage').attr('d', data.kpis.breakage.sparkline);
 
 		$('#dw-val-adjustments').text(data.kpis.adjustments.value);
-		$('#dw-delta-adjustments').text(data.kpis.adjustments.delta);
+		$('#dw-delta-adjustments').text(data.kpis.adjustments.delta || '');
 		$('#dw-spark-adjustments').attr('d', data.kpis.adjustments.sparkline);
 
 		$('#dw-val-recovery').text(data.kpis.recovery.value);
-		$('#dw-delta-recovery').text(data.kpis.recovery.delta);
+		$('#dw-delta-recovery').text(data.kpis.recovery.delta || '');
 		$('#dw-spark-recovery').attr('d', data.kpis.recovery.sparkline);
 
 		$('#dw-val-avoidable').text(data.kpis.avoidable.value);
-		$('#dw-delta-avoidable').text(data.kpis.avoidable.delta);
+		$('#dw-delta-avoidable').text(data.kpis.avoidable.delta || '');
 		$('#dw-spark-avoidable').attr('d', data.kpis.avoidable.sparkline);
+
+		if (data.kpis.procedural_errors) {
+			$('#dw-val-cases').text(data.kpis.procedural_errors.value);
+			$('#dw-sub-cases').text(data.kpis.procedural_errors.subtext);
+		}
+		if (data.reduction_metrics) {
+			var rm = data.reduction_metrics;
+			$('#dw-delta-cases').text((rm.evidence_missing || 0) + ' sin foto');
+			$('#dw-val-plans').text(rm.plan_closure_pct !== null && rm.plan_closure_pct !== undefined ? (Number(rm.plan_closure_pct).toFixed(1) + '%') : 'Sin planes');
+			$('#dw-delta-plans').text((rm.plans_closed || 0) + '/' + (rm.plans_total || 0) + ' cerrados');
+			$('#dw-sub-plans').text('Evitadas: $' + Number(rm.avoided_loss_amount || 0).toFixed(0) + ' · Evidencia: ' + (rm.evidence_compliance_pct !== null && rm.evidence_compliance_pct !== undefined ? Number(rm.evidence_compliance_pct).toFixed(0) + '%' : '—'));
+		}
 
 		// Actualizar Gráficos
 		dwEvolutionData = data.evolution;
@@ -2852,11 +2630,11 @@ function dwApplyFilters() {
 		dwRecoveryData = data.recovery;
 
 		$('#dw-side-curr-val').text(data.evolution.current_month.value);
-		$('#dw-side-curr-delta').text(data.evolution.current_month.delta);
+		$('#dw-side-curr-delta').text(data.evolution.current_month.delta || '');
 		$('#dw-side-proj-val').text(data.evolution.closing_projection.value);
-		$('#dw-side-proj-delta').text(data.evolution.closing_projection.delta);
+		$('#dw-side-proj-delta').text(data.evolution.closing_projection.delta || '');
 		$('#dw-donut-center-total').text(data.donut_types.total);
-		$('#dw-gauge-center-pct').text(data.recovery.recovery_rate + '%');
+		$('#dw-gauge-center-pct').text((data.recovery.recovery_rate !== null && data.recovery.recovery_rate !== undefined) ? (data.recovery.recovery_rate + '%') : '0%');
 		$('#dw-rec-val').text(data.recovery.recovered_amount);
 
 		initExecutiveCharts();

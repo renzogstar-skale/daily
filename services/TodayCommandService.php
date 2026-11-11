@@ -37,12 +37,12 @@ class TodayCommandService extends BaseService
 	private string $now;
 	private string $today;
 
-	public function Get(?int $branchId, bool $showPeople = false, ?callable $canOpen = null): array
+	public function Get(?int $branchId, bool $showPeople = false, ?callable $canOpen = null, ?string $date = null): array
 	{
 		$this->pdo = DatabaseService::GetInstance()->GetDbConnectionRaw();
 		$this->branch = $branchId;
-		$this->now = date('Y-m-d H:i:s');
-		$this->today = date('Y-m-d');
+		$this->today = DailyMetricsService::AnchorDate($date);
+		$this->now = $this->today . ' ' . ($this->today === date('Y-m-d') ? date('H:i:s') : '23:59:59');
 
 		$decisions = $this->Decisions();
 		if ($canOpen)
@@ -751,11 +751,14 @@ class TodayCommandService extends BaseService
 		$key = $this->branch ? strval($this->branch) : 'all';
 		try
 		{
-			$this->pdo->prepare('INSERT INTO today_snapshots (snap_date, scope, data, updated_at) VALUES (?, ?, ?, ?)
-				ON CONFLICT(snap_date, scope) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at')
-				->execute([$this->today, $key, json_encode($s), $this->now]);
+			if ($this->today === date('Y-m-d'))
+			{
+				$this->pdo->prepare('INSERT INTO today_snapshots (snap_date, scope, data, updated_at) VALUES (?, ?, ?, ?)
+					ON CONFLICT(snap_date, scope) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at')
+					->execute([$this->today, $key, json_encode($s), $this->now]);
+			}
 			$st = $this->pdo->prepare('SELECT data, updated_at FROM today_snapshots WHERE snap_date = ? AND scope = ?');
-			$st->execute([date('Y-m-d', strtotime('-1 day')), $key]);
+			$st->execute([date('Y-m-d', strtotime($this->today . ' -1 day')), $key]);
 			$r = $st->fetch(\PDO::FETCH_ASSOC);
 			return $r ? json_decode($r['data'], true) + ['at' => $r['updated_at']] : null;
 		}

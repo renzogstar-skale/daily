@@ -140,7 +140,9 @@
 			<div class="today-exec-select-box">
 				<span style="color: #64748b; margin-right: 4px;">Sucursal</span>
 				<select id="exec-filter-branch" aria-label="Sucursal">
-					<option value="all" @if(!$selectedBranchId) selected @endif>Todas</option>
+					@if(empty($restricted))
+						<option value="all" @if(!$selectedBranchId) selected @endif>Todas</option>
+					@endif
 					@foreach($branches as $b)
 						<option value="{{ $b->id }}" @if($selectedBranchId === intval($b->id)) selected @endif>{{ $b->name }}</option>
 					@endforeach
@@ -152,7 +154,7 @@
 				<span style="color: #64748b; margin-right: 4px;">Departamento</span>
 				<select id="exec-filter-dept" aria-label="Departamento">
 					<option value="todos" @if($selectedDept === 'todos') selected @endif>Todos</option>
-					@foreach(\Grocy\Services\DailyMetricsService::DEPARTMENTS as $dk => $dv)
+					@foreach(($departments ?? \Grocy\Services\DailyMetricsService::Departments()) as $dk => $dv)
 					<option value="{{ $dk }}" @if($selectedDept === $dk) selected @endif>{{ $dv[0] }}</option>
 					@endforeach
 				</select>
@@ -185,7 +187,7 @@
 	</header>
 
 	<!-- ==================== NIVEL 1: PULSO OPERATIVO EJECUTIVO ==================== -->
-	<section class="daily-pulse-banner" style="grid-template-columns: 1.6fr 1.2fr 1.2fr;" aria-label="Pulso Operativo del Turno">
+	<section class="daily-pulse-banner" style="grid-template-columns: 1.5fr 1fr 1fr 1fr;" aria-label="Pulso Operativo del Turno">
 		<div class="daily-pulse-status">
 			<div class="daily-pulse-indicator is-{{ $state[1] === 'danger' ? 'danger' : ($state[1] === 'warning' ? 'warning' : 'good') }}">
 				<i class="fa-solid {{ $state[1] === 'danger' ? 'fa-triangle-exclamation' : ($state[1] === 'warning' ? 'fa-bell' : 'fa-circle-check') }}"></i>
@@ -218,7 +220,7 @@
 				<span class="daily-delta {{ ['good' => 'is-good', 'bad' => 'is-bad'][$exec['kpis']['sales_net']['tone'] ?? ''] ?? 'is-neutral' }}">
 					{{ $exec['kpis']['sales_net']['delta_pct'] }}
 				</span>
-				<span>vs. periodo anterior</span>
+				<span>vs. período anterior</span>
 			</span>
 		</div>
 
@@ -233,7 +235,18 @@
 				<span>{{ $exec['kpis']['target_compliance']['target_text'] }}</span>
 			</span>
 		</div>
-	</section>
+
+		<!-- Métrica Macro 3: Margen Bruto -->
+		<div class="daily-pulse-metric">
+			<span class="daily-pulse-metric-label"><i class="fa-solid fa-percent text-info mr-1"></i> Margen Bruto</span>
+			<span class="daily-pulse-metric-value daily-tabular" id="pulse-margin-val">{{ $exec['kpis']['gross_margin']['value'] }}</span>
+			<span class="daily-pulse-metric-sub">
+				<span class="daily-delta {{ ['good' => 'is-good', 'bad' => 'is-bad'][$exec['kpis']['gross_margin']['tone'] ?? ''] ?? 'is-neutral' }}">
+					{{ $exec['kpis']['gross_margin']['delta_pp'] }}
+				</span>
+				<span>{{ $exec['kpis']['gross_margin']['comparison_text'] }}</span>
+			</span>
+		</div>
 	</section>
 
 	<!-- ==================== CONTROL DE NIVELES (SEGMENTED TABS) ==================== -->
@@ -585,7 +598,7 @@
 		<div class="today-exec-card">
 			<div class="today-exec-card-head">
 				<h3 class="today-exec-card-title">Avisos que requieren atención hoy</h3>
-				<span class="badge badge-warning text-dark font-weight-normal" style="font-size: 11px; white-space: nowrap; flex-shrink: 0;">{{ count($exec['priority_decisions'] ?? []) }} pendientes</span>
+				<span class="badge badge-warning text-dark font-weight-normal" id="exec-decisions-count" style="font-size: 11px; white-space: nowrap; flex-shrink: 0;">{{ count($exec['priority_decisions'] ?? []) }} pendientes</span>
 			</div>
 			<div class="today-exec-decisions-list" id="exec-decisions-list">
 				@if(!empty($exec['priority_decisions']))
@@ -603,7 +616,11 @@
 									<span class="today-exec-decision-title">{{ $dec['title'] }}</span>
 								</div>
 								<span class="today-exec-decision-desc">{{ $dec['description'] }}</span>
-								<span class="today-exec-decision-impact {{ $dec['impact_class'] }}">{{ $dec['impact_text'] }}</span>
+								<div class="d-flex align-items-center flex-wrap" style="gap: 8px; margin-top: 2px;">
+									<span class="today-exec-decision-impact {{ $dec['impact_class'] }}">{{ $dec['impact_text'] }}</span>
+									@if(!empty($dec['owner']))<span class="text-muted" style="font-size: 10px;"><i class="fa-regular fa-user mr-1"></i>{{ $dec['owner'] }}</span>@endif
+									@if(!empty($dec['due_date']))<span class="text-muted" style="font-size: 10px;"><i class="fa-regular fa-clock mr-1"></i>{{ $dec['due_date'] }}</span>@endif
+								</div>
 							</div>
 						</div>
 						<i class="fa-solid fa-chevron-right today-exec-decision-arrow"></i>
@@ -718,7 +735,7 @@
 						{!! $sparkLine($exec['sparks']['on_time'] ?? [], 'execGreenGrad', '#10b981') !!}
 					</div>
 				</div>
-				<a href="{{ $U('/dispatch') }}" class="today-exec-spark-link" title="{{ $exec['operational_kpis']['on_time_delivery']['tooltip'] }}">Ver detalle →</a>
+				<a href="{{ $U('/dispatches') }}" class="today-exec-spark-link" title="{{ $exec['operational_kpis']['on_time_delivery']['tooltip'] }}">Ver detalle →</a>
 			</div>
 		</div>
 	</div>
@@ -750,7 +767,7 @@
 						{!! $sparkLine($exec['sparks']['cogs'] ?? [], 'execRedGrad', '#ef4444') !!}
 					</div>
 				</div>
-				<a href="{{ $U('/kpis?tab=cogs') }}" class="today-exec-spark-link" title="{{ $exec['profitability_kpis']['cogs']['tooltip'] }}">Ver detalle →</a>
+				<a href="{{ $U('/kpis') }}" class="today-exec-spark-link" title="{{ $exec['profitability_kpis']['cogs']['tooltip'] }}">Ver detalle →</a>
 			</div>
 
 			<!-- Card 2: Descuentos -->
@@ -842,7 +859,7 @@
 						{!! $sparkBars($exec['sparks']['expiring'] ?? [], '#16a34a') !!}
 					</div>
 				</div>
-				<a href="{{ $U('/inventory/stockouts') }}" class="today-exec-spark-link" title="{{ $exec['risk_inventory']['expiring']['tooltip'] }}">Ver detalle →</a>
+				<a href="{{ $U('/traceability') }}" class="today-exec-spark-link" title="{{ $exec['risk_inventory']['expiring']['tooltip'] }}">Ver detalle →</a>
 			</div>
 
 			<!-- Card 3: Productos sensibles -->
@@ -914,31 +931,12 @@
 	<div class="today-exec-section">
 		<div class="today-exec-section-header">
 			<h2 class="today-exec-section-title">
-				<i class="fa-solid fa-user-check"></i> Personal y productividad
+				<i class="fa-solid fa-user-check"></i> Productividad y carga laboral
 			</h2>
 			<a href="{{ $U('/operations/scheduling') }}" class="today-exec-ver-todas">Ver detalle</a>
 		</div>
-		<div class="today-exec-cards-row-3">
-			<!-- Card 1: Cobertura de personal -->
-			<div class="today-exec-spark-card">
-				<div class="today-exec-spark-head">
-					<div class="today-exec-spark-icon is-green">
-						<i class="fa-solid fa-user-group"></i>
-					</div>
-					<span class="today-exec-spark-title">Cobertura de personal</span>
-				</div>
-				<div class="today-exec-spark-body">
-					<div class="today-exec-spark-val-col">
-						<span class="today-exec-spark-val" id="prod-cov-val">{{ $exec['workforce_kpis']['coverage']['value'] }}</span>
-						<span class="today-exec-spark-delta {{ ['good' => 'delta-up', 'bad' => 'delta-up-bad'][$exec['workforce_kpis']['coverage']['tone'] ?? ''] ?? '' }}" id="prod-cov-delta" data-spark="1">{{ $exec['workforce_kpis']['coverage']['delta'] }}</span>
-					</div>
-					<div class="today-exec-sparkline-box">
-						{!! $sparkLine($exec['sparks']['coverage'] ?? [], 'execGreenGrad', '#10b981') !!}
-					</div>
-				</div>
-			</div>
-
-			<!-- Card 2: Productividad por hora -->
+		<div class="today-exec-cards-row-3" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));">
+			<!-- Card 1: Productividad por hora -->
 			<div class="today-exec-spark-card">
 				<div class="today-exec-spark-head">
 					<div class="today-exec-spark-icon is-blue">
@@ -955,15 +953,16 @@
 						{!! $sparkLine($exec['sparks']['productivity'] ?? [], 'execGreenGrad', '#10b981') !!}
 					</div>
 				</div>
+				<a href="{{ $U('/operations/scheduling') }}" class="today-exec-spark-link" title="{{ $exec['workforce_kpis']['productivity']['tooltip'] }}">Ver detalle →</a>
 			</div>
 
-			<!-- Card 3: Horas extra -->
+			<!-- Card 2: Horas programadas -->
 			<div class="today-exec-spark-card">
 				<div class="today-exec-spark-head">
 					<div class="today-exec-spark-icon is-purple">
 						<i class="fa-regular fa-clock"></i>
 					</div>
-					<span class="today-exec-spark-title">Horas extra</span>
+					<span class="today-exec-spark-title">Horas programadas</span>
 				</div>
 				<div class="today-exec-spark-body">
 					<div class="today-exec-spark-val-col">
@@ -974,6 +973,7 @@
 						{!! $sparkLine($exec['sparks']['hours'] ?? [], 'execRedGrad', '#ef4444') !!}
 					</div>
 				</div>
+				<a href="{{ $U('/operations/scheduling') }}" class="today-exec-spark-link" title="{{ $exec['workforce_kpis']['overtime']['tooltip'] }}">Ver detalle →</a>
 			</div>
 		</div>
 	</div>
@@ -988,7 +988,7 @@
 						<i class="fa-solid fa-bars-progress" style="color: var(--daily-green-700); font-size: 18px; margin-right: 8px;"></i>
 						Estado de los procesos
 					</h2>
-					<span class="today-process-subtitle">Monitoreo operativo transversal · Reglas de evaluación comercial</span>
+					<span class="today-process-subtitle">Supervisión operativa transversal · Desviación, impacto económico, tendencia y responsable</span>
 				</div>
 				<div class="today-process-header-meta">
 					<div class="today-process-legend" aria-label="Leyenda de estados">
@@ -999,7 +999,7 @@
 					</div>
 					<div class="today-process-eval-stamp">
 						<i class="fa-regular fa-clock" style="color: #64748b; font-size: 11px;"></i>
-						<span>Evaluado con los registros a las <strong id="process-demo-clock">{{ date('H:i') }}</strong></span>
+						<span>Último registro: <strong id="process-demo-clock">{{ $exec['last_updated'] }}</strong></span>
 					</div>
 				</div>
 			</div>
@@ -1009,10 +1009,13 @@
 				<table class="today-process-table" id="today-process-table">
 					<thead>
 						<tr>
-							<th style="width: 22%;">Proceso</th>
-							<th style="width: 18%;">Estado</th>
-							<th style="width: 42%;">Situación principal</th>
-							<th style="width: 18%; text-align: right;">Acción</th>
+							<th style="width: 14%;">Proceso</th>
+							<th style="width: 12%;">Estado</th>
+							<th style="width: 13%;">Desviación</th>
+							<th style="width: 12%;">Impacto</th>
+							<th style="width: 11%;">Tendencia</th>
+							<th style="width: 25%;">Situación y responsable</th>
+							<th style="width: 13%; text-align: right;">Módulo</th>
 						</tr>
 					</thead>
 					<tbody id="today-process-tbody">
@@ -1033,9 +1036,19 @@
 											<span>{{ $proc['status_label'] }}</span>
 										</span>
 									</td>
+									<td><strong style="font-size: 12px;">{{ $proc['deviation'] ?? '—' }}</strong></td>
+									<td style="font-size: 12px;" class="{{ ($proc['economic_impact'] ?? 0) < 0 ? 'text-danger font-weight-bold' : '' }}">
+										{{ $proc['economic_impact_label'] ?? 'No calculable' }}
+									</td>
+									<td style="font-size: 12px;">
+										<span class="{{ ($proc['trend'] ?? '') === 'down' ? 'text-danger' : (($proc['trend'] ?? '') === 'up' ? 'text-success' : 'text-muted') }}">
+											{{ $proc['trend_label'] ?? 'Sin datos' }}
+										</span>
+									</td>
 									<td class="today-process-situation-cell">
 										<div class="today-proc-situation-content">
 											<span class="today-proc-situation-text">{{ $proc['situation'] }}</span>
+											<small class="text-muted d-block" style="font-size: 10.5px;">Responsable: <strong>{{ $proc['owner'] ?? 'Operaciones' }}</strong> · {{ $proc['last_updated'] ?? $exec['last_updated'] }}</small>
 											@if(!empty($proc['scope_note']))
 												<span class="today-proc-scope-tag" title="El filtro actual de departamento no subdivide este proceso global">{{ $proc['scope_note'] }}</span>
 											@endif
@@ -1189,79 +1202,31 @@
 	</section>
 </div>
 
-{{-- Fila 3 · Analítica de mermas (reutiliza las APIs del Centro de Control de Mermas) --}}
-@if($can['loss'])
-<div class="cc-row cc-row-3">
-	<section class="cc-card" aria-labelledby="cc-day-t">
-		<div class="cc-card-head">
-			<h2 id="cc-day-t">Merma total del día</h2>
-			<button type="button" class="cc-btn is-sm" data-retry="day"><i class="fa-solid fa-rotate-right"></i>Actualizar</button>
+{{-- Fila 3 · Seguimiento resumido de planes y acciones correctivas (analítica de mermas vive en /waste) --}}
+@php $caToday = $exec['corrective_actions'] ?? []; @endphp
+<section class="cc-card" aria-labelledby="cc-ca-t" style="margin-bottom: 14px;">
+	<div class="cc-card-head">
+		<h2 id="cc-ca-t"><i class="fa-solid fa-list-check text-success mr-2"></i>Seguimiento de acciones correctivas</h2>
+		<div class="d-flex align-items-center" style="gap: 10px;">
+			@if($canGo('/waste'))<a class="cc-link" href="{{ $link('/waste') }}">Abrir Centro de Mermas →</a>@endif
+			@if($canGo('/alerts'))<a class="cc-link" href="{{ $link('/alerts') }}">Centro de Alertas →</a>@endif
 		</div>
-		<div class="cc-day-total"><b id="cc-day-total">—</b><span id="cc-day-delta"></span></div>
-		<div class="cc-day-grid" id="cc-day-grid">
-			@foreach([['operativa', 'Operativa', 'red', 'fa-box-open'], ['comercial', 'Comercial', 'amber', 'fa-tags'], ['ajuste', 'Ajustes', 'purple', 'fa-sliders'], ['averia', 'Averías', 'yellow', 'fa-screwdriver-wrench']] as [$k, $label, $tone, $ic])
-			<a class="cc-mini is-{{ $tone }}" data-class="{{ $k }}" href="{{ $canGo('/waste') ? $link('/waste?loss_class=' . $k . '&start_date=' . date('Y-m-d') . '&end_date=' . date('Y-m-d') . '#tab-clasificacion') : '#' }}">
-				<span class="cc-mini-top"><i class="fa-solid {{ $ic }}"></i>{{ $label }}</span>
-				<b>—</b><small>—</small>
-			</a>
-			@endforeach
+	</div>
+	<div class="d-flex flex-wrap align-items-center justify-content-between" style="gap: 12px; padding: 4px 0;">
+		<div class="d-flex flex-wrap" style="gap: 18px; font-size: 13px;">
+			<span>Abiertas: <strong>{{ intval($caToday['open'] ?? 0) }}</strong></span>
+			<span>En curso: <strong class="text-primary">{{ intval($caToday['in_progress'] ?? 0) }}</strong></span>
+			<span>Vencidas: <strong class="{{ intval($caToday['overdue'] ?? 0) > 0 ? 'text-danger' : '' }}">{{ intval($caToday['overdue'] ?? 0) }}</strong></span>
+			<span>Costo evitado acumulado: <strong class="text-success">{{ $money($caToday['cost_avoided_total'] ?? 0) }}</strong></span>
 		</div>
-		<div class="cc-skel" id="cc-day-skel"></div>
-		<div class="cc-empty is-small is-error" id="cc-day-err" hidden><i class="fa-solid fa-triangle-exclamation"></i><b>No se pudo cargar</b><button type="button" class="cc-link" data-retry="day">Reintentar</button></div>
-	</section>
-
-	<section class="cc-card" aria-labelledby="cc-yoy-t">
-		<div class="cc-card-head">
-			<div>
-				<h2 id="cc-yoy-t">Merma acumulada {{ date('Y') - 1 }} vs. {{ date('Y') }}</h2>
-				<div class="cc-ctrl cc-ctrl-sm">
-					<select class="cc-select" id="cc-yoy-class" aria-label="Tipo de merma">
-						<option value="">Toda la merma</option>
-						<option value="operativa">Operativa</option>
-						<option value="comercial">Comercial</option>
-						<option value="ajuste">Ajustes</option>
-						<option value="averia">Averías</option>
-					</select>
-					@if(!empty($formats) && !$selectedBranchId)
-					<select class="cc-select" id="cc-yoy-format" aria-label="Formato">
-						<option value="">Todos los formatos</option>
-						@foreach($formats as $f)<option value="{{ $f }}">{{ $f }}</option>@endforeach
-					</select>
-					@endif
-					<div class="cc-tabs" role="tablist" aria-label="Unidad">
-						<button type="button" class="cc-tab is-on" data-metric="cost">$</button>
-						<button type="button" class="cc-tab" data-metric="pct" title="% de ventas">%</button>
-					</div>
-				</div>
+		@if(!empty($caToday['top']))
+			<div class="small text-muted">
+				Última activa: <strong>{{ $caToday['top'][0]['title'] ?? ($caToday['top'][0]['reason_name'] ?? 'Plan correctivo') }}</strong>
+				@if(!empty($caToday['top'][0]['assigned_username'])) · Resp.: {{ $caToday['top'][0]['assigned_username'] }}@endif
 			</div>
-			<div class="cc-yoy-var" id="cc-yoy-var"></div>
-		</div>
-		<div class="cc-chart" style="height: 150px;"><div class="cc-skel" id="cc-yoy-skel"></div><canvas id="cc-yoy" aria-label="Merma acumulada mensual, año anterior frente al actual" role="img"></canvas></div>
-		<p class="cc-card-sub" id="cc-yoy-sub">&nbsp;</p>
-		<div class="cc-empty is-small is-error" id="cc-yoy-err" hidden><i class="fa-solid fa-triangle-exclamation"></i><b>No se pudo cargar</b><button type="button" class="cc-link" data-retry="yoy">Reintentar</button></div>
-	</section>
-
-	<section class="cc-card" aria-labelledby="cc-dist-t">
-		<div class="cc-card-head">
-			<h2 id="cc-dist-t">Distribución por causa <span class="cc-muted cc-h-sub" id="cc-dist-period">(hoy)</span></h2>
-			<span class="cc-ctrl">
-				<span class="cc-tabs" role="tablist" aria-label="Período">
-					<button type="button" class="cc-tab is-on" data-dist="day">Hoy</button>
-					<button type="button" class="cc-tab" data-dist="month">Mes</button>
-					<button type="button" class="cc-tab" data-dist="year">Año</button>
-				</span>
-				@if($canGo('/waste'))<a class="cc-link" id="cc-dist-more" href="{{ $link('/waste#tab-causales') }}">Ver detalle</a>@endif
-			</span>
-		</div>
-		<div class="cc-donut-wrap" id="cc-dist-body">
-			<div class="cc-donut"><div class="cc-skel" id="cc-dist-skel"></div><canvas id="cc-dist" aria-label="Distribución de la merma por causal" role="img"></canvas><div class="cc-donut-center"><b id="cc-dist-total">&nbsp;</b><span>100%</span></div></div>
-			<ul class="cc-dlist" id="cc-dist-list"></ul>
-		</div>
-		<div class="cc-empty is-small" id="cc-dist-empty" hidden><i class="fa-solid fa-circle-check"></i><b>Sin merma registrada en el período</b></div>
-		<div class="cc-empty is-small is-error" id="cc-dist-err" hidden><i class="fa-solid fa-triangle-exclamation"></i><b>No se pudo cargar</b><button type="button" class="cc-link" data-retry="dist">Reintentar</button></div>
-	</section>
-</div>
-@endif
+		@endif
+	</div>
+</section>
 
 {{-- Fila 4 · Agenda de decisiones + Aprobaciones --}}
 <div class="cc-row cc-row-4">
@@ -1432,7 +1397,7 @@
 	<section class="cc-card" id="cc-exec" aria-labelledby="cc-exec-t">
 		<div class="cc-card-head">
 			<h2 id="cc-exec-t">Cumplimiento del día</h2>
-			@if($ex['total'] > 0)<button type="button" class="cc-link" id="cc-seg-toggle" aria-expanded="false">Por turno / rol</button>@endif
+			@if($canGo('/operations/scheduling'))<a class="cc-link" href="{{ $link('/operations/scheduling') }}">Ver turnos →</a>@endif
 		</div>
 		@php $pct = $ex['pct'] ?? 0; $circ = 2 * M_PI * 46; @endphp
 		<div class="cc-ring-wrap">
@@ -1447,23 +1412,6 @@
 			<div class="is-blue"><b>{{ $ex['in_progress'] }}</b><span>En proceso</span></div>
 			<div class="is-red"><b>{{ $tasksLate }}</b><span>Atrasadas</span></div>
 		</div>
-		@if($ex['total'] > 0)
-		<div id="cc-seg-box" hidden>
-			<div class="cc-tabs" role="tablist" aria-label="Segmentar" style="margin-top: 10px">
-				<button type="button" class="cc-tab is-on" data-seg="shift">Turno</button>
-				<button type="button" class="cc-tab" data-seg="role">Rol</button>
-				@if($ex['show_people'])<button type="button" class="cc-tab" data-seg="person">Persona</button>@endif
-			</div>
-			@php $segBar = function ($c) { $t = max(1, array_sum($c)); return collect(['done', 'in_progress', 'pending', 'overdue'])->map(fn($k) => $c[$k] ? '<span class="seg-' . $k . '" style="width:' . round(100 * $c[$k] / $t, 2) . '%" title="' . $c[$k] . '"></span>' : '')->implode(''); }; @endphp
-			@foreach($ex['segments'] as $g => $groups)
-			<ul class="cc-seglist" data-seg-group="{{ $g }}" @if($g !== 'shift') hidden @endif>
-				@foreach($groups as $name => $c)
-				<li><span class="cc-seg-name" title="{{ $name }}">{{ $name }}</span><span class="cc-segbar">{!! $segBar($c) !!}</span><span class="cc-seg-num">{{ $c['done'] }}/{{ array_sum($c) }}</span></li>
-				@endforeach
-			</ul>
-			@endforeach
-		</div>
-		@endif
 	</section>
 
 	<section class="cc-card" aria-labelledby="cc-hour-t">
@@ -1542,7 +1490,7 @@
 			</tbody>
 		</table>
 		@endif
-		@if(!$tm['has_schedule'])<p class="cc-note">Sin horarios cargados hoy: cobertura y carga no se calculan.@if($canGo('/schedule')) <a href="{{ $link('/schedule') }}">Cargar horarios</a>.@endif</p>@endif
+		@if(!$tm['has_schedule'])<p class="cc-note">Sin horarios cargados hoy: cobertura y carga no se calculan.@if($canGo('/operations/scheduling')) <a href="{{ $link('/operations/scheduling') }}">Cargar horarios</a>.@endif</p>@endif
 	</section>
 
 	<section class="cc-card" aria-labelledby="cc-act-t">
@@ -1760,33 +1708,13 @@
 		if (act === 'alert-reject') ask('Rechazar cierre', 'Por qué no se aprueba: la alerta vuelve a En curso.', 'Rechazar', 'btn-danger', 5, function(v) { run(post('/alerts/' + id + '/decide', { approve: false, note: v }), 'Cierre rechazado'); });
 	});
 
-	// ---- Merma total del día (misma fuente que el Centro de Control de Mermas)
-	function loadDay() {
-		if (!document.getElementById('cc-day-total')) return;
-		$('#cc-day-skel').prop('hidden', false); $('#cc-day-err').prop('hidden', true);
-		api('GET', '/loss/summary?' + qs({ from: TODAY, to: TODAY, branch_id: BRANCH })).then(function(r) {
-			$('#cc-day-skel').prop('hidden', true);
-			$('#cc-day-err').prop('hidden', true);
-			var tot = r.total.value, prev = r.prev_period_total;
-			document.getElementById('cc-day-total').textContent = money(tot);
-			var dv = prev ? Math.round(100 * (tot - prev) / Math.abs(prev)) : null;
-			document.getElementById('cc-day-delta').innerHTML = dv === null ? '<span class="cc-muted">Sin merma ayer para comparar</span>'
-				: '<span class="cc-delta ' + (dv > 0 ? 'is-bad' : dv < 0 ? 'is-good' : 'is-flat') + '"><i class="fa-solid fa-arrow-' + (dv > 0 ? 'up' : 'down') + '"></i>' + (dv > 0 ? '+' : '') + dv + '% vs. ayer</span>';
-			$('#cc-day-grid [data-class]').each(function() {
-				var k = r[this.getAttribute('data-class')] || { value: 0, share: null };
-				$(this).find('b').text(money(k.value));
-				$(this).find('small').text(k.share === null || k.share === undefined ? '—' : Math.round(k.share) + '%');
-			});
-		}).catch(function(e) { $('#cc-day-skel').prop('hidden', true); $('#cc-day-err').prop('hidden', false).find('b').text('No se pudo cargar: ' + e.message); });
-	}
-
-	if (typeof Chart === 'undefined') { loadDay(); return; }
+	if (typeof Chart === 'undefined') { return; }
 	var night = document.body.classList.contains('night-mode');
 	Chart.defaults.global.defaultFontFamily = "'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
 	Chart.defaults.global.defaultFontColor = night ? '#94A3B8' : '#64748B';
 	Chart.defaults.global.defaultFontSize = 11;
 	var NOPLUG = { colorschemes: false, outlabels: false, doughnutlabel: false };
-	var TIP = { backgroundColor: night ? '#0F172A' : '#FFFFFF', titleFontColor: night ? '#E2E8F0' : '#172B4D', bodyFontColor: night ? '#CBD5E1' : '#334155', footerFontColor: '#64748B', borderColor: night ? '#334155' : '#E4EAF2', borderWidth: 1, titleFontStyle: '700', xPadding: 10, yPadding: 8, cornerRadius: 8, caretSize: 5 };
+	var TIP = { backgroundColor: 'rgba(15, 23, 42, 0.94)', titleFontColor: '#FFFFFF', bodyFontColor: '#FFFFFF', footerFontColor: '#E2E8F0', borderColor: 'rgba(255, 255, 255, 0.15)', borderWidth: 1, titleFontStyle: 'bold', xPadding: 12, yPadding: 10, cornerRadius: 8, caretSize: 5, displayColors: true };
 	function axisY(extra) { return $.extend(true, { ticks: { beginAtZero: true, precision: 0, maxTicksLimit: 5 }, gridLines: { color: C.grid, zeroLineColor: C.grid, drawBorder: false } }, extra || {}); }
 	function axisX(extra) { return $.extend(true, { gridLines: { display: false }, ticks: { maxRotation: 0, autoSkipPadding: 8 } }, extra || {}); }
 
@@ -1851,7 +1779,7 @@
 	var bandTot = BANDS.map(function(b, i) { return bandData.reduce(function(a, r) { return a + r[i]; }, 0); });
 	var pk = bandTot.indexOf(Math.max.apply(null, bandTot));
 	document.getElementById('cc-hour-peak').innerHTML = sum ? '<b>' + sum + '</b> eventos hoy · franja más cargada <b>' + BANDS[pk][0] + '–' + BANDS[pk][1] + ' h</b>' + (outside ? ' · ' + outside + ' fuera de 6–22 h' : '') : 'Sin eventos registrados hoy';
-	new Chart(document.getElementById('cc-hourly'), {
+	var hourlyChart = new Chart(document.getElementById('cc-hourly'), {
 		type: 'bar',
 		data: { labels: BANDS.map(function(b) { return b[0] + '–' + b[1]; }), datasets: sev.map(function(s, i) { return { label: s[1], data: bandData[i], backgroundColor: s[2], barPercentage: .9, categoryPercentage: .7 }; }) },
 		options: { maintainAspectRatio: false, animation: { duration: 200 }, legend: { display: false },
@@ -1859,90 +1787,10 @@
 			plugins: NOPLUG,
 			scales: { xAxes: [axisX()], yAxes: [axisY({ ticks: { maxTicksLimit: 4 } })] } }
 	});
-
-	// ---- B · Merma acumulada interanual (API del Centro de Control de Mermas)
-	var yoy = null, Y = { metric: 'cost', loss_class: '', format: '' };
-	function loadYoy() {
-		if (!document.getElementById('cc-yoy')) return;
-		var year = new Date().getFullYear();
-		$('#cc-yoy-skel').prop('hidden', false); $('#cc-yoy-err').prop('hidden', true);
-		api('GET', '/loss/year-comparison?' + qs({ years: (year - 1) + ',' + year, metric: Y.metric, loss_class: Y.loss_class, format: Y.format, branch_id: BRANCH })).then(function(r) {
-			$('#cc-yoy-skel').prop('hidden', true);
-			$('#cc-yoy-err').prop('hidden', true);
-			var prev = r.years[0], cur = r.years[r.years.length - 1], pct = Y.metric === 'pct';
-			var fmt = function(v) { return v === null || v === undefined ? '—' : (pct ? Number(v).toFixed(2) + '%' : money(v)); };
-			var c = r.comparison, sub = '', big = '';
-			if (!prev.events && !cur.events) { sub = 'Sin merma registrada en ' + prev.year + ' ni ' + year + ' para este filtro.'; }
-			else if (c && c.trend === 'sin_historico') { sub = 'Sin histórico de ' + prev.year + '. ' + year + ' acumula ' + fmt(c.current) + ' a ' + c.month + '.'; }
-			else if (c) {
-				sub = 'A ' + c.month + ': <b>' + fmt(c.current) + '</b> vs. ' + fmt(c.base);
-				if (c.pct !== null) { big = '<b class="' + (c.diff > 0 ? 't-danger' : 't-success') + '">' + (c.pct > 0 ? '+' : '') + Number(c.pct).toFixed(0) + '%</b><span>vs. ' + prev.year + '</span>'; }
-			}
-			document.getElementById('cc-yoy-sub').innerHTML = sub;
-			document.getElementById('cc-yoy-var').innerHTML = big;
-			var cfg = {
-				type: 'line',
-				data: { labels: r.labels, datasets: [
-					{ label: String(cur.year), data: cur.cumulative, borderColor: '#14B8A6', backgroundColor: 'rgba(20,184,166,.08)', borderWidth: 2.5, pointRadius: 2.5, pointBackgroundColor: '#14B8A6', lineTension: .3, fill: true, spanGaps: false },
-					{ label: String(prev.year), data: prev.cumulative, borderColor: '#CBD5E1', backgroundColor: '#CBD5E1', borderWidth: 2, pointRadius: 2, lineTension: .3, fill: false }
-				] },
-				options: { maintainAspectRatio: false, animation: { duration: 200 }, legend: { position: 'top', align: 'start', labels: { boxWidth: 8, padding: 10, usePointStyle: true } },
-					tooltips: $.extend({ mode: 'index', intersect: false, callbacks: {
-						label: function(t, data) { return ' ' + data.datasets[t.datasetIndex].label + ': ' + fmt(t.yLabel) + ' acumulado'; },
-						footer: function(t) { var a = cur.cumulative[t[0].index], b = prev.cumulative[t[0].index]; if (a === null || b === null || !prev.events || !b) return ''; var v = (a - b) / Math.abs(b) * 100; return 'Variación: ' + (v > 0 ? '+' : '') + v.toFixed(1) + '%'; } } }, TIP),
-					plugins: NOPLUG,
-					scales: { xAxes: [axisX({ ticks: { maxTicksLimit: 12 } })], yAxes: [axisY({ ticks: { precision: undefined, maxTicksLimit: 4, callback: function(v) { return pct ? v + '%' : '$' + (Math.abs(v) >= 1000 ? (v / 1000).toFixed(1) + 'k' : v); } } })] } }
-			};
-			if (yoy) { yoy.destroy(); }
-			yoy = new Chart(document.getElementById('cc-yoy'), cfg);
-		}).catch(function(e) { $('#cc-yoy-skel').prop('hidden', true); $('#cc-yoy-err').prop('hidden', false).find('b').text('No se pudo cargar: ' + e.message); });
-	}
-	$(document).on('click', '[data-metric]', function() { $(this).addClass('is-on').siblings().removeClass('is-on'); Y.metric = this.getAttribute('data-metric'); loadYoy(); });
-	$('#cc-yoy-class').on('change', function() { Y.loss_class = this.value; loadYoy(); });
-	$('#cc-yoy-format').on('change', function() { Y.format = this.value; loadYoy(); });
-
-	// ---- C · Distribución de merma por causal
-	var dist = null, D = 'day';
-	var PALETTE = [C.blue, C.pink, C.red, C.green, C.amber, C.purple, C.gray];
-	function loadDist() {
-		if (!document.getElementById('cc-dist')) return;
-		var from = D === 'day' ? TODAY : (D === 'month' ? TODAY.slice(0, 8) + '01' : TODAY.slice(0, 4) + '-01-01');
-		$('#cc-dist-period').text('(' + { day: 'hoy', month: 'mes', year: 'año' }[D] + ')');
-		$('#cc-dist-skel').prop('hidden', false); $('#cc-dist-err, #cc-dist-empty').prop('hidden', true); $('#cc-dist-body').prop('hidden', false);
-		var base = Grocy.BaseUrl.replace(/\/$/, '') + '/waste?' + qs({ branch_id: BRANCH, start_date: from, end_date: TODAY });
-		$('#cc-dist-more').attr('href', base + '#tab-causales');
-		api('GET', '/loss/causes?' + qs({ from: from, to: TODAY, branch_id: BRANCH })).then(function(r) {
-			$('#cc-dist-skel').prop('hidden', true);
-			$('#cc-dist-err').prop('hidden', true);
-			var list = r.causes.filter(function(c) { return c.cost > 0; });
-			if (!list.length) { $('#cc-dist-body').prop('hidden', true); $('#cc-dist-empty').prop('hidden', false); if (dist) { dist.destroy(); dist = null; } return; }
-			var top = list.slice(0, 6), rest = list.slice(6);
-			if (rest.length) { top.push({ code: '', name: 'Otras (' + rest.length + ')', cost: rest.reduce(function(a, c) { return a + c.cost; }, 0), pct: rest.reduce(function(a, c) { return a + (c.pct || 0); }, 0) }); }
-			document.getElementById('cc-dist-total').textContent = money(r.total);
-			$('#cc-dist-list').html(top.map(function(c, i) {
-				return '<li><a href="' + base + '#tab-causales" data-i="' + i + '" title="' + esc(c.name) + ': ' + money(c.cost) + '"><i style="background:' + PALETTE[i] + '"></i><span>' + esc(c.name) + '</span><small>' + Math.round(c.pct || 0) + '%</small></a></li>';
-			}).join(''));
-			if (dist) { dist.destroy(); }
-			dist = new Chart(document.getElementById('cc-dist'), {
-				type: 'doughnut',
-				data: { labels: top.map(function(c) { return c.name; }), datasets: [{ data: top.map(function(c) { return Math.round(c.cost * 100) / 100; }), backgroundColor: PALETTE.slice(0, top.length), borderWidth: 2, borderColor: night ? '#1E293B' : '#fff', hoverBorderColor: night ? '#1E293B' : '#fff', hoverBorderWidth: 0 }] },
-				options: { maintainAspectRatio: false, cutoutPercentage: 68, legend: { display: false }, animation: { duration: 250 }, plugins: NOPLUG,
-					tooltips: $.extend({ callbacks: { label: function(t) { var c = top[t.index]; return ' ' + c.name + ': ' + money(c.cost) + ' (' + Number(c.pct || 0).toFixed(1) + '%)'; } } }, TIP),
-					onClick: function(e, el) { if (el.length) { window.location = $('#cc-dist-list a').eq(el[0]._index).attr('href'); } },
-					hover: { onHover: function(e, el) { e.target.style.cursor = el.length ? 'pointer' : 'default'; $('#cc-dist-list a').removeClass('is-hl'); if (el.length) $('#cc-dist-list a').eq(el[0]._index).addClass('is-hl'); } } }
-			});
-		}).catch(function(e) { $('#cc-dist-skel').prop('hidden', true); $('#cc-dist-body').prop('hidden', true); $('#cc-dist-err').prop('hidden', false).find('b').text('No se pudo cargar: ' + e.message); });
-	}
-	// Leyenda ↔ segmento: resalta el sector al pasar por la leyenda
-	$(document).on('mouseenter focus', '#cc-dist-list a', function() {
-		if (!dist) return; var i = +this.getAttribute('data-i'), meta = dist.getDatasetMeta(0);
-		dist.updateHoverStyle(meta.data, null, false); dist.updateHoverStyle([meta.data[i]], null, true); dist.tooltip._active = [meta.data[i]]; dist.tooltip.update(true); dist.render();
-	}).on('mouseleave blur', '#cc-dist-list a', function() {
-		if (!dist) return; dist.updateHoverStyle(dist.getDatasetMeta(0).data, null, false); dist.tooltip._active = []; dist.tooltip.update(true); dist.render();
-	});
-	$(document).on('click', '[data-dist]', function() { $(this).addClass('is-on').siblings().removeClass('is-on'); D = this.getAttribute('data-dist'); loadDist(); });
-	$(document).on('click', '[data-retry]', function() { var k = this.getAttribute('data-retry'); k === 'yoy' ? loadYoy() : (k === 'day' ? loadDay() : loadDist()); });
-	loadDay(); loadYoy(); loadDist();
+	window.__dailyTodayResizeOps = function() {
+		if (trend && typeof trend.resize === 'function') trend.resize();
+		if (hourlyChart && typeof hourlyChart.resize === 'function') hourlyChart.resize();
+	};
 })();
 
 // ==========================================
@@ -1953,6 +1801,7 @@
 	var execMainChart = null;
 	var execDonutChart = null;
 	var execCompChart = null;
+	function esc(t) { return t == null ? '' : $('<div>').text(String(t)).html(); }
 
 	function initExecCharts(data) {
 		if (!data) return;
@@ -2010,12 +1859,19 @@
 				tooltips: {
 					mode: 'index',
 					intersect: false,
-					backgroundColor: 'rgba(15, 23, 42, 0.9)',
+					backgroundColor: 'rgba(15, 23, 42, 0.94)',
+					titleFontColor: '#FFFFFF',
+					titleFontStyle: 'bold',
 					titleFontSize: 12,
-					bodyFontSize: 12,
-					cornerRadius: 6,
-					xPadding: 10,
-					yPadding: 8,
+					bodyFontColor: '#FFFFFF',
+					bodyFontSize: 11,
+					footerFontColor: '#E2E8F0',
+					borderColor: 'rgba(255, 255, 255, 0.15)',
+					borderWidth: 1,
+					cornerRadius: 8,
+					xPadding: 12,
+					yPadding: 10,
+					displayColors: true,
 					callbacks: {
 						label: function(t, d) {
 							return ' ' + d.datasets[t.datasetIndex].label + ': $' + Number(t.yLabel).toLocaleString();
@@ -2107,7 +1963,19 @@
 				legend: { display: false },
 				animation: { duration: 400 },
 				tooltips: {
-					backgroundColor: 'rgba(15, 23, 42, 0.9)',
+					backgroundColor: 'rgba(15, 23, 42, 0.94)',
+					titleFontColor: '#FFFFFF',
+					titleFontStyle: 'bold',
+					titleFontSize: 12,
+					bodyFontColor: '#FFFFFF',
+					bodyFontSize: 11,
+					footerFontColor: '#E2E8F0',
+					borderColor: 'rgba(255, 255, 255, 0.15)',
+					borderWidth: 1,
+					cornerRadius: 8,
+					xPadding: 12,
+					yPadding: 10,
+					displayColors: true,
 					callbacks: {
 						label: function(t, d) {
 							var label = d.labels[t.index] || '';
@@ -2210,7 +2078,19 @@
 				maintainAspectRatio: false,
 				legend: { display: false },
 				tooltips: {
-					backgroundColor: 'rgba(15, 23, 42, 0.9)',
+					backgroundColor: 'rgba(15, 23, 42, 0.94)',
+					titleFontColor: '#FFFFFF',
+					titleFontStyle: 'bold',
+					titleFontSize: 12,
+					bodyFontColor: '#FFFFFF',
+					bodyFontSize: 11,
+					footerFontColor: '#E2E8F0',
+					borderColor: 'rgba(255, 255, 255, 0.15)',
+					borderWidth: 1,
+					cornerRadius: 8,
+					xPadding: 12,
+					yPadding: 10,
+					displayColors: true,
 					callbacks: {
 						label: function(t) {
 							var formatted = formattedValues[t.index] || (isPercentage ? (Number(t.yLabel).toFixed(1) + '%') : ('$' + Number(t.yLabel).toLocaleString()));
@@ -2282,7 +2162,7 @@
 
 		$('#exec-refresh-btn').addClass('spinning');
 
-		var baseUrl = window.Grocy ? window.Grocy.BaseUrl : '';
+		var baseUrl = (window.Grocy && window.Grocy.BaseUrl) ? window.Grocy.BaseUrl.replace(/\/$/, '') : '';
 		$.ajax({
 			url: baseUrl + '/api/today/sales-executive',
 			method: 'GET',
@@ -2411,19 +2291,53 @@
 			setDelta('#prod-ot-delta', wf.overtime, 'delta');
 		}
 
-		if (data.branch_priorities && data.branch_priorities.length > 0) {
+		if (data.branch_priorities) {
 			var bpHtml = '';
-			var baseUrl = window.Grocy ? window.Grocy.BaseUrl : '';
+			var baseUrl = (window.Grocy && window.Grocy.BaseUrl) ? window.Grocy.BaseUrl.replace(/\/$/, '') : '';
 			data.branch_priorities.forEach(function(bp) {
 				bpHtml += '<tr class="today-exec-table-row" onclick="window.location=\'' + baseUrl + bp.href + '\'">' +
-					'<td class="today-exec-branch-name">' + bp.branch + '</td>' +
-					'<td><span class="today-exec-table-state"><i class="fa-solid ' + bp.status_icon + '" style="color: ' + bp.status_icon_color + '; font-size: 13px;"></i> ' + bp.status_text + '</span></td>' +
-					'<td><span class="today-exec-prio-badge ' + bp.priority_class + '">' + bp.priority + '</span></td>' +
-					'<td class="today-exec-table-detail">' + bp.detail + '</td>' +
+					'<td class="today-exec-branch-name">' + esc(bp.branch) + '</td>' +
+					'<td><span class="today-exec-table-state"><i class="fa-solid ' + esc(bp.status_icon) + '" style="color: ' + esc(bp.status_icon_color) + '; font-size: 13px;"></i> ' + esc(bp.status_text) + '</span></td>' +
+					'<td><span class="today-exec-prio-badge ' + esc(bp.priority_class) + '">' + esc(bp.priority) + '</span></td>' +
+					'<td class="today-exec-table-detail">' + esc(bp.detail) + '</td>' +
 					'<td><i class="fa-solid fa-chevron-right today-exec-chevron"></i></td>' +
 				'</tr>';
 			});
+			if (!bpHtml) {
+				bpHtml = '<tr><td colspan="5" class="text-center text-muted py-3">Sin información de sucursales</td></tr>';
+			}
 			$('#exec-branch-priorities-body').html(bpHtml);
+		}
+
+		if (data.priority_decisions) {
+			var decBase = (window.Grocy && window.Grocy.BaseUrl) ? window.Grocy.BaseUrl.replace(/\/$/, '') : '';
+			$('#exec-decisions-count').text(data.priority_decisions.length + ' pendientes');
+			if (data.priority_decisions.length > 0) {
+				var decHtml = '';
+				data.priority_decisions.forEach(function(dec) {
+					decHtml += '<a href="' + decBase + esc(dec.href) + '" class="today-exec-decision-card is-' + esc(dec.severity) + '">' +
+						'<div class="today-exec-decision-left">' +
+							'<div class="today-exec-decision-icon"><i class="fa-solid ' + esc(dec.icon) + '"></i></div>' +
+							'<div class="today-exec-decision-info">' +
+								'<div class="d-flex align-items-center flex-wrap mb-1" style="gap: 5px;">' +
+									(dec.module_label ? '<span class="badge badge-light border text-muted" style="font-size: 9.5px; padding: 1px 5px; font-weight: 600; flex-shrink: 0;">' + esc(dec.module_label) + '</span>' : '') +
+									'<span class="today-exec-decision-title">' + esc(dec.title) + '</span>' +
+								'</div>' +
+								'<span class="today-exec-decision-desc">' + esc(dec.description) + '</span>' +
+								'<div class="d-flex align-items-center flex-wrap" style="gap: 8px; margin-top: 2px;">' +
+									'<span class="today-exec-decision-impact ' + esc(dec.impact_class) + '">' + esc(dec.impact_text) + '</span>' +
+									(dec.owner ? '<span class="text-muted" style="font-size: 10px;"><i class="fa-regular fa-user mr-1"></i>' + esc(dec.owner) + '</span>' : '') +
+									(dec.due_date ? '<span class="text-muted" style="font-size: 10px;"><i class="fa-regular fa-clock mr-1"></i>' + esc(dec.due_date) + '</span>' : '') +
+								'</div>' +
+							'</div>' +
+						'</div>' +
+						'<i class="fa-solid fa-chevron-right today-exec-decision-arrow"></i>' +
+					'</a>';
+				});
+				$('#exec-decisions-list').html(decHtml);
+			} else {
+				$('#exec-decisions-list').html('<div class="text-center py-4 text-muted small"><i class="fa-regular fa-circle-check mr-1"></i>Sin avisos prioritarios pendientes para este filtro</div>');
+			}
 		}
 
 		if (data.date) {
@@ -2437,17 +2351,17 @@
 		}
 
 		if (data.process_statuses) {
-			renderProcessStatuses(data.process_statuses);
+			renderProcessStatuses(data.process_statuses, data.last_updated);
 		}
 	}
 
 	// ==========================================
 	// Estado de los procesos: se evalúa con los registros; se resuelve en cada módulo (enlace de acción)
 	// ==========================================
-	function renderProcessStatuses(statuses) {
+	function renderProcessStatuses(statuses, lastUpdated) {
 		if (!statuses || !statuses.length) return;
 		var tbodyHtml = '';
-		var baseUrl = window.Grocy ? window.Grocy.BaseUrl : '';
+		var baseUrl = (window.Grocy && window.Grocy.BaseUrl) ? window.Grocy.BaseUrl.replace(/\/$/, '') : '';
 		var selectedBranch = $('#exec-filter-branch').val();
 		var branchParam = (selectedBranch && selectedBranch !== 'all') ? 'branch_id=' + selectedBranch : '';
 
@@ -2456,37 +2370,43 @@
 			var statusLabel = p.status_label;
 			var statusIcon = p.status_icon;
 			var situation = p.situation;
+			var trendClass = p.trend === 'down' ? 'text-danger' : (p.trend === 'up' ? 'text-success' : 'text-muted');
+			var impactClass = (p.economic_impact !== null && Number(p.economic_impact) < 0) ? 'text-danger font-weight-bold' : '';
 
 			var href = p.href;
 			if (branchParam && href.indexOf('branch_id=') === -1) {
 				href += (href.indexOf('?') === -1 ? '?' : '&') + branchParam;
 			}
 
-			tbodyHtml += '<tr class="today-process-row" data-key="' + p.key + '">' +
+			tbodyHtml += '<tr class="today-process-row" data-key="' + esc(p.key) + '">' +
 				'<td class="today-process-name-cell">' +
 					'<div class="today-process-name-badge">' +
-						'<span class="today-process-icon-wrap" style="color: ' + p.color + '; background: ' + p.color + '18;">' +
-							'<i class="fa-solid ' + p.icon + '"></i>' +
+						'<span class="today-process-icon-wrap" style="color: ' + esc(p.color) + '; background: ' + esc(p.color) + '18;">' +
+							'<i class="fa-solid ' + esc(p.icon) + '"></i>' +
 						'</span>' +
-						'<strong>' + p.process + '</strong>' +
+						'<strong>' + esc(p.process) + '</strong>' +
 					'</div>' +
 				'</td>' +
 				'<td class="today-process-status-cell">' +
-					'<span class="today-proc-badge is-' + status + '">' +
-						'<i class="fa-solid ' + statusIcon + '"></i>' +
-						'<span>' + statusLabel + '</span>' +
+					'<span class="today-proc-badge is-' + esc(status) + '">' +
+						'<i class="fa-solid ' + esc(statusIcon) + '"></i>' +
+						'<span>' + esc(statusLabel) + '</span>' +
 					'</span>' +
 				'</td>' +
+				'<td><strong style="font-size: 12px;">' + esc(p.deviation || '—') + '</strong></td>' +
+				'<td style="font-size: 12px;" class="' + impactClass + '">' + esc(p.economic_impact_label || 'No calculable') + '</td>' +
+				'<td style="font-size: 12px;"><span class="' + trendClass + '">' + esc(p.trend_label || 'Sin datos') + '</span></td>' +
 				'<td class="today-process-situation-cell">' +
 					'<div class="today-proc-situation-content">' +
-						'<span class="today-proc-situation-text">' + situation + '</span>' +
-						(p.scope_note ? '<span class="today-proc-scope-tag" title="El filtro actual de departamento no subdivide este proceso global">' + p.scope_note + '</span>' : '') +
+						'<span class="today-proc-situation-text">' + esc(situation) + '</span>' +
+						'<small class="text-muted d-block" style="font-size: 10.5px;">Responsable: <strong>' + esc(p.owner || 'Operaciones') + '</strong> · ' + esc(p.last_updated || lastUpdated || '') + '</small>' +
+						(p.scope_note ? '<span class="today-proc-scope-tag" title="El filtro actual de departamento no subdivide este proceso global">' + esc(p.scope_note) + '</span>' : '') +
 					'</div>' +
 				'</td>' +
 				'<td class="today-process-action-cell text-right">' +
 					'<div class="today-proc-action-group">' +
-						'<a href="' + baseUrl + href + '" class="today-proc-action-link" title="' + p.action_text + ' en su módulo correspondiente">' +
-							p.action_text + ' <i class="fa-solid fa-arrow-right"></i>' +
+						'<a href="' + baseUrl + href + '" class="today-proc-action-link" title="' + esc(p.action_text) + ' en su módulo correspondiente">' +
+							esc(p.action_text) + ' <i class="fa-solid fa-arrow-right"></i>' +
 						'</a>' +
 					'</div>' +
 				'</td>' +
@@ -2494,12 +2414,9 @@
 		});
 
 		$('#today-process-tbody').html(tbodyHtml);
-
-		var now = new Date();
-		var hh = String(now.getHours()).padStart(2, '0');
-		var mm = String(now.getMinutes()).padStart(2, '0');
-		var ss = String(now.getSeconds()).padStart(2, '0');
-		$('#process-demo-clock').text(hh + ':' + mm + ':' + ss);
+		if (lastUpdated) {
+			$('#process-demo-clock').text(lastUpdated);
+		}
 	}
 
 	$('#exec-comparative-metric').on('change', function() {
@@ -2530,8 +2447,11 @@
 		$(target).addClass('active');
 
 		if (target === '#daily-tab-commercial') {
-			if (execSalesChart) execSalesChart.resize();
+			if (execMainChart) execMainChart.resize();
 			if (execDonutChart) execDonutChart.resize();
+			if (execCompChart) execCompChart.resize();
+		} else if (target === '#daily-tab-operations' && typeof window.__dailyTodayResizeOps === 'function') {
+			window.__dailyTodayResizeOps();
 		}
 	});
 
@@ -2579,7 +2499,7 @@
 	$(function() {
 		initExecCharts(execData);
 		if (execData && execData.process_statuses) {
-			renderProcessStatuses(execData.process_statuses);
+			renderProcessStatuses(execData.process_statuses, execData.last_updated);
 		}
 	});
 })();

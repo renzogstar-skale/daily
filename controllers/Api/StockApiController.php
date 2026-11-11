@@ -679,64 +679,17 @@ class StockApiController extends BaseApiController
 				$note = $requestBody['note'];
 			}
 
-			$transactionId = StockService::GetInstance()->InventoryProduct($args['productId'], $requestBody['new_amount'], $bestBeforeDate, $locationId, $price, $shoppingLocationId, $purchasedDate, $stockLabelType, $note);
-			$args['transactionId'] = $transactionId;
-
-			// Notificar al Bus de Eventos Unificado 360°
-			try
-			{
-				if (class_exists('\\Grocy\\Services\\UnifiedInventoryEventService'))
-				{
-					$eventSvc = \Grocy\Services\UnifiedInventoryEventService::GetInstance();
-					$dbRaw = \Grocy\Services\DatabaseService::GetInstance()->GetDbConnectionRaw();
-					$txRow = $dbRaw->query("SELECT * FROM stock_log WHERE id = " . intval($transactionId))->fetch(\PDO::FETCH_ASSOC);
-					$amountDiff = $txRow ? floatval($txRow['amount']) : 0;
-					$prodRow = $dbRaw->query("SELECT name, sku FROM products WHERE id = " . intval($args['productId']))->fetch(\PDO::FETCH_ASSOC);
-
-					if (abs($amountDiff) > 0.0001)
-					{
-						$eventSvc->Publish(
-							\Grocy\Services\UnifiedInventoryEventService::EVENT_INVENTORY_DISCREPANCY_DETECTED,
-							'product',
-							strval($args['productId']),
-							[
-								'product_name' => $prodRow['name'] ?? '',
-								'sku' => $prodRow['sku'] ?? '',
-								'counted' => floatval($requestBody['new_amount']),
-								'difference' => $amountDiff,
-								'notes' => $note
-							],
-							1,
-							defined('GROCY_USER_ID') ? GROCY_USER_ID : 1
-						);
-					}
-					else
-					{
-						$eventSvc->Publish(
-							\Grocy\Services\UnifiedInventoryEventService::EVENT_INVENTORY_COUNT_COMPLETED,
-							'product',
-							strval($args['productId']),
-							[
-								'product_name' => $prodRow['name'] ?? '',
-								'counted' => floatval($requestBody['new_amount'])
-							],
-							1,
-							defined('GROCY_USER_ID') ? GROCY_USER_ID : 1
-						);
-					}
-
-					// Actualizar contexto operativo del usuario
-					$eventSvc->SetContext(defined('GROCY_USER_ID') ? GROCY_USER_ID : 1, [
-						'product_id' => intval($args['productId']),
-						'last_module' => '/inventory'
-					]);
-				}
-			}
-			catch (\Throwable $e)
-			{
-			}
-
-			return $this->StockTransactions($request, $response, $args);
+			// Un conteo no modifica existencias sin aprobación: la diferencia queda como ajuste pendiente (Inventario → Conteos y ajustes)
+			$adj = \Grocy\Services\InventoryOperationsService::GetInstance()->RequestAdjustment(intval($args['productId']), floatval($requestBody['new_amount']), $locationId !== null ? intval($locationId) : null,
+				['note' => $note, 'source' => 'count_form', 'best_before_date' => $bestBeforeDate, 'price' => $price, 'request_key' => $request->getHeaderLine('Idempotency-Key') ?: null]);
+			return $this->ApiResponse($response, [
+				'pending_approval' => !empty($adj['adjustment']),
+				'no_difference' => !empty($adj['no_difference']),
+				'adjustment' => $adj['adjustment'] ?? null,
+				'message' => !empty($adj['adjustment'])
+					? 'Diferencia de ' . (floatval($adj['adjustment']['difference_amount']) > 0 ? '+' : '') . floatval($adj['adjustment']['difference_amount']) . ' registrada como ajuste ' . $adj['adjustment']['adjustment_number'] . ': el stock cambia cuando un aprobador lo autorice'
+					: 'El conteo coincide con el sistema: no hay ajuste'
+			]);
 		}
 		catch (\Exception $ex)
 		{
@@ -1121,6 +1074,12 @@ class StockApiController extends BaseApiController
 			if (array_key_exists('stock_entry_id', $requestBody) && !empty($requestBody['stock_entry_id']))
 			{
 				$specificStockEntryId = $requestBody['stock_entry_id'];
+			}
+
+			// Entre sucursales (o hacia/desde tránsito) se traslada con documento y confirmación de recepción en /transfers
+			if (\Grocy\Services\InventoryOperationsService::GetInstance()->IsCrossBranchMove(intval($requestBody['location_id_from']), intval($requestBody['location_id_to'])))
+			{
+				throw new \Exception('Las ubicaciones son de sucursales distintas: registre un traslado entre tiendas (Traslados), que exige confirmar la recepción');
 			}
 
 			$transactionId = StockService::GetInstance()->TransferProduct($args['productId'], $requestBody['amount'], $requestBody['location_id_from'], $requestBody['location_id_to'], $specificStockEntryId);

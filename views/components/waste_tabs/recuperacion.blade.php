@@ -3,139 +3,92 @@
 	$pctFmt = fn($v) => number_format(floatval($v), 1) . '%';
 
 	$supplierReturns = $supplierReturns ?? [];
-	
-	// Cálculos de indicadores de recuperación financiera
-	$potencial = 42850.00;
-	$reclamado = 36420.00;
-	$confirmado = 28150.00;
-	$rechazado = 3120.00;
-	$pendiente = 5150.00;
-	$tasaGlobal = $reclamado > 0 ? ($confirmado / $reclamado) * 100 : 77.3;
-	$tiempoPromedio = 8.4; // días
 
-	// Casos enriquecidos con tipo de tercero y etapa en el flujo de 10 pasos
-	$recCases = [
-		[
-			'id' => 101,
-			'case_number' => 'REC-2026-0089',
-			'type' => 'proveedor',
-			'type_label' => 'Proveedor · Nota de Crédito',
-			'type_badge' => 'badge-primary',
-			'third_party' => 'Colanta Lácteos S.A.',
-			'product' => 'Queso Doble Crema 500g (Lote Q-882)',
-			'claim_amount' => 4820.00,
-			'recovered_amount' => 4820.00,
-			'status' => 'confirmed',
-			'status_label' => 'Recuperado confirmado',
-			'status_badge' => 'badge-success',
-			'step' => 10,
-			'step_name' => '10. Cierre de expediente',
-			'lead_days' => 6,
-			'evidence_doc' => 'NC-COL-99214.pdf',
-			'responsible' => 'Carlos Mendoza (Control Calidad)',
-			'dates' => ['created' => '2026-10-18', 'acknowledged' => '2026-10-20', 'resolved' => '2026-10-24']
-		],
-		[
-			'id' => 102,
-			'case_number' => 'REC-2026-0092',
-			'type' => 'transportista',
-			'type_label' => 'Transportista · Avería Tránsito',
-			'type_badge' => 'badge-warning',
-			'third_party' => 'Logística Refrigerada del Norte',
-			'product' => 'Pechuga de Pollo Fresca 1kg (Cajas estibadas)',
-			'claim_amount' => 6450.00,
-			'recovered_amount' => 5200.00,
-			'status' => 'confirmed',
-			'status_label' => 'Recuperado confirmado',
-			'status_badge' => 'badge-success',
-			'step' => 9,
-			'step_name' => '9. Ajuste contable y de stock',
-			'lead_days' => 9,
-			'evidence_doc' => 'Póliza-TR-8812.pdf',
-			'responsible' => 'Lucía Restrepo (Fulfillment)',
-			'dates' => ['created' => '2026-10-21', 'acknowledged' => '2026-10-23', 'resolved' => '2026-10-30']
-		],
-		[
-			'id' => 103,
-			'case_number' => 'REC-2026-0095',
-			'type' => 'aseguradora',
-			'type_label' => 'Aseguradora · Siniestro Cadena Frío',
-			'type_badge' => 'badge-danger',
-			'third_party' => 'Seguros Comerciales Bolívar',
-			'product' => 'Cámara Frigorífica #2 (Lácteos y Postres)',
-			'claim_amount' => 14800.00,
-			'recovered_amount' => 0.00,
-			'status' => 'pending',
-			'status_label' => 'Pendiente respuesta',
-			'status_badge' => 'badge-warning',
-			'step' => 6,
-			'step_name' => '6. Evaluación técnica pericial',
-			'lead_days' => 12,
-			'evidence_doc' => 'Peritaje-TERM-402.pdf',
-			'responsible' => 'Renzo Giovine (Gerencia Ops)',
-			'dates' => ['created' => '2026-10-22', 'acknowledged' => '2026-10-25', 'resolved' => null]
-		],
-		[
-			'id' => 104,
-			'case_number' => 'REC-2026-0098',
-			'type' => 'proveedor',
-			'type_label' => 'Proveedor · Defecto Fábrica',
-			'type_badge' => 'badge-primary',
-			'third_party' => 'Alquería Productos Lácteos',
-			'product' => 'Yogurt Fresa 1.5L (Sellado deficiente)',
-			'claim_amount' => 2850.00,
-			'recovered_amount' => 2850.00,
-			'status' => 'confirmed',
-			'status_label' => 'Recuperado confirmado',
-			'status_badge' => 'badge-success',
-			'step' => 10,
-			'step_name' => '10. Cierre de expediente',
-			'lead_days' => 5,
-			'evidence_doc' => 'NC-ALQ-34112.pdf',
-			'responsible' => 'Carlos Mendoza (Control Calidad)',
-			'dates' => ['created' => '2026-10-26', 'acknowledged' => '2026-10-27', 'resolved' => '2026-10-31']
-		],
-		[
-			'id' => 105,
-			'case_number' => 'REC-2026-0101',
-			'type' => 'transportista',
-			'type_label' => 'Transportista · Rotura en Descargue',
-			'type_badge' => 'badge-warning',
-			'third_party' => 'Transportes Rápidos Andinos',
-			'product' => 'Aceite de Oliva Extra Virgen 500ml',
-			'claim_amount' => 3120.00,
-			'recovered_amount' => 0.00,
-			'status' => 'rejected',
-			'status_label' => 'Rechazado (No imputable)',
-			'status_badge' => 'badge-secondary',
-			'step' => 7,
-			'step_name' => '7. Conciliación final',
-			'lead_days' => 14,
-			'evidence_doc' => 'Informe-Rechazo-TRA-99.pdf',
-			'responsible' => 'Felipe Guzmán (Recepción Bodega)',
-			'dates' => ['created' => '2026-10-15', 'acknowledged' => '2026-10-17', 'resolved' => '2026-10-29']
-		],
-		[
-			'id' => 106,
-			'case_number' => 'REC-2026-0104',
-			'type' => 'proveedor',
-			'type_label' => 'Proveedor · Faltante Oculto ASN',
-			'type_badge' => 'badge-primary',
-			'third_party' => 'Nutresa Galletas y Dulces',
-			'product' => 'Galletas Selección Familiar Pack x12',
-			'claim_amount' => 4380.00,
-			'recovered_amount' => 0.00,
-			'status' => 'negotiating',
-			'status_label' => 'En negociación',
-			'status_badge' => 'badge-info',
-			'step' => 7,
-			'step_name' => '7. Negociación y acuerdo',
-			'lead_days' => 7,
-			'evidence_doc' => 'Acta-ASN-DIF-801.pdf',
-			'responsible' => 'Mateo Valencia (Auditoría)',
-			'dates' => ['created' => '2026-10-27', 'acknowledged' => '2026-10-28', 'resolved' => null]
-		]
-	];
+	$potencial = 0.0;
+	$reclamado = 0.0;
+	$confirmado = 0.0;
+	$rechazado = 0.0;
+	$pendiente = 0.0;
+	$leadDaysSum = 0.0;
+	$leadDaysCnt = 0;
+
+	$recCases = [];
+	$countsByType = ['all' => 0, 'proveedor' => 0, 'transportista' => 0, 'aseguradora' => 0];
+	foreach ($supplierReturns as $sr) {
+		$req = floatval($sr['credit_requested_amount'] ?? $sr['total_cost'] ?? 0);
+		$rec = floatval($sr['credit_recovered_amount'] ?? 0);
+		$stRaw = strtolower(trim(strval($sr['status'] ?? 'pending_credit')));
+		$potencial += $req;
+		$reclamado += $req;
+
+		$typeKey = 'proveedor';
+		$supName = strval($sr['supplier_name'] ?? 'Proveedor sin asignar');
+		if (stripos($supName, 'transp') !== false || stripos($supName, 'logíst') !== false) {
+			$typeKey = 'transportista';
+		} elseif (stripos($supName, 'segur') !== false || stripos($supName, 'aseg') !== false) {
+			$typeKey = 'aseguradora';
+		}
+		$countsByType['all']++;
+		$countsByType[$typeKey]++;
+
+		if ($stRaw === 'credit_recovered' || $stRaw === 'recovered' || $stRaw === 'approved') {
+			$statusKey = 'confirmed';
+			$statusLabel = 'Recuperado confirmado';
+			$statusBadge = 'badge-success';
+			$step = 10;
+			$stepName = '10. Cierre y abono';
+			$confirmado += $rec > 0 ? $rec : $req;
+		} elseif ($stRaw === 'rejected') {
+			$statusKey = 'rejected';
+			$statusLabel = 'Rechazado';
+			$statusBadge = 'badge-secondary';
+			$step = 7;
+			$stepName = '7. Conciliación';
+			$rechazado += $req;
+		} else {
+			$statusKey = 'pending';
+			$statusLabel = 'Pendiente de crédito';
+			$statusBadge = 'badge-warning';
+			$step = 6;
+			$stepName = '6. Seguimiento proveedor';
+			$pendiente += max(0, $req - $rec);
+			if ($rec > 0) {
+				$confirmado += $rec;
+			}
+		}
+
+		$createdAt = substr(strval($sr['created_timestamp'] ?? date('Y-m-d')), 0, 10);
+		$resolvedAt = !empty($sr['resolved_date']) ? substr(strval($sr['resolved_date']), 0, 10) : null;
+		$leadDays = $resolvedAt ? max(0, intval(round((strtotime($resolvedAt) - strtotime($createdAt)) / 86400))) : max(0, intval(round((time() - strtotime($createdAt)) / 86400)));
+		if ($resolvedAt) {
+			$leadDaysSum += $leadDays;
+			$leadDaysCnt++;
+		}
+
+		$recCases[] = [
+			'id' => intval($sr['id'] ?? 0),
+			'case_number' => $sr['return_number'] ?? ('DEV-' . intval($sr['id'] ?? 0)),
+			'type' => $typeKey,
+			'type_label' => ucfirst($typeKey) . ' · Nota de Crédito',
+			'type_badge' => $typeKey === 'proveedor' ? 'badge-primary' : ($typeKey === 'transportista' ? 'badge-warning' : 'badge-danger'),
+			'third_party' => $supName,
+			'product' => ($sr['product_name'] ?? 'Producto') . (!empty($sr['reason']) ? ' (' . $sr['reason'] . ')' : ''),
+			'claim_amount' => $req,
+			'recovered_amount' => $rec,
+			'status' => $statusKey,
+			'status_label' => $statusLabel,
+			'status_badge' => $statusBadge,
+			'step' => $step,
+			'step_name' => $stepName,
+			'lead_days' => $leadDays,
+			'evidence_doc' => $sr['credit_note_number'] ?? 'Pendiente NC',
+			'responsible' => $sr['branch_name'] ?? 'Sucursal',
+			'dates' => ['created' => $createdAt, 'acknowledged' => $createdAt, 'resolved' => $resolvedAt]
+		];
+	}
+
+	$tasaGlobal = $reclamado > 0 ? ($confirmado / $reclamado) * 100 : 0.0;
+	$tiempoPromedio = $leadDaysCnt > 0 ? round($leadDaysSum / $leadDaysCnt, 1) : 0.0;
 @endphp
 
 <div class="card border-0 shadow-xs bg-white mb-3 dairy-bordered">
@@ -189,7 +142,7 @@
 						<i class="fa-solid fa-file-invoice text-info"></i>
 					</div>
 					<div class="h4 font-weight-bold text-info mb-0">{{ $money($reclamado) }}</div>
-					<small class="text-muted">6 expedientes radicados</small>
+					<small class="text-muted">{{ $countsByType['all'] }} expedientes radicados</small>
 				</div>
 			</div>
 
@@ -260,10 +213,10 @@
 		<div class="d-flex justify-content-between align-items-center mb-2">
 			<span class="font-weight-bold text-dark"><i class="fa-solid fa-table-list mr-1 text-primary"></i>Expedientes de Reclamación y Recuperación Activos</span>
 			<div class="btn-group btn-group-sm">
-				<button class="btn btn-outline-secondary active" onclick="recFilterType('all')">Todos (6)</button>
-				<button class="btn btn-outline-primary" onclick="recFilterType('proveedor')">Proveedores (3)</button>
-				<button class="btn btn-outline-warning" onclick="recFilterType('transportista')">Transporte (2)</button>
-				<button class="btn btn-outline-danger" onclick="recFilterType('aseguradora')">Seguros (1)</button>
+				<button class="btn btn-outline-secondary active" onclick="recFilterType('all')">Todos ({{ $countsByType['all'] }})</button>
+				<button class="btn btn-outline-primary" onclick="recFilterType('proveedor')">Proveedores ({{ $countsByType['proveedor'] }})</button>
+				<button class="btn btn-outline-warning" onclick="recFilterType('transportista')">Transporte ({{ $countsByType['transportista'] }})</button>
+				<button class="btn btn-outline-danger" onclick="recFilterType('aseguradora')">Seguros ({{ $countsByType['aseguradora'] }})</button>
 			</div>
 		</div>
 

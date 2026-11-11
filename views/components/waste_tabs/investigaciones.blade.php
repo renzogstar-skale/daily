@@ -13,7 +13,7 @@
 	$unassignedCount = count(array_filter($investigationsList, fn($c) => empty($c['investigator_user_id'])));
 	$activePlansCount = count(array_filter($actionPlansList, fn($p) => in_array($p['status'], ['open', 'in_progress'])));
 	$overduePlansCount = count(array_filter($actionPlansList, fn($p) => in_array($p['status'], ['open', 'in_progress']) && !empty($p['due_date']) && $p['due_date'] < $today));
-	$closedPlansCount = count(array_filter($actionPlansList, fn($p) => $p['status'] === 'completed'));
+	$closedPlansCount = count(array_filter($actionPlansList, fn($p) => in_array($p['status'], ['completed', 'closed', 'verified'], true)));
 
 	// Resolver imagen del producto
 	$productImg = function($c) use ($U) {

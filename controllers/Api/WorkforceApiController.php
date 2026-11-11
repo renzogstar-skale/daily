@@ -63,7 +63,10 @@ class WorkforceApiController extends BaseApiController
 
 	public function CreateAgreementTask(Request $request, Response $response, array $args)
 	{
-		User::CheckPermission($request, User::PERMISSION_TASKS);
+		if (\Grocy\Helpers\DairyAccess::GetSimulatedRole() === 'empleado' || !\Grocy\Helpers\DairyAccess::HasAny([User::PERMISSION_WORKFORCE_SCHEDULE_MANAGE, User::PERMISSION_ADMIN]))
+		{
+			throw new \Grocy\Middleware\PermissionMissingException($request, User::PERMISSION_WORKFORCE_SCHEDULE_MANAGE);
+		}
 
 		try
 		{
@@ -141,6 +144,14 @@ class WorkforceApiController extends BaseApiController
 			}
 
 			$dbRaw = \Grocy\Services\DatabaseService::GetInstance()->GetDbConnectionRaw();
+			$taskRoleStmt = $dbRaw->prepare("SELECT assigned_role FROM workforce_store_tasks WHERE id = :id");
+			$taskRoleStmt->execute([':id' => $taskId]);
+			$assignedRole = strtolower(strval($taskRoleStmt->fetchColumn() ?: ''));
+			if (in_array($assignedRole, ['supervisor', 'manager'], true)
+				&& (\Grocy\Helpers\DairyAccess::GetSimulatedRole() === 'empleado' || !\Grocy\Helpers\DairyAccess::HasAny([User::PERMISSION_WORKFORCE_SCHEDULE_MANAGE, User::PERMISSION_WORKFORCE_ATTENDANCE_MANAGE, User::PERMISSION_ADMIN])))
+			{
+				throw new \Grocy\Middleware\PermissionMissingException($request, User::PERMISSION_WORKFORCE_SCHEDULE_MANAGE);
+			}
 			$stmt = $dbRaw->prepare("UPDATE workforce_store_tasks SET status = :status WHERE id = :id");
 			$stmt->execute([':status' => $newStatus, ':id' => $taskId]);
 

@@ -53,6 +53,10 @@
 </div>
 
 <!-- Tarjetas Resumen de la Matriz -->
+<div class="alert alert-light border d-flex align-items-center justify-content-between py-2 px-3 mb-3 small">
+	<span><i class="fa-solid fa-tags text-primary mr-1"></i> Catálogo exclusivo de <strong>causales físicas de merma y errores operativos</strong>. Las incidencias de seguridad, hurto o custodia IMEI se gestionan en Prevención de Pérdidas.</span>
+	<a href="{{ $U('/loss-prevention') }}" class="btn btn-xs btn-outline-primary font-weight-600 ml-2">Ir a Seguridad</a>
+</div>
 @php
 	$totalReasons = count($reasons);
 	$criticasCount = 0;

@@ -1047,8 +1047,8 @@
 			$('#kx-d-doc-icon').html('<i class="fa-solid fa-clock text-slate"></i>');
 			$('#kx-d-doc-title').text('Horario de tienda: 06:00–22:00');
 			$('#kx-d-doc-desc').text('Movimiento registrado en horario no operativo. Compruebe autorización o proceso nocturno.');
-			$('#kx-d-doc-link-text').text('Revisar agenda de turnos');
-			$('#kx-d-doc-link').attr('href', Grocy.BaseUrl + '/schedule').removeAttr('data-toggle').removeAttr('data-target');
+			$('#kx-d-doc-link-text').text('Gestionar revisión');
+			$('#kx-d-doc-link').attr('href', '#').attr('data-toggle', 'modal').attr('data-target', '#modalReviewMovement');
 		}
 
 		// Preparar modal de resolución

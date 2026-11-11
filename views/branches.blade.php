@@ -20,40 +20,35 @@
 	</div>
 </div>
 
-<!-- SCORECARD COMPARATIVO DE SUCURSALES (VENTAS · MARGEN · MERMA · RIESGO) -->
+<!-- SCORECARD DE INVENTARIO POR SUCURSAL (FÍSICO · DISPONIBLE · RESERVADO · BLOQUEADO · BODEGA/SALA) -->
+{{-- El comparativo comercial (ventas, margen, ticket) vive en Ventas/KPI; aquí solo inventario (InventoryOperationsService) --}}
 @php
-	$scTotalSales = array_sum(array_column($scorecards, 'net_sales'));
-	$scTotalWaste = array_sum(array_column($scorecards, 'waste_cost'));
-	$scTotalOpen = array_sum(array_column($scorecards, 'open_cases'));
-	$scTotalStock = array_sum(array_column($scorecards, 'stock_value'));
-	$scWastePct = $scTotalSales > 0 ? $scTotalWaste / $scTotalSales * 100 : 0;
-	$scColors = ['success' => ['#047857', '#ecfdf5', 'Dentro de referencia'], 'warning' => ['#b45309', '#fffbeb', 'Sobre referencia'], 'danger' => ['#b91c1c', '#fef2f2', 'Sobre tope corporativo'], 'nodata' => ['#64748b', '#f1f5f9', 'Sin información']];
-@endphp
-@php
-	$scInTarget = count(array_filter($scorecards, function($sc) { return $sc['status'] === 'success'; }));
-	$scSorted = array_values(array_filter($scorecards, fn($sc) => !empty($sc['has_data'])));
-	$scWithData = count($scSorted);
-	usort($scSorted, function($x, $y) { return $x['waste_pct'] <=> $y['waste_pct']; });
-	$scBest = $scSorted[0] ?? null;
-	$scWorst = count($scSorted) > 0 ? $scSorted[count($scSorted) - 1] : null;
-	$scGap = ($scBest && $scWorst) ? $scWorst['waste_pct'] - $scBest['waste_pct'] : 0;
+	$invSum = \Grocy\Services\InventoryOperationsService::GetInstance()->Summary();
+	$invK = $invSum['kpis'];
+	$invByBranch = array_column($invSum['branches'], null, 'branch_id');
+	$scColors = ['success' => ['#047857', '#ecfdf5', 'Sin anomalías'], 'warning' => ['#b45309', '#fffbeb', 'Revisar'], 'danger' => ['#b91c1c', '#fef2f2', 'Stock negativo'], 'nodata' => ['#64748b', '#f1f5f9', 'Sin existencias']];
 @endphp
 @include('components.dairy_kpi_row', ['kpis' => [
-	['label' => 'Sucursales en Meta', 'value' => $scInTarget . ' / ' . $scWithData, 'sub' => 'merma ≤ 1.51% · ' . (count($scorecards) - $scWithData) . ' sin información', 'icon' => 'fa-bullseye', 'tone' => $scInTarget == $scWithData ? 'success' : 'warning', 'alert' => $scInTarget < $scWithData],
-	['label' => 'Merma de la Red', 'value' => number_format($scWastePct, 2) . '%', 'sub' => '$' . number_format($scTotalWaste, 2) . ' en el mes', 'icon' => 'fa-trash-can', 'tone' => $scWastePct <= 1.51 ? 'success' : ($scWastePct <= 2.5 ? 'warning' : 'danger'), 'alert' => $scWastePct > 1.51, 'href' => $U('/waste')],
-	['label' => 'Menor Merma', 'value' => $scBest ? number_format($scBest['waste_pct'], 2) . '%' : '—', 'sub' => $scBest ? $scBest['name'] : 'sin datos', 'icon' => 'fa-medal', 'tone' => 'success'],
-	['label' => 'Mayor Merma', 'value' => $scWorst ? number_format($scWorst['waste_pct'], 2) . '%' : '—', 'sub' => $scWorst ? $scWorst['name'] : 'sin datos', 'icon' => 'fa-arrow-trend-up', 'tone' => 'danger', 'alert' => true],
-	['label' => 'Brecha de Merma', 'value' => number_format($scGap, 2) . ' pts', 'sub' => 'peor vs. mejor sucursal', 'icon' => 'fa-arrows-left-right', 'tone' => 'purple'],
-	['label' => 'Casos Abiertos', 'value' => $scTotalOpen, 'sub' => 'pendientes de cierre', 'icon' => 'fa-folder-open', 'tone' => $scTotalOpen > 0 ? 'warning' : 'secondary', 'href' => $U('/waste/approvals')],
+	['label' => 'Valor del inventario', 'value' => '$' . number_format($invK['value'], 0), 'sub' => number_format($invK['physical'], 0) . ' u físicas', 'icon' => 'fa-boxes-stacked', 'tone' => 'success'],
+	['label' => 'Disponible', 'value' => number_format($invK['available'], 0), 'sub' => number_format($invK['reserved'], 0) . ' reservadas · ' . number_format($invK['blocked'], 0) . ' bloqueadas', 'icon' => 'fa-circle-check', 'tone' => 'success'],
+	['label' => 'Exactitud de inventario', 'value' => $invK['accuracy_pct'] === null ? '—' : number_format($invK['accuracy_pct'], 1) . '%', 'sub' => $invK['accuracy_counts'] . ' conteos en 90 días', 'icon' => 'fa-bullseye', 'tone' => $invK['accuracy_pct'] !== null && $invK['accuracy_pct'] < 95 ? 'warning' : 'success'],
+	['label' => 'Traslados sin recepción', 'value' => $invK['transit_late'] . ' / ' . $invK['transit_open'], 'sub' => 'vencidos / en tránsito', 'icon' => 'fa-truck-ramp-box', 'tone' => $invK['transit_late'] ? 'danger' : 'secondary', 'href' => $U('/transfers')],
+	['label' => 'Negativo · Sobrecomprometido', 'value' => $invK['negative'] . ' · ' . $invK['overcommitted'], 'sub' => 'pares producto-sucursal', 'icon' => 'fa-triangle-exclamation', 'tone' => ($invK['negative'] + $invK['overcommitted']) ? 'danger' : 'secondary', 'alert' => ($invK['negative'] + $invK['overcommitted']) > 0],
+	['label' => 'Ajustes por aprobar', 'value' => $invK['adjustments_pending'], 'sub' => $invK['counts_open'] . ' conteos abiertos', 'icon' => 'fa-scale-balanced', 'tone' => $invK['adjustments_pending'] ? 'warning' : 'secondary', 'href' => $U('/stockoverview#inv-ops-counts')],
 ]])
 
 <div class="d-flex align-items-center justify-content-between mb-2 mt-2">
-	<span class="font-weight-700 text-dark dairy-fs-md"><i class="fa-solid fa-ranking-star text-primary mr-2"></i>Scorecard por Sucursal</span>
-	<span class="text-muted dairy-fs-sm">Período {{ date('d/m/Y', strtotime($startDate)) }} – {{ date('d/m/Y', strtotime($endDate)) }} · semáforo de merma s/ventas</span>
+	<span class="font-weight-700 text-dark dairy-fs-md"><i class="fa-solid fa-ranking-star text-primary mr-2"></i>Inventario por Sucursal</span>
+	<span class="text-muted dairy-fs-sm">Disponible = físico − bloqueado − reservado · actualizado {{ substr($invSum['generated_at'], 11, 5) }}</span>
 </div>
 <div class="row mb-3" style="margin-left: -6px; margin-right: -6px;">
 	@foreach($scorecards as $sc)
-	@php $c = $scColors[$sc['status']]; @endphp
+	@php
+		$ib = $invByBranch[intval($sc['id'])] ?? null;
+		$st = !$ib || $ib['physical'] <= 0 ? 'nodata' : ($ib['negative'] > 0 ? 'danger' : ($ib['overcommitted'] > 0 || $sc['expiring_value'] > 0 ? 'warning' : 'success'));
+		$c = $scColors[$st];
+		$availPct = $ib && $ib['physical'] > 0 ? min(100, $ib['available'] / $ib['physical'] * 100) : 0;
+	@endphp
 	<div class="col-xl-4 col-md-6 mb-3" style="padding-left: 6px; padding-right: 6px;">
 		<div class="dairy-op-card branch-scorecard" style="--sc-color: {{ $c[0] }};">
 			<div class="dairy-op-header">
@@ -69,30 +64,30 @@
 			<div class="dairy-op-body">
 				<div class="d-flex justify-content-between align-items-end mb-1">
 					<div>
-						<div class="text-muted dairy-fs-xs">Ventas netas</div>
-						<div class="dairy-kpi-value mb-0">@if(!empty($sc['has_data']))${{ number_format($sc['net_sales'], 2) }}@else Sin información @endif</div>
+						<div class="text-muted dairy-fs-xs">Valor del inventario</div>
+						<div class="dairy-kpi-value mb-0">@if($ib)${{ number_format($ib['value'], 2) }}@else Sin información @endif</div>
 					</div>
 					<div class="text-right">
-						<div class="text-muted dairy-fs-xs">Merma s/ventas</div>
-						<div class="font-weight-700" style="font-size: var(--dairy-fs-xl); color: {{ $c[0] }};">@if(!empty($sc['has_data'])){{ number_format($sc['waste_pct'], 2) }}%@else — @endif</div>
+						<div class="text-muted dairy-fs-xs">Disponible</div>
+						<div class="font-weight-700" style="font-size: var(--dairy-fs-xl); color: {{ $c[0] }};">@if($ib && $ib['physical'] > 0){{ number_format($availPct, 1) }}%@else — @endif</div>
 					</div>
 				</div>
-				<div class="progress mb-3 dairy-bg-subtle" style="height: 5px;" title="Participación relativa en ventas">
-					<div class="progress-bar" style="width: {{ $sc['sales_share'] }}%; background: var(--dairy-primary);"></div>
+				<div class="progress mb-3 dairy-bg-subtle" style="height: 5px;" title="Disponible sobre físico">
+					<div class="progress-bar" style="width: {{ $availPct }}%; background: var(--dairy-primary);"></div>
 				</div>
 				<div class="row text-center no-gutters branch-sc-metrics">
-					<div class="col-4"><div class="text-muted">Margen</div><strong>{{ number_format($sc['margin_pct'], 1) }}%</strong></div>
-					<div class="col-4"><div class="text-muted">Ticket prom.</div><strong>${{ number_format($sc['avg_ticket'], 2) }}</strong></div>
-					<div class="col-4"><div class="text-muted">Tickets</div><strong>{{ $sc['tickets'] }}</strong></div>
-					<div class="col-4 mt-2"><div class="text-muted">Merma $</div><strong class="text-danger">${{ number_format($sc['waste_cost'], 2) }}</strong></div>
-					<div class="col-4 mt-2"><div class="text-muted">Casos abiertos</div><strong>{{ $sc['open_cases'] }}</strong></div>
+					<div class="col-4"><div class="text-muted">Físico</div><strong>{{ number_format($ib['physical'] ?? 0, 0) }}</strong></div>
+					<div class="col-4"><div class="text-muted">Reservado</div><strong>{{ number_format($ib['reserved'] ?? 0, 0) }}</strong></div>
+					<div class="col-4"><div class="text-muted">Bloqueado</div><strong>{{ number_format($ib['blocked'] ?? 0, 0) }}</strong></div>
+					<div class="col-4 mt-2"><div class="text-muted">Bodega</div><strong>{{ number_format($ib['bodega'] ?? 0, 0) }}</strong></div>
+					<div class="col-4 mt-2"><div class="text-muted">Sala</div><strong>{{ number_format($ib['sala'] ?? 0, 0) }}</strong></div>
 					<div class="col-4 mt-2"><div class="text-muted">Vence ≤7 d</div><strong class="text-warning">${{ number_format($sc['expiring_value'], 2) }}</strong></div>
 				</div>
 			</div>
 			<div class="d-flex border-top dairy-fs-sm">
 				<a class="flex-fill text-center py-2 border-right font-weight-600" href="{{ $U('/branch/' . $sc['id'] . '/stock') }}"><i class="fa-solid fa-boxes-stacked mr-1"></i>Stock</a>
 				<a class="flex-fill text-center py-2 border-right font-weight-600 text-danger" href="{{ $U('/waste?branch_id=' . $sc['id']) }}"><i class="fa-solid fa-trash-can mr-1"></i>Mermas</a>
-				<a class="flex-fill text-center py-2 font-weight-600 text-success" href="{{ $U('/sales?branch_id=' . $sc['id']) }}"><i class="fa-solid fa-receipt mr-1"></i>Ventas</a>
+				<a class="flex-fill text-center py-2 font-weight-600 text-success" href="{{ $U('/transfers') }}"><i class="fa-solid fa-right-left mr-1"></i>Traslados</a>
 			</div>
 		</div>
 	</div>

@@ -95,7 +95,7 @@
 
 	function send(path, body, opts) {
 		opts = opts || {};
-		var item = { key: newKey(), user_id: userId, path: path, body: $.extend({}, body), photo: opts.photo || null, label: opts.label || path, created: Date.now(), state: 'pending', message: null };
+		var item = { key: opts.key || newKey(), user_id: userId, path: path, body: $.extend({}, body), photo: opts.photo || null, label: opts.label || path, created: Date.now(), state: 'pending', message: null };
 		if (navigator.onLine === false) { return enqueue(item); }
 		return deliver(item).then(function(r) {
 			if (r.ok) { return { queued: false, data: r.data }; }

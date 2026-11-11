@@ -70,7 +70,8 @@ class TodayExecutiveSalesService extends BaseService
 		// Meta del día (meta mensual registrada ÷ días del mes). Con filtro de departamento no hay meta propia.
 		$target = $deptKeys === null ? $m->DailySalesTarget($branchId, $date) : null;
 		$rawCompliance = ($target && $salesNet !== null) ? round($salesNet / $target * 100, 1) : null;
-		$compliance = $rawCompliance !== null ? min(100.0, $rawCompliance) : null;
+		$compliance = $rawCompliance;
+		$visualCompliance = $rawCompliance !== null ? min(100.0, $rawCompliance) : null;
 		$overTarget = ($rawCompliance !== null && $rawCompliance > 100) ? round($rawCompliance - 100, 1) : 0.0;
 
 		$labor = $m->Labor($branchId, $date);
@@ -103,16 +104,16 @@ class TodayExecutiveSalesService extends BaseService
 			'sales_net' => ['value' => self::Money($salesNet), 'numeric' => $salesNet, 'delta_pct' => $dSales['text'], 'delta_direction' => $dSales['dir'], 'tone' => $dSales['tone'],
 				'comparison_text' => $dSales['text'] !== '' ? $cmpTxt : 'Sin día comparable con ventas'],
 			'target_compliance' => [
-				'value' => $compliance === null ? 'Sin meta definida' : number_format($compliance, 1) . '%',
-				'numeric' => $compliance,
+				'value' => $rawCompliance === null ? 'Sin meta definida' : number_format($rawCompliance, 1) . '%',
+				'numeric' => $rawCompliance,
 				'raw_numeric' => $rawCompliance,
 				'over_target_pct' => $overTarget,
-				'visual_value' => $compliance === null ? 'Sin meta definida' : number_format($compliance, 1) . '%',
+				'visual_value' => $visualCompliance === null ? 'Sin meta definida' : number_format($visualCompliance, 1) . '%',
 				'real_value' => $rawCompliance === null ? 'Sin meta definida' : number_format($rawCompliance, 1) . '%',
-				'gap_pp' => $compliance === null ? 'Sin meta definida' : ($rawCompliance >= 100 ? ('✓ 100% (Real: ' . number_format($rawCompliance, 1) . '%' . ($overTarget > 0 ? " · +{$overTarget}% sobre meta" : '') . ')') : ('↓ ' . number_format($compliance - 100, 1) . ' pp')),
-				'tone' => $compliance === null ? 'neutral' : ($rawCompliance >= 100 ? 'good' : 'bad'),
+				'gap_pp' => $rawCompliance === null ? 'Sin meta definida' : ($rawCompliance >= 100 ? ('✓ Real: ' . number_format($rawCompliance, 1) . '%' . ($overTarget > 0 ? " (+{$overTarget}% sobre meta)" : ' (en meta)')) : ('↓ ' . number_format($rawCompliance - 100, 1) . ' pp bajo meta')),
+				'tone' => $rawCompliance === null ? 'neutral' : ($rawCompliance >= 100 ? 'good' : ($rawCompliance >= 90 ? 'warning' : 'bad')),
 				'target_text' => $target === null ? 'Sin meta definida' : 'Meta del día: $' . number_format($target, 0) . ($isToday ? ' (día completo)' : ''),
-				'diff_monetary' => ($target && $salesNet !== null) ? '$' . number_format($salesNet - $target, 0) : ''
+				'diff_monetary' => ($target && $salesNet !== null) ? (($salesNet - $target >= 0 ? '+$' : '-$') . number_format(abs($salesNet - $target), 0)) : ''
 			],
 			'gross_margin' => ['value' => $cur['margin_pct'] === null ? 'Sin información' : number_format($cur['margin_pct'], 1) . '%', 'numeric' => $cur['margin_pct'],
 				'delta_pp' => $dMargin['text'], 'delta_direction' => $dMargin['dir'], 'tone' => $dMargin['tone'], 'comparison_text' => $dMargin['text'] !== '' ? $cmpTxt : '',
@@ -234,9 +235,9 @@ class TodayExecutiveSalesService extends BaseService
 			'staff_coverage' => ['title' => 'Cobertura de personal', 'value' => $coverage === null ? ($labor['has_data'] ? $labor['people'] . ' personas' : 'Sin información') : number_format($coverage, 0) . '%', 'numeric' => $coverage,
 				'delta' => $labor['has_data'] ? number_format($labor['hours'], 1) . ' h programadas' : 'Sin turnos', 'tone' => $coverage === null ? 'neutral' : ($coverage >= 95 ? 'good' : 'bad'),
 				'tooltip' => $coverage === null ? 'Sin requerimiento de dotación configurado: se muestran las personas con turno' : 'Horas programadas ÷ horas requeridas por la cobertura mínima configurada', 'href' => '/operations/scheduling'],
-			'on_time_delivery' => ['title' => 'Pedidos a tiempo', 'value' => $orders['on_time_pct'] === null ? 'Sin información' : number_format($orders['on_time_pct'], 0) . '%', 'numeric' => $orders['on_time_pct'],
+			'on_time_delivery' => ['title' => 'Pedidos a tiempo (OTIF)', 'value' => $orders['on_time_pct'] === null ? 'Sin información' : number_format($orders['on_time_pct'], 0) . '%', 'numeric' => $orders['on_time_pct'],
 				'delta' => $orders['dispatched'] . ' despachados (28 d)', 'tone' => $orders['on_time_pct'] === null ? 'neutral' : ($orders['on_time_pct'] >= 95 ? 'good' : 'bad'),
-				'tooltip' => 'Pedidos de clientes despachados en o antes de la fecha solicitada, últimos 28 días', 'href' => '/dispatch']
+				'tooltip' => 'Pedidos de clientes despachados en o antes de la fecha solicitada, últimos 28 días', 'href' => '/dispatches']
 		];
 
 		$cogsPct = ($cur['has_data'] && $cur['net_sales'] > 0) ? round($cur['cogs'] / $cur['net_sales'] * 100, 1) : null;
@@ -261,7 +262,7 @@ class TodayExecutiveSalesService extends BaseService
 				'delta' => $inv['out_of_stock'] . ' agotados · ' . $inv['below_min'] . ' bajo mínimo', 'tone' => ($inv['below_min'] + $inv['out_of_stock']) ? 'bad' : 'good',
 				'tooltip' => 'Productos activos con existencia por debajo del stock mínimo configurado', 'href' => '/stockoverview?filter=below_min' . $branchQs],
 			'expiring' => ['title' => 'Próximos a vencer', 'value' => $inv['expiring_products'] . ' productos', 'count' => $inv['expiring_products'], 'delta' => '$' . number_format($inv['expiring_value'], 0) . ' en ≤ 7 días',
-				'tone' => $inv['expiring_products'] ? 'bad' : 'good', 'tooltip' => 'Productos con lotes que vencen en los próximos 7 días (costo expuesto, no pérdida confirmada)', 'href' => '/quality' . ($branchId ? '?branch_id=' . $branchId : '')],
+				'tone' => $inv['expiring_products'] ? 'bad' : 'good', 'tooltip' => 'Productos con lotes que vencen en los próximos 7 días (costo expuesto, no pérdida confirmada)', 'href' => '/traceability' . ($branchId ? '?branch_id=' . $branchId : '')],
 			'sensitive_diffs' => ['title' => 'Diferencias de inventario', 'value' => ($sensitive + $adjust) . ' pendientes', 'count' => $sensitive + $adjust, 'delta' => $adjust . ' ajustes por aprobar · ' . $sensitive . ' investigaciones',
 				'tone' => ($sensitive + $adjust) ? 'bad' : 'good', 'tooltip' => 'Ajustes de inventario pendientes de aprobación e investigaciones de productos sensibles abiertas', 'href' => '/reconciliation']
 		];
@@ -277,6 +278,38 @@ class TodayExecutiveSalesService extends BaseService
 				'delta' => $hoursCmp === null ? '' : self::Delta($labor['hours'], $hoursCmp, false)['text'], 'tone' => 'neutral',
 				'tooltip' => 'Horas de los turnos del día (sin pausas). Las horas extra no se registran por separado.', 'href' => '/operations/scheduling']
 		];
+
+		$dbRaw = DatabaseService::GetInstance()->GetDbConnectionRaw();
+		$bOnly = ($branchId !== null && $branchId > 0) ? ' WHERE branch_id = ' . intval($branchId) : '';
+		$latestTs = $dbRaw->query("
+			SELECT MAX(ts) FROM (
+				SELECT MAX(created_timestamp) AS ts FROM sales$bOnly
+				UNION ALL
+				SELECT MAX(created_timestamp) AS ts FROM waste_records$bOnly
+				UNION ALL
+				SELECT MAX(created_at) AS ts FROM customer_orders$bOnly
+				UNION ALL
+				SELECT MAX(row_created_timestamp) AS ts FROM stock_log
+			)
+		")->fetchColumn();
+		$lastUpdatedFormatted = !empty($latestTs) ? date('d/m/Y H:i', strtotime($latestTs)) : 'Sin registros';
+
+		$correctivePlans = ['total' => 0, 'open' => 0, 'in_progress' => 0, 'overdue' => 0, 'cost_avoided_total' => 0.0, 'top' => []];
+		try
+		{
+			$apData = AkcalMetricsService::GetInstance()->GetActionPlansMatrix($branchId);
+			$apKpis = $apData['kpis'] ?? [];
+			$activePlans = array_values(array_filter($apData['plans'] ?? [], fn($p) => ($p['status'] ?? '') !== 'completed'));
+			$correctivePlans = [
+				'total' => intval($apKpis['total'] ?? 0),
+				'open' => intval($apKpis['open'] ?? 0),
+				'in_progress' => intval($apKpis['in_progress'] ?? 0),
+				'overdue' => intval($apKpis['overdue'] ?? 0),
+				'cost_avoided_total' => round(floatval($apKpis['cost_avoided_total'] ?? 0), 2),
+				'top' => array_slice($activePlans, 0, 5)
+			];
+		}
+		catch (\Throwable $e) {}
 
 		$result = [
 			'date' => $date,
@@ -301,15 +334,21 @@ class TodayExecutiveSalesService extends BaseService
 			'heatmap' => ['hours' => $heatHours, 'days' => $days, 'grid' => $grid, 'insights' => $heatInsights],
 			'comparative' => $comparative,
 			'priority_decisions' => $this->PriorityDecisions($branchId, $waste),
+			'corrective_actions' => $correctivePlans,
 			'operational_kpis' => $operationalKpis,
 			'profitability_kpis' => $profitabilityKpis,
 			'risk_inventory' => $riskInventory,
 			'branch_priorities' => $branchPriorities,
 			'workforce_kpis' => $workforceKpis,
-			'last_updated' => date('d/m/Y H:i')
+			'last_updated' => $lastUpdatedFormatted,
+			'last_updated_iso' => $latestTs ?: null,
+			'checked_at' => date('d/m/Y H:i')
 		];
 		$result['sparks'] = $this->Sparks($branchId, $date, $deptKeys);
-		$result['process_statuses'] = $this->GetProcessStatuses($branchId, $date, $department, $category, $kpis, $operationalKpis, $riskInventory, $workforceKpis, $wasteTarget);
+		$result['process_statuses'] = $this->GetProcessStatuses(
+			$branchId, $date, $department, $category, $kpis, $operationalKpis, $riskInventory, $workforceKpis,
+			$wasteTarget, $lastUpdatedFormatted, $target, $salesNet, $waste['cost'], $dSales['dir']
+		);
 		return $result;
 	}
 
@@ -369,13 +408,15 @@ class TodayExecutiveSalesService extends BaseService
 			{
 				$e += 86400;
 			}
-			$total += $e - $a;
-			$done += max(0, min($now, $e) - $a);
+			$brk = max(0, intval($s['break_minutes'] ?? 0) * 60);
+			$dur = max(0, ($e - $a) - $brk);
+			$total += $dur;
+			$done += max(0, min($dur, min($now, $e) - $a));
 		}
 		return $total > 0 ? max(0.05, $done / $total) : 1.0;
 	}
 
-	/** Horas programadas ÷ horas requeridas por coverage_requirements del día; null si no hay requerimiento */
+	/** Horas programadas ÷ horas requeridas por coverage_requirements del día (sin tope artificial 100%); null si no hay requerimiento */
 	private function Coverage(?int $branchId, string $date, array $labor): ?float
 	{
 		$dow = intval(date('N', strtotime($date)));
@@ -388,7 +429,7 @@ class TodayExecutiveSalesService extends BaseService
 			$e = strtotime("2000-01-01 {$r['end_time']}");
 			$req += max(0, ($e - $a) / 3600) * intval($r['min_staff']);
 		}
-		return $req > 0 ? round(min(100, ($labor['present_hours'] ?? $labor['hours']) / $req * 100), 0) : null;
+		return $req > 0 ? round(($labor['present_hours'] ?? $labor['hours']) / $req * 100, 0) : null;
 	}
 
 	private function Comparative(string $date, string $prevDay, string $weekAgo, string $yearAgo, array $cur, array $yday, array $cmp, array $lyear, ?string $comparativeMetric, string $metric): array
@@ -397,7 +438,7 @@ class TodayExecutiveSalesService extends BaseService
 			$mon = ['', 'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'][intval(date('n', strtotime($d)))];
 			return date('j', strtotime($d)) . ' ' . $mon . ($year ? ' ' . date('Y', strtotime($d)) : '');
 		};
-		$rows = [['Ayer', $fmt($prevDay), $yday, '#8194ad', false], ['Hoy', $fmt($date), $cur, '#00C83B', true], ['Semana ant.', $fmt($weekAgo), $cmp, '#6ee7b7', false], ['Año anterior', $fmt($yearAgo, true), $lyear, '#a7f3d0', false]];
+		$rows = [['Ayer', $fmt($prevDay), $yday, '#8194ad', false], ['Hoy', $fmt($date), $cur, '#00C83B', true], ['Semana ant.', $fmt($weekAgo), $cmp, '#6ee7b7', false], ['Año anterior', $fmt($yearAgo, true) . (!empty($lyear['full_day']) ? ' · día completo' : ''), $lyear, '#a7f3d0', false]];
 		$build = function (string $title, string $unit, callable $val, callable $show) use ($rows) {
 			$items = [];
 			$vals = [];
@@ -429,32 +470,41 @@ class TodayExecutiveSalesService extends BaseService
 		$p = $db->query("SELECT COUNT(*), IFNULL(SUM(total_cost), 0) FROM waste_records WHERE status = 'pending_approval'$b")->fetch(\PDO::FETCH_NUM);
 		if (intval($p[0]) > 0)
 		{
+			$cost = round(floatval($p[1]), 2);
 			$out[] = ['id' => 'dec_waste_approvals', 'severity' => 'warning', 'icon' => 'fa-scale-unbalanced', 'title' => 'Mermas por aprobar', 'description' => intval($p[0]) . ' registro(s) de merma esperan aprobación; su stock aún no se descontó.',
-				'impact_text' => 'Costo pendiente: $' . number_format(floatval($p[1]), 2), 'impact_class' => 'text-warning', 'href' => '/waste/approvals' . $qs, 'module_label' => 'Mermas'];
+				'impact_text' => 'Costo pendiente: $' . number_format($cost, 2), 'impact_class' => 'text-warning', 'economic_impact' => $cost,
+				'owner' => 'Jefe de Mermas / Operaciones', 'due_date' => 'Hoy', 'href' => '/waste/approvals' . $qs, 'module_label' => 'Mermas'];
 		}
 		$late = DailyMetricsService::GetInstance()->LateReceipts($branchId);
 		if ($late > 0)
 		{
+			$lateVal = floatval($db->query("SELECT IFNULL(SUM(total_estimated_cost), 0) FROM procurement_orders WHERE status IN ('sent', 'confirmed', 'partially_received') AND COALESCE(confirmed_delivery_date, expected_delivery_date) < date('now', 'localtime')$b")->fetchColumn());
 			$out[] = ['id' => 'dec_late_receipts', 'severity' => 'warning', 'icon' => 'fa-truck-ramp-box', 'title' => 'Recepciones atrasadas', 'description' => "$late orden(es) de compra enviadas superaron su fecha comprometida sin recibirse.",
-				'impact_text' => 'Afecta la disponibilidad del día', 'impact_class' => 'text-warning', 'href' => '/mrp' . $qs, 'module_label' => 'Compras'];
+				'impact_text' => $lateVal > 0 ? 'OC comprometidas: $' . number_format($lateVal, 0) : 'Afecta disponibilidad del día', 'impact_class' => 'text-warning', 'economic_impact' => round($lateVal, 2),
+				'owner' => 'Jefe de Compras', 'due_date' => 'Hoy', 'href' => '/mrp' . $qs, 'module_label' => 'Compras'];
 		}
 		$a = $db->query("SELECT COUNT(*) FROM dairy_alerts WHERE status IN ('open', 'in_progress') AND priority IN ('P1', 'P2')$b")->fetchColumn();
 		if (intval($a) > 0)
 		{
 			$out[] = ['id' => 'dec_alerts', 'severity' => 'danger', 'icon' => 'fa-bell', 'title' => 'Alertas de prioridad alta abiertas', 'description' => intval($a) . ' alerta(s) P1/P2 sin cerrar. Cada una enlaza al producto o registro que la originó.',
-				'impact_text' => 'Requiere responsable asignado', 'impact_class' => 'text-danger', 'href' => '/alerts' . $qs, 'module_label' => 'Centro de alertas'];
+				'impact_text' => 'Requiere responsable y cierre', 'impact_class' => 'text-danger', 'economic_impact' => null,
+				'owner' => 'Supervisor / Centro de Alertas', 'due_date' => 'Inmediato', 'href' => '/alerts' . $qs, 'module_label' => 'Centro de alertas'];
 		}
-		$t = $db->query("SELECT COUNT(*) FROM tasks WHERE done = 0 AND due_date IS NOT NULL AND date(due_date) < date('now', 'localtime')")->fetchColumn();
-		if (intval($t) > 0)
+		$wt = intval($db->query("SELECT COUNT(*) FROM workforce_store_tasks WHERE status IN ('pending', 'in_progress', 'blocked') AND due_time IS NOT NULL AND datetime(due_time) < datetime('now', 'localtime')$b")->fetchColumn());
+		$gt = $branchId ? 0 : intval($db->query("SELECT COUNT(*) FROM tasks WHERE done = 0 AND due_date IS NOT NULL AND date(due_date) < date('now', 'localtime')")->fetchColumn());
+		$tTotal = $wt + $gt;
+		if ($tTotal > 0)
 		{
-			$out[] = ['id' => 'dec_tasks_overdue', 'severity' => 'warning', 'icon' => 'fa-list-check', 'title' => 'Tareas vencidas', 'description' => intval($t) . ' tarea(s) pendientes con fecha vencida (todas las sucursales).',
-				'impact_text' => 'Prioridad · requiere acción', 'impact_class' => 'text-warning', 'href' => '/tasks', 'module_label' => 'Tareas'];
+			$out[] = ['id' => 'dec_tasks_overdue', 'severity' => 'warning', 'icon' => 'fa-list-check', 'title' => 'Tareas y acciones correctivas vencidas', 'description' => $tTotal . ' tarea(s) operativa(s) con plazo vencido' . ($branchId ? ' en esta sucursal.' : ' en la red.'),
+				'impact_text' => 'Prioridad · requiere ejecución', 'impact_class' => 'text-warning', 'economic_impact' => null,
+				'owner' => 'Jefe de Turno / Operaciones', 'due_date' => 'Hoy', 'href' => ($wt > 0 ? '/workforce' . $qs : '/tasks'), 'module_label' => ($wt > 0 ? 'Personal' : 'Tareas')];
 		}
 		$o = DailyMetricsService::GetInstance()->Orders($branchId, date('Y-m-d'), date('Y-m-d'));
 		if ($o['open'] > 0)
 		{
 			$out[] = ['id' => 'dec_orders', 'severity' => $o['late_open'] ? 'danger' : 'info', 'icon' => 'fa-box', 'title' => 'Pedidos de clientes en curso', 'description' => $o['open'] . ' pedido(s) confirmados con stock reservado' . ($o['late_open'] ? ', ' . $o['late_open'] . ' con fecha vencida' : '') . '.',
-				'impact_text' => 'Stock reservado: no disponible para venta', 'impact_class' => $o['late_open'] ? 'text-danger' : 'text-info', 'href' => '/orders' . $qs, 'module_label' => 'Pedidos'];
+				'impact_text' => 'Stock reservado: no disponible para venta', 'impact_class' => $o['late_open'] ? 'text-danger' : 'text-info', 'economic_impact' => null,
+				'owner' => 'Jefe de Despachos', 'due_date' => $o['late_open'] ? 'Vencido' : 'En curso', 'href' => '/dispatches' . $qs, 'module_label' => 'Despachos'];
 		}
 		return $out;
 	}
@@ -476,18 +526,19 @@ class TodayExecutiveSalesService extends BaseService
 			$w = $m->Waste($id, date('Y-m-d', strtotime("$date -6 days")), $date);
 			$sw = $m->Sales($id, date('Y-m-d', strtotime("$date -6 days")), $date);
 			$wPct = $sw['has_data'] ? $m->WastePct($w['cost'], $sw) : null;
+			$wTarget = floatval($m->Targets($id, $date)['waste_target_pct'] ?? 2.0);
 			$cands = [];
 			if ($inv['out_of_stock'] > 0)
 			{
 				$cands[] = [3, 'fa-box-open', '#ef4444', 'Agotados', 'Alta', 'is-alta', $inv['out_of_stock'] . ' producto(s) sin stock', '/stockoverview?branch_id=' . $id . '&filter=below_min'];
 			}
-			if ($wPct !== null && $wPct > 2.5)
+			if ($wPct !== null && $wPct > $wTarget)
 			{
-				$cands[] = [2, 'fa-triangle-exclamation', '#ef4444', 'Merma', 'Alta', 'is-alta', 'Merma ' . number_format($wPct, 1) . '% en 7 días ($' . number_format($w['cost'], 0) . ')', '/waste?branch_id=' . $id];
+				$cands[] = [2, 'fa-triangle-exclamation', '#ef4444', 'Merma', 'Alta', 'is-alta', 'Merma ' . number_format($wPct, 1) . '% en 7 días (obj ≤ ' . number_format($wTarget, 1) . '% · $' . number_format($w['cost'], 0) . ')', '/waste?branch_id=' . $id];
 			}
 			if ($inv['expiring_products'] > 0)
 			{
-				$cands[] = [1, 'fa-calendar-days', '#f59e0b', 'Vencimientos', 'Media', 'is-media', $inv['expiring_products'] . ' producto(s) vencen en ≤ 7 días', '/quality?branch_id=' . $id];
+				$cands[] = [1, 'fa-calendar-days', '#f59e0b', 'Vencimientos', 'Media', 'is-media', $inv['expiring_products'] . ' producto(s) vencen en ≤ 7 días ($' . number_format($inv['expiring_value'], 0) . ')', '/traceability?branch_id=' . $id];
 			}
 			if ($inv['below_min'] > 0)
 			{
@@ -510,9 +561,11 @@ class TodayExecutiveSalesService extends BaseService
 		return array_slice($out, 0, $only ? 1 : 5);
 	}
 
-	private function GetProcessStatuses(?int $branchId, ?string $date, ?string $department, ?string $category, array $kpis, array $operationalKpis, array $riskInventory, array $workforceKpis, float $wasteTarget): array
+	private function GetProcessStatuses(?int $branchId, ?string $date, ?string $department, ?string $category, array $kpis, array $operationalKpis, array $riskInventory, array $workforceKpis, float $wasteTarget, string $lastUpdated = '', ?float $salesTarget = null, ?float $salesNet = null, float $wasteCost = 0.0, string $salesTrendDir = 'flat'): array
 	{
 		$m = DailyMetricsService::GetInstance();
+		$db = DatabaseService::GetInstance()->GetDbConnectionRaw();
+		$bAnd = $branchId ? ' AND branch_id = ' . intval($branchId) : '';
 		$scopeDept = ($department && $department !== 'todos' && $department !== 'all') || ($category && $category !== 'todas' && $category !== 'all');
 		$scopeText = $scopeDept ? 'Alcance: toda la sucursal' : null;
 		$branchQs = $branchId ? '?branch_id=' . $branchId : '';
@@ -522,38 +575,56 @@ class TodayExecutiveSalesService extends BaseService
 		$rows = [];
 
 		$late = $m->LateReceipts($branchId);
+		$latePoCost = $late > 0 ? round(floatval($db->query("SELECT IFNULL(SUM(total_estimated_cost), 0) FROM procurement_orders WHERE status IN ('sent', 'confirmed', 'partially_received') AND COALESCE(confirmed_delivery_date, expected_delivery_date) < date('now', 'localtime')$bAnd")->fetchColumn()), 2) : 0.0;
 		$rows[] = ['purchasing', 'Compras', 'fa-cart-shopping', '#0284c7', DailyMetricsService::CountLevel($late, 'late_receipts_crit'),
-			$late > 0 ? "$late orden(es) de compra atrasada(s)" : 'Sin órdenes de compra atrasadas', $scopeText, 'Ver compras', '/mrp' . $branchQs];
+			$late > 0 ? "$late orden(es) de compra atrasada(s)" : 'Sin órdenes de compra atrasadas', $scopeText, 'Ver compras', '/mrp' . $branchQs,
+			$late > 0 ? "$late OC atrasadas vs 0" : '0 atrasos (en meta)', $late > 0 ? -$latePoCost : 0.0, $late > 0 ? ('-$' . number_format($latePoCost, 0)) : '$0', $late > 0 ? 'down' : 'flat', $late > 0 ? 'Atraso activo' : 'Estable', 'Jefe de Compras', $lastUpdated];
 
 		$diff = intval($riskInventory['sensitive_diffs']['count']);
+		$inv = $m->Inventory($branchId);
 		$rows[] = ['inventory', 'Inventario', 'fa-boxes-stacked', '#059669', DailyMetricsService::CountLevel($diff, 'inventory_diffs_crit'),
-			$diff > 0 ? "$diff diferencia(s) pendiente(s) de revisión" : 'Sin ajustes ni investigaciones pendientes', $scopeText, 'Ver inventario', '/reconciliation' . $branchQs];
+			$diff > 0 ? "$diff diferencia(s) pendiente(s) de revisión" : 'Sin ajustes ni investigaciones pendientes', $scopeText, 'Ver inventario', '/reconciliation' . $branchQs,
+			$diff > 0 ? "$diff dif. vs obj. 0" : '0 dif. pendientes', $inv['out_of_stock'] > 0 ? null : 0.0, $diff > 0 ? "$diff caso(s)" : '$0', $diff > 0 ? 'down' : 'flat', $inv['out_of_stock'] . ' agotados', 'Jefe de Inventario', $lastUpdated];
 
 		$c = $kpis['target_compliance']['numeric'];
+		$salesGap = ($salesTarget !== null && $salesNet !== null) ? round($salesNet - $salesTarget, 2) : null;
+		$salesDev = $c === null ? 'Sin meta / sin ventas' : (($c - 100 >= 0 ? '+' : '') . number_format($c - 100, 1) . ' pp (' . number_format($c, 1) . '%)');
 		$rows[] = ['sales', 'Ventas', 'fa-chart-line', '#00C83B', DailyMetricsService::SalesLevel($c),
-			$c === null ? ($kpis['target_compliance']['value'] === 'Sin meta' ? 'Sin meta registrada para evaluar el objetivo' : 'Sin ventas registradas') : 'Cumplimiento ' . number_format($c, 1) . ' % · ' . $kpis['target_compliance']['target_text'], null, 'Ver ventas', '/sales' . $branchQs];
+			$c === null ? (strpos($kpis['target_compliance']['value'], 'Sin meta') === 0 ? 'Sin meta registrada para evaluar el objetivo' : 'Sin ventas registradas') : 'Cumplimiento ' . number_format($c, 1) . ' % · ' . $kpis['target_compliance']['target_text'], null, 'Ver ventas', '/sales' . $branchQs,
+			$salesDev, $salesGap, $salesGap === null ? 'Sin datos' : (($salesGap >= 0 ? '+$' : '-$') . number_format(abs($salesGap), 0)), $salesTrendDir, $kpis['sales_net']['delta_pct'] ?: 'Estable', 'Gerente Comercial', $lastUpdated];
 
 		$o = $m->Orders($branchId, date('Y-m-d', strtotime(($date ?: 'now') . ' -27 days')), $date ?: date('Y-m-d'));
 		$rows[] = ['dispatch', 'Despachos', 'fa-truck-fast', '#6366f1', $o['late_open'] > 0 ? DailyMetricsService::CountLevel($o['late_open'], 'late_orders_crit') : ($o['dispatched'] + $o['open'] > 0 ? 'success' : 'neutral'),
-			$o['late_open'] > 0 ? $o['late_open'] . ' pedido(s) con fecha vencida sin despachar' : ($o['dispatched'] + $o['open'] > 0 ? $o['open'] . ' pedido(s) en curso · ' . $o['dispatched'] . ' despachados en 28 días' : 'Sin pedidos registrados'), $scopeText, 'Ver despachos', '/dispatch' . $branchQs];
+			$o['late_open'] > 0 ? $o['late_open'] . ' pedido(s) con fecha vencida sin despachar' : ($o['dispatched'] + $o['open'] > 0 ? $o['open'] . ' pedido(s) en curso · ' . $o['dispatched'] . ' despachados en 28 días' : 'Sin pedidos registrados'), $scopeText, 'Ver despachos', '/dispatches' . $branchQs,
+			$o['on_time_pct'] !== null ? ('OTIF ' . number_format($o['on_time_pct'], 0) . '% (obj. 95%)') : ($o['late_open'] > 0 ? $o['late_open'] . ' vencido(s)' : 'Sin entregas'), null, $o['late_open'] > 0 ? $o['late_open'] . ' retrasados' : 'En plazo', $o['late_open'] > 0 ? 'down' : ($o['dispatched'] + $o['open'] > 0 ? 'up' : 'no_data'), $o['open'] . ' activos', 'Jefe de Despachos', $lastUpdated];
 
 		$cov = $operationalKpis['staff_coverage']['numeric'];
 		$people = $workforceKpis['overtime']['numeric'];
 		$absentPeople = intval($m->Labor($branchId, $date ?: date('Y-m-d'))['absent_people']);
 		$rows[] = ['workforce', 'Personal', 'fa-user-clock', '#8b5cf6', DailyMetricsService::CoverageLevel($cov),
-			$cov === null ? ($people > 0 ? number_format($people, 1) . ' h programadas (sin requerimiento de cobertura configurado)' : 'Sin turnos programados para la fecha') : 'Cobertura ' . number_format($cov, 0) . ' % de la dotación requerida' . ($absentPeople ? ' · ' . $absentPeople . ' ausencia(s) o inasistencia(s)' : ''), $scopeText, 'Ver cobertura', '/operations/scheduling' . $branchQs];
+			$cov === null ? ($people > 0 ? number_format($people, 1) . ' h programadas (sin requerimiento de cobertura configurado)' : 'Sin turnos programados para la fecha') : 'Cobertura ' . number_format($cov, 0) . ' % de la dotación requerida' . ($absentPeople ? ' · ' . $absentPeople . ' ausencia(s) o inasistencia(s)' : ''), $scopeText, 'Ver cobertura', '/operations/scheduling' . $branchQs,
+			$cov === null ? 'Sin req. cobertura' : (($cov - 100 >= 0 ? '+' : '') . number_format($cov - 100, 0) . ' pp vs 100%'), null, $absentPeople > 0 ? "$absentPeople ausencia(s)" : 'Completa', $cov === null ? 'no_data' : ($cov >= 95 ? 'up' : 'down'), $cov !== null ? number_format($cov, 0) . '%' : 'Sin req.', 'Jefe de Personal', $lastUpdated];
 
 		$q = $m->QualityIssues($branchId, $date ?: date('Y-m-d'));
 		$rows[] = ['quality', 'Calidad', 'fa-shield-halved', '#ec4899', DailyMetricsService::CountLevel($q['total'], 'quality_issues_crit'),
-			$q['total'] > 0 ? "{$q['expired_lots']} lote(s) vencidos con stock · {$q['quarantine']} en cuarentena · {$q['temperature_excursions']} lectura(s) fuera de rango" : 'Sin lotes vencidos, cuarentenas ni temperaturas fuera de rango', $scopeText, 'Ver calidad', '/quality' . $branchQs];
+			$q['total'] > 0 ? "{$q['expired_lots']} lote(s) vencidos con stock · {$q['quarantine']} en cuarentena · {$q['temperature_excursions']} lectura(s) fuera de rango" : 'Sin lotes vencidos, cuarentenas ni temperaturas fuera de rango', $scopeText, 'Ver calidad', '/traceability' . $branchQs,
+			$q['total'] > 0 ? "{$q['total']} hallazgo(s) vs 0" : '0 hallazgos', $inv['expiring_value'] > 0 ? -round($inv['expiring_value'], 2) : 0.0, $inv['expiring_value'] > 0 ? ('-$' . number_format($inv['expiring_value'], 0) . ' expuesto') : '$0', $q['total'] > 0 ? 'down' : 'flat', $q['total'] . ' alerta(s)', 'Líder de Calidad', $lastUpdated];
 
 		$w = $kpis['waste_ratio']['numeric'];
+		$wGap = $w !== null ? round($w - $wasteTarget, 1) : null;
 		$rows[] = ['waste', 'Mermas', 'fa-triangle-exclamation', '#ef4444', DailyMetricsService::WasteLevel($w, $wasteTarget),
-			$w === null ? 'Sin ventas para calcular la merma del día' : 'Merma ' . number_format($w, 1) . ' % (objetivo ≤ ' . number_format($wasteTarget, 1) . ' %)', null, 'Ver mermas', '/waste' . $branchQs];
+			$w === null ? 'Sin ventas para calcular la merma del día' : 'Merma ' . number_format($w, 1) . ' % (objetivo ≤ ' . number_format($wasteTarget, 1) . ' %)', null, 'Ver mermas', '/waste' . $branchQs,
+			$wGap === null ? 'Sin base' : (($wGap > 0 ? '+' : '') . number_format($wGap, 1) . ' pp vs ≤' . number_format($wasteTarget, 1) . '%'), -$wasteCost, '-$' . number_format($wasteCost, 0), ($w !== null && $w > $wasteTarget) ? 'down' : 'up', $kpis['waste_ratio']['delta_pp'] ?: 'Sin comparativo', 'Jefe de Mermas', $lastUpdated];
 
 		return array_map(function ($r) use ($st) {
 			[$label, $icon] = $st($r[4]);
-			return ['key' => $r[0], 'process' => $r[1], 'icon' => $r[2], 'color' => $r[3], 'status' => $r[4], 'status_label' => $label, 'status_icon' => $icon, 'situation' => $r[5], 'scope_note' => $r[6], 'action_text' => $r[7], 'href' => $r[8]];
+			return [
+				'key' => $r[0], 'process' => $r[1], 'icon' => $r[2], 'color' => $r[3],
+				'status' => $r[4], 'status_label' => $label, 'status_icon' => $icon,
+				'situation' => $r[5], 'scope_note' => $r[6], 'action_text' => $r[7], 'href' => $r[8],
+				'deviation' => $r[9], 'economic_impact' => $r[10], 'economic_impact_label' => $r[11],
+				'trend' => $r[12], 'trend_label' => $r[13], 'owner' => $r[14], 'last_updated' => $r[15]
+			];
 		}, $rows);
 	}
 

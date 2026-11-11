@@ -170,6 +170,9 @@ $dailyDark = $dailyModePref === 'dark';
 	<!-- Modo Noche global (tokens + componentes + adaptador de colores fijos) -->
 	<link href="{{ $U('/css/daily_dark.css?v=', true) }}{{ daily_asset_version('/css/daily_dark.css') }}"
 		rel="stylesheet">
+	<!-- Efecto Hover interactivo verde en todas las tarjetas KPI de DAILY -->
+	<link href="{{ $U('/css/daily_kpi_hover.css?v=', true) }}{{ daily_asset_version('/css/daily_kpi_hover.css') }}"
+		rel="stylesheet">
 
 	@if(file_exists(GROCY_DATAPATH . '/custom_css.html'))
 	@php include GROCY_DATAPATH . '/custom_css.html' @endphp

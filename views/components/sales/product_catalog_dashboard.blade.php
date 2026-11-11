@@ -263,14 +263,14 @@
 			<div class="prod-kpi-sub">{{ $k['expiring_soon']['sub'] ?? 'lotes o SKU en riesgo' }}</div>
 		</article>
 
-		<!-- 7. Oportunidad comercial estimada (Verde sólido) -->
-		<article class="prod-kpi-card prod-kpi-card-green" onclick="filterByKpi('opportunity')" title="Oportunidad comercial estimada" data-testid="kpi-oportunidad">
+		<!-- 7. Oportunidad comercial estimada (Blanca por defecto; verde únicamente en :hover) -->
+		<article class="prod-kpi-card" onclick="filterByKpi('opportunity')" title="Oportunidad comercial estimada" data-testid="kpi-oportunidad">
 			<div class="prod-kpi-header">
-				<span class="prod-kpi-label text-white">{{ $k['commercial_opportunity']['label'] ?? 'Oportunidad comercial estimada' }}</span>
-				<i class="fa-solid fa-circle-dollar-sign text-white opacity-75"></i>
+				<span class="prod-kpi-label">{{ $k['commercial_opportunity']['label'] ?? 'Oportunidad comercial estimada' }}</span>
+				<i class="fa-solid fa-circle-dollar-sign prod-kpi-icon-muted"></i>
 			</div>
-			<div class="prod-kpi-val text-white">{{ $k['commercial_opportunity']['value'] ?? '≈ $18,900' }}</div>
-			<div class="prod-kpi-sub text-white-50">{{ $k['commercial_opportunity']['sub'] ?? 'estimación · confianza media' }}</div>
+			<div class="prod-kpi-val">{{ $k['commercial_opportunity']['value'] ?? '≈ $18,900' }}</div>
+			<div class="prod-kpi-sub">{{ $k['commercial_opportunity']['sub'] ?? 'estimación · confianza media' }}</div>
 		</article>
 	</section>
 

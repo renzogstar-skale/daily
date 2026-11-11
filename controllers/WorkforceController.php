@@ -2,6 +2,9 @@
 
 namespace Grocy\Controllers;
 
+use Grocy\Controllers\Users\User;
+use Grocy\Helpers\DairyAccess;
+use Grocy\Services\BranchService;
 use Grocy\Services\DatabaseService;
 use Grocy\Services\WorkforceService;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -15,48 +18,57 @@ class WorkforceController extends BaseController
 		$params = $request->getQueryParams();
 		$branchId = isset($params['branch_id']) ? intval($params['branch_id']) : 1;
 
-		$branches = $dbRaw->query("SELECT id, name FROM branches ORDER BY name")->fetchAll(\PDO::FETCH_OBJ);
-		$products = $dbRaw->query("SELECT id, name, IFNULL(NULLIF(sale_price, 0), 3.99) AS default_sale_price FROM products WHERE active = 1 ORDER BY name")->fetchAll(\PDO::FETCH_OBJ);
-		$reasons = $dbRaw->query("SELECT id, code, name, category FROM waste_reasons WHERE active = 1 ORDER BY code")->fetchAll(\PDO::FETCH_OBJ);
+		$isEmpSimulated = DairyAccess::GetSimulatedRole() === 'empleado';
+		$canManage = !$isEmpSimulated && DairyAccess::HasAny([
+			User::PERMISSION_WORKFORCE_SCHEDULE_MANAGE,
+			User::PERMISSION_WORKFORCE_ATTENDANCE_MANAGE,
+			User::PERMISSION_ADMIN
+		]);
+
+		$branches = DairyAccess::FilterBranches($dbRaw->query("SELECT id, name FROM branches WHERE active = 1 ORDER BY name")->fetchAll(\PDO::FETCH_OBJ));
 
 		$wfService = WorkforceService::GetInstance();
 		$tasks = $wfService->GetStoreTasks($branchId, 'all');
 
-		// Acuerdos de reuniones disponibles para convertir en tareas
+		if (!$canManage)
+		{
+			$tasks = array_values(array_filter($tasks, fn($t) => !in_array(strtolower($t->assigned_role ?? ''), ['manager', 'supervisor'], true)));
+		}
+
+		// Acuerdos operativos de personal (sin mermas ni equipos de infraestructura)
 		$meetingAgreements = [
 			[
 				'id' => 101,
-				'title' => 'Reubicar sensores de temperatura en vitrinas lácteas de ' . \Grocy\Services\BranchService::NameById(1),
+				'title' => 'Validar apertura de cajas rápidas y check-in de apertura en ' . BranchService::NameById($branchId),
 				'meeting' => 'Comité Operativo Semanal #43',
-				'date' => '2026-10-26',
+				'date' => date('Y-m-d'),
 				'role' => 'supervisor',
-				'process' => 'Equipos y Frío',
+				'process' => 'Apertura y Cobertura',
 				'priority' => 'Alta',
 				'due_hours' => 24
 			],
 			[
 				'id' => 102,
-				'title' => 'Refuerzo de reposición FEFO en yogurt griego previo a horario peak (17:00)',
+				'title' => 'Refuerzo de rotación de personal en piso previo a franja peak (17:00)',
 				'meeting' => 'Minuta de Alineación Diaria',
-				'date' => '2026-10-27',
+				'date' => date('Y-m-d'),
 				'role' => 'stocker',
-				'process' => 'Rotación y Mermas',
+				'process' => 'Cobertura Horaria',
 				'priority' => 'Media',
 				'due_hours' => 6
 			],
 			[
 				'id' => 103,
-				'title' => 'Auditoría física selectiva de quesos madurados por discrepancia en IRA',
-				'meeting' => 'Comité de Control de Pérdidas',
-				'date' => '2026-10-27',
-				'role' => 'supervisor',
-				'process' => 'Inventario',
+				'title' => 'Revisión de pausas activas y relevos de descanso en turno de cierre',
+				'meeting' => 'Comité Operativo de Personal',
+				'date' => date('Y-m-d'),
+				'role' => 'cashier',
+				'process' => 'Descansos y Turnos',
 				'priority' => 'Alta',
 				'due_hours' => 12
 			]
 		];
 
-		// Identificar acuerdos ya convertidos en tareas para enlazarlos sin duplicar
 		$agreementTaskMap = [];
 		foreach ($tasks as $t)
 		{
@@ -72,7 +84,6 @@ class WorkforceController extends BaseController
 		}
 		unset($agr);
 
-		// Contadores métricos de tareas
 		$nowTs = time();
 		$overdueCount = 0;
 		$blockedCount = 0;
@@ -107,27 +118,27 @@ class WorkforceController extends BaseController
 			}
 		}
 
-				$rawDb = \Grocy\Services\DatabaseService::GetInstance()->GetDbConnectionRaw();
-		$certifications = $rawDb->query("SELECT * FROM daily_employee_certifications_ext ORDER BY id DESC")->fetchAll(\PDO::FETCH_ASSOC);
-		$maintenanceLogs = $rawDb->query("SELECT * FROM daily_equipment_maintenance ORDER BY id DESC")->fetchAll(\PDO::FETCH_ASSOC);
-		$operationalIncidents = $rawDb->query("SELECT * FROM daily_operational_incidents ORDER BY id DESC")->fetchAll(\PDO::FETCH_ASSOC);
-return $this->RenderPage($response, 'workforce', [
+		$certifications = $canManage ? $dbRaw->query("SELECT * FROM daily_employee_certifications_ext ORDER BY id DESC")->fetchAll(\PDO::FETCH_ASSOC) : [];
+		$operationalIncidents = $canManage ? $dbRaw->query("SELECT * FROM daily_operational_incidents ORDER BY id DESC")->fetchAll(\PDO::FETCH_ASSOC) : [];
+		$totalTasks = count($tasks);
+		$completionPct = $totalTasks > 0 ? round(($completedCount / $totalTasks) * 100, 1) : 100.0;
+
+		return $this->RenderPage($response, 'workforce', [
 			'branches' => $branches,
-			'products' => $products,
-			'reasons' => $reasons,
 			'tasks' => $tasks,
 			'selectedBranchId' => $branchId,
+			'canManage' => $canManage,
 			'certifications' => $certifications,
-			'maintenanceLogs' => $maintenanceLogs,
 			'operationalIncidents' => $operationalIncidents,
-			'meetingAgreements' => $meetingAgreements,
+			'meetingAgreements' => $canManage ? $meetingAgreements : [],
 			'taskMetrics' => [
 				'overdue' => $overdueCount,
 				'blocked' => $blockedCount,
 				'in_progress' => $inProgressCount,
 				'completed' => $completedCount,
 				'pending' => $pendingCount,
-				'total' => count($tasks)
+				'total' => $totalTasks,
+				'completion_pct' => $completionPct
 			]
 		]);
 	}

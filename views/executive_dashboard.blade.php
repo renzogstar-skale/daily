@@ -1,4 +1,4 @@
-@php require_frontend_packages(['chartjs', 'datatables', 'animatecss']); @endphp
+@php require_frontend_packages(['chartjs']); @endphp
 
 @extends('layout.default')
 
@@ -7,90 +7,164 @@
 @push('pageStyles')
 <link href="{{ $U('/css/daily_sales_dashboard.css?v=', true) }}{{ daily_asset_version('/css/daily_sales_dashboard.css') }}" rel="stylesheet">
 <link href="{{ $U('/css/daily_executive_panel.css?v=', true) }}{{ daily_asset_version('/css/daily_executive_panel.css') }}" rel="stylesheet">
+<style>
+.ded-kpis-grid-6 {
+	display: grid;
+	grid-template-columns: repeat(6, minmax(0, 1fr));
+	gap: 10px;
+	margin-bottom: 14px;
+	align-items: stretch;
+}
+@media (max-width: 1360px) {
+	.ded-kpis-grid-6 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 768px) {
+	.ded-kpis-grid-6 { grid-template-columns: 1fr; }
+}
+.ded-kpis-grid-6 .ded-kpi-card { min-width: 0; }
+.ded-select-native {
+	border: none;
+	background: transparent;
+	color: inherit;
+	font-weight: 700;
+	font-size: 12.5px;
+	outline: none;
+	cursor: pointer;
+	max-width: 195px;
+}
+html.daily-dark #dailyExecutiveDashboardApp .text-dark { color: #e2e8f0 !important; }
+html.daily-dark #dailyExecutiveDashboardApp .text-secondary { color: #94a3b8 !important; }
+html.daily-dark #dailyExecutiveDashboardApp .bg-light,
+html.daily-dark #dailyExecutiveDashboardApp .badge-light { background-color: rgba(148,163,184,0.14) !important; color: #e2e8f0 !important; border-color: rgba(148,163,184,0.22) !important; }
+html.daily-dark #dailyExecutiveDashboardApp .ded-dropdown-menu { background: #111827 !important; border-color: rgba(148,163,184,0.22) !important; }
+html.daily-dark #dailyExecutiveDashboardApp .ded-dropdown-item { color: #e2e8f0 !important; }
+html.daily-dark #dailyExecutiveDashboardApp .ded-dropdown-item:hover { background: rgba(16,185,129,0.14) !important; }
+.ded-state-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 2px 8px;
+	border-radius: 999px;
+	font-size: 11px;
+	font-weight: 700;
+	white-space: nowrap;
+}
+.ded-state-pill.is-ok { background: rgba(16, 185, 129, 0.14); color: #047857; }
+.ded-state-pill.is-warn { background: rgba(245, 158, 11, 0.16); color: #b45309; }
+.ded-state-pill.is-crit { background: rgba(239, 68, 68, 0.14); color: #b91c1c; }
+.ded-state-pill.is-no_data { background: rgba(100, 116, 139, 0.14); color: #475569; }
+html.daily-dark .ded-state-pill.is-ok { color: #34d399; }
+html.daily-dark .ded-state-pill.is-warn { color: #fbbf24; }
+html.daily-dark .ded-state-pill.is-crit { color: #f87171; }
+html.daily-dark .ded-state-pill.is-no_data { color: #94a3b8; }
+.ded-def-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+	gap: 10px;
+}
+.ded-def-item {
+	border: 1px solid rgba(148, 163, 184, 0.22);
+	border-radius: 10px;
+	padding: 10px 12px;
+	font-size: 11.5px;
+}
+</style>
 @endpush
 
 @php
 	$ep = $executivePanel ?? [];
 	$se = $stockExec ?? [];
-	$colombiaBranches = $ep['colombia_branches'] ?? [];
-	$branchCounts = $ep['branch_counts'] ?? ['operativa' => 7, 'atencion' => 2, 'critica' => 1, 'total' => 10];
-	$topDepartments = $ep['top_departments'] ?? [];
-	$priorityAlertsList = $ep['priority_alerts_list'] ?? [];
-	$urgentActionsList = $ep['urgent_actions_list'] ?? [];
-	$quickActionsList = $ep['quick_actions_list'] ?? [];
-	$processCards = $ep['process_cards'] ?? [];
-	$salesDayCurve = $ep['sales_day_curve'] ?? [];
-
-	// Datos para análisis profundo
+	$fs = $ep['financial_summary'] ?? [];
 	$sKpis = $ep['strategic_kpis'] ?? [];
 	$decisions = $ep['priority_decisions'] ?? [];
 	$budget = $ep['budget_summary'] ?? [];
 	$ops = $ep['operations_status'] ?? [];
+	$ca = $ep['corrective_actions'] ?? [];
+	$kpiDefs = $ep['kpi_definitions'] ?? [];
+	$deptRows = $ep['department_breakdown'] ?? [];
 	$evoChart = $ep['evolution_chart'] ?? ['labels' => [], 'sales_real' => [], 'target_line' => [], 'prev_period' => []];
 	$dq = $ep['data_quality'] ?? [];
 	$branchRanking = $kpiData['branch_ranking'] ?? [];
+	$deptCatalog = $departments ?? \Grocy\Services\DailyMetricsService::Departments();
 
-	// Métricas reales sincronizadas con DailyMetricsService
 	$epM = \Grocy\Services\DailyMetricsService::GetInstance();
 	$epR = \Grocy\Services\DailyMetricsService::PeriodRange($selectedPeriod ?? 'month', $selectedDate ?? null, $customStart ?? null, $customEnd ?? null);
-	$epLen = (int) round((strtotime($epR['end']) - strtotime($epR['start'])) / 86400) + 1;
+	$epLen = max(1, (int) round((strtotime($epR['end']) - strtotime($epR['start'])) / 86400) + 1);
 	$epPrevTo = date('Y-m-d', strtotime($epR['start'] . ' -1 day'));
 	$epPrevFrom = date('Y-m-d', strtotime($epPrevTo . ' -' . ($epLen - 1) . ' days'));
-	$epS = $epM->Summary($selectedBranchId ?: null, $epR['start'], $epR['end']);
 	$epP = $epM->Summary($selectedBranchId ?: null, $epPrevFrom, $epPrevTo);
 	$epInv = $epM->StockStatusCounts($selectedBranchId ?: null);
-	$epLab = $epM->Labor($selectedBranchId ?: null, $epR['end']);
 	$epQ = $epM->QualityIssues($selectedBranchId ?: null, $epR['end']);
 	$epPer = \Grocy\Helpers\DailyFilters::PeriodLabel($epR['start'], $epR['end']);
 	$epPrevPer = \Grocy\Helpers\DailyFilters::PeriodLabel($epPrevFrom, $epPrevTo);
 
-	$epNet = ($epS['sales']['has_data'] && $epS['sales']['net_sales'] > 0) ? $epS['sales']['net_sales'] : 669540;
-	$epPrevNet = ($epP['sales']['has_data'] && $epP['sales']['net_sales'] > 0) ? $epP['sales']['net_sales'] : 583200;
-	$salesDeltaPct = $epPrevNet > 0 ? round(($epNet - $epPrevNet) / $epPrevNet * 100, 1) : 14.8;
+	$hasSalesData = !empty($fs['has_data']) || ($sKpis['sales']['has_data'] ?? false);
+	$epNet = ($sKpis['sales']['has_data'] ?? false) ? floatval($fs['net_sales'] ?? 0) : null;
+	$epPrevNet = ($epP['sales']['has_data'] ?? false) ? floatval($epP['sales']['net_sales']) : null;
+	$salesDeltaPct = ($epNet !== null && $epPrevNet !== null && $epPrevNet > 0)
+		? round(($epNet - $epPrevNet) / $epPrevNet * 100, 1)
+		: null;
 
-	$compliancePct = ($epS['compliance_pct'] !== null && $epS['compliance_pct'] > 0) ? round($epS['compliance_pct'], 1) : 98.2;
-	$targetBudget = $epS['sales_target'] ?? 681000;
+	$compliancePct = $fs['compliance_pct'] ?? null;
+	$targetBudget = $fs['sales_target'] ?? null;
+	$complianceDeltaPp = $compliancePct !== null ? round($compliancePct - 100, 1) : null;
 
-	$marginPct = ($epS['sales']['has_data'] && $epS['sales']['margin_pct'] > 0) ? round($epS['sales']['margin_pct'], 1) : 28.4;
-	$targetMarginPct = $epS['margin_target_pct'] ?? 27.5;
-	$marginDelta = round($marginPct - $targetMarginPct, 1);
+	$marginHasData = ($sKpis['margin']['has_data'] ?? false);
+	$marginPct = $marginHasData ? ($fs['margin_pct'] ?? null) : null;
+	$targetMarginPct = $fs['margin_target_pct'] ?? null;
+	$marginDelta = ($marginPct !== null && $targetMarginPct !== null) ? round($marginPct - $targetMarginPct, 1) : null;
 
-	$inventoryValue = ($se['kpis']['inventory_value']['value'] ?? null);
-	if (empty($inventoryValue) || $inventoryValue === 'Sin información') {
-		$inventoryValue = '$18,817';
-	}
-	$invCoverageDays = $se['kpis']['coverage']['value'] ?? '14.2 días';
+	$invValNum = floatval($fs['inventory_valuation'] ?? ($kpiData['total_inventory_valuation'] ?? 0));
+	$inventoryValue = $invValNum > 0 ? '$' . number_format($invValNum, 0) : ($se['kpis']['inventory_value']['value'] ?? 'Sin información');
+	$invCoverageDays = ($fs['dsi_days'] ?? null) !== null
+		? number_format(floatval($fs['dsi_days']), 1) . ' días'
+		: ($se['kpis']['coverage']['value'] ?? 'Sin información');
+	$turnoverVal = floatval($fs['turnover'] ?? ($kpiData['inventory_turnover'] ?? 0));
 
-	$wasteCost = ($epS['waste']['has_data'] && $epS['waste']['cost'] > 0) ? $epS['waste']['cost'] : 12450;
-	$wastePct = ($epS['waste_pct'] !== null && $epS['waste_pct'] > 0) ? round($epS['waste_pct'], 1) : 1.8;
-	$wasteTargetPct = $epS['waste_target_pct'] ?? 2.0;
+	$wasteHasData = ($sKpis['waste']['has_data'] ?? false) || floatval($fs['waste_cost'] ?? 0) > 0;
+	$wasteCost = floatval($fs['waste_cost'] ?? 0);
+	$wasteRecovered = floatval($fs['waste_recovered'] ?? 0);
+	$netWasteCost = floatval($fs['net_waste_cost'] ?? 0);
+	$wastePct = $fs['waste_pct'] ?? null;
+	$wasteTargetPct = floatval($fs['waste_target_pct'] ?? 2.0);
 
-	// Helper para preservar el contexto de sucursal y período al navegar a módulos de detalle
-	$ctxUrl = function(string $path) use ($U, $selectedBranchId, $selectedPeriod, $customStart, $customEnd, $selectedDate) {
+	$netOpContribution = ($sKpis['sales']['has_data'] ?? false) ? floatval($fs['net_operating_contribution'] ?? 0) : null;
+	$netOpMarginPct = $fs['net_operating_margin_pct'] ?? null;
+
+	$selectedDeptData = (!empty($selectedDepartment) && $selectedDepartment !== 'todos' && isset($deptRows[$selectedDepartment]))
+		? $deptRows[$selectedDepartment]
+		: null;
+
+	$ctxUrl = function(string $path, array $overrides = []) use ($U, $selectedBranchId, $selectedPeriod, $selectedDepartment, $customStart, $customEnd, $selectedDate) {
 		$hash = '';
-		if (strpos($path, '#') !== false)
-		{
+		if (strpos($path, '#') !== false) {
 			[$path, $hash] = explode('#', $path, 2);
 			$hash = '#' . $hash;
 		}
-		$query = [];
-		if (!empty($selectedBranchId))
-		{
-			$query['branch_id'] = $selectedBranchId;
+		$query = [
+			'branch_id' => $selectedBranchId ?: '',
+			'period' => $selectedPeriod ?? 'month',
+			'department' => $selectedDepartment ?? 'todos',
+			'date' => $selectedDate ?? date('Y-m-d'),
+			'start_date' => $customStart ?? '',
+			'end_date' => $customEnd ?? '',
+		];
+		foreach ($overrides as $k => $v) {
+			$query[$k] = $v;
 		}
-		if (!empty($selectedPeriod) && $selectedPeriod !== 'month')
-		{
-			$query['period'] = $selectedPeriod;
+		if (($query['period'] ?? 'month') !== 'custom') {
+			unset($query['start_date'], $query['end_date']);
 		}
-		if (!empty($selectedDate) && $selectedDate !== date('Y-m-d'))
-		{
-			$query['date'] = $selectedDate;
+		if (($query['date'] ?? '') === date('Y-m-d')) {
+			unset($query['date']);
 		}
-		if ($selectedPeriod === 'custom' && !empty($customStart) && !empty($customEnd))
-		{
-			$query['start_date'] = $customStart;
-			$query['end_date'] = $customEnd;
+		if (($query['department'] ?? 'todos') === 'todos' || ($query['department'] ?? '') === '') {
+			unset($query['department']);
 		}
+		if (($query['branch_id'] ?? '') === '') {
+			unset($query['branch_id']);
+		}
+		$query = array_filter($query, fn($v) => $v !== null && $v !== '');
 		$sep = (strpos($path, '?') !== false) ? '&' : '?';
 		$qs = !empty($query) ? ($sep . http_build_query($query)) : '';
 		return $U($path . $qs . $hash);
@@ -103,10 +177,9 @@
 		'month' => 'Este mes',
 		'quarter' => 'Este trimestre',
 		'year' => 'Este año',
-		'custom' => 'Rango personalizado'
+		'custom' => ($customStart && $customEnd) ? ($customStart . ' al ' . $customEnd) : 'Personalizado'
 	];
 
-	// Nombre descriptivo de la sucursal seleccionada
 	$currentBranchName = 'Red Consolidada (Todas)';
 	foreach ($branches as $b) {
 		$bId = is_array($b) ? $b['id'] : $b->id;
@@ -117,323 +190,169 @@
 		}
 	}
 
-	// Ciclo Integral del Retail (8 Etapas con iconos Lucide)
-	$retailCycleSteps = [
-		[
-			'id' => 1,
-			'name' => 'Planificación',
-			'icon' => 'calendar-range',
-			'url' => '/mrp',
-			'status' => 'Óptimo',
-			'badge_class' => 'badge-success',
-			'metric' => '96.4 % Cobertura',
-			'deviation' => '3 SKUs bajo stock seguridad',
-			'action' => 'Ver MRP'
-		],
-		[
-			'id' => 2,
-			'name' => 'Compras',
-			'icon' => 'truck',
-			'url' => '/suppliers',
-			'status' => 'Atención',
-			'badge_class' => 'badge-warning',
-			'metric' => '92.0 % OTIF',
-			'deviation' => '2 entregas en tránsito',
-			'action' => 'Ver Compras'
-		],
-		[
-			'id' => 3,
-			'name' => 'Recepción',
-			'icon' => 'barcode',
-			'url' => '/scan',
-			'status' => 'Óptimo',
-			'badge_class' => 'badge-success',
-			'metric' => '98.2 % A tiempo',
-			'deviation' => '1 lote en inspección técnica',
-			'action' => 'Ver Recepción'
-		],
-		[
-			'id' => 4,
-			'name' => 'Inventario',
-			'icon' => 'package-check',
-			'url' => '/stockoverview',
-			'status' => 'Óptimo',
-			'badge_class' => 'badge-success',
-			'metric' => '94.2 % Disponibilidad',
-			'deviation' => '72 agotados en red comercial',
-			'action' => 'Ver Stock'
-		],
-		[
-			'id' => 5,
-			'name' => 'Ventas',
-			'icon' => 'receipt',
-			'url' => '/sales',
-			'status' => 'Óptimo',
-			'badge_class' => 'badge-success',
-			'metric' => '$' . number_format($epNet, 0) . ' Netas',
-			'deviation' => number_format($compliancePct, 1) . ' % de la meta cumplida',
-			'action' => 'Ver Ventas'
-		],
-		[
-			'id' => 6,
-			'name' => 'Rentabilidad',
-			'icon' => 'coins',
-			'url' => '/sales?tab=rentabilidad',
-			'status' => 'Óptimo',
-			'badge_class' => 'badge-success',
-			'metric' => number_format($marginPct, 1) . ' % Margen',
-			'deviation' => ($marginDelta >= 0 ? '+' : '') . $marginDelta . ' pp sobre objetivo',
-			'action' => 'Ver Margen'
-		],
-		[
-			'id' => 7,
-			'name' => 'Prevención',
-			'icon' => 'shield',
-			'url' => '/waste',
-			'status' => 'Atención',
-			'badge_class' => 'badge-warning',
-			'metric' => number_format($wastePct, 1) . ' % Merma',
-			'deviation' => '$' . number_format($wasteCost, 0) . ' costo acumulado',
-			'action' => 'Ver Mermas'
-		],
-		[
-			'id' => 8,
-			'name' => 'Optimización',
-			'icon' => 'sparkles',
-			'url' => '/action-center',
-			'status' => 'Óptimo',
-			'badge_class' => 'badge-success',
-			'metric' => '+8.3 % Eficiencia',
-			'deviation' => '4 planes de acción en curso',
-			'action' => 'Ver Acciones'
-		]
-	];
-
-	// 7 Áreas Estratégicas para Rendimiento por Área
-	$strategicAreas = [
-		[
-			'name' => 'Ventas y Rentabilidad',
-			'icon' => 'circle-dollar-sign',
-			'kpi' => '$' . number_format($epNet, 0) . ' · ' . number_format($marginPct, 1) . '% Margen',
-			'progress' => min(100, $compliancePct),
-			'status' => 'En ritmo',
-			'status_tone' => 'text-success',
-			'url' => '/sales'
-		],
-		[
-			'name' => 'Inventario y Almacenes',
-			'icon' => 'boxes',
-			'kpi' => '94.2% Disponibilidad · 14.2 d Cobertura',
-			'progress' => 94,
-			'status' => 'Óptimo',
-			'status_tone' => 'text-success',
-			'url' => '/stockoverview'
-		],
-		[
-			'name' => 'Despachos y Devoluciones',
-			'icon' => 'truck',
-			'kpi' => '96.8% A tiempo · 0.4% Devoluciones',
-			'progress' => 97,
-			'status' => 'Óptimo',
-			'status_tone' => 'text-success',
-			'url' => '/stockjournal'
-		],
-		[
-			'name' => 'Mermas y Prevención',
-			'icon' => 'trash-2',
-			'kpi' => number_format($wastePct, 1) . '% Merma (Meta ≤ 2.0%)',
-			'progress' => 88,
-			'status' => 'En rango',
-			'status_tone' => 'text-success',
-			'url' => '/waste'
-		],
-		[
-			'name' => 'Operaciones y Personal',
-			'icon' => 'users',
-			'kpi' => '$48.26/h Productividad · 94.1% Asistencia',
-			'progress' => 94,
-			'status' => 'Óptimo',
-			'status_tone' => 'text-success',
-			'url' => '/schedule'
-		],
-		[
-			'name' => 'Prevención de Pérdidas',
-			'icon' => 'shield-alert',
-			'kpi' => 'Cero brechas críticas de seguridad',
-			'progress' => 96,
-			'status' => 'Seguro',
-			'status_tone' => 'text-success',
-			'url' => '/loss-prevention'
-		],
-		[
-			'name' => 'Planeación y Compras',
-			'icon' => 'calendar-clock',
-			'kpi' => '92.0% OTIF · 96.4% Cobertura sugerida',
-			'progress' => 92,
-			'status' => 'Seguimiento',
-			'status_tone' => 'text-warning',
+	// Riesgos y oportunidades calculadas desde datos reales
+	$opportunities = [];
+	$aboveGoalBranches = array_values(array_filter($branchRanking, fn($r) => ($r['compliance_pct'] ?? 0) >= 100 && !empty($r['has_activity'])));
+	$belowGoalBranches = array_values(array_filter($branchRanking, fn($r) => ($r['compliance_pct'] ?? null) !== null && $r['compliance_pct'] < 90 && !empty($r['has_activity'])));
+	if (count($aboveGoalBranches) > 0) {
+		usort($aboveGoalBranches, fn($a, $b) => ($b['compliance_pct'] ?? 0) <=> ($a['compliance_pct'] ?? 0));
+		$topB = $aboveGoalBranches[0];
+		$opportunities[] = [
+			'type' => 'Oportunidad',
+			'tone' => 'success',
+			'title' => count($aboveGoalBranches) . ' sucursal(es) superando meta (Líder: ' . $topB['clean_name'] . ' ' . number_format($topB['compliance_pct'], 1) . '%)',
+			'detail' => 'Replicar mix de categoría y cobertura en tiendas bajo presupuesto.',
+			'url' => '/kpis?branch_id=' . $topB['branch_id']
+		];
+	}
+	if (count($belowGoalBranches) > 0) {
+		usort($belowGoalBranches, fn($a, $b) => ($a['compliance_pct'] ?? 999) <=> ($b['compliance_pct'] ?? 999));
+		$lowB = $belowGoalBranches[0];
+		$gapAmt = ($lowB['sales_target'] && $lowB['sales'] !== null) ? max(0, $lowB['sales_target'] - $lowB['sales']) : 0;
+		$opportunities[] = [
+			'type' => 'Riesgo Comercial',
+			'tone' => 'danger',
+			'title' => count($belowGoalBranches) . ' sucursal(es) bajo 90% de meta (Mayor brecha: ' . $lowB['clean_name'] . ')',
+			'detail' => ($gapAmt > 0 ? 'Brecha de venta: $' . number_format($gapAmt, 0) . ' · ' : '') . 'Revisar inventario y tracción comercial.',
+			'url' => '/sales?branch_id=' . $lowB['branch_id']
+		];
+	}
+	if ($epInv['expiring_products'] > 0) {
+		$opportunities[] = [
+			'type' => 'Riesgo FEFO',
+			'tone' => 'warning',
+			'title' => $epInv['expiring_products'] . ' SKU(s) con lotes próximos a vencer (≤ 7 días)',
+			'detail' => 'Costo expuesto: $' . number_format($epInv['expiring_value'], 0) . '. Activar liquidación o transferencia.',
+			'url' => '/traceability'
+		];
+	}
+	if (($epInv['below_min'] + $epInv['out_of_stock']) > 0) {
+		$opportunities[] = [
+			'type' => 'Riesgo de Quiebre',
+			'tone' => 'warning',
+			'title' => $epInv['out_of_stock'] . ' agotados y ' . $epInv['below_min'] . ' SKUs bajo mínimo',
+			'detail' => 'Afecta disponibilidad en góndola y captura de ventas.',
 			'url' => '/mrp'
-		]
-	];
+		];
+	}
 
-	// Alertas y Decisiones Ejecutivas
-	$executiveAlerts = [
-		[
-			'level' => 'P1',
-			'badge' => 'ded-alert-badge-p1',
-			'title' => 'Quiebre inminente en categoría Lácteos por retraso logístico',
-			'process' => 'Compras & Abastecimiento',
-			'process_icon' => 'truck',
-			'impact' => '$3,420 / día',
-			'branch' => 'DAILY Norte (Tienda 02)',
-			'action' => 'Transferir 400 u. desde CEDI Central y renegociar entrega',
-			'responsible' => 'Jefe de Compras',
-			'status' => 'En ejecución',
-			'status_tone' => 'text-warning font-weight-bold',
-			'url' => '/action-center'
-		],
-		[
-			'level' => 'P1',
-			'badge' => 'ded-alert-badge-p1',
-			'title' => 'Excursión de temperatura en Cámara Frigorífica 02 (> 4.8 °C)',
-			'process' => 'Cadena de Frío & Calidad',
-			'process_icon' => 'thermometer-sun',
-			'impact' => '$2,850 en riesgo',
-			'branch' => 'DAILY Central (Tienda 01)',
-			'action' => 'Reubicar stock perecedero y activar técnico de mantenimiento',
-			'responsible' => 'Supervisor de Mantenimiento',
-			'status' => 'En validación',
-			'status_tone' => 'text-danger font-weight-bold',
-			'url' => '/alerts'
-		],
-		[
-			'level' => 'P2',
-			'badge' => 'ded-alert-badge-p2',
-			'title' => 'Desviación de margen en Carnes por incremento en costo de compra',
-			'process' => 'Precios & Rentabilidad',
-			'process_icon' => 'percent',
-			'impact' => '$1,920 / sem.',
-			'branch' => 'Red Consolidada',
-			'action' => 'Revisar matriz de precios al público o bonificación de proveedor',
-			'responsible' => 'Director Comercial',
-			'status' => 'En análisis',
-			'status_tone' => 'text-warning font-weight-bold',
-			'url' => '/sales?tab=rentabilidad'
-		],
-		[
-			'level' => 'P2',
-			'badge' => 'ded-alert-badge-p2',
-			'title' => '5 Lotes de panadería y charcutería con caducidad FEFO ≤ 48 horas',
-			'process' => 'Inventario & Mermas',
-			'process_icon' => 'clock',
-			'impact' => '$840 potencial',
-			'branch' => 'DAILY Sur (Tienda 03)',
-			'action' => 'Activar descuento express -30% en góndola antes de mediodía',
-			'responsible' => 'Líder de Sección',
-			'status' => 'Pendiente',
-			'status_tone' => 'text-secondary font-weight-bold',
-			'url' => '/waste'
-		]
-	];
+	$uName = $currentUser['name'] ?? (defined('GROCY_USER_USERNAME') ? GROCY_USER_USERNAME : 'Usuario');
+	$uInitials = $currentUser['initials'] ?? mb_strtoupper(mb_substr($uName, 0, 2));
+	$uRole = $currentUser['role'] ?? 'Dirección Ejecutiva';
+
+	$hasChartData = !empty(array_filter($evoChart['sales_real'] ?? [], fn($v) => floatval($v) > 0))
+		|| !empty(array_filter($evoChart['target_line'] ?? [], fn($v) => floatval($v) > 0));
 @endphp
 
 @section('content')
 <div class="ded-dashboard-wrap" id="dailyExecutiveDashboardApp">
 
-	<!-- ====================================================================
-	     ENCABEZADO: TÍTULO, SUBTÍTULO Y SELECTORES ESTILO TABLERO DE VENTAS
-	     ==================================================================== -->
+	<!-- ENCABEZADO Y FILTROS GLOBALES -->
 	<header class="ded-header">
 		<div class="ded-header-left">
 			<h1 class="ded-title">Panel Ejecutivo</h1>
-			<p class="ded-subtitle">Centro de dirección estratégica del retail: ventas, rentabilidad, abastecimiento y decisiones clave</p>
+			<p class="ded-subtitle">
+				Cómo está operando el negocio · {{ $epPer }} · Comparado vs {{ $epPrevPer }} ·
+				<span class="font-weight-bold text-success" title="Timestamp máximo real de ventas, mermas, stock y pedidos">
+					Actualizado: {{ $dq['last_updated_formatted'] ?? 'Sin registros' }}
+				</span>
+			</p>
 		</div>
 
-		<div class="ded-header-right">
-			<!-- Selector de Período / Fechas -->
+		<div class="ded-header-right flex-wrap">
+			<!-- Período / Fechas -->
 			<div class="ded-dropdown-container position-relative">
 				<button type="button" class="ded-select-btn ded-dropdown-toggle" id="btnExecDates" title="Seleccionar período">
 					<i data-lucide="calendar"></i>
 					<span>{{ $periodLabels[$selectedPeriod ?? 'month'] ?? 'Este mes' }}</span>
 					<i data-lucide="chevron-down" class="ded-chevron"></i>
 				</button>
-				<div class="ded-dropdown-menu dropdown-menu-right" aria-labelledby="btnExecDates" style="min-width: 220px;">
-					<div class="dropdown-header text-uppercase font-weight-bold" style="font-size: 10px; color: #64748b; padding: 6px 14px;">Período Comercial</div>
-					@foreach(['day' => 'Hoy', 'week' => 'Esta semana', 'month' => 'Este mes', 'quarter' => 'Este trimestre', 'year' => 'Este año'] as $pKey => $pLabel)
-					<a href="{{ $ctxUrl('/kpis?period=' . $pKey) }}" class="ded-dropdown-item @if(($selectedPeriod ?? 'month') === $pKey) is-active @endif">
+				<div class="ded-dropdown-menu dropdown-menu-right" aria-labelledby="btnExecDates" style="min-width: 260px;">
+					<div class="dropdown-header text-uppercase font-weight-bold" style="font-size: 10px; color: #64748b; padding: 6px 14px;">Período Estratégico</div>
+					@foreach(['day' => 'Hoy / Día de corte', 'week' => 'Esta semana', 'month' => 'Este mes', 'quarter' => 'Este trimestre', 'year' => 'Este año'] as $pKey => $pLabel)
+					<a href="{{ $ctxUrl('/kpis', ['period' => $pKey]) }}" class="ded-dropdown-item @if(($selectedPeriod ?? 'month') === $pKey) is-active @endif">
 						<span>{{ $pLabel }}</span>
 						@if(($selectedPeriod ?? 'month') === $pKey)<i data-lucide="check" style="width:13px;height:13px;"></i>@endif
 					</a>
 					@endforeach
+					<div class="dropdown-divider my-1"></div>
+					<form method="GET" action="{{ $U('/kpis') }}" class="px-3 py-2">
+						@if($selectedBranchId)<input type="hidden" name="branch_id" value="{{ $selectedBranchId }}">@endif
+						@if(!empty($selectedDepartment) && $selectedDepartment !== 'todos')<input type="hidden" name="department" value="{{ $selectedDepartment }}">@endif
+						<input type="hidden" name="period" value="custom">
+						<div class="small font-weight-bold text-muted mb-1" style="font-size:10px;">Rango personalizado</div>
+						<div class="d-flex gap-1 mb-1">
+							<input type="date" name="start_date" class="form-control form-control-sm" value="{{ $customStart ?? $epR['start'] }}" required>
+							<input type="date" name="end_date" class="form-control form-control-sm" value="{{ $customEnd ?? $epR['end'] }}" required>
+						</div>
+						<button type="submit" class="btn btn-xs btn-success btn-block font-weight-bold">Aplicar rango</button>
+					</form>
 				</div>
 			</div>
 
-			<!-- Selector de Sucursales -->
-			<div class="ded-dropdown-container position-relative">
-				<button type="button" class="ded-select-btn ded-dropdown-toggle" id="btnExecBranches" title="Filtrar por sucursal">
-					<i data-lucide="store"></i>
-					<span>{{ $currentBranchName }}</span>
-					<i data-lucide="chevron-down" class="ded-chevron"></i>
-				</button>
-				<div class="ded-dropdown-menu dropdown-menu-right" aria-labelledby="btnExecBranches" style="min-width: 230px;">
-					<div class="dropdown-header text-uppercase font-weight-bold" style="font-size: 10px; color: #64748b; padding: 6px 14px;">Centro Operativo</div>
-					<a href="{{ $ctxUrl('/kpis?branch_id=') }}" class="ded-dropdown-item @if(!$selectedBranchId) is-active @endif">
-						<span>Red Consolidada (Todas)</span>
-						@if(!$selectedBranchId)<i data-lucide="check" style="width:13px;height:13px;"></i>@endif
-					</a>
-					<div class="dropdown-divider my-1"></div>
+			<!-- Sucursal (mantiene #exec-select-branch para compatibilidad) -->
+			<div class="ded-select-btn" title="Filtrar por sucursal">
+				<i data-lucide="store"></i>
+				<select id="exec-select-branch" class="ded-select-native" aria-label="Sucursal">
+					@if(\Grocy\Helpers\DairyAccess::AllowedBranches() === null)
+						<option value="" @if(!$selectedBranchId) selected @endif>Red Consolidada (Todas)</option>
+					@endif
 					@foreach($branches as $b)
 						@php
 							$bId = is_array($b) ? $b['id'] : $b->id;
-							$bName = is_array($b) ? $b['name'] : $b->name;
+							$bName = trim(str_replace('[DEMO]', '', is_array($b) ? $b['name'] : $b->name));
 						@endphp
-						<a href="{{ $ctxUrl('/kpis?branch_id=' . $bId) }}" class="ded-dropdown-item @if((int)$selectedBranchId === (int)$bId) is-active @endif">
-							<span>{{ trim(str_replace('[DEMO]', '', $bName)) }}</span>
-							@if((int)$selectedBranchId === (int)$bId)<i data-lucide="check" style="width:13px;height:13px;"></i>@endif
-						</a>
+						<option value="{{ $bId }}" @if((int)$selectedBranchId === (int)$bId) selected @endif>{{ $bName }}</option>
 					@endforeach
-				</div>
+				</select>
 			</div>
 
-			<!-- Selector de Departamentos -->
+			<!-- Departamento -->
 			<div class="ded-dropdown-container position-relative">
 				<button type="button" class="ded-select-btn ded-dropdown-toggle" id="btnExecDepartments" title="Filtrar por departamento">
 					<i data-lucide="layers"></i>
-					<span>{{ !empty($selectedDepartment) && $selectedDepartment !== 'todos' ? \Grocy\Services\DailyMetricsService::DEPARTMENTS[$selectedDepartment][0] ?? 'Departamento' : 'Todos los departamentos' }}</span>
+					<span>{{ !empty($selectedDepartment) && $selectedDepartment !== 'todos' ? ($deptCatalog[$selectedDepartment][0] ?? 'Departamento') : 'Todos los departamentos' }}</span>
 					<i data-lucide="chevron-down" class="ded-chevron"></i>
 				</button>
-				<div class="ded-dropdown-menu dropdown-menu-right" aria-labelledby="btnExecDepartments" style="min-width: 210px;">
-					<div class="dropdown-header text-uppercase font-weight-bold" style="font-size: 10px; color: #64748b; padding: 6px 14px;">Departamento Comercial</div>
-					<a href="{{ $ctxUrl('/kpis?department=todos') }}" class="ded-dropdown-item @if(empty($selectedDepartment) || $selectedDepartment === 'todos') is-active @endif">
+				<div class="ded-dropdown-menu dropdown-menu-right" aria-labelledby="btnExecDepartments" style="min-width: 220px;">
+					<div class="dropdown-header text-uppercase font-weight-bold" style="font-size: 10px; color: #64748b; padding: 6px 14px;">Departamento</div>
+					<a href="{{ $ctxUrl('/kpis', ['department' => 'todos']) }}" class="ded-dropdown-item @if(empty($selectedDepartment) || $selectedDepartment === 'todos') is-active @endif">
 						<span>Todos los departamentos</span>
-						@if(empty($selectedDepartment) || $selectedDepartment === 'todos')<i data-lucide="check" style="width:13px;height:13px;"></i>@endif
 					</a>
 					<div class="dropdown-divider my-1"></div>
-					@foreach(\Grocy\Services\DailyMetricsService::DEPARTMENTS as $dKey => $dDef)
-					<a href="{{ $ctxUrl('/kpis?department=' . $dKey) }}" class="ded-dropdown-item @if(($selectedDepartment ?? '') === $dKey) is-active @endif">
+					@foreach($deptCatalog as $dKey => $dDef)
+					<a href="{{ $ctxUrl('/kpis', ['department' => $dKey]) }}" class="ded-dropdown-item @if(($selectedDepartment ?? '') === $dKey) is-active @endif">
 						<span>{{ $dDef[0] }}</span>
-						@if(($selectedDepartment ?? '') === $dKey)<i data-lucide="check" style="width:13px;height:13px;"></i>@endif
 					</a>
 					@endforeach
 				</div>
 			</div>
 
-			<!-- Notificaciones / Alertas activas -->
-			<a href="{{ $ctxUrl('/alerts') }}" class="ded-icon-btn" title="Notificaciones y Alertas prioritarias ({{ $alertCount }})" aria-label="Notificaciones">
+			<!-- Enlace rápido a HOY (operación en curso) -->
+			<a href="{{ $ctxUrl('/today') }}" class="ded-select-btn text-decoration-none" title="Ir a HOY (qué necesita atención ahora)">
+				<i data-lucide="activity" style="color:#16a34a;"></i>
+				<span>Ver HOY</span>
+			</a>
+
+			<!-- Alertas reales -->
+			<a href="{{ $ctxUrl('/alerts') }}" class="ded-icon-btn" title="Alertas abiertas ({{ $alertCount }})" aria-label="Notificaciones">
 				<i data-lucide="bell"></i>
 				@if($alertCount > 0)<span class="ded-notif-dot"></span>@endif
 			</a>
 
-			<!-- Perfil del Usuario: Círculo verde con iniciales blancas -->
+			<!-- Perfil real de usuario -->
 			<div class="ded-dropdown-container position-relative">
-				<button type="button" class="ded-user-avatar ded-dropdown-toggle" id="btnExecUserAvatar" title="Perfil de usuario (RG)" aria-label="Perfil de usuario">
-					RG
+				<button type="button" class="ded-user-avatar ded-dropdown-toggle" id="btnExecUserAvatar" title="Perfil ({{ $uName }})" aria-label="Perfil de usuario">
+					{{ $uInitials }}
 				</button>
-				<div class="ded-dropdown-menu dropdown-menu-right" aria-labelledby="btnExecUserAvatar" style="min-width: 200px;">
+				<div class="ded-dropdown-menu dropdown-menu-right" aria-labelledby="btnExecUserAvatar" style="min-width: 205px;">
 					<div class="px-3 py-2 border-bottom">
-						<div class="font-weight-bold text-dark" style="font-size: 13px;">Renzo G.</div>
-						<small class="text-muted" style="font-size: 11px;">Manager / Director General</small>
+						<div class="font-weight-bold text-dark" style="font-size: 13px;">{{ $uName }}</div>
+						<small class="text-muted" style="font-size: 11px;">{{ $uRole }}</small>
 					</div>
+					@if(\Grocy\Helpers\DairyAccess::CanOpen('/admin/economics'))
+					<a href="{{ $U('/admin/economics') }}" class="ded-dropdown-item"><i data-lucide="sliders-horizontal" style="width:14px;height:14px;margin-right:6px;"></i>Economía y Metas</a>
+					@endif
 					<a href="{{ $U('/usersettings') }}" class="ded-dropdown-item"><i data-lucide="user-cog" style="width:14px;height:14px;margin-right:6px;"></i>Configuración</a>
 					<a href="{{ $ctxUrl('/alerts') }}" class="ded-dropdown-item"><i data-lucide="bell" style="width:14px;height:14px;margin-right:6px;"></i>Centro de Alertas</a>
 					<div class="dropdown-divider my-1"></div>
@@ -443,432 +362,619 @@
 		</div>
 	</header>
 
-	<!-- ====================================================================
-	     BARRA DE PESTAÑAS INTEGRADA — ESTILO TABLERO DE VENTAS
-	     ==================================================================== -->
+	@if($selectedDeptData)
+	<div class="alert alert-light border d-flex align-items-center justify-content-between flex-wrap gap-2 py-2 px-3 mb-3" style="border-radius:10px; font-size:12px;">
+		<div>
+			<strong class="text-success"><i data-lucide="filter" style="width:14px;height:14px;vertical-align:-2px;"></i> Enfoque por departamento: {{ $selectedDeptData['name'] }}</strong>
+			<span class="text-muted ml-2">
+				Ventas netas: <strong>${{ number_format($selectedDeptData['sales'], 2) }}</strong> ·
+				Utilidad bruta: <strong>${{ number_format($selectedDeptData['gross_profit'], 2) }}</strong> ({{ number_format($selectedDeptData['margin_pct'], 1) }}%) ·
+				{{ number_format($selectedDeptData['units'], 0) }} unidades en {{ number_format($selectedDeptData['tickets'], 0) }} tickets.
+				<em>Las tarjetas globales abajo reflejan la {{ $currentBranchName }}.</em>
+			</span>
+		</div>
+		<a href="{{ $ctxUrl('/kpis', ['department' => 'todos']) }}" class="btn btn-xs btn-outline-secondary">Ver todos</a>
+	</div>
+	@endif
+
+	<!-- BARRA DE NAVEGACIÓN INTERNA -->
 	<nav class="ded-nav-tabs-bar mb-3" role="tablist" aria-label="Vistas del Panel Ejecutivo">
-		<button type="button" class="ded-nav-tab is-active" role="tab" aria-selected="true" onclick="window.scrollTo({top:0, behavior:'smooth'});">
-			<i class="fa-solid fa-chart-line mr-1"></i>
-			<span>Resumen General</span>
+		<button type="button" class="ded-nav-tab is-active" onclick="document.getElementById('sec-exec-kpis').scrollIntoView({behavior:'smooth'});">
+			<i class="fa-solid fa-chart-line mr-1"></i><span>KPIs Estratégicos</span>
 		</button>
-		<button type="button" class="ded-nav-tab" role="tab" onclick="document.getElementById('sec-retail-cycle').scrollIntoView({behavior:'smooth'});">
-			<i class="fa-solid fa-arrows-spin mr-1"></i>
-			<span>Ciclo del Retail</span>
+		<button type="button" class="ded-nav-tab" onclick="document.getElementById('sec-evo-finance').scrollIntoView({behavior:'smooth'});">
+			<i class="fa-solid fa-coins mr-1"></i><span>Tendencia y Finanzas</span>
 		</button>
-		<button type="button" class="ded-nav-tab" role="tab" onclick="document.getElementById('sec-area-branch').scrollIntoView({behavior:'smooth'});">
-			<i class="fa-solid fa-sitemap mr-1"></i>
-			<span>Rendimiento por Área</span>
+		<button type="button" class="ded-nav-tab" onclick="document.getElementById('sec-branch-dept').scrollIntoView({behavior:'smooth'});">
+			<i class="fa-solid fa-store mr-1"></i><span>Sucursales y Áreas</span>
 		</button>
-		<button type="button" class="ded-nav-tab" role="tab" onclick="document.getElementById('sec-area-branch').scrollIntoView({behavior:'smooth'});">
-			<i class="fa-solid fa-store mr-1"></i>
-			<span>Sucursales</span>
+		<button type="button" class="ded-nav-tab" onclick="document.getElementById('sec-process-gov').scrollIntoView({behavior:'smooth'});">
+			<i class="fa-solid fa-diagram-project mr-1"></i><span>7 Procesos</span>
 		</button>
-		<button type="button" class="ded-nav-tab" role="tab" onclick="document.getElementById('sec-evo-alerts').scrollIntoView({behavior:'smooth'});">
-			<i class="fa-solid fa-triangle-exclamation mr-1"></i>
-			<span>Alertas &amp; Decisiones</span>
+		<button type="button" class="ded-nav-tab" onclick="document.getElementById('sec-risks-actions').scrollIntoView({behavior:'smooth'});">
+			<i class="fa-solid fa-list-check mr-1"></i><span>Riesgos y Acciones</span>
 		</button>
-		<button type="button" class="ded-nav-tab" role="tab" onclick="document.getElementById('sec-evo-alerts').scrollIntoView({behavior:'smooth'});">
-			<i class="fa-solid fa-chart-area mr-1"></i>
-			<span>Evolución &amp; Tendencias</span>
+		<button type="button" class="ded-nav-tab" onclick="document.getElementById('sec-kpi-definitions').scrollIntoView({behavior:'smooth'});">
+			<i class="fa-solid fa-book-open mr-1"></i><span>Definiciones KPI</span>
 		</button>
 	</nav>
 
 	<!-- ====================================================================
-	     SECCIÓN A. RESUMEN GENERAL DEL NEGOCIO (CINCO TARJETAS KPI ESTILO VENTAS)
+	     SECCIÓN A. 6 KPI ESTRATÉGICOS CONSOLIDADOS (SIN DATOS DE RELLENO)
 	     ==================================================================== -->
-	<section class="ded-kpis-grid-5" aria-label="Resumen General del Negocio">
-		<!-- 1. Ventas netas (Tarjeta destacada en verde degradado DAILY) -->
-		<article class="ded-kpi-card is-highlight" title="Ventas netas del período" onclick="window.location.href='{{ $ctxUrl('/sales') }}'">
-			<div class="ded-kpi-top-highlight">
-				<div class="ded-highlight-brand">
-					<i data-lucide="circle-dollar-sign"></i>
-					<span>Ventas netas</span>
-				</div>
-				<div class="ded-highlight-spark-box">
-					<i data-lucide="trending-up"></i>
-				</div>
+	<section class="ded-kpis-grid-6" id="sec-exec-kpis" data-testid="exec-real-kpis" aria-label="Indicadores Estratégicos del Negocio">
+		<!-- 1. Ventas netas -->
+		@php $defSales = $kpiDefs['sales_net'] ?? []; @endphp
+		<article class="dkpi ded-kpi-card is-highlight" title="{{ ($defSales['formula'] ?? 'Ventas brutas − IVA − descuentos.') . ' Responsable: ' . ($defSales['owner_name'] ?? 'Dirección Comercial') }}" onclick="window.location.href='{{ $ctxUrl('/sales') }}'">
+			<div class="ded-kpi-top">
+				<span class="ded-kpi-icon"><i data-lucide="circle-dollar-sign"></i></span>
+				<span class="badge badge-light" style="font-size:10px;">{{ $sKpis['sales']['state'] ?? 'Sin datos' }}</span>
 			</div>
-			<div class="ded-kpi-val">${{ number_format($epNet, 0) }}</div>
-			<div class="ded-kpi-sub-highlight">
-				▲ +{{ $salesDeltaPct }} % vs ${{ number_format($epPrevNet, 0) }} del período anterior
+			<div class="ded-kpi-label">Ventas netas</div>
+			<div class="ded-kpi-val">{{ $epNet !== null ? ('$' . number_format($epNet, 2)) : 'Sin información' }}</div>
+			<div class="ded-kpi-sub">
+				@if($salesDeltaPct !== null)
+					<span class="ded-kpi-badge-green">{{ $salesDeltaPct >= 0 ? '▲ +' : '▼ ' }}{{ $salesDeltaPct }} %</span> vs ${{ number_format($epPrevNet, 0) }}
+				@else
+					<span>Sin comparativo previo</span>
+				@endif
 			</div>
 		</article>
 
-		<!-- 2. Cumplimiento de meta -->
-		<article class="ded-kpi-card" title="Cumplimiento frente a la meta comercial presupuestada" onclick="window.location.href='{{ $ctxUrl('/cost-centers') }}'">
+		<!-- 2. Cumplimiento de meta (real sin tope 100%) -->
+		<article class="dkpi ded-kpi-card" title="Venta neta del período ÷ meta comercial acumulada al corte (sin tope en 100%). Responsable: Gerencia Comercial" onclick="window.location.href='{{ $ctxUrl('/cost-centers') }}'">
 			<div class="ded-kpi-top">
 				<span class="ded-kpi-icon"><i data-lucide="target"></i></span>
+				<span class="badge {{ $compliancePct === null ? 'badge-secondary' : ($compliancePct >= 100 ? 'badge-success' : ($compliancePct >= 90 ? 'badge-warning' : 'badge-danger')) }}" style="font-size:10px;">
+					{{ $compliancePct === null ? 'Sin meta' : ($complianceDeltaPp >= 0 ? ('+' . $complianceDeltaPp . ' pp') : ($complianceDeltaPp . ' pp')) }}
+				</span>
 			</div>
 			<div class="ded-kpi-label">Cumplimiento de meta</div>
-			<div class="ded-kpi-val">{{ number_format($compliancePct, 1) }} %</div>
+			<div class="ded-kpi-val">{{ $compliancePct !== null ? (number_format($compliancePct, 1) . ' %') : 'Sin meta' }}</div>
 			<div class="ded-kpi-sub">
-				<span class="ded-kpi-badge-green">Meta: ${{ number_format($targetBudget / 1000, 0) }}K</span>
+				@if($targetBudget !== null && $targetBudget > 0)
+					<span class="ded-kpi-badge-green">Meta: ${{ number_format($targetBudget, 0) }}</span>
+				@else
+					<span>Sin meta configurada en el período</span>
+				@endif
 			</div>
 		</article>
 
 		<!-- 3. Margen bruto -->
-		<article class="ded-kpi-card" title="Margen bruto sobre ventas post-costo de mercancía vendida (CMV)" onclick="window.location.href='{{ $ctxUrl('/sales?tab=rentabilidad') }}'">
+		@php $defMargin = $kpiDefs['gross_margin_pct'] ?? []; @endphp
+		<article class="dkpi ded-kpi-card" title="{{ ($defMargin['formula'] ?? '(Venta neta − CMV) ÷ Venta neta × 100.') . ' Responsable: ' . ($defMargin['owner_name'] ?? 'Dirección Comercial') }}" onclick="window.location.href='{{ $ctxUrl('/sales?tab=rentabilidad') }}'">
 			<div class="ded-kpi-top">
 				<span class="ded-kpi-icon"><i data-lucide="percent"></i></span>
+				<span class="badge badge-light" style="font-size:10px;">{{ $sKpis['margin']['state'] ?? 'Sin datos' }}</span>
 			</div>
 			<div class="ded-kpi-label">Margen bruto</div>
-			<div class="ded-kpi-val">{{ number_format($marginPct, 1) }} %</div>
+			<div class="ded-kpi-val">{{ $marginPct !== null ? (number_format($marginPct, 1) . ' %') : 'Sin información' }}</div>
 			<div class="ded-kpi-sub">
-				<span class="ded-kpi-badge-green">▲ {{ ($marginDelta >= 0 ? '+' : '') . $marginDelta }} pp</span> vs objetivo
+				@if($marginPct !== null)
+					<span class="{{ ($marginDelta ?? 0) >= 0 ? 'ded-kpi-badge-green' : 'ded-pill-red' }}">
+						{{ $marginDelta !== null ? (($marginDelta >= 0 ? '+' : '') . $marginDelta . ' pp vs ' . number_format($targetMarginPct, 1) . '%') : ('Utilidad $' . number_format($fs['gross_margin'] ?? 0, 0)) }}
+					</span>
+				@else
+					<span>Sin ventas con costo unitario</span>
+				@endif
 			</div>
 		</article>
 
-		<!-- 4. Valor total del inventario -->
-		<article class="ded-kpi-card" title="Valor total del inventario disponible en almacenes y tiendas" onclick="window.location.href='{{ $ctxUrl('/stockoverview') }}'">
+		<!-- 4. Capital en inventario y cobertura DSI -->
+		@php $defInv = $kpiDefs['inventory_value'] ?? []; @endphp
+		<article class="dkpi ded-kpi-card" title="{{ ($defInv['formula'] ?? 'Σ existencias disponibles × costo unitario (excluye tránsito).') . ' Responsable: ' . ($defInv['owner_name'] ?? 'Jefe de Inventario') }}" onclick="window.location.href='{{ $ctxUrl('/stockoverview') }}'">
 			<div class="ded-kpi-top">
 				<span class="ded-kpi-icon"><i data-lucide="package"></i></span>
+				<span class="badge badge-light" style="font-size:10px;">{{ $sKpis['turnover']['state'] ?? 'Sin datos' }}</span>
 			</div>
 			<div class="ded-kpi-label">Valor del inventario</div>
 			<div class="ded-kpi-val">{{ $inventoryValue }}</div>
 			<div class="ded-kpi-sub">
-				<span class="ded-kpi-badge-green">{{ $invCoverageDays }}</span> cobertura
+				<span class="ded-kpi-badge-green">{{ $invCoverageDays }}</span>
+				@if($turnoverVal > 0)· {{ number_format($turnoverVal, 2) }}x rot.@endif
 			</div>
 		</article>
 
-		<!-- 5. Impacto financiero de mermas y pérdidas -->
-		<article class="ded-kpi-card" title="Impacto financiero de merma aprobada sobre ventas" onclick="window.location.href='{{ $ctxUrl('/waste') }}'">
+		<!-- 5. Merma neta sobre ventas -->
+		@php $defWaste = $kpiDefs['waste_pct'] ?? []; @endphp
+		<article class="dkpi ded-kpi-card" title="{{ ($defWaste['formula'] ?? 'Merma aprobada a costo ÷ Base de merma × 100.') . ' Responsable: ' . ($defWaste['owner_name'] ?? 'Jefe de Mermas') }}" onclick="window.location.href='{{ $ctxUrl('/waste') }}'">
 			<div class="ded-kpi-top">
-				<span class="ded-kpi-icon text-danger" style="color: #ef4444;"><i data-lucide="shield-alert"></i></span>
+				<span class="ded-kpi-icon" style="color: #ef4444;"><i data-lucide="shield-alert"></i></span>
+				<span class="badge badge-light" style="font-size:10px;">{{ $sKpis['waste']['state'] ?? 'Sin datos' }}</span>
 			</div>
 			<div class="ded-kpi-label">Impacto de mermas</div>
-			<div class="ded-kpi-val">${{ number_format($wasteCost, 0) }}</div>
+			<div class="ded-kpi-val">{{ $wasteHasData ? ('$' . number_format($wasteCost, 0)) : 'Sin información' }}</div>
 			<div class="ded-kpi-sub">
-				<span class="text-danger font-weight-bold">{{ number_format($wastePct, 1) }} %</span> sobre ventas (≤ {{ number_format($wasteTargetPct, 1) }}%)
+				@if($wastePct !== null)
+					<span class="{{ $wastePct <= $wasteTargetPct ? 'ded-kpi-badge-green' : 'ded-pill-red' }}">{{ number_format($wastePct, 1) }} %</span> (obj. ≤ {{ number_format($wasteTargetPct, 1) }}%)
+				@else
+					<span>Sin base de ventas</span>
+				@endif
+			</div>
+		</article>
+
+		<!-- 6. Contribución operativa neta -->
+		<article class="dkpi ded-kpi-card" title="Utilidad bruta − Merma neta aprobada (después de recuperaciones). Responsable: Finanzas / Dirección" onclick="window.location.href='{{ $ctxUrl('/cost-centers') }}'">
+			<div class="ded-kpi-top">
+				<span class="ded-kpi-icon"><i data-lucide="wallet"></i></span>
+				<span class="badge badge-light" style="font-size:10px;">Neto post-merma</span>
+			</div>
+			<div class="ded-kpi-label">Contribución operativa</div>
+			<div class="ded-kpi-val">{{ $netOpContribution !== null ? ('$' . number_format($netOpContribution, 0)) : 'Sin información' }}</div>
+			<div class="ded-kpi-sub">
+				@if($netOpMarginPct !== null)
+					<span class="ded-kpi-badge-green">{{ number_format($netOpMarginPct, 1) }} %</span> margen neto · Recup. ${{ number_format($wasteRecovered, 0) }}
+				@else
+					<span>Sin ventas registradas</span>
+				@endif
 			</div>
 		</article>
 	</section>
 
 	<!-- ====================================================================
-	     SECCIÓN B. CICLO INTEGRAL DEL RETAIL (8 ETAPAS INTERACTIVAS)
+	     SECCIÓN B. EVOLUCIÓN REAL + RESUMEN FINANCIERO Y PRESUPUESTO
 	     ==================================================================== -->
-	<section class="ded-card mb-3" id="sec-retail-cycle">
-		<header class="ded-card-header mb-2">
-			<div>
-				<h2 class="ded-card-title d-flex align-items-center gap-2">
-					<i data-lucide="repeat" style="width:16px;height:16px;color:#10b981;"></i>
-					<span>Ciclo Integral del Retail</span>
-				</h2>
-				<p class="text-muted small mb-0" style="font-size:11.5px;">Supervisión transversal del valor de la cadena: de la planificación al margen y optimización</p>
-			</div>
-			<span class="badge badge-light border text-muted font-weight-bold" style="font-size: 11px;">8 Etapas Interactivas</span>
-		</header>
-		<div class="ded-cycle-grid">
-			@foreach($retailCycleSteps as $step)
-			<a href="{{ $ctxUrl($step['url']) }}" class="ded-cycle-item" title="Abrir módulo de {{ $step['name'] }}">
-				<div>
-					<div class="ded-cycle-top">
-						<span class="ded-cycle-step-badge">{{ $step['id'] }}</span>
-						<span class="badge {{ $step['badge_class'] }}" style="font-size: 9.5px; padding: 2px 6px;">{{ $step['status'] }}</span>
-					</div>
-					<div class="ded-cycle-icon">
-						<i data-lucide="{{ $step['icon'] }}"></i>
-					</div>
-					<div class="ded-cycle-name">{{ $step['name'] }}</div>
-					<div class="ded-cycle-metric">{{ $step['metric'] }}</div>
-					<div class="ded-cycle-dev">{{ $step['deviation'] }}</div>
-				</div>
-				<div class="ded-cycle-arrow">
-					<span>{{ $step['action'] }}</span>
-					<i data-lucide="arrow-right" style="width:11px;height:11px;"></i>
-				</div>
-			</a>
-			@endforeach
-		</div>
-	</section>
-
-	<!-- ====================================================================
-	     SECCIÓN C & D. RENDIMIENTO POR ÁREA & RENDIMIENTO POR SUCURSAL
-	     ==================================================================== -->
-	<section class="ded-row-2 mb-3" id="sec-area-branch">
-		<!-- Izquierda: Rendimiento por Área -->
-		<article class="ded-card">
-			<header class="ded-card-header">
-				<div>
-					<h2 class="ded-card-title d-flex align-items-center gap-2">
-						<i data-lucide="layout-grid" style="width:16px;height:16px;color:#10b981;"></i>
-						<span>Rendimiento por Área</span>
-					</h2>
-					<p class="text-muted small mb-0" style="font-size:11.5px;">Métricas estratégicas para evaluar cada proceso de la operación</p>
-				</div>
-				<a href="{{ $ctxUrl('/reports') }}" class="small font-weight-bold text-success">Ver informes →</a>
-			</header>
-			<div class="ded-areas-list pt-1">
-				@foreach($strategicAreas as $area)
-				<div class="ded-area-row">
-					<div class="ded-area-info">
-						<i data-lucide="{{ $area['icon'] }}" style="width:14px;height:14px;color:#10b981;"></i>
-						<div>
-							<strong class="text-dark d-block" style="font-size:12px;">{{ $area['name'] }}</strong>
-							<span class="text-muted" style="font-size:11px;">{{ $area['kpi'] }}</span>
-						</div>
-					</div>
-					<div class="ded-area-progress" title="{{ $area['progress'] }}% de avance">
-						<div class="ded-area-progress-fill" style="width: {{ $area['progress'] }}%;"></div>
-					</div>
-					<div class="text-right" style="min-width: 80px;">
-						<span class="{{ $area['status_tone'] }} font-weight-bold" style="font-size:11.5px;">{{ $area['status'] }}</span>
-						<a href="{{ $ctxUrl($area['url']) }}" class="small text-muted d-block" style="font-size:10.5px;">Abrir →</a>
-					</div>
-				</div>
-				@endforeach
-			</div>
-		</article>
-
-		<!-- Derecha: Rendimiento por Sucursal (Scorecard Comparativo) -->
-		<article class="ded-card">
-			<header class="ded-card-header">
-				<div>
-					<h2 class="ded-card-title d-flex align-items-center gap-2">
-						<i data-lucide="store" style="width:16px;height:16px;color:#10b981;"></i>
-						<span>Rendimiento por Sucursal</span>
-					</h2>
-					<p class="text-muted small mb-0" style="font-size:11.5px;">Cumplimiento de metas, rentabilidad, inventario y estado operativo</p>
-				</div>
-				<a href="{{ $ctxUrl('/sales?tab=sucursales') }}" class="small font-weight-bold text-success">Multisucursal →</a>
-			</header>
-			<div class="table-responsive">
-				<table class="table table-hover mb-0" style="font-size: 11.5px;">
-					<thead>
-						<tr class="text-muted" style="border-bottom: 1px solid #e2e8f0;">
-							<th class="py-2 pl-2">Sucursal</th>
-							<th class="py-2 text-right">Ventas</th>
-							<th class="py-2 text-center">Meta</th>
-							<th class="py-2 text-center">Margen</th>
-							<th class="py-2 text-center">Cobertura</th>
-							<th class="py-2 text-center">Estado</th>
-							<th class="py-2 pr-2 text-right">Filtrar</th>
-						</tr>
-					</thead>
-					<tbody>
-						@php
-							$branchScorecardRows = [
-								['name' => 'DAILY Central (Tienda 01)', 'city' => 'Bogotá', 'sales' => 142850, 'meta' => 102.4, 'margin' => 29.1, 'cov' => '15 d', 'status' => 'Operativa', 'badge' => 'badge-success', 'id' => 1],
-								['name' => 'DAILY Norte (Tienda 02)', 'city' => 'Medellín', 'sales' => 128400, 'meta' => 98.5, 'margin' => 28.2, 'cov' => '13 d', 'status' => 'Operativa', 'badge' => 'badge-success', 'id' => 2],
-								['name' => 'DAILY Sur (Tienda 03)', 'city' => 'Cali', 'sales' => 96300, 'meta' => 91.2, 'margin' => 26.8, 'cov' => '11 d', 'status' => 'Atención', 'badge' => 'badge-warning', 'id' => 3],
-								['name' => 'DAILY Calle 80 (Tienda 04)', 'city' => 'Bogotá', 'sales' => 84200, 'meta' => 99.0, 'margin' => 28.6, 'cov' => '14 d', 'status' => 'Operativa', 'badge' => 'badge-success', 'id' => 4],
-								['name' => 'DAILY Envigado (Tienda 05)', 'city' => 'Envigado', 'sales' => 76900, 'meta' => 88.4, 'margin' => 25.4, 'cov' => '9 d', 'status' => 'Crítica', 'badge' => 'badge-danger', 'id' => 5],
-								['name' => 'DAILY Barranquilla (Tienda 06)', 'city' => 'Barranquilla', 'sales' => 72100, 'meta' => 96.0, 'margin' => 27.9, 'cov' => '16 d', 'status' => 'Operativa', 'badge' => 'badge-success', 'id' => 6]
-							];
-						@endphp
-						@foreach($branchScorecardRows as $bs)
-						<tr class="@if((int)$selectedBranchId === $bs['id']) table-success @endif" style="cursor: pointer;" onclick="window.location.href='{{ $ctxUrl('/kpis?branch_id=' . $bs['id']) }}'">
-							<td class="py-2 pl-2">
-								<strong class="text-dark d-block">{{ $bs['name'] }}</strong>
-								<small class="text-muted">{{ $bs['city'] }}</small>
-							</td>
-							<td class="py-2 text-right font-weight-bold text-dark">${{ number_format($bs['sales'], 0) }}</td>
-							<td class="py-2 text-center">
-								<span class="badge {{ $bs['meta'] >= 95 ? 'badge-success' : 'badge-warning' }}">{{ $bs['meta'] }}%</span>
-							</td>
-							<td class="py-2 text-center font-weight-600 text-dark">{{ $bs['margin'] }}%</td>
-							<td class="py-2 text-center text-muted">{{ $bs['cov'] }}</td>
-							<td class="py-2 text-center">
-								<span class="badge {{ $bs['badge'] }}">{{ $bs['status'] }}</span>
-							</td>
-							<td class="py-2 pr-2 text-right">
-								<a href="{{ $ctxUrl('/kpis?branch_id=' . $bs['id']) }}" class="btn btn-xs btn-outline-success py-0 px-2 font-weight-bold" style="font-size: 11px;">
-									Enfocar
-								</a>
-							</td>
-						</tr>
-						@endforeach
-					</tbody>
-				</table>
-			</div>
-		</article>
-	</section>
-
-	<!-- ====================================================================
-	     SECCIÓN E & F. EVOLUCIÓN Y TENDENCIAS & ALERTAS Y DECISIONES EJECUTIVAS
-	     ==================================================================== -->
-	<section class="ded-row-2 mb-3" id="sec-evo-alerts">
-		<!-- Izquierda (55%): Evolución y Tendencias del Negocio -->
+	<section class="ded-row-2 mb-3" id="sec-evo-finance">
+		<!-- Evolución y Comparativo -->
 		<article class="ded-card">
 			<header class="ded-card-header">
 				<div>
 					<h2 class="ded-card-title d-flex align-items-center gap-2">
 						<i data-lucide="trending-up" style="width:16px;height:16px;color:#10b981;"></i>
-						<span>Evolución y Tendencias</span>
+						<span>Evolución de Ventas vs Meta y Período Anterior</span>
 					</h2>
-					<p class="text-muted small mb-0" style="font-size:11.5px;">Seguimiento continuo de ventas netas frente a la meta comercial</p>
+					<p class="text-muted small mb-0" style="font-size:11.5px;">Lectura exacta de registros reales ({{ $epPer }} vs {{ $epPrevPer }})</p>
 				</div>
-				<div class="ded-card-tools">
-					<div class="ded-legend-inline">
-						<span class="ded-legend-item">
-							<span class="ded-legend-rect" style="background:#10b981;"></span>
-							<span>Venta real</span>
-						</span>
-						<span class="ded-legend-item">
-							<span class="ded-legend-line-dot" style="background:#f59e0b;"></span>
-							<span>Meta presupuestada</span>
-						</span>
-					</div>
+				<div class="ded-legend-inline">
+					<span class="ded-legend-item"><span class="ded-legend-rect" style="background:#10b981;"></span><span>Venta real</span></span>
+					<span class="ded-legend-item"><span class="ded-legend-line-dot" style="background:#f59e0b;"></span><span>Meta</span></span>
+					<span class="ded-legend-item"><span class="ded-legend-line-dot" style="background:#64748b;"></span><span>Período anterior</span></span>
 				</div>
 			</header>
-			<div class="ded-chart-canvas-box" style="position: relative; height: 260px; width: 100%;">
-				<canvas id="dedChartExecEvo" aria-label="Gráfico de evolución y tendencias del negocio"></canvas>
+			<div class="ded-chart-canvas-box" style="position: relative; height: 255px; width: 100%;">
+				@if($hasChartData)
+					<canvas id="dedChartExecEvo" aria-label="Evolución real de ventas netas"></canvas>
+				@else
+					<div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted small">
+						<i data-lucide="bar-chart-2" style="width:28px;height:28px;opacity:0.45;" class="mb-2"></i>
+						<span>Sin ventas ni metas registradas en este período para graficar.</span>
+					</div>
+				@endif
 			</div>
 			<div class="ded-comp-grid pt-2 mt-2 border-top">
 				<div class="ded-comp-col">
 					<div class="ded-comp-row">
-						<span class="ded-comp-label">Ventas acumuladas</span>
-						<span class="ded-comp-val font-weight-bold text-dark">${{ number_format($epNet, 0) }}</span>
+						<span class="ded-comp-label">Ventas netas ({{ $epPer }})</span>
+						<span class="ded-comp-val font-weight-bold text-dark">{{ $epNet !== null ? ('$' . number_format($epNet, 2)) : 'Sin información' }}</span>
 					</div>
 					<div class="ded-comp-row">
-						<span class="ded-comp-label">Meta del período</span>
-						<span class="ded-comp-val">${{ number_format($targetBudget, 0) }}</span>
+						<span class="ded-comp-label">Período anterior ({{ $epPrevPer }})</span>
+						<span class="ded-comp-val">{{ $epPrevNet !== null ? ('$' . number_format($epPrevNet, 2)) : 'Sin información' }}</span>
 					</div>
 				</div>
 				<div class="ded-comp-col">
 					<div class="ded-comp-row">
-						<span class="ded-comp-label">Cumplimiento</span>
-						<span class="ded-comp-val font-weight-bold text-success">{{ number_format($compliancePct, 1) }} %</span>
+						<span class="ded-comp-label">Meta acumulada al corte</span>
+						<span class="ded-comp-val">{{ $targetBudget !== null ? ('$' . number_format($targetBudget, 2)) : 'Sin meta' }}</span>
 					</div>
 					<div class="ded-comp-row">
-						<span class="ded-comp-label">Margen comercial</span>
-						<span class="ded-comp-val font-weight-bold text-dark">{{ number_format($marginPct, 1) }} %</span>
+						<span class="ded-comp-label">Cumplimiento real</span>
+						<span class="ded-comp-val font-weight-bold {{ ($compliancePct ?? 0) >= 100 ? 'text-success' : 'text-warning' }}">
+							{{ $compliancePct !== null ? (number_format($compliancePct, 1) . ' %') : 'Sin meta' }}
+						</span>
 					</div>
 				</div>
 			</div>
 		</article>
 
-		<!-- Derecha (45%): Alertas y Decisiones Ejecutivas -->
+		<!-- Resumen Financiero Consolidado & Presupuesto de Abastecimiento -->
 		<article class="ded-card">
 			<header class="ded-card-header">
 				<div>
 					<h2 class="ded-card-title d-flex align-items-center gap-2">
-						<i data-lucide="shield-alert" style="width:16px;height:16px;color:#dc2626;"></i>
-						<span>Alertas y Decisiones Ejecutivas</span>
+						<i data-lucide="landmark" style="width:16px;height:16px;color:#10b981;"></i>
+						<span>Resumen Financiero Consolidado</span>
 					</h2>
-					<p class="text-muted small mb-0" style="font-size:11.5px;">Desviaciones críticas con impacto financiero, responsable y estado</p>
+					<p class="text-muted small mb-0" style="font-size:11.5px;">Cascada de rentabilidad y ejecución presupuestaria del período</p>
 				</div>
-				<a href="{{ $ctxUrl('/alerts') }}" class="small font-weight-bold text-success">Centro de Alertas →</a>
+				@if(\Grocy\Helpers\DairyAccess::CanOpen('/cost-centers'))
+				<a href="{{ $ctxUrl('/cost-centers') }}" class="small font-weight-bold text-success">Centros de costo →</a>
+				@endif
 			</header>
-			<div class="ded-alerts-list">
-				@foreach($executiveAlerts as $alt)
-				<div class="ded-alert-row">
-					<div>
-						<div class="d-flex align-items-center gap-2 mb-1">
-							<span class="{{ $alt['badge'] }}">{{ $alt['level'] }}</span>
-							<strong class="text-dark" style="font-size: 12px;">{{ $alt['title'] }}</strong>
-						</div>
-						<div class="text-muted small mb-1" style="font-size: 11px;">
-							<i data-lucide="{{ $alt['process_icon'] }}" style="width: 12px; height: 12px; margin-right: 3px; color: #64748b;"></i>
-							<span>{{ $alt['process'] }} · <strong>{{ $alt['branch'] }}</strong></span>
-						</div>
-						<div class="small text-secondary mb-1" style="font-size: 11px;">
-							<strong>Acción:</strong> {{ $alt['action'] }}
-						</div>
-						<div class="d-flex align-items-center gap-3 small text-muted" style="font-size: 10.5px;">
-							<span>Responsable: <strong>{{ $alt['responsible'] }}</strong></span>
-							<span>Estado: <span class="{{ $alt['status_tone'] }}">{{ $alt['status'] }}</span></span>
-						</div>
-					</div>
-					<div class="text-right flex-shrink-0">
-						<div class="ded-alert-impact mb-2">{{ $alt['impact'] }}</div>
-						<a href="{{ $ctxUrl($alt['url']) }}" class="btn btn-xs btn-outline-success font-weight-bold py-1 px-2" style="font-size: 11px;">
-							Intervenir
-						</a>
-					</div>
+
+			<table class="table table-sm mb-3" style="font-size:12px;">
+				<tbody>
+					<tr>
+						<td class="text-muted border-top-0">Ventas brutas (con IVA)</td>
+						<td class="text-right font-weight-bold border-top-0">{{ $hasSalesData ? ('$' . number_format($fs['gross_sales'] ?? 0, 2)) : 'Sin información' }}</td>
+					</tr>
+					<tr>
+						<td class="text-muted">Impuestos descontados / Ventas netas</td>
+						<td class="text-right font-weight-bold text-dark">{{ $epNet !== null ? ('$' . number_format($epNet, 2)) : 'Sin información' }}</td>
+					</tr>
+					<tr>
+						<td class="text-muted">Costo de mercancía vendida (CMV)</td>
+						<td class="text-right text-secondary">{{ $hasSalesData ? ('-$' . number_format($fs['cogs'] ?? 0, 2)) : 'Sin información' }}</td>
+					</tr>
+					<tr>
+						<td class="text-muted">Utilidad bruta</td>
+						<td class="text-right font-weight-bold text-success">{{ $marginHasData ? ('$' . number_format($fs['gross_margin'] ?? 0, 2) . ' (' . number_format($marginPct ?? 0, 1) . '%)') : 'Sin información' }}</td>
+					</tr>
+					<tr>
+						<td class="text-muted">Merma aprobada − Recuperación (${{ number_format($wasteRecovered, 0) }})</td>
+						<td class="text-right text-danger">{{ $wasteHasData ? ('-$' . number_format($netWasteCost, 2)) : '$0.00' }}</td>
+					</tr>
+					<tr class="table-active">
+						<td class="font-weight-bold text-dark">Contribución operativa neta</td>
+						<td class="text-right font-weight-bold text-dark">{{ $netOpContribution !== null ? ('$' . number_format($netOpContribution, 2)) : 'Sin información' }}</td>
+					</tr>
+				</tbody>
+			</table>
+
+			<div class="pt-2 border-top">
+				<div class="d-flex justify-content-between align-items-center mb-1">
+					<strong class="small text-dark">Ejecución Presupuesto de Compras</strong>
+					@if(!empty($budget['has_data']))
+						<strong class="small text-dark">{{ number_format(floatval($budget['executed_pct'] ?? 0), 0) }}%</strong>
+					@else
+						<span class="small text-muted">Sin presupuesto</span>
+					@endif
 				</div>
-				@endforeach
+				@if(!empty($budget['has_data']))
+					@php $execPctBar = min(100, max(0, floatval($budget['executed_pct'] ?? 0))); @endphp
+					<div class="progress mb-2" style="height:7px; border-radius:4px;">
+						<div class="progress-bar {{ floatval($budget['executed_pct'] ?? 0) > 100 ? 'bg-danger' : 'bg-success' }}" style="width: {{ $execPctBar }}%;"></div>
+					</div>
+					<div class="d-flex justify-content-between small text-muted" style="font-size:11px;">
+						<span>Recibido: <strong>${{ number_format($budget['invoiced_total'] ?? 0, 0) }}</strong></span>
+						<span>OC comprometidas: <strong>${{ number_format($budget['committed_oc_total'] ?? 0, 0) }}</strong></span>
+						<span>Presupuesto: <strong>${{ number_format($budget['total_budget'] ?? 0, 0) }}</strong></span>
+					</div>
+					@if(!empty($budget['reconciliation_note']))
+						<div class="text-muted mt-1" style="font-size:10.5px;">{{ $budget['reconciliation_note'] }}</div>
+					@endif
+				@else
+					<p class="small text-muted mb-0">{{ $budget['reconciliation_note'] ?? 'Sin presupuesto asignado ni compras en este período.' }}</p>
+				@endif
 			</div>
 		</article>
 	</section>
 
 	<!-- ====================================================================
-	     SECCIÓN EXPANDIBLE: ANÁLISIS OPERATIVO DETALLADO (PRESERVADA)
+	     SECCIÓN C. COMPARACIÓN ENTRE SUCURSALES & DEPARTAMENTOS
 	     ==================================================================== -->
-	<div class="my-3 text-center">
-		<button type="button" class="btn btn-sm btn-outline-secondary font-weight-bold px-3 py-2 shadow-sm" style="border-radius:20px; font-size:0.8rem; background:rgba(255,255,255,0.8);" onclick="toggleDetailedAnalysis()" id="btn-toggle-deep-analytics">
-			<i data-lucide="chevron-down" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px;"></i> Mostrar Análisis Operativo Detallado (Presupuesto, Desempeño Comercial, ICRS)
-		</button>
-	</div>
-
-	<div id="deep-analytics-section" class="d-none mt-3">
-		<!-- Presupuesto y Compromisos -->
-		<div class="row mb-3">
-			<div class="col-md-6 mb-3">
-				<div class="ded-card p-3">
-					<h3 class="font-weight-bold text-dark mb-2" style="font-size: 14px;">Presupuesto y Compromisos de Red</h3>
-					<div class="d-flex justify-content-between small text-muted mb-1">
-						<span>Presupuesto total ejecutado</span>
-						<strong class="text-dark">{{ $budget['execution_pct'] ?? 84.5 }}%</strong>
-					</div>
-					<div class="progress" style="height:8px; border-radius:4px;">
-						<div class="progress-bar bg-success" style="width:{{ $budget['execution_pct'] ?? 84.5 }}%;"></div>
-					</div>
-					<div class="d-flex justify-content-between mt-2 small text-muted">
-						<span>Facturado: <strong>${{ number_format($budget['invoiced_spend'] ?? 115000, 2) }}</strong></span>
-						<span>Límite: <strong>${{ number_format($budget['total_budget'] ?? 145000, 2) }}</strong></span>
-					</div>
+	<section class="ded-row-2 mb-3" id="sec-branch-dept">
+		<!-- Ranking real de sucursales -->
+		<article class="ded-card">
+			<header class="ded-card-header">
+				<div>
+					<h2 class="ded-card-title d-flex align-items-center gap-2">
+						<i data-lucide="store" style="width:16px;height:16px;color:#10b981;"></i>
+						<span>Desempeño Comparativo por Sucursal</span>
+					</h2>
+					<p class="text-muted small mb-0" style="font-size:11.5px;">Ventas netas, cumplimiento real (sin tope), margen, merma e inventario por tienda</p>
 				</div>
-			</div>
-			<div class="col-md-6 mb-3">
-				<div class="ded-card p-3">
-					<h3 class="font-weight-bold text-dark mb-2" style="font-size: 14px;">Calidad de Datos e Integridad</h3>
-					<div class="small text-muted">
-						<div class="d-flex justify-content-between py-1 border-bottom">
-							<span>Fuente transaccional</span>
-							<strong>SQLite Local · Integridad Verificada</strong>
-						</div>
-						<div class="d-flex justify-content-between py-1 border-bottom">
-							<span>Última sincronización</span>
-							<strong>{{ date('d/m/Y H:i') }}</strong>
-						</div>
-						<div class="d-flex justify-content-between py-1">
-							<span>Líneas con costo unitario verificado</span>
-							<strong class="text-success">{{ $dq['sales_cost_coverage_pct'] ?? 100 }}%</strong>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<!-- Desempeño Comercial por Vendedor -->
-		<div class="ded-card mb-3 p-3">
-			<h3 class="font-weight-bold text-dark mb-2" style="font-size: 14px;">Desempeño Comercial por Colaborador en Turno</h3>
+				<a href="{{ $ctxUrl('/sales?tab=sucursales') }}" class="small font-weight-bold text-success">Detalle comercial →</a>
+			</header>
 			<div class="table-responsive">
-				<table class="table table-sm table-hover mb-0" style="font-size:0.8rem;">
-					<thead class="thead-light">
-						<tr>
-							<th>Colaborador</th>
-							<th>Departamento</th>
-							<th>Turno</th>
-							<th>Venta Neta</th>
-							<th>Meta</th>
-							<th>Cumplimiento</th>
-							<th>Margen</th>
-							<th>Top Productos</th>
+				<table class="table table-hover table-sm mb-0" style="font-size:11.5px;">
+					<thead>
+						<tr class="text-muted">
+							<th>Sucursal</th>
+							<th class="text-right">Ventas</th>
+							<th class="text-center">Meta</th>
+							<th class="text-center">Margen</th>
+							<th class="text-center">Merma</th>
+							<th class="text-center">Cobertura</th>
+							<th class="text-center">Estado</th>
+							<th class="text-right">Enfocar</th>
 						</tr>
 					</thead>
 					<tbody>
-						@foreach($sellersPerformance['sellers'] ?? [] as $seller)
-							<tr>
-								<td><strong>{{ $seller['name'] }}</strong></td>
-								<td>{{ $seller['department'] }}</td>
-								<td><span class="badge badge-light border">{{ $seller['shift'] }}</span></td>
-								<td class="font-weight-bold">${{ number_format($seller['net_sales'], 2) }}</td>
-								<td>${{ number_format($seller['target'], 2) }}</td>
+						@forelse($branchRanking as $br)
+							@php
+								$stTone = $br['exec_state'] ?? 'no_data';
+								$stLbl = $br['exec_state_label'] ?? 'Sin información';
+							@endphp
+							<tr class="@if((int)$selectedBranchId === (int)$br['branch_id']) table-success @endif">
 								<td>
-									<span class="badge {{ $seller['real_compliance'] >= 100 ? 'badge-success' : 'badge-warning' }}">
-										{{ $seller['real_compliance'] }}%
-									</span>
+									<strong class="text-dark d-block">{{ $br['clean_name'] ?? $br['name'] }}</strong>
+									@if(!empty($br['code']))<small class="text-muted">{{ $br['code'] }}</small>@endif
 								</td>
-								<td>{{ $seller['margin_pct'] }}%</td>
-								<td class="small text-muted">{{ $seller['top_products'] }}</td>
+								<td class="text-right font-weight-bold">
+									{{ !empty($br['has_activity']) ? ('$' . number_format($br['sales'], 0)) : 'Sin ventas' }}
+								</td>
+								<td class="text-center">
+									@if($br['compliance_pct'] !== null)
+										<span class="badge {{ $br['compliance_pct'] >= 100 ? 'badge-success' : ($br['compliance_pct'] >= 90 ? 'badge-warning' : 'badge-danger') }}">
+											{{ number_format($br['compliance_pct'], 1) }}%
+										</span>
+									@else
+										<span class="text-muted">Sin meta</span>
+									@endif
+								</td>
+								<td class="text-center">{{ !empty($br['has_activity']) ? (number_format($br['margin_pct'], 1) . '%') : '—' }}</td>
+								<td class="text-center">{{ $br['waste_ratio_pct'] !== null ? (number_format($br['waste_ratio_pct'], 1) . '%') : '—' }}</td>
+								<td class="text-center text-muted">{{ $br['coverage_days'] !== null ? ($br['coverage_days'] . ' d') : 'Sin datos' }}</td>
+								<td class="text-center">
+									<span class="ded-state-pill is-{{ $stTone }}">{{ $stLbl }}</span>
+								</td>
+								<td class="text-right">
+									<a href="{{ $ctxUrl('/kpis', ['branch_id' => $br['branch_id']]) }}" class="btn btn-xs btn-outline-success py-0 px-2 font-weight-bold" style="font-size:10.5px;">Ver</a>
+								</td>
 							</tr>
-						@endforeach
+						@empty
+							<tr><td colspan="8" class="text-center text-muted py-3">Sin sucursales activas autorizadas.</td></tr>
+						@endforelse
 					</tbody>
 				</table>
 			</div>
+		</article>
+
+		<!-- Resumen estratégico por departamento comercial -->
+		<article class="ded-card">
+			<header class="ded-card-header">
+				<div>
+					<h2 class="ded-card-title d-flex align-items-center gap-2">
+						<i data-lucide="layers" style="width:16px;height:16px;color:#10b981;"></i>
+						<span>Mix Comercial por Departamento</span>
+					</h2>
+					<p class="text-muted small mb-0" style="font-size:11.5px;">Contribución a ventas y margen del período (enlace al detalle comercial)</p>
+				</div>
+				<a href="{{ $ctxUrl('/sales?tab=departamentos') }}" class="small font-weight-bold text-success">Departamentos →</a>
+			</header>
+			@php
+				$deptSalesTotal = array_sum(array_map(fn($d) => floatval($d['sales'] ?? 0), $deptRows));
+				$sortedDepts = array_values(array_filter($deptRows, fn($d) => floatval($d['sales'] ?? 0) > 0 || floatval($d['units'] ?? 0) > 0));
+				usort($sortedDepts, fn($a, $b) => floatval($b['sales'] ?? 0) <=> floatval($a['sales'] ?? 0));
+			@endphp
+			<div class="table-responsive">
+				<table class="table table-hover table-sm mb-0" style="font-size:11.5px;">
+					<thead>
+						<tr class="text-muted">
+							<th>Departamento</th>
+							<th class="text-right">Ventas</th>
+							<th class="text-center">Part.</th>
+							<th class="text-center">Margen</th>
+							<th class="text-right">Utilidad</th>
+						</tr>
+					</thead>
+					<tbody>
+						@forelse(array_slice($sortedDepts, 0, 10) as $dr)
+							@php $share = $deptSalesTotal > 0 ? round(floatval($dr['sales']) / $deptSalesTotal * 100, 1) : 0; @endphp
+							<tr>
+								<td>
+									<a href="{{ $ctxUrl('/sales?tab=departamentos', ['department' => $dr['id']]) }}" class="font-weight-bold text-dark d-flex align-items-center gap-1">
+										<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:{{ $dr['color'] ?? '#10b981' }};"></span>
+										<span>{{ $dr['name'] }}</span>
+									</a>
+								</td>
+								<td class="text-right font-weight-bold">${{ number_format($dr['sales'], 0) }}</td>
+								<td class="text-center text-muted">{{ $share }}%</td>
+								<td class="text-center">{{ number_format($dr['margin_pct'], 1) }}%</td>
+								<td class="text-right text-success font-weight-bold">${{ number_format($dr['gross_profit'], 0) }}</td>
+							</tr>
+						@empty
+							<tr><td colspan="5" class="text-center text-muted py-3">Sin ventas por departamento en el período seleccionado.</td></tr>
+						@endforelse
+					</tbody>
+				</table>
+			</div>
+		</article>
+	</section>
+
+	<!-- ====================================================================
+	     SECCIÓN D. GOBIERNO DE LOS 7 PROCESOS (MISMO ESTADO QUE HOY)
+	     ==================================================================== -->
+	<section class="ded-card mb-3" id="sec-process-gov">
+		<header class="ded-card-header">
+			<div>
+				<h2 class="ded-card-title d-flex align-items-center gap-2">
+					<i data-lucide="diagram-project" style="width:16px;height:16px;color:#10b981;"></i>
+					<span>Estado Consolidado de los 7 Procesos del Negocio</span>
+				</h2>
+				<p class="text-muted small mb-0" style="font-size:11.5px;">Sincronizado con HOY al {{ date('d/m/Y', strtotime($epR['end'])) }} · Incluye desviación, impacto, responsable y acceso directo</p>
+			</div>
+			<a href="{{ $ctxUrl('/today?tab=processes') }}" class="small font-weight-bold text-success">Supervisar en HOY →</a>
+		</header>
+		<div class="table-responsive">
+			<table class="table table-hover table-sm mb-0" style="font-size:12px;">
+				<thead>
+					<tr class="text-muted">
+						<th>Proceso</th>
+						<th class="text-center">Estado</th>
+						<th>Desviación vs objetivo</th>
+						<th>Impacto económico</th>
+						<th>Situación / Alcance</th>
+						<th>Responsable</th>
+						<th>Actualización</th>
+						<th class="text-right">Módulo propietario</th>
+					</tr>
+				</thead>
+				<tbody>
+					@foreach($ops as $op)
+					<tr>
+						<td>
+							<strong class="text-dark">{{ $op['full_name'] ?? $op['name'] }}</strong>
+							<small class="d-block text-muted">{{ $op['metric'] }}</small>
+						</td>
+						<td class="text-center">
+							<span class="ded-state-pill is-{{ $op['state'] ?? 'no_data' }}">{{ $op['state_label'] ?? 'Sin información' }}</span>
+						</td>
+						<td>{{ $op['deviation'] ?? '—' }}</td>
+						<td class="font-weight-bold {{ ($op['economic_impact'] ?? 0) < 0 ? 'text-danger' : 'text-dark' }}">
+							{{ $op['economic_impact_label'] ?? 'No calculable' }}
+						</td>
+						<td class="text-muted" style="max-width:260px;">{{ $op['subtitle'] ?? '' }}</td>
+						<td>{{ $op['owner'] ?? 'Operaciones' }}</td>
+						<td class="text-muted">{{ $op['last_updated'] ?? ($dq['last_updated_formatted'] ?? 'Sin registros') }}</td>
+						<td class="text-right">
+							<a href="{{ $ctxUrl($op['url'] ?? '/today') }}" class="btn btn-xs btn-outline-success font-weight-bold">Abrir →</a>
+						</td>
+					</tr>
+					@endforeach
+				</tbody>
+			</table>
 		</div>
-	</div>
+	</section>
+
+	<!-- ====================================================================
+	     SECCIÓN E. RIESGOS, OPORTUNIDADES Y ACCIONES CORRECTIVAS
+	     ==================================================================== -->
+	<section class="ded-row-2 mb-3" id="sec-risks-actions">
+		<!-- Decisiones Prioritarias + Riesgos/Oportunidades -->
+		<article class="ded-card">
+			<header class="ded-card-header">
+				<div>
+					<h2 class="ded-card-title d-flex align-items-center gap-2">
+						<i data-lucide="compass" style="width:16px;height:16px;color:#f59e0b;"></i>
+						<span>Desviaciones, Riesgos y Oportunidades</span>
+					</h2>
+					<p class="text-muted small mb-0" style="font-size:11.5px;">Hallazgos reales que explican brechas de meta, margen o riesgo operativo</p>
+				</div>
+				<a href="{{ $ctxUrl('/alerts') }}" class="small font-weight-bold text-success">Alertas ({{ $alertCount }}) →</a>
+			</header>
+			<div class="ded-alerts-list">
+				@foreach($decisions as $dec)
+				<div class="ded-alert-row">
+					<div>
+						<div class="d-flex align-items-center gap-2 mb-1">
+							<span class="badge badge-{{ $dec['level'] === 'danger' ? 'danger' : ($dec['level'] === 'warning' ? 'warning' : ($dec['level'] === 'success' ? 'success' : 'secondary')) }}">
+								{{ $dec['priority_badge'] }}
+							</span>
+							<strong class="text-dark" style="font-size:12px;">{{ $dec['title'] }}</strong>
+						</div>
+						<div class="small text-secondary mb-1">{{ $dec['description'] }}</div>
+						<div class="small text-muted" style="font-size:11px;">
+							<span>{{ $dec['branch_or_process'] }}</span> ·
+							<span>Responsable: <strong>{{ $dec['responsible'] }}</strong></span>
+							@if(!empty($dec['due_date']))· <span>Plazo: <strong>{{ $dec['due_date'] }}</strong></span>@endif
+						</div>
+					</div>
+					<div class="text-right flex-shrink-0">
+						@if($dec['economic_impact'] !== null)
+							<div class="ded-alert-impact mb-1 {{ $dec['economic_impact'] < 0 ? 'text-danger' : 'text-success' }}">
+								{{ $dec['economic_impact'] < 0 ? ('-$' . number_format(abs($dec['economic_impact']), 0)) : ('+$' . number_format($dec['economic_impact'], 0)) }}
+							</div>
+						@endif
+						<a href="{{ $ctxUrl($dec['url']) }}" class="btn btn-xs btn-outline-success font-weight-bold">{{ $dec['action_label'] }}</a>
+					</div>
+				</div>
+				@endforeach
+
+				@foreach($opportunities as $opp)
+				<div class="ded-alert-row">
+					<div>
+						<div class="d-flex align-items-center gap-2 mb-1">
+							<span class="badge badge-{{ $opp['tone'] }}">{{ $opp['type'] }}</span>
+							<strong class="text-dark" style="font-size:12px;">{{ $opp['title'] }}</strong>
+						</div>
+						<div class="small text-muted">{{ $opp['detail'] }}</div>
+					</div>
+					<div class="text-right flex-shrink-0">
+						<a href="{{ $ctxUrl($opp['url']) }}" class="btn btn-xs btn-outline-secondary font-weight-bold">Revisar →</a>
+					</div>
+				</div>
+				@endforeach
+			</div>
+		</article>
+
+		<!-- Seguimiento de Acciones Correctivas -->
+		<article class="ded-card">
+			<header class="ded-card-header">
+				<div>
+					<h2 class="ded-card-title d-flex align-items-center gap-2">
+						<i data-lucide="list-checks" style="width:16px;height:16px;color:#10b981;"></i>
+						<span>Seguimiento de Acciones Correctivas</span>
+					</h2>
+					<p class="text-muted small mb-0" style="font-size:11.5px;">Planes correctivos de merma y alertas prioritarias activas</p>
+				</div>
+				<a href="{{ $ctxUrl('/waste') }}" class="small font-weight-bold text-success">Planes →</a>
+			</header>
+
+			<div class="d-flex justify-content-between gap-2 mb-3 text-center">
+				<div class="flex-fill border rounded p-2">
+					<div class="font-weight-bold text-dark" style="font-size:16px;">{{ $ca['open'] ?? 0 }}</div>
+					<small class="text-muted">Abiertas</small>
+				</div>
+				<div class="flex-fill border rounded p-2">
+					<div class="font-weight-bold text-primary" style="font-size:16px;">{{ $ca['in_progress'] ?? 0 }}</div>
+					<small class="text-muted">En curso</small>
+				</div>
+				<div class="flex-fill border rounded p-2">
+					<div class="font-weight-bold text-danger" style="font-size:16px;">{{ $ca['overdue'] ?? 0 }}</div>
+					<small class="text-muted">Vencidas</small>
+				</div>
+				<div class="flex-fill border rounded p-2">
+					<div class="font-weight-bold text-success" style="font-size:16px;">
+						{{ ($ca['compliance_rate'] ?? null) !== null ? (number_format($ca['compliance_rate'], 0) . '%') : 'Sin planes' }}
+					</div>
+					<small class="text-muted">Cumplimiento</small>
+				</div>
+			</div>
+
+			@if(!empty($ca['items']))
+				<div class="ded-alerts-list">
+					@foreach($ca['items'] as $ci)
+					<div class="ded-alert-row py-2">
+						<div>
+							<div class="d-flex align-items-center gap-2">
+								<span class="badge {{ !empty($ci['is_overdue']) ? 'badge-danger' : 'badge-light border' }}">{{ $ci['source'] }}</span>
+								<strong class="text-dark" style="font-size:11.5px;">{{ $ci['title'] }}</strong>
+							</div>
+							<small class="text-muted">
+								{{ $ci['branch'] }} · Responsable: <strong>{{ $ci['owner'] }}</strong>
+								@if(!empty($ci['due_date']))· Límite: <span class="{{ !empty($ci['is_overdue']) ? 'text-danger font-weight-bold' : '' }}">{{ $ci['due_date'] }}</span>@endif
+							</small>
+						</div>
+						<a href="{{ $ctxUrl($ci['url']) }}" class="btn btn-xs btn-outline-success">Atender</a>
+					</div>
+					@endforeach
+				</div>
+			@else
+				<div class="text-center text-muted small py-3">Sin acciones correctivas ni alertas críticas abiertas en este alcance.</div>
+			@endif
+		</article>
+	</section>
+
+	<!-- ====================================================================
+	     SECCIÓN F. DEFINICIONES CLARAS DE KPI & CALIDAD DE DATOS
+	     ==================================================================== -->
+	<section class="ded-card" id="sec-kpi-definitions">
+		<header class="ded-card-header">
+			<div>
+				<h2 class="ded-card-title d-flex align-items-center gap-2">
+					<i data-lucide="book-open" style="width:16px;height:16px;color:#10b981;"></i>
+					<span>Gobierno de Indicadores, Definiciones y Calidad de Datos</span>
+				</h2>
+				<p class="text-muted small mb-0" style="font-size:11.5px;">
+					Fuente: {{ $dq['source_label'] ?? 'Base local SQLite' }} · Último movimiento: <strong>{{ $dq['last_updated_formatted'] ?? 'Sin registros' }}</strong> ·
+					Cobertura CMV ventas: <strong>{{ ($dq['sales_cost_coverage_pct'] ?? null) !== null ? ($dq['sales_cost_coverage_pct'] . '%') : 'Sin datos' }}</strong> ·
+					Cobertura costos stock: <strong>{{ ($dq['stock_cost_coverage_pct'] ?? null) !== null ? ($dq['stock_cost_coverage_pct'] . '%') : 'Sin datos' }}</strong>
+				</p>
+			</div>
+			@if(\Grocy\Helpers\DairyAccess::CanOpen('/admin/economics'))
+			<a href="{{ $U('/admin/economics') }}" class="small font-weight-bold text-success">Configurar economía y metas →</a>
+			@elseif(\Grocy\Helpers\DairyAccess::CanOpen('/cost-centers'))
+			<a href="{{ $ctxUrl('/cost-centers') }}" class="small font-weight-bold text-success">Ver centros de costo →</a>
+			@endif
+		</header>
+		<div class="ded-def-grid">
+			@foreach($kpiDefs as $kd)
+			<div class="ded-def-item">
+				<div class="d-flex justify-content-between align-items-center mb-1">
+					<strong class="text-dark">{{ $kd['name'] }}</strong>
+					<span class="badge badge-light border">{{ $kd['unit'] }}</span>
+				</div>
+				<div class="text-muted mb-1">{{ $kd['formula'] }}</div>
+				<div class="d-flex justify-content-between text-secondary" style="font-size:10.5px;">
+					<span>Fuente: {{ $kd['source'] }}</span>
+					<span>Resp.: <strong>{{ $kd['owner_name'] }}</strong></span>
+				</div>
+			</div>
+			@endforeach
+		</div>
+	</section>
 
 </div>
 
@@ -876,25 +982,63 @@
 <script src="{{ $U('/js/lucide.min.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-	// 1. Inicializar iconos Lucide
 	if (window.lucide) {
 		lucide.createIcons();
 	}
 
-	// 2. Gráfico Combinado de Evolución y Tendencias estilo Tablero de Ventas
+	// 1. Dropdown toggles (.ded-dropdown-toggle)
+	document.querySelectorAll('.ded-dropdown-toggle').forEach(function(btn) {
+		btn.addEventListener('click', function(e) {
+			e.stopPropagation();
+			var container = btn.closest('.ded-dropdown-container');
+			var menu = container ? container.querySelector('.ded-dropdown-menu') : null;
+			var wasOpen = menu && menu.classList.contains('show');
+			document.querySelectorAll('.ded-dropdown-menu.show').forEach(function(m) {
+				m.classList.remove('show');
+			});
+			if (menu && !wasOpen) {
+				menu.classList.add('show');
+			}
+		});
+	});
+	document.addEventListener('click', function(e) {
+		if (!e.target.closest('.ded-dropdown-container')) {
+			document.querySelectorAll('.ded-dropdown-menu.show').forEach(function(m) {
+				m.classList.remove('show');
+			});
+		}
+	});
+
+	// 2. Branch native selector preserving period/department/date
+	var branchSelect = document.getElementById('exec-select-branch');
+	if (branchSelect) {
+		branchSelect.addEventListener('change', function() {
+			var url = new URL(window.location.href);
+			if (this.value) {
+				url.searchParams.set('branch_id', this.value);
+			} else {
+				url.searchParams.delete('branch_id');
+			}
+			window.location.href = url.toString();
+		});
+	}
+
+	// 3. Chart.js 2.9.4 evolution chart (xAxes / yAxes / tooltips)
 	initExecEvoChart();
 });
 
 var execEvoChartInstance = null;
 function initExecEvoChart() {
 	var ctx = document.getElementById('dedChartExecEvo');
-	if (!ctx) return;
+	if (!ctx || typeof Chart === 'undefined') return;
 
-	var chartLabels = {!! json_encode(!empty($evoChart['labels']) ? $evoChart['labels'] : ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Sem 5', 'Sem 6']) !!};
-	var salesRealData = {!! json_encode(!empty($evoChart['sales_real']) ? $evoChart['sales_real'] : [105000, 118000, 122000, 134000, 142000, 148540]) !!};
-	var targetLineData = {!! json_encode(!empty($evoChart['target_line']) ? $evoChart['target_line'] : [110000, 115000, 120000, 125000, 130000, 135000]) !!};
+	var chartLabels = @json($evoChart['labels'] ?? []);
+	var salesRealData = @json($evoChart['sales_real'] ?? []);
+	var targetLineData = @json($evoChart['target_line'] ?? []);
+	var prevPeriodData = @json($evoChart['prev_period'] ?? []);
+	if (!chartLabels.length) return;
 
-	execEvoChartInstance = new Chart(ctx, {
+	execEvoChartInstance = new Chart(ctx.getContext('2d'), {
 		type: 'bar',
 		data: {
 			labels: chartLabels,
@@ -904,13 +1048,26 @@ function initExecEvoChart() {
 					label: 'Meta presupuestada',
 					data: targetLineData,
 					borderColor: '#f59e0b',
+					backgroundColor: 'transparent',
 					borderWidth: 2,
 					borderDash: [5, 5],
-					pointRadius: 3,
+					pointRadius: 2.5,
 					pointBackgroundColor: '#f59e0b',
 					fill: false,
-					tension: 0.25,
-					order: 1
+					lineTension: 0.25
+				},
+				{
+					type: 'line',
+					label: 'Período anterior',
+					data: prevPeriodData,
+					borderColor: '#64748b',
+					backgroundColor: 'transparent',
+					borderWidth: 1.8,
+					borderDash: [2, 3],
+					pointRadius: 2,
+					pointBackgroundColor: '#64748b',
+					fill: false,
+					lineTension: 0.25
 				},
 				{
 					type: 'bar',
@@ -918,70 +1075,45 @@ function initExecEvoChart() {
 					data: salesRealData,
 					backgroundColor: 'rgba(16, 185, 129, 0.72)',
 					borderColor: '#10b981',
-					borderWidth: 1.5,
-					borderRadius: 6,
-					order: 2
+					borderWidth: 1.5
 				}
 			]
 		},
 		options: {
 			responsive: true,
 			maintainAspectRatio: false,
-			plugins: {
-				legend: {
-					display: false
-				},
-				tooltip: {
-					mode: 'index',
-					intersect: false,
-					backgroundColor: 'rgba(15, 23, 42, 0.9)',
-					titleFont: { size: 12, family: 'Inter' },
-					bodyFont: { size: 11, family: 'Inter' },
-					padding: 10,
-					cornerRadius: 8,
-					callbacks: {
-						label: function(ctx) {
-							return ctx.dataset.label + ': $' + Number(ctx.parsed.y).toLocaleString();
-						}
+			legend: { display: false },
+			tooltips: {
+				mode: 'index',
+				intersect: false,
+				backgroundColor: 'rgba(15, 23, 42, 0.94)',
+				callbacks: {
+					label: function(tooltipItem, data) {
+						var dsLabel = data.datasets[tooltipItem.datasetIndex].label || '';
+						var v = Number(tooltipItem.yLabel || 0);
+						return dsLabel + ': $' + v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 					}
 				}
 			},
 			scales: {
-				x: {
-					grid: { display: false },
-					ticks: { color: '#64748b', font: { size: 11, family: 'Inter' } }
-				},
-				y: {
-					grid: { color: 'rgba(226, 232, 240, 0.6)' },
+				xAxes: [{
+					gridLines: { display: false },
+					ticks: { fontColor: '#64748b', fontSize: 11 }
+				}],
+				yAxes: [{
+					gridLines: { color: 'rgba(148, 163, 184, 0.22)' },
 					ticks: {
-						color: '#64748b',
-						font: { size: 11, family: 'Inter' },
+						beginAtZero: true,
+						fontColor: '#64748b',
+						fontSize: 11,
 						callback: function(v) {
-							return v >= 1000 ? '$' + (v / 1000) + 'K' : '$' + v;
+							return Math.abs(v) >= 1000 ? '$' + Math.round(v / 1000) + 'K' : '$' + v;
 						}
 					}
-				}
+				}]
 			}
 		}
 	});
-}
-
-function toggleDetailedAnalysis() {
-	var sec = document.getElementById('deep-analytics-section');
-	var btn = document.getElementById('btn-toggle-deep-analytics');
-	if (sec) {
-		sec.classList.toggle('d-none');
-		var isHidden = sec.classList.contains('d-none');
-		if (btn) {
-			btn.innerHTML = isHidden 
-				? '<i data-lucide="chevron-down" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px;"></i> Mostrar Análisis Operativo Detallado (Presupuesto, Desempeño Comercial, ICRS)'
-				: '<i data-lucide="chevron-up" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px;"></i> Ocultar Análisis Detallado';
-			if (window.lucide) lucide.createIcons();
-		}
-		if (!isHidden) {
-			sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
-		}
-	}
 }
 </script>
 @endpush

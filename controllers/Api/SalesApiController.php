@@ -61,6 +61,15 @@ class SalesApiController extends BaseApiController
 		try
 		{
 			$requestBody = $this->GetParsedAndFilteredRequestBody($request);
+			// Descuentos, precios bajo lista, fechas y turnos solo los fija el servidor (POS: /api/pos/checkout con autorización)
+			unset($requestBody['allow_pos_discount'], $requestBody['_external'], $requestBody['sold_at'], $requestBody['shift_id'], $requestBody['ticket_discount_amount'], $requestBody['event_uuid']);
+			foreach ($requestBody['items'] ?? [] as $i => $it)
+			{
+				if (is_array($it))
+				{
+					unset($requestBody['items'][$i]['allow_pos_discount']);
+				}
+			}
 			$salesService = SalesService::GetInstance();
 			$sale = $salesService->CreateSale($requestBody, GROCY_USER_ID);
 			$branchId = intval($sale->branch_id ?? ($requestBody['branch_id'] ?? 1));
@@ -522,6 +531,76 @@ class SalesApiController extends BaseApiController
 			$userId = GROCY_USER_ID;
 			$res = \Grocy\Services\PosReturnsService::GetInstance()->ProcessPosReturn($b, $userId);
 			return $this->ApiResponse($response, $res);
+		}
+		catch (\Throwable $e)
+		{
+			return $this->GenericErrorResponse($response, $e->getMessage(), 400);
+		}
+	}
+
+	/** Configuración comercial de departamentos (código, nombre, color, orden y valores de producto) */
+	/** Historial de Ventas: corrección autorizada (duplicate = anular copia | date = fecha de venta) */
+	public function SaveHistoryCorrection(Request $request, Response $response, array $args)
+	{
+		User::CheckPermission($request, User::PERMISSION_SALES_CANCEL);
+
+		try
+		{
+			$body = $this->GetParsedAndFilteredRequestBody($request);
+			$saleId = intval($body['sale_id'] ?? 0);
+			$this->AssertSaleBranch($request, $saleId);
+			$svc = \Grocy\Services\SalesHistoryAuditService::GetInstance();
+			$kind = (string) ($body['kind'] ?? '');
+			if ($kind === 'duplicate')
+			{
+				$r = $svc->VoidDuplicate($saleId, (string) ($body['reason'] ?? ''), GROCY_USER_ID);
+			}
+			elseif ($kind === 'date')
+			{
+				$r = $svc->CorrectDate($saleId, (string) ($body['datetime'] ?? ''), (string) ($body['reason'] ?? ''), GROCY_USER_ID);
+			}
+			else
+			{
+				throw new \Exception('Tipo de corrección no válido');
+			}
+			return $this->ApiResponse($response, ['success' => true] + $r);
+		}
+		catch (\Grocy\Controllers\Users\PermissionMissingException $e)
+		{
+			throw $e;
+		}
+		catch (\Throwable $e)
+		{
+			return $this->GenericErrorResponse($response, $e->getMessage(), 400);
+		}
+	}
+
+	/** Historial de Ventas: cierre comercial de una semana o un mes terminado */
+	public function SaveHistoryClosure(Request $request, Response $response, array $args)
+	{
+		User::CheckPermission($request, User::PERMISSION_SALES_CANCEL);
+
+		try
+		{
+			$body = $this->GetParsedAndFilteredRequestBody($request);
+			$r = \Grocy\Services\SalesHistoryAuditService::GetInstance()->Close((string) ($body['type'] ?? ''), (string) ($body['from'] ?? ''), (string) ($body['notes'] ?? ''), GROCY_USER_ID);
+			return $this->ApiResponse($response, ['success' => true] + $r);
+		}
+		catch (\Throwable $e)
+		{
+			return $this->GenericErrorResponse($response, $e->getMessage(), 400);
+		}
+	}
+
+	public function SaveDepartmentConfig(Request $request, Response $response, array $args)
+	{
+		User::CheckPermission($request, User::PERMISSION_MASTER_DATA_EDIT);
+
+		try
+		{
+			$body = $this->GetParsedAndFilteredRequestBody($request);
+			\Grocy\Services\DailyMetricsService::GetInstance()->SaveDepartments(is_array($body['departments'] ?? null) ? $body['departments'] : []);
+			return $this->ApiResponse($response, ['success' => true] + \Grocy\Services\SalesReportsService::DeptConfig());
 		}
 		catch (\Throwable $e)
 		{

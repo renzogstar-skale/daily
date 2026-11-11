@@ -6,6 +6,7 @@
 
 @push('pageStyles')
 <link href="{{ $U('/css/daily_stock.css?v=', true) }}{{ daily_asset_version('/css/daily_stock.css') }}" rel="stylesheet">
+<link href="{{ $U('/css/daily_inventory_ops.css?v=', true) }}{{ daily_asset_version('/css/daily_inventory_ops.css') }}" rel="stylesheet">
 @endpush
 
 @push('pageScripts')
@@ -13,6 +14,7 @@
 	window.DAILY_STOCK_EXEC_INITIAL = {!! json_encode($stockExec ?? [], JSON_HEX_TAG | JSON_HEX_AMP) !!};
 </script>
 <script src="{{ $U('/viewjs/purchase.js?v=', true) }}{{ $version }}"></script>
+<script src="{{ $U('/js/daily_inventory_ops.js?v=', true) }}{{ daily_asset_version('/js/daily_inventory_ops.js') }}" defer></script>
 @endpush
 
 @php
@@ -391,40 +393,7 @@ $meta = $se['meta'] ?? [];
 							<th class="text-center">Acción</th>
 						</tr>
 					</thead>
-					<tbody id="dsm-alert-tbody">
-						<tr>
-							<td>
-								<div class="dsm-prod-cell">
-									<img src="{{ $U('/img/control_center/prod_baguette.svg') }}" class="dsm-prod-thumb" alt="">
-									<div>
-										<div class="dsm-prod-name">Leche Entera Alquería 1L</div>
-										<div class="dsm-prod-sku">SKU-1004</div>
-									</div>
-								</div>
-							</td>
-							<td>7702001001234</td>
-							<td><span class="dsm-dept-pill">Lácteos</span></td>
-							<td class="text-center"><span class="dsm-stock-badge is-danger">0</span></td>
-							<td class="text-center text-muted">24</td>
-							<td class="text-center"><button type="button" class="dsm-act-btn is-red" onclick="dsmActionFromCard('reorder', 1)"><i class="fa-solid fa-cart-plus mr-1"></i>Pedir</button></td>
-						</tr>
-						<tr>
-							<td>
-								<div class="dsm-prod-cell">
-									<img src="{{ $U('/img/control_center/prod_baguette.svg') }}" class="dsm-prod-thumb" alt="">
-									<div>
-										<div class="dsm-prod-name">Aceite Vegetal Premier 1000ml</div>
-										<div class="dsm-prod-sku">SKU-1002</div>
-									</div>
-								</div>
-							</td>
-							<td>7702123456789</td>
-							<td><span class="dsm-dept-pill">Abarrotes</span></td>
-							<td class="text-center"><span class="dsm-stock-badge is-warning">4</span></td>
-							<td class="text-center text-muted">18</td>
-							<td class="text-center"><button type="button" class="dsm-act-btn is-yellow" onclick="dsmActionFromCard('transfer', 2)"><i class="fa-solid fa-right-left mr-1"></i>Trasladar</button></td>
-						</tr>
-					</tbody>
+					<tbody id="dsm-alert-tbody"></tbody>
 				</table>
 			</div>
 
@@ -474,20 +443,7 @@ $meta = $se['meta'] ?? [];
 							<th class="text-right">Cantidad</th>
 						</tr>
 					</thead>
-					<tbody id="dsm-move-tbody">
-						<tr>
-							<td class="text-muted">{{ date('d/m H:i', strtotime('-15 minutes')) }}</td>
-							<td><span class="dsm-type-pill is-green"><i class="fa-solid fa-boxes-packing mr-1"></i>Recepción</span></td>
-							<td><strong>Arroz Diana 1kg</strong><br><small class="text-muted">Muelle Calle 80</small></td>
-							<td class="text-right font-weight-bold text-success">+120</td>
-						</tr>
-						<tr>
-							<td class="text-muted">{{ date('d/m H:i', strtotime('-42 minutes')) }}</td>
-							<td><span class="dsm-type-pill is-blue"><i class="fa-solid fa-cart-shopping mr-1"></i>Venta POS</span></td>
-							<td><strong>Smart TV Samsung 55"</strong><br><small class="text-muted">Caja 03</small></td>
-							<td class="text-right font-weight-bold text-dark">-1</td>
-						</tr>
-					</tbody>
+					<tbody id="dsm-move-tbody"></tbody>
 				</table>
 			</div>
 		</div>
@@ -510,9 +466,8 @@ $meta = $se['meta'] ?? [];
 					<i class="fa-solid fa-coins"></i>
 				</div>
 				<div class="dsm-dept-kpi-content">
-					<div class="dsm-dept-kpi-val" id="dsm-dept-kpi-val">{{ $donut['center_value'] ?? '$18,282' }}</div>
+					<div class="dsm-dept-kpi-val" id="dsm-dept-kpi-val">{{ $donut['center_value'] ?? '—' }}</div>
 					<div class="dsm-dept-kpi-title">Valor total del inventario</div>
-					<div class="dsm-dept-kpi-badge is-up"><i class="fa-solid fa-arrow-up"></i> +4.8% <span class="dsm-kpi-note font-weight-normal text-muted" style="font-size: 11px;">vs. período anterior</span></div>
 				</div>
 			</div>
 			<!-- KPI 2: Unidades totales -->
@@ -521,9 +476,8 @@ $meta = $se['meta'] ?? [];
 					<i class="fa-solid fa-box"></i>
 				</div>
 				<div class="dsm-dept-kpi-content">
-					<div class="dsm-dept-kpi-val" id="dsm-dept-kpi-units">{{ number_format($donut['center_numeric_units'] ?? 1805, 0) }}</div>
+					<div class="dsm-dept-kpi-val" id="dsm-dept-kpi-units">{{ number_format($donut['center_numeric_units'] ?? 0, 0) }}</div>
 					<div class="dsm-dept-kpi-title">Unidades totales</div>
-					<div class="dsm-dept-kpi-badge is-up"><i class="fa-solid fa-arrow-up"></i> +2.9%</div>
 				</div>
 			</div>
 			<!-- KPI 3: Rotación promedio -->
@@ -534,7 +488,6 @@ $meta = $se['meta'] ?? [];
 				<div class="dsm-dept-kpi-content">
 					<div class="dsm-dept-kpi-val" id="dsm-dept-kpi-rot">1.52x</div>
 					<div class="dsm-dept-kpi-title">Rotación promedio</div>
-					<div class="dsm-dept-kpi-badge is-down"><i class="fa-solid fa-arrow-down"></i> -0.3</div>
 				</div>
 			</div>
 			<!-- KPI 4: Cobertura promedio -->
@@ -545,7 +498,6 @@ $meta = $se['meta'] ?? [];
 				<div class="dsm-dept-kpi-content">
 					<div class="dsm-dept-kpi-val" id="dsm-dept-kpi-cov">5.6 días</div>
 					<div class="dsm-dept-kpi-title">Cobertura promedio</div>
-					<div class="dsm-dept-kpi-badge is-up"><i class="fa-solid fa-arrow-up"></i> +0.6 días</div>
 				</div>
 			</div>
 			<!-- KPI 5: Departamentos analizados -->
@@ -580,7 +532,7 @@ $meta = $se['meta'] ?? [];
 					<div class="dsm-donut-canvas-box">
 						<canvas id="dsmDonutChart" role="img" aria-label="Participación del valor del inventario por departamento"></canvas>
 						<div class="dsm-donut-center">
-							<div class="dsm-donut-center-val" id="dsm-donut-center-val">{{ $donut['center_value'] ?? '$18,282' }}</div>
+							<div class="dsm-donut-center-val" id="dsm-donut-center-val">{{ $donut['center_value'] ?? '—' }}</div>
 							<div class="dsm-donut-center-label">Valor total del inventario</div>
 							<div class="dsm-donut-center-badge" id="dsm-donut-center-sub">{{ count($donut['departments'] ?? []) ?: 8 }} departamentos</div>
 						</div>
@@ -610,9 +562,9 @@ $meta = $se['meta'] ?? [];
 						<tfoot id="dsm-rank-tfoot">
 							<tr class="dsm-dept-total-row">
 								<td colspan="2" class="font-weight-bold" style="padding-left: 14px;">Total</td>
-								<td class="text-right font-weight-bold" id="dsm-dept-total-val">{{ $donut['center_value'] ?? '$18,282' }}</td>
+								<td class="text-right font-weight-bold" id="dsm-dept-total-val">{{ $donut['center_value'] ?? '—' }}</td>
 								<td class="font-weight-bold" id="dsm-dept-total-share">100.0%</td>
-								<td class="text-right font-weight-bold" id="dsm-dept-total-units">{{ number_format($donut['center_numeric_units'] ?? 1805, 0) }}</td>
+								<td class="text-right font-weight-bold" id="dsm-dept-total-units">{{ number_format($donut['center_numeric_units'] ?? 0, 0) }}</td>
 								<td class="text-right font-weight-bold" id="dsm-dept-total-rot">1.52x</td>
 								<td class="text-right font-weight-bold" id="dsm-dept-total-cov">5.6 d</td>
 								<td colspan="2"></td>
@@ -949,7 +901,7 @@ $meta = $se['meta'] ?? [];
 					Variación %
 				</button>
 				<button type="button" class="dsm-branch-pill" id="dsm-btn-toggle-all-branches" style="background: #ffffff; color: #1e293b; border: 1px solid #e2e8f0; border-radius: 8px; font-weight: 700; font-size: 11px; padding: 5px 12px; display: inline-flex; align-items: center; gap: 5px;" title="Alternar entre Top 5 y las 8 sucursales de la red">
-					<i class="fa-solid fa-shop text-success"></i> 8 Sucursales
+					<i class="fa-solid fa-shop text-success"></i> {{ count($branchesTable) }} Sucursales
 				</button>
 			</div>
 
@@ -958,27 +910,23 @@ $meta = $se['meta'] ?? [];
 				<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
 					<div style="background: #f0fdf4; border: 1px solid #dcfce7; border-radius: 12px; padding: 8px 6px; text-align: center;">
 						<div style="color: #008744; font-size: 14px; margin-bottom: 2px;"><i class="fa-solid fa-coins"></i></div>
-						<div style="font-size: 15px; font-weight: 800; color: #0f172a; line-height: 1.1;" id="dsm-b-kpi-val">{{ $stockExec['branch_kpis']['formatted_total_value'] ?? '$11,914' }}</div>
+						<div style="font-size: 15px; font-weight: 800; color: #0f172a; line-height: 1.1;" id="dsm-b-kpi-val">{{ $stockExec['branch_kpis']['formatted_total_value'] ?? '—' }}</div>
 						<div style="font-size: 10px; color: #64748b; font-weight: 600;">Valor total</div>
-						<div class="mt-1"><span class="badge" style="background: #dcfce7; color: #008744; font-size: 9.5px; font-weight: 700; padding: 2px 6px; border-radius: 4px;">▲ +4.8%</span></div>
 					</div>
 					<div style="background: #f0fdf4; border: 1px solid #dcfce7; border-radius: 12px; padding: 8px 6px; text-align: center;">
 						<div style="color: #008744; font-size: 14px; margin-bottom: 2px;"><i class="fa-solid fa-box"></i></div>
-						<div style="font-size: 15px; font-weight: 800; color: #0f172a; line-height: 1.1;" id="dsm-b-kpi-units">{{ $stockExec['branch_kpis']['formatted_total_units'] ?? '1,043' }}</div>
+						<div style="font-size: 15px; font-weight: 800; color: #0f172a; line-height: 1.1;" id="dsm-b-kpi-units">{{ $stockExec['branch_kpis']['formatted_total_units'] ?? '—' }}</div>
 						<div style="font-size: 10px; color: #64748b; font-weight: 600;">Unidades</div>
-						<div class="mt-1"><span class="badge" style="background: #dcfce7; color: #008744; font-size: 9.5px; font-weight: 700; padding: 2px 6px; border-radius: 4px;">▲ +2.9%</span></div>
 					</div>
 					<div style="background: #f0fdf4; border: 1px solid #dcfce7; border-radius: 12px; padding: 8px 6px; text-align: center;">
 						<div style="color: #008744; font-size: 14px; margin-bottom: 2px;"><i class="fa-solid fa-rotate"></i></div>
-						<div style="font-size: 15px; font-weight: 800; color: #0f172a; line-height: 1.1;" id="dsm-b-kpi-rot">{{ $stockExec['branch_kpis']['rotation'] ?? '1.52' }}</div>
+						<div style="font-size: 15px; font-weight: 800; color: #0f172a; line-height: 1.1;" id="dsm-b-kpi-rot">{{ $stockExec['branch_kpis']['rotation'] ?? '—' }}</div>
 						<div style="font-size: 10px; color: #64748b; font-weight: 600;">Rotación</div>
-						<div class="mt-1"><span class="badge" style="background: #fee2e2; color: #dc2626; font-size: 9.5px; font-weight: 700; padding: 2px 6px; border-radius: 4px;">▼ -0.3</span></div>
 					</div>
 					<div style="background: #f0fdf4; border: 1px solid #dcfce7; border-radius: 12px; padding: 8px 6px; text-align: center;">
 						<div style="color: #008744; font-size: 14px; margin-bottom: 2px;"><i class="fa-regular fa-calendar-days"></i></div>
-						<div style="font-size: 15px; font-weight: 800; color: #0f172a; line-height: 1.1;" id="dsm-b-kpi-cov">{{ $stockExec['branch_kpis']['coverage'] ?? '5.6 días' }}</div>
+						<div style="font-size: 15px; font-weight: 800; color: #0f172a; line-height: 1.1;" id="dsm-b-kpi-cov">{{ $stockExec['branch_kpis']['coverage'] ?? '—' }}</div>
 						<div style="font-size: 10px; color: #64748b; font-weight: 600;">Cobertura</div>
-						<div class="mt-1"><span class="badge" style="background: #dcfce7; color: #008744; font-size: 9.5px; font-weight: 700; padding: 2px 6px; border-radius: 4px;">▲ +0.6 días</span></div>
 					</div>
 				</div>
 			</div>
@@ -1090,9 +1038,8 @@ $meta = $se['meta'] ?? [];
 							<i class="fa-solid fa-arrow-right-arrow-left"></i>
 						</div>
 						<div>
-							<div style="font-size: 20px; font-weight: 800; color: #0f172a; line-height: 1.1;" id="dsm-move-kpi-total">{{ $movements['stats']['formatted_total'] ?? '21,600' }}</div>
+							<div style="font-size: 20px; font-weight: 800; color: #0f172a; line-height: 1.1;" id="dsm-move-kpi-total">{{ $movements['stats']['formatted_total'] ?? '—' }}</div>
 							<div style="font-size: 11px; color: #64748b; font-weight: 600;">Movimientos totales</div>
-							<div style="font-size: 10px; color: #008744; font-weight: 700;">▲ +6.4% vs. período anterior</div>
 						</div>
 					</div>
 					<div class="d-flex align-items-center" style="gap: 12px; border-left: 1px solid #e2e8f0; padding-left: 12px;">
@@ -1100,9 +1047,9 @@ $meta = $se['meta'] ?? [];
 							<i class="fa-solid fa-tag"></i>
 						</div>
 						<div>
-							<div style="font-size: 20px; font-weight: 800; color: #0f172a; line-height: 1.1;" id="dsm-move-kpi-prods">{{ $movements['stats']['formatted_active_products'] ?? '4,982' }}</div>
+							<div style="font-size: 20px; font-weight: 800; color: #0f172a; line-height: 1.1;" id="dsm-move-kpi-prods">{{ $movements['stats']['formatted_active_products'] ?? '—' }}</div>
 							<div style="font-size: 11px; color: #64748b; font-weight: 600;">Productos con movimiento</div>
-							<div style="font-size: 10px; color: #64748b;">de 8,245 en inventario (60.4%)</div>
+							<div style="font-size: 10px; color: #64748b;" id="dsm-move-kpi-prods-sub">de {{ $movements['stats']['formatted_catalog_products'] ?? '—' }} productos activos{{ isset($movements['stats']['active_pct']) ? ' (' . number_format($movements['stats']['active_pct'], 1) . '%)' : '' }}</div>
 						</div>
 					</div>
 				</div>
@@ -1112,21 +1059,22 @@ $meta = $se['meta'] ?? [];
 			<div class="px-3 py-2">
 				<div class="dsm-moves-chart-wrapper" style="display: flex; height: 180px; align-items: stretch; gap: 8px;">
 					<!-- Eje Y -->
-					<div style="display: flex; flex-direction: column; justify-content: space-between; font-size: 10px; color: #94a3b8; font-weight: 600; text-align: right; width: 42px; padding-bottom: 22px;">
-						<span>12,000</span>
-						<span>10,000</span>
-						<span>8,000</span>
-						<span>6,000</span>
-						<span>4,000</span>
-						<span>2,000</span>
-						<span>0</span>
+					<div id="dsm-moves-yaxis" style="display: flex; flex-direction: column; justify-content: space-between; font-size: 10px; color: #94a3b8; font-weight: 600; text-align: right; width: 42px; padding-bottom: 22px;">
+						@php
+							// Escala del eje: múltiplo redondo sobre la barra más alta (antes fija en 12 000)
+							$barMax = max(1, max(array_column($movements['bars_photo'] ?? [], 'units') ?: [0]));
+							$mag = pow(10, floor(log10($barMax)));
+							$maxBarUnits = max(6, ceil($barMax / $mag) * $mag);
+						@endphp
+						@for($i = 6; $i >= 0; $i--)
+						<span>{{ number_format($maxBarUnits * $i / 6, 0) }}</span>
+						@endfor
 					</div>
 
 					<!-- Área de Barras con líneas de cuadrícula horizontal -->
 					<div class="dsm-moves-chart-area" id="dsm-moves-bars-container" style="flex: 1; display: flex; align-items: flex-end; justify-content: space-around; height: 100%; border-bottom: 1px solid #e2e8f0; position: relative; padding: 0 4px 6px 4px; gap: 12px;">
 						@php
 							$bars = $movements['bars_photo'] ?? [];
-							$maxBarUnits = 12000;
 							$iconsMap = [
 								'entradas' => 'fa-box',
 								'salidas' => 'fa-box',
@@ -1169,31 +1117,31 @@ $meta = $se['meta'] ?? [];
 						<div class="dsm-move-share-label text-success" style="font-size: 9.5px; font-weight: 700;">
 							<i class="fa-solid fa-circle" style="font-size: 6px;"></i> Entradas
 						</div>
-						<div class="dsm-move-share-val font-weight-bold text-dark" style="font-size: 12px;">48.9%</div>
+						<div class="dsm-move-share-val font-weight-bold text-dark" style="font-size: 12px;" id="dsm-move-share-entradas">{{ $movements['stats']['shares']['entradas'] ?? '—' }}</div>
 					</div>
 					<div class="dsm-move-share-pill" style="background: #fee2e2; border: 1px solid #fecaca; border-radius: 8px; padding: 6px 4px; text-align: center;">
 						<div class="dsm-move-share-label text-danger" style="font-size: 9.5px; font-weight: 700;">
 							<i class="fa-solid fa-circle" style="font-size: 6px;"></i> Salidas
 						</div>
-						<div class="dsm-move-share-val font-weight-bold text-dark" style="font-size: 12px;">47.9%</div>
+						<div class="dsm-move-share-val font-weight-bold text-dark" style="font-size: 12px;" id="dsm-move-share-salidas">{{ $movements['stats']['shares']['salidas'] ?? '—' }}</div>
 					</div>
 					<div class="dsm-move-share-pill" style="background: #fef3c7; border: 1px solid #fde68a; border-radius: 8px; padding: 6px 4px; text-align: center;">
 						<div class="dsm-move-share-label text-warning" style="font-size: 9.5px; font-weight: 700;">
 							<i class="fa-solid fa-circle" style="font-size: 6px;"></i> Traslados
 						</div>
-						<div class="dsm-move-share-val font-weight-bold text-dark" style="font-size: 12px;">0.2%</div>
+						<div class="dsm-move-share-val font-weight-bold text-dark" style="font-size: 12px;" id="dsm-move-share-traslados">{{ $movements['stats']['shares']['traslados'] ?? '—' }}</div>
 					</div>
 					<div class="dsm-move-share-pill" style="background: #f3e8ff; border: 1px solid #e9d5ff; border-radius: 8px; padding: 6px 4px; text-align: center;">
 						<div class="dsm-move-share-label" style="color: #7e22ce; font-size: 9.5px; font-weight: 700;">
 							<i class="fa-solid fa-circle" style="font-size: 6px;"></i> Dev. clientes
 						</div>
-						<div class="dsm-move-share-val font-weight-bold text-dark" style="font-size: 12px;">0.2%</div>
+						<div class="dsm-move-share-val font-weight-bold text-dark" style="font-size: 12px;" id="dsm-move-share-devoluciones">{{ $movements['stats']['shares']['devoluciones'] ?? '—' }}</div>
 					</div>
 					<div class="dsm-move-share-pill" style="background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px 4px; text-align: center;">
 						<div class="dsm-move-share-label text-secondary" style="font-size: 9.5px; font-weight: 700;">
 							<i class="fa-solid fa-circle" style="font-size: 6px;"></i> Otros
 						</div>
-						<div class="dsm-move-share-val font-weight-bold text-dark" style="font-size: 12px;">2.8%</div>
+						<div class="dsm-move-share-val font-weight-bold text-dark" style="font-size: 12px;" id="dsm-move-share-otros">{{ $movements['stats']['shares']['otros'] ?? '—' }}</div>
 					</div>
 				</div>
 			</div>
@@ -1227,49 +1175,21 @@ $meta = $se['meta'] ?? [];
 			</div>
 
 			<div class="dsm-card-body p-3">
-				<!-- Alerta 1: Próximos a vencer -->
-				<div class="dsm-decision-card is-danger mb-2" onclick="dsmOpenFefoAllModal()" style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: transform 0.15s ease;">
-					<div class="d-flex align-items-center" style="gap: 12px;">
-						<div style="background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0;">
-							<i class="fa-solid fa-triangle-exclamation"></i>
+				<!-- Decisiones destacadas: conteos reales del servicio (stockoverview.js las actualiza al filtrar) -->
+				<div id="dsm-decisions-featured" class="mb-3">
+					@foreach($decisions as $dec)
+					<div class="dsm-decision-item is-{{ $dec['severity'] }}" onclick='dsmHandleDecisionClick({{ json_encode($dec, JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_TAG | JSON_HEX_AMP) }})' title="Responsable: {{ $dec['owner'] }} · Prioridad: {{ $dec['priority'] }}">
+						<div class="dsm-dec-left">
+							<div class="dsm-dec-icon"><i class="fa-solid {{ $dec['icon'] }}"></i></div>
+							<div class="dsm-dec-text">
+								<span class="dsm-dec-title">{{ $dec['title'] }}</span>
+								<span class="dsm-dec-sub">{{ $dec['line1'] }}</span>
+								<span class="dsm-dec-sub">{{ $dec['line2'] }}</span>
+							</div>
 						</div>
-						<div>
-							<div style="font-weight: 800; color: #991b1b; font-size: 13.5px; line-height: 1.2;">140 productos próximos a vencer</div>
-							<div style="font-size: 11.5px; color: #475569; margin-top: 2px;">Valor en riesgo: <strong class="text-dark">$3,878</strong> &middot; &le; 30 días</div>
-							<div style="font-size: 11px; color: #64748b;">Sucursales: <strong>5</strong> &middot; Lotes: <strong>184</strong></div>
-						</div>
+						<i class="fa-solid fa-chevron-right dsm-dec-arrow"></i>
 					</div>
-					<i class="fa-solid fa-chevron-right text-muted" style="font-size: 12px;"></i>
-				</div>
-
-				<!-- Alerta 2: Productos agotados -->
-				<div class="dsm-decision-card is-danger mb-2" onclick="window.location.href='{{ $U('/mrp') }}'" style="background: #fff5f5; border: 1px solid #fed7d7; border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: transform 0.15s ease;">
-					<div class="d-flex align-items-center" style="gap: 12px;">
-						<div style="background: #fed7d7; color: #c53030; border: 1px solid #feb2b2; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0;">
-							<i class="fa-solid fa-box-open"></i>
-						</div>
-						<div>
-							<div style="font-weight: 800; color: #991b1b; font-size: 13.5px; line-height: 1.2;">231 productos agotados</div>
-							<div style="font-size: 11.5px; color: #475569; margin-top: 2px;">Pares producto-sucursal con existencia 0 y stock mínimo.</div>
-							<div style="font-size: 11px; color: #64748b;">Impacto estimado en ventas: <strong class="text-dark">$12,460/mes</strong></div>
-						</div>
-					</div>
-					<i class="fa-solid fa-chevron-right text-muted" style="font-size: 12px;"></i>
-				</div>
-
-				<!-- Alerta 3: Productos bajo mínimo -->
-				<div class="dsm-decision-card is-warning mb-3" onclick="window.location.href='{{ $U('/mrp') }}'" style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: transform 0.15s ease;">
-					<div class="d-flex align-items-center" style="gap: 12px;">
-						<div style="background: #fef3c7; color: #d97706; border: 1px solid #fde68a; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0;">
-							<i class="fa-solid fa-arrow-down-short-wide"></i>
-						</div>
-						<div>
-							<div style="font-weight: 800; color: #92400e; font-size: 13.5px; line-height: 1.2;">97 productos bajo mínimo</div>
-							<div style="font-size: 11.5px; color: #475569; margin-top: 2px;">Existencia mayor a 0 y menor al mínimo de la sucursal.</div>
-							<div style="font-size: 11px; color: #64748b;">Faltante estimado: <strong class="text-dark">1,284 unidades</strong></div>
-						</div>
-					</div>
-					<i class="fa-solid fa-chevron-right text-muted" style="font-size: 12px;"></i>
+					@endforeach
 				</div>
 
 				<!-- Sección de Acciones Rápidas -->
@@ -1299,6 +1219,56 @@ $meta = $se['meta'] ?? [];
 			</div>
 		</div>
 	</div>
+
+	<!-- ======================================================================
+	     5b. OPERACIÓN DE INVENTARIO Y ALMACENES (InventoryOperationsService)
+	     Recepción → ubicación → almacenamiento → reposición → salida → conciliación.
+	     Cada pestaña se carga al abrirla (/api/inventory-ops/*) para no pesar en móvil.
+	     ====================================================================== -->
+	@php
+		$iopCanApprove = \Grocy\Helpers\DairyAccess::HasAny([\Grocy\Controllers\Users\User::PERMISSION_INVENTORY_ADJUST_APPROVE]);
+		$iopCanTransfer = \Grocy\Helpers\DairyAccess::HasAny([\Grocy\Controllers\Users\User::PERMISSION_STOCK_TRANSFER]);
+		$iopCanCount = \Grocy\Helpers\DairyAccess::HasAny([\Grocy\Controllers\Users\User::PERMISSION_STOCK_INVENTORY]);
+	@endphp
+	<section class="dsm-card iop" id="inv-ops" aria-labelledby="iop-title" data-can-approve="{{ $iopCanApprove ? 1 : 0 }}" data-can-transfer="{{ $iopCanTransfer ? 1 : 0 }}" data-can-count="{{ $iopCanCount ? 1 : 0 }}" data-user-id="{{ GROCY_USER_ID }}">
+		<div class="iop-head">
+			<div class="iop-head-left">
+				<div class="iop-head-icon"><i class="fa-solid fa-warehouse"></i></div>
+				<div>
+					<h2 class="iop-title" id="iop-title">Operación de inventario</h2>
+					<span class="iop-sub">Físico, reservado y disponible por sucursal y ubicación · <span id="iop-generated">—</span></span>
+				</div>
+			</div>
+			<form class="iop-scan" id="iop-scan-form" autocomplete="off" role="search">
+				<label for="iop-scan-input" class="sr-only">Escanear UPC, SKU o lote</label>
+				<input type="text" id="iop-scan-input" inputmode="search" enterkeyhint="search" placeholder="Escanear UPC, SKU o lote" autocapitalize="off" spellcheck="false">
+				<button type="submit" title="Buscar código" aria-label="Buscar código"><i class="fa-solid fa-barcode"></i></button>
+			</form>
+		</div>
+
+		<div class="iop-scan-result" id="iop-scan-result" hidden aria-live="polite"></div>
+
+		<div class="iop-cycle" id="iop-cycle" aria-label="Ciclo de la mercancía"></div>
+
+		<div class="iop-kpis" id="iop-kpis">
+			<div class="iop-loading">Cargando posición de inventario</div>
+		</div>
+
+		<div class="iop-tabs" role="tablist" aria-label="Operación de inventario">
+			<button type="button" class="iop-tab" role="tab" data-tab="positions" aria-selected="true">Existencias</button>
+			<button type="button" class="iop-tab" role="tab" data-tab="locations" aria-selected="false">Ubicaciones</button>
+			<button type="button" class="iop-tab" role="tab" data-tab="kardex" aria-selected="false">Kardex</button>
+			<button type="button" class="iop-tab" role="tab" data-tab="counts" aria-selected="false">Conteos y ajustes <span class="iop-badge is-warn" id="iop-b-counts" hidden></span></button>
+			<button type="button" class="iop-tab" role="tab" data-tab="replenishment" aria-selected="false">Reposición <span class="iop-badge is-warn" id="iop-b-replenishment" hidden></span></button>
+			<button type="button" class="iop-tab" role="tab" data-tab="transfers" aria-selected="false">Traslados <span class="iop-badge" id="iop-b-transfers" hidden></span></button>
+			<button type="button" class="iop-tab" role="tab" data-tab="anomalies" aria-selected="false">Anomalías <span class="iop-badge" id="iop-b-anomalies" hidden></span></button>
+			<button type="button" class="iop-tab" role="tab" data-tab="coverage" aria-selected="false">Antigüedad y cobertura</button>
+			<button type="button" class="iop-tab" role="tab" data-tab="lots" aria-selected="false">Lotes y vencimientos</button>
+			<button type="button" class="iop-tab" role="tab" data-tab="reservations" aria-selected="false">Reservas</button>
+			<button type="button" class="iop-tab" role="tab" data-tab="audit" aria-selected="false">Auditoría</button>
+		</div>
+		<div class="iop-panel" id="iop-panel" role="tabpanel" aria-live="polite"></div>
+	</section>
 
 	<!-- ======================================================================
 	     6. INTEGRACIÓN ENTRE MÓDULOS (SECCIÓN 11 — 14 MÓDULOS CONECTADOS)
@@ -1495,20 +1465,7 @@ $meta = $se['meta'] ?? [];
 								<th>Validación</th>
 							</tr>
 						</thead>
-						<tbody id="dsmMovementsModalTbody">
-							<tr>
-								<td class="font-mono font-weight-bold">MOV-{{ date('Ymd') }}-001</td>
-								<td>{{ date('d/m/Y H:i', strtotime('-18 minutes')) }}</td>
-								<td><span class="badge badge-success">Recepción Muelle</span></td>
-								<td><strong>Arroz Diana 1kg</strong><br><small class="text-muted">SKU-2041</small></td>
-								<td class="text-right font-weight-bold text-success">+120 unids</td>
-								<td>Calle 80 - Bogotá</td>
-								<td>Muelle &rarr; Pasillo Granos 01</td>
-								<td>Carlos Mendoza</td>
-								<td>REM-99201</td>
-								<td><i class="fa-solid fa-circle-check text-success"></i> Conforme</td>
-							</tr>
-						</tbody>
+						<tbody id="dsmMovementsModalTbody"></tbody>
 					</table>
 				</div>
 			</div>
@@ -1552,17 +1509,7 @@ $meta = $se['meta'] ?? [];
 								<th style="text-align: right;">Acción Ejecutable</th>
 							</tr>
 						</thead>
-						<tbody id="dsmDecisionsModalTbody">
-							<tr>
-								<td><span class="badge badge-danger">Crítico</span></td>
-								<td><strong>Quiebre inminente en Leche Entera 1L</strong><br><small class="text-muted">Stock actual 0 con demanda activa</small></td>
-								<td class="text-danger font-weight-bold">Pérdida estimada $420,000 / día</td>
-								<td>Jefe Compras</td>
-								<td>{{ date('d/m/Y H:i') }}</td>
-								<td><span class="badge badge-warning text-dark">Pendiente</span></td>
-								<td class="text-right"><a href="{{ $U('/mrp') }}" class="btn btn-xs btn-primary font-weight-bold">Generar OC Urgente</a></td>
-							</tr>
-						</tbody>
+						<tbody id="dsmDecisionsModalTbody"></tbody>
 					</table>
 				</div>
 			</div>
@@ -1723,30 +1670,7 @@ $meta = $se['meta'] ?? [];
 								<th class="text-center">Acciones</th>
 							</tr>
 						</thead>
-						<tbody id="dsm-all-alerts-tbody">
-							<tr>
-								<td><strong>Leche Entera Alquería 1L</strong><br><small class="text-muted">SKU-1004</small></td>
-								<td>7702001001234</td>
-								<td><span class="dsm-dept-pill">Lácteos</span></td>
-								<td>Calle 80 - Bogotá</td>
-								<td class="text-center font-weight-bold text-danger">0</td>
-								<td class="text-center text-muted">24</td>
-								<td class="text-center text-danger font-weight-bold">-24</td>
-								<td><span class="badge badge-danger">Agotado</span></td>
-								<td class="text-center"><button class="btn btn-xs btn-primary font-weight-bold"><i class="fa-solid fa-cart-plus mr-1"></i>Reponer</button></td>
-							</tr>
-							<tr>
-								<td><strong>Aceite Vegetal Premier 1000ml</strong><br><small class="text-muted">SKU-1002</small></td>
-								<td>7702123456789</td>
-								<td><span class="dsm-dept-pill">Abarrotes</span></td>
-								<td>Cali Sur</td>
-								<td class="text-center font-weight-bold text-warning">4</td>
-								<td class="text-center text-muted">18</td>
-								<td class="text-center text-warning font-weight-bold">-14</td>
-								<td><span class="badge badge-warning text-dark">Bajo mínimo</span></td>
-								<td class="text-center"><button class="btn btn-xs btn-warning font-weight-bold text-dark"><i class="fa-solid fa-right-left mr-1"></i>Trasladar</button></td>
-							</tr>
-						</tbody>
+						<tbody id="dsm-all-alerts-tbody"></tbody>
 					</table>
 				</div>
 			</div>
@@ -1970,24 +1894,7 @@ $meta = $se['meta'] ?? [];
 								<th class="text-right">% Participación</th>
 							</tr>
 						</thead>
-						<tbody id="dsm-top10-all-modal-tbody">
-							<tr>
-								<td class="font-weight-bold text-muted">1</td>
-								<td><strong>Smart TV Samsung 55" Crystal UHD</strong></td>
-								<td><span class="dsm-dept-pill">Tecnología</span></td>
-								<td class="text-right font-weight-bold text-dark">$42,497,500</td>
-								<td class="text-right">25 unids</td>
-								<td class="text-right font-weight-bold text-primary">28.4%</td>
-							</tr>
-							<tr>
-								<td class="font-weight-bold text-muted">2</td>
-								<td><strong>Nevera Mabe No Frost 300L</strong></td>
-								<td><span class="dsm-dept-pill">Electrodomésticos</span></td>
-								<td class="text-right font-weight-bold text-dark">$28,500,000</td>
-								<td class="text-right">15 unids</td>
-								<td class="text-right font-weight-bold text-primary">19.1%</td>
-							</tr>
-						</tbody>
+						<tbody id="dsm-top10-all-modal-tbody"></tbody>
 					</table>
 				</div>
 			</div>
@@ -2033,19 +1940,7 @@ $meta = $se['meta'] ?? [];
 								<th class="text-center">Acción</th>
 							</tr>
 						</thead>
-						<tbody id="dsm-fefo-all-modal-tbody">
-							<tr>
-								<td class="font-weight-bold text-muted">1</td>
-								<td><strong>Yogurt Alpina Fresa 1000g</strong></td>
-								<td><span class="badge badge-light border">LOT-20261101-04</span></td>
-								<td>Calle 80 / Nevera Lácteos 02</td>
-								<td>{{ date('d/m/Y', strtotime('+4 days')) }}</td>
-								<td class="text-center"><span class="badge badge-danger font-weight-bold">4 días</span></td>
-								<td class="text-right font-weight-bold">18 unids</td>
-								<td class="text-right font-weight-bold text-danger">$162,000</td>
-								<td class="text-center"><a href="{{ $U('/waste/report') }}" class="btn btn-xs btn-outline-danger">Acción FEFO</a></td>
-							</tr>
-						</tbody>
+						<tbody id="dsm-fefo-all-modal-tbody"></tbody>
 					</table>
 				</div>
 			</div>

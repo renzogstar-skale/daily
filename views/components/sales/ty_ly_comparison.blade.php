@@ -5,6 +5,29 @@
      ========================================================================== --}}
 @php
 	$tl = $tyLy ?? ['departments' => [], 'totals' => [], 'period' => [], 'ly_source' => 'real'];
+	if (empty($tl['departments'])) {
+		$demoDepts = [
+			['key' => 'alimentos', 'name' => 'Alimentos y Despensa', 'color' => '#D97706', 'icon' => 'shopping-basket', 'ty' => 45210.00, 'ly' => 41500.00, 'diff' => 3710.00, 'var_pct' => 8.9, 'share_pct' => 22.5, 'units_ty' => 8420, 'stockouts' => 2, 'low_stock' => 5, 'returns_amount' => 120.00],
+			['key' => 'dairy', 'name' => 'Lácteos y huevos', 'color' => '#FFB800', 'icon' => 'milk', 'ty' => 38450.00, 'ly' => 35200.00, 'diff' => 3250.00, 'var_pct' => 9.2, 'share_pct' => 19.1, 'units_ty' => 7150, 'stockouts' => 0, 'low_stock' => 3, 'returns_amount' => 45.00],
+			['key' => 'carnes', 'name' => 'Carnes y aves', 'color' => '#E11D48', 'icon' => 'beef', 'ty' => 34120.00, 'ly' => 31800.00, 'diff' => 2320.00, 'var_pct' => 7.3, 'share_pct' => 17.0, 'units_ty' => 3200, 'stockouts' => 1, 'low_stock' => 2, 'returns_amount' => 80.00],
+			['key' => 'bebidas', 'name' => 'Bebidas', 'color' => '#0EA5E9', 'icon' => 'cup-soda', 'ty' => 28940.00, 'ly' => 27100.00, 'diff' => 1840.00, 'var_pct' => 6.8, 'share_pct' => 14.4, 'units_ty' => 6100, 'stockouts' => 0, 'low_stock' => 1, 'returns_amount' => 30.00],
+			['key' => 'fruver', 'name' => 'Frutas y verduras', 'color' => '#16A34A', 'icon' => 'apple', 'ty' => 21350.00, 'ly' => 22400.00, 'diff' => -1050.00, 'var_pct' => -4.7, 'share_pct' => 10.6, 'units_ty' => 5900, 'stockouts' => 3, 'low_stock' => 4, 'returns_amount' => 65.00],
+			['key' => 'bakery', 'name' => 'Panadería', 'color' => '#8B5CF6', 'icon' => 'croissant', 'ty' => 16480.00, 'ly' => 15200.00, 'diff' => 1280.00, 'var_pct' => 8.4, 'share_pct' => 8.2, 'units_ty' => 4200, 'stockouts' => 0, 'low_stock' => 2, 'returns_amount' => 20.00],
+			['key' => 'congelados', 'name' => 'Congelados', 'color' => '#38BDF8', 'icon' => 'snowflake', 'ty' => 16350.00, 'ly' => 14900.00, 'diff' => 1450.00, 'var_pct' => 9.7, 'share_pct' => 8.1, 'units_ty' => 2800, 'stockouts' => 1, 'low_stock' => 2, 'returns_amount' => 50.00]
+		];
+		$tl['departments'] = $demoDepts;
+		$totTy = array_sum(array_column($demoDepts, 'ty'));
+		$totLy = array_sum(array_column($demoDepts, 'ly'));
+		$tl['totals'] = [
+			'ty' => $totTy,
+			'ly' => $totLy,
+			'diff' => $totTy - $totLy,
+			'var_pct' => round(($totTy - $totLy) / $totLy * 100, 1),
+			'declining_count' => count(array_filter($demoDepts, fn($d) => $d['diff'] < 0)),
+			'declining_gap' => array_sum(array_column(array_filter($demoDepts, fn($d) => $d['diff'] < 0), 'diff'))
+		];
+		$tl['ly_source'] = 'demo';
+	}
 	$tlT = $tl['totals'] ?? [];
 	$tlDemo = ($tl['ly_source'] ?? 'real') === 'demo';
 	$tlMoney = fn($v) => ($v < 0 ? '−$' : '$') . number_format(abs($v), 0);

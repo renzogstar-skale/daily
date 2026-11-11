@@ -87,14 +87,21 @@ class WorkforceScheduleService extends BaseService
 			':hc' => ($d['hourly_cost'] ?? '') !== '' ? max(0, floatval($d['hourly_cost'])) : null,
 			':a' => isset($d['active']) ? (intval($d['active']) ? 1 : 0) : 1
 		];
+		$payrollCode = trim(strval($d['payroll_code'] ?? ''));
 		if ($id > 0)
 		{
-			$this->GetEmployee($id);
-			$this->Q('UPDATE employees SET name = :name, branch_id = :b, user_id = :u, position = :pos, department = :dep, weekly_hours = :wh, hourly_cost = :hc, active = :a WHERE id = :id', $row + [':id' => $id]);
+			$existingEmp = $this->GetEmployee($id);
+			$effectivePc = $payrollCode !== '' ? $payrollCode : (trim(strval($existingEmp['payroll_code'] ?? '')) ?: ('EMP-' . str_pad(strval($id), 4, '0', STR_PAD_LEFT)));
+			$this->Q('UPDATE employees SET name = :name, branch_id = :b, user_id = :u, position = :pos, department = :dep, weekly_hours = :wh, hourly_cost = :hc, active = :a, payroll_code = :pc WHERE id = :id', $row + [':pc' => $effectivePc, ':id' => $id]);
 			return $id;
 		}
-		$this->Q('INSERT INTO employees (name, branch_id, user_id, position, department, weekly_hours, hourly_cost, active) VALUES (:name, :b, :u, :pos, :dep, :wh, :hc, :a)', $row);
-		return intval($this->Db()->lastInsertId());
+		$this->Q('INSERT INTO employees (name, branch_id, user_id, position, department, weekly_hours, hourly_cost, active, payroll_code) VALUES (:name, :b, :u, :pos, :dep, :wh, :hc, :a, :pc)', $row + [':pc' => ($payrollCode !== '' ? $payrollCode : null)]);
+		$newId = intval($this->Db()->lastInsertId());
+		if ($payrollCode === '' && $newId > 0)
+		{
+			$this->Q('UPDATE employees SET payroll_code = :pc WHERE id = :id', [':pc' => 'EMP-' . str_pad(strval($newId), 4, '0', STR_PAD_LEFT), ':id' => $newId]);
+		}
+		return $newId;
 	}
 
 	public function SetAvailability(int $employeeId, array $days): void
@@ -179,8 +186,11 @@ class WorkforceScheduleService extends BaseService
 		[$s, $e] = self::Span($date, $start, $end);
 
 		// Solapamiento con otros turnos del empleado (día anterior, mismo y siguiente por turnos nocturnos)
+		$autoSvc = \Grocy\Services\WorkforceAutoScheduleService::GetInstance();
+		$jPolicy = $autoSvc->GetBranchJurisdictionPolicy(intval($emp->branch_id ?? 1), $date);
 		$others = $this->Q("SELECT * FROM employee_shifts WHERE employee_id = :e AND status != 'cancelled' AND id != :i AND shift_date BETWEEN date(:d, '-1 day') AND date(:d, '+1 day')", [':e' => $employeeId, ':i' => $ignoreShiftId, ':d' => $date])->fetchAll(\PDO::FETCH_OBJ);
-		$minRest = floatval(defined('GROCY_WORKFORCE_MIN_REST_HOURS') ? GROCY_WORKFORCE_MIN_REST_HOURS : 10) * 3600;
+		$minRestHrs = defined('GROCY_WORKFORCE_MIN_REST_HOURS') ? floatval(GROCY_WORKFORCE_MIN_REST_HOURS) : floatval($jPolicy['min_rest_hours'] ?? 10);
+		$minRest = $minRestHrs * 3600;
 		foreach ($others as $o)
 		{
 			[$os, $oe] = self::Span($o->shift_date, $o->start_time, $o->end_time);
@@ -190,8 +200,17 @@ class WorkforceScheduleService extends BaseService
 			}
 			elseif ($minRest > 0 && (($s >= $oe && $s - $oe < $minRest) || ($os >= $e && $os - $e < $minRest)))
 			{
-				$gap = round(($s >= $oe ? $s - $oe : $os - $e) / 3600, 1);
-				$issues[] = ['level' => 'warning', 'code' => 'rest', 'message' => "Descanso de {$gap} h con el turno del {$o->shift_date} (mínimo " . ($minRest / 3600) . ' h)'];
+				$gapSec = ($s >= $oe ? $s - $oe : $os - $e);
+				$gap = round($gapSec / 3600, 1);
+				// Jornada partida válida intra-día (pausa >= 1h y <= 5h el mismo día) no viola descanso inter-jornada
+				if ($o->shift_date === $date && $gapSec >= 3600 && $gapSec <= 18000)
+				{
+					$issues[] = ['level' => 'info', 'code' => 'split_shift', 'message' => "Jornada partida con pausa de {$gap} h el mismo día"];
+				}
+				else
+				{
+					$issues[] = ['level' => 'warning', 'code' => 'rest', 'message' => "Descanso de {$gap} h con el turno del {$o->shift_date} (mínimo {$minRestHrs} h · {$jPolicy['jurisdiction_code']})"];
+				}
 			}
 		}
 
@@ -360,17 +379,24 @@ class WorkforceScheduleService extends BaseService
 		{
 			throw new \Exception(implode('; ', array_column($errors, 'message')));
 		}
+		$branchResolved = intval($d['branch_id'] ?? 0) ?: ($current ? intval($current->branch_id) : intval($emp->branch_id));
+		$jPolicy = \Grocy\Services\WorkforceAutoScheduleService::GetInstance()->GetBranchJurisdictionPolicy($branchResolved, $date);
+		$shiftBand = trim(strval($d['shift_band'] ?? '')) ?: WorkforceLaborRulesService::DetectShiftBand($start, $end, $jPolicy);
+		$isOvernight = ($end <= $start) ? 1 : 0;
+		$compOrigin = !empty($d['compensatory_origin_date']) ? strval($d['compensatory_origin_date']) : null;
+
 		$row = [
-			':e' => $employeeId, ':b' => intval($d['branch_id'] ?? 0) ?: ($current ? intval($current->branch_id) : intval($emp->branch_id)), ':d' => $date, ':s' => $start, ':t' => $end, ':br' => $break,
+			':e' => $employeeId, ':b' => $branchResolved, ':d' => $date, ':s' => $start, ':t' => $end, ':br' => $break,
 			':dep' => trim(strval($d['department'] ?? '')) ?: $emp->department, ':r' => trim(strval($d['role'] ?? '')) ?: $emp->position,
-			':n' => trim(strval($d['notes'] ?? '')) ?: null
+			':n' => trim(strval($d['notes'] ?? '')) ?: null,
+			':sb' => $shiftBand, ':ov' => $isOvernight, ':co' => $compOrigin
 		];
 		$reason = trim(strval($d['reason'] ?? '')) ?: null;
 		$now = date('Y-m-d H:i:s');
 		$res = $this->Tx(function () use ($id, $current, $row, $userId, $action, $batch, $reason, $now, $issues) {
 			if ($id > 0)
 			{
-				$n = $this->Q('UPDATE employee_shifts SET employee_id = :e, branch_id = :b, shift_date = :d, start_time = :s, end_time = :t, break_minutes = :br, department = :dep, role = :r, notes = :n, version = version + 1, updated_by_user_id = :u, updated_timestamp = :now WHERE id = :id AND version = :v',
+				$n = $this->Q('UPDATE employee_shifts SET employee_id = :e, branch_id = :b, shift_date = :d, start_time = :s, end_time = :t, break_minutes = :br, department = :dep, role = :r, notes = :n, shift_band = :sb, is_overnight = :ov, compensatory_origin_date = :co, version = version + 1, updated_by_user_id = :u, updated_timestamp = :now WHERE id = :id AND version = :v',
 					$row + [':id' => $id, ':v' => $current->version, ':u' => $userId, ':now' => $now])->rowCount();
 				if ($n === 0)
 				{
@@ -386,7 +412,7 @@ class WorkforceScheduleService extends BaseService
 			}
 			else
 			{
-				$this->Q("INSERT INTO employee_shifts (employee_id, branch_id, shift_date, start_time, end_time, break_minutes, department, role, notes, status, created_by_user_id) VALUES (:e, :b, :d, :s, :t, :br, :dep, :r, :n, 'planned', :u)", $row + [':u' => $userId]);
+				$this->Q("INSERT INTO employee_shifts (employee_id, branch_id, shift_date, start_time, end_time, break_minutes, department, role, notes, shift_band, is_overnight, compensatory_origin_date, status, created_by_user_id) VALUES (:e, :b, :d, :s, :t, :br, :dep, :r, :n, :sb, :ov, :co, 'planned', :u)", $row + [':u' => $userId]);
 				$id = intval($this->Db()->lastInsertId());
 				$after = $this->GetShift($id);
 				$this->LogChange($id, intval($after->branch_id), $action ?? 'create', null, $this->Snapshot($after), $userId, $reason, $batch);
@@ -501,27 +527,60 @@ class WorkforceScheduleService extends BaseService
 		return $n;
 	}
 
-	// Copia los turnos de una semana a otra; omite los que generen conflicto bloqueante
-	public function CopyWeek(int $branchId, string $fromMonday, string $toMonday, int $userId): array
+	// Copia los turnos de una semana a otra; valida conflictos antes y permite modo atómico para evitar semanas parciales
+	public function CopyWeek(int $branchId, string $fromMonday, string $toMonday, int $userId, bool $atomic = false): array
 	{
 		$shifts = $this->Q("SELECT * FROM employee_shifts WHERE branch_id = :b AND status != 'cancelled' AND shift_date BETWEEN :m AND date(:m, '+6 day')", [':b' => $branchId, ':m' => $fromMonday])->fetchAll(\PDO::FETCH_OBJ);
 		$offset = intval(round((strtotime($toMonday) - strtotime($fromMonday)) / 86400));
 		$created = 0;
 		$skipped = [];
-		$batch = 'copy-' . uniqid();
+		$validPayloads = [];
+
 		foreach ($shifts as $s)
 		{
 			$date = date('Y-m-d', strtotime("{$s->shift_date} {$offset} days"));
-			try
+			$issues = $this->CheckConflicts(intval($s->employee_id), $date, $s->start_time, $s->end_time, intval($s->break_minutes ?? 0), 0, $s->role);
+			$errors = array_values(array_filter($issues, fn($i) => $i['level'] === 'error'));
+			if (count($errors) > 0)
 			{
-				$this->SaveShift(['employee_id' => $s->employee_id, 'shift_date' => $date, 'start_time' => $s->start_time, 'end_time' => $s->end_time, 'break_minutes' => $s->break_minutes, 'branch_id' => $s->branch_id, 'department' => $s->department, 'role' => $s->role, 'notes' => $s->notes], $userId, 'duplicate', $batch);
-				$created++;
+				$skipped[] = "$date: " . implode('; ', array_column($errors, 'message'));
 			}
-			catch (\Exception $ex)
+			else
 			{
-				$skipped[] = "$date: " . $ex->getMessage();
+				$validPayloads[] = [
+					'employee_id' => $s->employee_id,
+					'shift_date' => $date,
+					'start_time' => $s->start_time,
+					'end_time' => $s->end_time,
+					'break_minutes' => $s->break_minutes,
+					'branch_id' => $s->branch_id,
+					'department' => $s->department,
+					'role' => $s->role,
+					'notes' => $s->notes
+				];
 			}
 		}
+
+		if ($atomic && count($skipped) > 0)
+		{
+			throw new \Exception('Copia atómica cancelada por conflictos: ' . implode(' | ', array_slice($skipped, 0, 5)));
+		}
+
+		$batch = 'copy-' . uniqid();
+		$this->Tx(function () use ($validPayloads, $userId, $batch, &$created, &$skipped) {
+			foreach ($validPayloads as $payload)
+			{
+				try
+				{
+					$this->SaveShift($payload, $userId, 'duplicate', $batch);
+					$created++;
+				}
+				catch (\Exception $ex)
+				{
+					$skipped[] = $payload['shift_date'] . ': ' . $ex->getMessage();
+				}
+			}
+		});
 		return ['created' => $created, 'skipped' => $skipped];
 	}
 
@@ -860,7 +919,7 @@ class WorkforceScheduleService extends BaseService
 		return $out;
 	}
 
-	// Personas programadas por hora vs requisito mínimo; devuelve horas con faltante
+	// Personas programadas por hora vs requisito mínimo (agregado correctamente por departamento)
 	public function CoverageForDay(int $branchId, string $date, ?array $shifts = null): array
 	{
 		if ($shifts === null)
@@ -882,17 +941,31 @@ class WorkforceScheduleService extends BaseService
 				}
 			}
 		}
-		$required = array_fill(0, 24, 0);
+		// Agrupar requisitos primero por departamento antes de sumar al total de tienda
+		$reqByDept = [];
 		foreach ($reqs as $r)
 		{
+			$dept = trim(strval($r->department ?? '')) ?: 'General';
+			if (!isset($reqByDept[$dept]))
+			{
+				$reqByDept[$dept] = array_fill(0, 24, 0);
+			}
 			[$rs, $re] = self::Span($date, $r->start_time, $r->end_time);
 			for ($h = 0; $h < 24; $h++)
 			{
 				$hs = strtotime("$date " . sprintf('%02d:00', $h));
 				if ($hs >= $rs && $hs < $re)
 				{
-					$required[$h] = max($required[$h], intval($r->min_staff));
+					$reqByDept[$dept][$h] = max($reqByDept[$dept][$h], intval($r->min_staff));
 				}
+			}
+		}
+		$required = array_fill(0, 24, 0);
+		foreach ($reqByDept as $deptHours)
+		{
+			for ($h = 0; $h < 24; $h++)
+			{
+				$required[$h] += $deptHours[$h];
 			}
 		}
 		$gaps = [];
@@ -904,6 +977,194 @@ class WorkforceScheduleService extends BaseService
 			}
 		}
 		return ['staff' => $staff, 'required' => $required, 'gaps' => $gaps, 'has_requirements' => count($reqs) > 0];
+	}
+
+	/**
+	 * Cobertura precisa por departamento, hora (fraccional con descuento proporcional de descansos) y banda operativa
+	 * (apertura, intermedio, cierre, nocturno). Evita mezclar departamentos ni descartar turnos que empiezan a media hora.
+	 */
+	public function CoverageByDepartmentAndHour(int $branchId, string $date, ?array $shifts = null): array
+	{
+		if ($shifts === null)
+		{
+			$shifts = $this->Q("SELECT * FROM employee_shifts WHERE branch_id = :b AND status != 'cancelled' AND shift_date BETWEEN date(:d, '-1 day') AND :d", [':b' => $branchId, ':d' => $date])->fetchAll(\PDO::FETCH_OBJ);
+		}
+		$wd = intval(date('N', strtotime($date)));
+		$reqs = $this->Q('SELECT * FROM coverage_requirements WHERE branch_id = :b AND weekday IN (0, :w)', [':b' => $branchId, ':w' => $wd])->fetchAll(\PDO::FETCH_OBJ);
+		$deptConfigs = $this->Q('SELECT * FROM workforce_department_configs WHERE branch_id = :b', [':b' => $branchId])->fetchAll(\PDO::FETCH_ASSOC);
+		$policy = \Grocy\Services\WorkforceAutoScheduleService::GetInstance()->GetBranchJurisdictionPolicy($branchId, $date);
+
+		$departments = [];
+		$initDept = function (string $name) use (&$departments) {
+			if (!isset($departments[$name]))
+			{
+				$departments[$name] = [
+					'department' => $name,
+					'gross_hourly' => array_fill(0, 24, 0.0),
+					'effective_hourly' => array_fill(0, 24, 0.0),
+					'required_hourly' => array_fill(0, 24, 0),
+					'bands' => ['apertura' => 0, 'intermedio' => 0, 'cierre' => 0, 'nocturno' => 0],
+					'min_open' => 1,
+					'min_peak' => 1,
+					'gaps' => []
+				];
+			}
+		};
+
+		foreach ($deptConfigs as $cfg)
+		{
+			$dName = trim(strval($cfg['department'] ?? '')) ?: 'General';
+			$initDept($dName);
+			$departments[$dName]['min_open'] = max(1, intval($cfg['min_staff_open'] ?? 1));
+			$departments[$dName]['min_peak'] = max(1, intval($cfg['min_staff_peak'] ?? 1));
+		}
+
+		foreach ($reqs as $r)
+		{
+			$dName = trim(strval($r->department ?? '')) ?: 'General';
+			$initDept($dName);
+			[$rs, $re] = self::Span($date, $r->start_time, $r->end_time);
+			for ($h = 0; $h < 24; $h++)
+			{
+				$hs = strtotime("$date " . sprintf('%02d:00', $h));
+				$he = $hs + 3600;
+				if ($hs < $re && $he > $rs)
+				{
+					$departments[$dName]['required_hourly'][$h] = max($departments[$dName]['required_hourly'][$h], intval($r->min_staff));
+				}
+			}
+		}
+
+		$storeHourlyEffective = array_fill(0, 24, 0.0);
+		$storeHourlyRequired = array_fill(0, 24, 0);
+		$bandTotals = ['apertura' => 0, 'intermedio' => 0, 'cierre' => 0, 'nocturno' => 0];
+
+		foreach ($shifts as $s)
+		{
+			$dName = trim(strval($s->department ?? '')) ?: 'General';
+			$initDept($dName);
+			[$ss, $se] = self::Span($s->shift_date, $s->start_time, $s->end_time);
+			$totalSec = max(1, $se - $ss);
+			$breakSec = min($totalSec, max(0, intval($s->break_minutes ?? 0)) * 60);
+			$effectiveRatio = ($totalSec - $breakSec) / $totalSec;
+
+			if ($s->shift_date === $date)
+			{
+				$band = !empty($s->shift_band) ? strval($s->shift_band) : WorkforceLaborRulesService::DetectShiftBand($s->start_time, $s->end_time, $policy);
+				if (!isset($departments[$dName]['bands'][$band])) $band = 'intermedio';
+				$departments[$dName]['bands'][$band]++;
+				$bandTotals[$band]++;
+			}
+
+			for ($h = 0; $h < 24; $h++)
+			{
+				$hs = strtotime("$date " . sprintf('%02d:00', $h));
+				$he = $hs + 3600;
+				$overlap = max(0, min($se, $he) - max($ss, $hs));
+				if ($overlap > 0)
+				{
+					$fracGross = round($overlap / 3600, 2);
+					$fracEff = round(($overlap / 3600) * $effectiveRatio, 2);
+					$departments[$dName]['gross_hourly'][$h] = round($departments[$dName]['gross_hourly'][$h] + $fracGross, 2);
+					$departments[$dName]['effective_hourly'][$h] = round($departments[$dName]['effective_hourly'][$h] + $fracEff, 2);
+				}
+			}
+		}
+
+		$allGaps = [];
+		foreach ($departments as $dName => &$dInfo)
+		{
+			for ($h = 0; $h < 24; $h++)
+			{
+				$storeHourlyEffective[$h] = round($storeHourlyEffective[$h] + $dInfo['effective_hourly'][$h], 2);
+				$storeHourlyRequired[$h] += $dInfo['required_hourly'][$h];
+				if ($dInfo['required_hourly'][$h] > $dInfo['effective_hourly'][$h])
+				{
+					$deficit = round($dInfo['required_hourly'][$h] - $dInfo['effective_hourly'][$h], 2);
+					$gap = [
+						'department' => $dName,
+						'hour' => $h,
+						'hour_label' => sprintf('%02d:00–%02d:00', $h, ($h + 1) % 24),
+						'required' => $dInfo['required_hourly'][$h],
+						'scheduled_effective' => $dInfo['effective_hourly'][$h],
+						'scheduled_gross' => $dInfo['gross_hourly'][$h],
+						'deficit' => $deficit
+					];
+					$dInfo['gaps'][] = $gap;
+					$allGaps[] = $gap;
+				}
+			}
+			// Verificar bandas apertura y cierre para tiendas con operación registrada
+			if (count($shifts) > 0 && ($dInfo['bands']['apertura'] ?? 0) === 0 && $dInfo['min_open'] > 0 && array_sum($dInfo['effective_hourly']) > 0)
+			{
+				$dInfo['gaps'][] = [
+					'department' => $dName,
+					'hour' => 8,
+					'hour_label' => 'Apertura',
+					'required' => $dInfo['min_open'],
+					'scheduled_effective' => 0,
+					'scheduled_gross' => 0,
+					'deficit' => $dInfo['min_open']
+				];
+			}
+		}
+		unset($dInfo);
+
+		return [
+			'date' => $date,
+			'branch_id' => $branchId,
+			'jurisdiction' => $policy['jurisdiction_code'],
+			'departments' => array_values($departments),
+			'store_hourly_effective' => $storeHourlyEffective,
+			'store_hourly_required' => $storeHourlyRequired,
+			'bands' => $bandTotals,
+			'gaps' => $allGaps,
+			'gap_count' => count($allGaps)
+		];
+	}
+
+	/**
+	 * Evalúa cobertura real y sincroniza alertas de cobertura insuficiente en dairy_alerts sin datos demo.
+	 */
+	public function EvaluateAndSyncCoverageAlerts(int $branchId, string $date): array
+	{
+		$cov = $this->CoverageByDepartmentAndHour($branchId, $date);
+		$db = $this->Db();
+		$createdAlerts = [];
+
+		// Agrupar brechas por departamento
+		$byDept = [];
+		foreach ($cov['gaps'] as $g)
+		{
+			$byDept[$g['department']][] = $g;
+		}
+		foreach ($byDept as $dept => $gaps)
+		{
+			$maxDeficit = max(array_column($gaps, 'deficit'));
+			$hoursList = implode(', ', array_slice(array_column($gaps, 'hour_label'), 0, 4));
+			$dedupe = "coverage:deficit:$branchId:$date:" . preg_replace('/[^a-z0-9]/i', '_', strtolower($dept));
+			$title = "Cobertura insuficiente en $dept (-$maxDeficit p.)";
+			$detail = "Déficit detectado el $date en franjas: $hoursList (descontando descansos programados).";
+
+			$exists = $this->Q('SELECT id FROM dairy_alerts WHERE dedupe_key = :k', [':k' => $dedupe])->fetchColumn();
+			if (!$exists)
+			{
+				$this->Q("INSERT INTO dairy_alerts (rule_code, dedupe_key, branch_id, severity, title, detail, value, href, status, created_at, updated_at, category, alert_type, department, priority)
+					VALUES ('workforce_coverage_gap', :dk, :b, :sev, :ti, :det, :val, :hr, 'active', datetime('now'), datetime('now'), 'operaciones', 'coverage', :dep, :pr)", [
+					':dk' => $dedupe,
+					':b' => $branchId,
+					':sev' => $maxDeficit >= 2 ? 'danger' : 'warning',
+					':ti' => $title,
+					':det' => $detail,
+					':val' => $maxDeficit,
+					':hr' => "/operations/scheduling?branch_id=$branchId",
+					':dep' => $dept,
+					':pr' => $maxDeficit >= 2 ? 'P1' : 'P2'
+				]);
+				$createdAlerts[] = ['department' => $dept, 'title' => $title, 'max_deficit' => $maxDeficit];
+			}
+		}
+		return ['coverage' => $cov, 'alerts_synced' => $createdAlerts];
 	}
 
 	/* ------------------------------------------------------------------ Certificaciones */
@@ -1468,10 +1729,10 @@ class WorkforceScheduleService extends BaseService
 			WHERE e.branch_id = :b AND date(a.clock_in) BETWEEN :f AND :t ORDER BY a.clock_in DESC", [':b' => $branchId, ':f' => $from, ':t' => $to])->fetchAll(\PDO::FETCH_OBJ);
 	}
 
-	// Horas trabajadas (fichajes cerrados) menos el descanso del turno vinculado
+	// Horas trabajadas (fichajes cerrados) deduplicando solapamientos de reloj y cobrando el descanso del turno máximo 1 vez
 	public function WorkedHoursByEmployee(string $from, string $to, ?int $branchId = null): array
 	{
-		$sql = "SELECT a.employee_id, SUM(MAX(0, (julianday(a.clock_out) - julianday(a.clock_in)) * 24 - IFNULL(s.break_minutes, 0) / 60.0)) h
+		$sql = "SELECT a.employee_id, a.shift_id, a.clock_in, a.clock_out, a.break_start, a.break_end, IFNULL(s.break_minutes, 0) AS shift_break_minutes
 			FROM employee_attendance a JOIN employees e ON e.id = a.employee_id LEFT JOIN employee_shifts s ON s.id = a.shift_id
 			WHERE a.clock_out IS NOT NULL AND date(a.clock_in) BETWEEN :f AND :t";
 		$p = [':f' => $from, ':t' => $to];
@@ -1480,7 +1741,78 @@ class WorkforceScheduleService extends BaseService
 			$sql .= ' AND e.branch_id = :b';
 			$p[':b'] = $branchId;
 		}
-		return array_map(fn($v) => round(floatval($v), 2), $this->Q($sql . ' GROUP BY a.employee_id', $p)->fetchAll(\PDO::FETCH_KEY_PAIR));
+		$sql .= ' ORDER BY a.employee_id ASC, a.clock_in ASC';
+
+		$byEmp = [];
+		foreach ($this->Q($sql, $p)->fetchAll(\PDO::FETCH_OBJ) as $r)
+		{
+			$eid = intval($r->employee_id);
+			$cin = strtotime($r->clock_in);
+			$cout = strtotime($r->clock_out);
+			if ($cin === false || $cout === false || $cout <= $cin)
+			{
+				continue;
+			}
+			$byEmp[$eid][] = [
+				's' => $cin,
+				'e' => $cout,
+				'shift_id' => $r->shift_id ? intval($r->shift_id) : 0,
+				'shift_break_min' => intval($r->shift_break_minutes),
+				'bs' => $r->break_start ? strtotime($r->break_start) : null,
+				'be' => $r->break_end ? strtotime($r->break_end) : null
+			];
+		}
+
+		$out = [];
+		foreach ($byEmp as $eid => $rows)
+		{
+			// Unir intervalos solapados para evitar horas duplicadas por doble marcación
+			usort($rows, fn($a, $b) => $a['s'] <=> $b['s']);
+			$merged = [];
+			foreach ($rows as $row)
+			{
+				if (empty($merged))
+				{
+					$merged[] = [$row['s'], $row['e']];
+				}
+				else
+				{
+					$lastIdx = count($merged) - 1;
+					if ($row['s'] <= $merged[$lastIdx][1])
+					{
+						$merged[$lastIdx][1] = max($merged[$lastIdx][1], $row['e']);
+					}
+					else
+					{
+						$merged[] = [$row['s'], $row['e']];
+					}
+				}
+			}
+			$grossSeconds = 0;
+			foreach ($merged as [$ms, $me])
+			{
+				$grossSeconds += max(0, $me - $ms);
+			}
+
+			// Descontar descansos reales o el descanso del turno máximo UNA vez por shift_id
+			$breakSeconds = 0;
+			$seenShifts = [];
+			foreach ($rows as $row)
+			{
+				if ($row['bs'] !== null && $row['be'] !== null && $row['be'] > $row['bs'])
+				{
+					$breakSeconds += ($row['be'] - $row['bs']);
+				}
+				elseif ($row['shift_id'] > 0 && !isset($seenShifts[$row['shift_id']]))
+				{
+					$seenShifts[$row['shift_id']] = true;
+					$breakSeconds += $row['shift_break_min'] * 60;
+				}
+			}
+			$netHours = max(0.0, ($grossSeconds - min($grossSeconds, $breakSeconds)) / 3600);
+			$out[$eid] = round($netHours, 2);
+		}
+		return $out;
 	}
 
 	/* ------------------------------------------------------------------ Ausencias y cambios */
@@ -1520,7 +1852,7 @@ class WorkforceScheduleService extends BaseService
 		return ['affected_shifts' => $affected];
 	}
 
-	public function RequestSwap(int $shiftId, int $toEmployeeId, int $userId, ?string $notes = null): int
+	public function RequestSwap(int $shiftId, int $toEmployeeId, int $userId, ?string $notes = null, ?int $targetShiftId = null): int
 	{
 		$s = $this->GetShift($shiftId);
 		if (intval($s->employee_id) === $toEmployeeId)
@@ -1528,7 +1860,44 @@ class WorkforceScheduleService extends BaseService
 			throw new \Exception('El turno ya es de ese empleado');
 		}
 		$this->GetEmployee($toEmployeeId);
-		$this->Q('INSERT INTO shift_swap_requests (shift_id, from_employee_id, to_employee_id, notes) VALUES (:s, :f, :t, :n)', [':s' => $shiftId, ':f' => $s->employee_id, ':t' => $toEmployeeId, ':n' => $notes]);
+
+		$swapMode = ($targetShiftId !== null && $targetShiftId > 0) ? 'swap' : 'transfer';
+		$ts = null;
+		if ($swapMode === 'swap')
+		{
+			$ts = $this->GetShift(intval($targetShiftId));
+			if (intval($ts->employee_id) !== $toEmployeeId)
+			{
+				throw new \Exception('El turno destino del intercambio no pertenece al colaborador seleccionado');
+			}
+			// Validar ambos lados ignorando su propio turno actual
+			$issuesTo = $this->CheckConflicts($toEmployeeId, $s->shift_date, $s->start_time, $s->end_time, intval($s->break_minutes ?? 0), intval($ts->id), $s->role);
+			$errTo = array_values(array_filter($issuesTo, fn($i) => $i['level'] === 'error'));
+			if (count($errTo) > 0)
+			{
+				throw new \Exception('El colaborador receptor tiene conflicto en esa franja: ' . implode('; ', array_column($errTo, 'message')));
+			}
+			$issuesFrom = $this->CheckConflicts(intval($s->employee_id), $ts->shift_date, $ts->start_time, $ts->end_time, intval($ts->break_minutes ?? 0), intval($s->id), $ts->role);
+			$errFrom = array_values(array_filter($issuesFrom, fn($i) => $i['level'] === 'error'));
+			if (count($errFrom) > 0)
+			{
+				throw new \Exception('El solicitante tiene conflicto al tomar el turno destino: ' . implode('; ', array_column($errFrom, 'message')));
+			}
+		}
+		else
+		{
+			// Cesión unidireccional: validar inmediatamente conflictos y ausencias del receptor antes de guardar solicitud
+			$issues = $this->CheckConflicts($toEmployeeId, $s->shift_date, $s->start_time, $s->end_time, intval($s->break_minutes ?? 0), 0, $s->role);
+			$errors = array_values(array_filter($issues, fn($i) => $i['level'] === 'error'));
+			if (count($errors) > 0)
+			{
+				throw new \Exception('No se puede solicitar el cambio: ' . implode('; ', array_column($errors, 'message')));
+			}
+		}
+
+		$this->Q('INSERT INTO shift_swap_requests (shift_id, from_employee_id, to_employee_id, swap_mode, target_shift_id, notes) VALUES (:s, :f, :t, :sm, :ts, :n)', [
+			':s' => $shiftId, ':f' => $s->employee_id, ':t' => $toEmployeeId, ':sm' => $swapMode, ':ts' => $targetShiftId, ':n' => $notes
+		]);
 		return intval($this->Db()->lastInsertId());
 	}
 
@@ -1542,7 +1911,23 @@ class WorkforceScheduleService extends BaseService
 		$result = ['warnings' => []];
 		if ($approve)
 		{
-			$result = $this->MoveShift(intval($r->shift_id), intval($r->to_employee_id), $this->GetShift(intval($r->shift_id))->shift_date, $userId, 'swap', $r->notes);
+			if (!empty($r->swap_mode) && $r->swap_mode === 'swap' && !empty($r->target_shift_id))
+			{
+				$s1 = $this->GetShift(intval($r->shift_id));
+				$s2 = $this->GetShift(intval($r->target_shift_id));
+				$result = $this->Tx(function () use ($r, $s1, $s2, $userId) {
+					// Validar nuevamente ambos extremos
+					$this->Q('UPDATE employee_shifts SET employee_id = :to, version = version + 1, updated_by_user_id = :u, updated_timestamp = :now WHERE id = :id', [':to' => $r->to_employee_id, ':u' => $userId, ':now' => date('Y-m-d H:i:s'), ':id' => $s1->id]);
+					$this->Q('UPDATE employee_shifts SET employee_id = :to, version = version + 1, updated_by_user_id = :u, updated_timestamp = :now WHERE id = :id', [':to' => $r->from_employee_id, ':u' => $userId, ':now' => date('Y-m-d H:i:s'), ':id' => $s2->id]);
+					$this->LogChange(intval($s1->id), intval($s1->branch_id), 'swap', $this->Snapshot($s1), ['employee_id' => $r->to_employee_id], $userId, $r->notes);
+					$this->LogChange(intval($s2->id), intval($s2->branch_id), 'swap', $this->Snapshot($s2), ['employee_id' => $r->from_employee_id], $userId, $r->notes);
+					return ['warnings' => [], 'swapped_ids' => [intval($s1->id), intval($s2->id)]];
+				});
+			}
+			else
+			{
+				$result = $this->MoveShift(intval($r->shift_id), intval($r->to_employee_id), $this->GetShift(intval($r->shift_id))->shift_date, $userId, 'swap', $r->notes);
+			}
 		}
 		$this->Q("UPDATE shift_swap_requests SET status = :s, decided_by_user_id = :u, decided_timestamp = :now WHERE id = :id", [':s' => $approve ? 'approved' : 'rejected', ':u' => $userId, ':id' => $id, ':now' => date('Y-m-d H:i:s')]);
 		return $result;
@@ -1668,5 +2053,121 @@ class WorkforceScheduleService extends BaseService
 			}
 		}
 		return null;
+	}
+
+	/* ------------------------------------------------------------------ Libro mayor de Compensatorios y Vacaciones */
+
+	/**
+	 * Devuelve el saldo consolidado y movimientos del libro mayor de compensatorios por sucursal o empleado,
+	 * marcando compensatorios vencidos según su fecha límite sin perder el registro para nómina.
+	 */
+	public function GetCompensatoryLedger(int $branchId, ?int $employeeId = null, string $today = 'now'): array
+	{
+		$todayDate = ($today === 'now') ? date('Y-m-d') : substr($today, 0, 10);
+		$policy = \Grocy\Services\WorkforceAutoScheduleService::GetInstance()->GetBranchJurisdictionPolicy($branchId, $todayDate);
+
+		// Marcar automáticamente compensatorios vencidos no disfrutados para seguimiento en nómina
+		$staleRows = $this->Q("SELECT cb.*, e.id AS eid, e.hourly_cost, e.branch_id
+			FROM workforce_compensatory_bank cb
+			JOIN employees e ON e.payroll_code = cb.payroll_code
+			WHERE e.branch_id = :b AND cb.status = 'PENDING' AND cb.due_date IS NOT NULL AND cb.due_date < :td", [':b' => $branchId, ':td' => $todayDate])->fetchAll(\PDO::FETCH_OBJ);
+		foreach ($staleRows as $st)
+		{
+			$hc = floatval($st->hourly_cost ?: 16.5);
+			$payout = round(8.0 * $hc * (1.0 + floatval($policy['sunday_holiday_premium_pct'] ?? 0.9)), 2);
+			$this->Q("UPDATE workforce_compensatory_bank SET status = 'EXPIRED_PAYOUT_DUE', payout_amount = :p, expired_timestamp = datetime('now') WHERE id = :id", [':p' => $payout, ':id' => $st->id]);
+			$this->Q("INSERT INTO workforce_compensatory_ledger (employee_id, payroll_code, branch_id, movement_type, hours, origin_date, due_date, payout_amount, status, notes)
+				VALUES (:eid, :pc, :b, 'EXPIRED', -8.0, :od, :dd, :p, 'EXPIRED_PAYOUT_DUE', 'Vencido sin descanso asignado: trasladado a pago dominical')", [
+				':eid' => $st->eid, ':pc' => $st->payroll_code, ':b' => $branchId, ':od' => $st->origin_sunday, ':dd' => $st->due_date, ':p' => $payout
+			]);
+		}
+
+		$whereEmp = $employeeId ? ' AND e.id = :eid' : '';
+		$params = [':b' => $branchId];
+		if ($employeeId) $params[':eid'] = $employeeId;
+
+		$balances = $this->Q("SELECT e.id AS employee_id, e.name, e.payroll_code, e.department,
+				COUNT(CASE WHEN cb.status = 'PENDING' THEN 1 END) AS pending_days,
+				COUNT(CASE WHEN cb.status IN ('SCHEDULED', 'TAKEN') THEN 1 END) AS taken_days,
+				COUNT(CASE WHEN cb.status IN ('EXPIRED_PAYOUT_DUE', 'PAID_OUT') THEN 1 END) AS payout_days,
+				ROUND(IFNULL(SUM(CASE WHEN cb.status IN ('EXPIRED_PAYOUT_DUE', 'PAID_OUT') THEN cb.payout_amount ELSE 0 END), 0), 2) AS total_payout_due,
+				MIN(CASE WHEN cb.status = 'PENDING' THEN cb.due_date END) AS next_due_date
+			FROM employees e
+			LEFT JOIN workforce_compensatory_bank cb ON cb.payroll_code = e.payroll_code
+			WHERE e.branch_id = :b AND e.active = 1 $whereEmp
+			GROUP BY e.id, e.name, e.payroll_code, e.department
+			HAVING pending_days > 0 OR taken_days > 0 OR payout_days > 0
+			ORDER BY pending_days DESC, e.name ASC", $params)->fetchAll(\PDO::FETCH_ASSOC);
+
+		$entries = $this->Q("SELECT cb.*, e.name AS employee_name, e.department
+			FROM workforce_compensatory_bank cb
+			JOIN employees e ON e.payroll_code = cb.payroll_code
+			WHERE e.branch_id = :b $whereEmp
+			ORDER BY cb.origin_sunday DESC, cb.id DESC LIMIT 100", $params)->fetchAll(\PDO::FETCH_ASSOC);
+
+		return ['balances' => $balances, 'entries' => $entries, 'jurisdiction' => $policy['jurisdiction_code']];
+	}
+
+	/**
+	 * Registra o redime un compensatorio ganado en domingo/festivo (evita duplicados y soporta Art. 180 CST pago en dinero cuando es ocasional).
+	 */
+	public function AccrueOrRedeemCompensatory(int $employeeId, string $originSunday, bool $choosePayout, ?string $redeemDate, int $userId): array
+	{
+		$emp = $this->GetEmployee($employeeId);
+		$payrollCode = !empty($emp->payroll_code) ? $emp->payroll_code : ('EMP-' . $emp->id);
+		$branchId = intval($emp->branch_id ?: 1);
+		$policy = \Grocy\Services\WorkforceAutoScheduleService::GetInstance()->GetBranchJurisdictionPolicy($branchId, $originSunday);
+
+		$ym = substr($originSunday, 0, 7);
+		$workedSundays = intval($this->Q("SELECT COUNT(*) FROM employee_shifts WHERE employee_id = :e AND status != 'cancelled' AND substr(shift_date, 1, 7) = :ym AND strftime('%w', shift_date) = '0'", [':e' => $employeeId, ':ym' => $ym])->fetchColumn()) + 1;
+		$eval = WorkforceLaborRulesService::EvaluateCompensatoryRule($originSunday, $workedSundays, $choosePayout, floatval($emp->hourly_cost ?: 16.5), $policy);
+
+		return $this->Tx(function () use ($employeeId, $payrollCode, $branchId, $originSunday, $eval, $redeemDate, $userId) {
+			$existing = $this->Q('SELECT * FROM workforce_compensatory_bank WHERE payroll_code = :pc AND origin_sunday = :od', [':pc' => $payrollCode, ':od' => $originSunday])->fetch(\PDO::FETCH_OBJ);
+			if ($existing && in_array($existing->status, ['SCHEDULED', 'TAKEN', 'PAID_OUT'], true))
+			{
+				throw new \Exception("El compensatorio del {$originSunday} ya fue {$existing->status}; no se permite duplicarlo");
+			}
+
+			$status = ($eval['action'] === 'PAGO_RECARGO') ? 'PAID_OUT' : ($redeemDate ? 'SCHEDULED' : 'PENDING');
+			$payout = ($eval['action'] === 'PAGO_RECARGO') ? $eval['payout_amount'] : 0.0;
+
+			if ($existing)
+			{
+				$this->Q('UPDATE workforce_compensatory_bank SET status = :st, assigned_date = :ad, entitlement = :en, due_date = :dd, payout_amount = :pa WHERE id = :id', [
+					':st' => $status, ':ad' => $redeemDate, ':en' => $eval['entitlement'], ':dd' => $eval['due_date'], ':pa' => $payout, ':id' => $existing->id
+				]);
+			}
+			else
+			{
+				$this->Q('INSERT INTO workforce_compensatory_bank (payroll_code, origin_sunday, assigned_date, status, entitlement, due_date, payout_amount, notes) VALUES (:pc, :od, :ad, :st, :en, :dd, :pa, :nt)', [
+					':pc' => $payrollCode, ':od' => $originSunday, ':ad' => $redeemDate, ':st' => $status, ':en' => $eval['entitlement'], ':dd' => $eval['due_date'], ':pa' => $payout, ':nt' => 'Generado desde motor laboral'
+				]);
+			}
+
+			$mvType = $eval['action'] === 'PAGO_RECARGO' ? 'PAYOUT' : ($redeemDate ? 'REDEEMED' : 'ACCRUAL');
+			$mvHours = $eval['action'] === 'PAGO_RECARGO' ? 0.0 : ($redeemDate ? -8.0 : 8.0);
+			$this->Q('INSERT INTO workforce_compensatory_ledger (employee_id, payroll_code, branch_id, movement_type, hours, origin_date, due_date, payout_amount, status, created_by_user_id, notes) VALUES (:e, :pc, :b, :mt, :h, :od, :dd, :pa, :st, :u, :nt)', [
+				':e' => $employeeId, ':pc' => $payrollCode, ':b' => $branchId, ':mt' => $mvType, ':h' => $mvHours, ':od' => $originSunday, ':dd' => $eval['due_date'], ':pa' => $payout, ':st' => $status, ':u' => $userId, ':nt' => "Derecho {$eval['entitlement']}"
+			]);
+
+			return array_merge($eval, ['status' => $status, 'assigned_date' => $redeemDate]);
+		});
+	}
+
+	/**
+	 * Devuelve el saldo real de vacaciones por empleado y período.
+	 */
+	public function GetVacationBalances(int $branchId, int $year = 2026): array
+	{
+		return $this->Q("SELECT e.id AS employee_id, e.name, e.payroll_code, e.department,
+				COALESCE(vb.accrued_days, 15.0) AS accrued_days,
+				COALESCE(vb.taken_days, 0.0) AS taken_days,
+				COALESCE(vb.pending_days, 0.0) AS pending_days,
+				ROUND(COALESCE(vb.accrued_days, 15.0) - COALESCE(vb.taken_days, 0.0) - COALESCE(vb.pending_days, 0.0), 1) AS available_days
+			FROM employees e
+			LEFT JOIN workforce_vacation_balances vb ON vb.employee_id = e.id AND vb.period_year = :y
+			WHERE e.branch_id = :b AND e.active = 1
+			ORDER BY e.name ASC", [':b' => $branchId, ':y' => $year])->fetchAll(\PDO::FETCH_ASSOC);
 	}
 }

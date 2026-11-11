@@ -491,6 +491,33 @@ class WorkforceScheduleEquivalenceService extends BaseService
 		$stmtB->execute([':c' => $codeB, ':d' => $dateB]);
 		$shiftB = $stmtB->fetch(\PDO::FETCH_ASSOC);
 
+		if (!$shiftA || !$shiftB)
+		{
+			throw new \Exception('Uno o ambos turnos no existen en la malla mensual para intercambiar.');
+		}
+
+		// Validar que ninguno de los turnos intercambiados se superponga con turnos adyacentes (nocturnos día anterior/siguiente)
+		foreach ([[$codeA, $dateA, $shiftB], [$codeB, $dateB, $shiftA]] as [$pCode, $targetDate, $incoming])
+		{
+			if (!empty($incoming['start_time']) && !empty($incoming['end_time']) && $incoming['start_time'] !== $incoming['end_time'])
+			{
+				[$sNew, $eNew] = WorkforceScheduleService::Span($targetDate, $incoming['start_time'], $incoming['end_time']);
+				$adjStmt = $db->prepare("SELECT shift_date, start_time, end_time FROM workforce_monthly_schedules WHERE payroll_code = :c AND shift_date BETWEEN date(:d, '-1 day') AND date(:d, '+1 day') AND shift_date != :d");
+				$adjStmt->execute([':c' => $pCode, ':d' => $targetDate]);
+				foreach ($adjStmt->fetchAll(\PDO::FETCH_ASSOC) as $adj)
+				{
+					if (!empty($adj['start_time']) && !empty($adj['end_time']) && $adj['start_time'] !== $adj['end_time'])
+					{
+						[$sAdj, $eAdj] = WorkforceScheduleService::Span($adj['shift_date'], $adj['start_time'], $adj['end_time']);
+						if ($sNew < $eAdj && $sAdj < $eNew)
+						{
+							throw new \Exception("Intercambio bloqueado: el turno asignado a $pCode el $targetDate se superpone con el turno del {$adj['shift_date']} ({$adj['start_time']}–{$adj['end_time']}).");
+						}
+					}
+				}
+			}
+		}
+
 		// Swap content: employee A gets shift B's parameters on dateA
 		// employee B gets shift A's parameters on dateB
 		$db->beginTransaction();

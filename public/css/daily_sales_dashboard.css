@@ -557,16 +557,16 @@
 	gap: 2px;
 }
 
-/* Tarjeta 1: Ventas netas (Destacada en degradado verde DAILY) */
+/* Tarjeta 1: Ventas netas (Verde fija permanente en degradado DAILY) */
 .ded-kpi-card.is-highlight {
-	background: var(--ded-primary-gradient);
-	color: #ffffff;
-	border: none;
-	box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25);
+	background: var(--ded-primary-gradient, linear-gradient(135deg, #059669 0%, #10b981 100%)) !important;
+	color: #ffffff !important;
+	border: 1px solid rgba(255, 255, 255, 0.22) !important;
+	box-shadow: 0 4px 14px rgba(16, 185, 129, 0.28) !important;
 }
 
 .ded-kpi-card.is-highlight:hover {
-	box-shadow: 0 6px 18px rgba(16, 185, 129, 0.35);
+	box-shadow: 0 6px 18px rgba(16, 185, 129, 0.38) !important;
 }
 
 .ded-kpi-card.is-highlight .ded-kpi-top-highlight {
@@ -582,21 +582,31 @@
 	gap: 6px;
 	font-size: 12px;
 	font-weight: 600;
-	color: #ffffff;
+	color: #ffffff !important;
 }
 
-.ded-kpi-card.is-highlight .ded-highlight-brand svg {
+.ded-kpi-card.is-highlight .ded-highlight-brand svg,
+.ded-kpi-card.is-highlight .ded-kpi-icon svg,
+.ded-kpi-card.is-highlight i {
 	width: 16px;
 	height: 16px;
+	color: #ffffff !important;
+	stroke: #ffffff !important;
+}
+
+.ded-kpi-card.is-highlight .ded-kpi-icon {
+	background: rgba(255, 255, 255, 0.22) !important;
+	border-color: rgba(255, 255, 255, 0.35) !important;
+	color: #ffffff !important;
 }
 
 .ded-kpi-card.is-highlight .ded-highlight-spark-box {
-	background: rgba(255, 255, 255, 0.2);
+	background: rgba(255, 255, 255, 0.2) !important;
 	border-radius: 6px;
 	padding: 2px 5px;
 	display: inline-flex;
 	align-items: center;
-	color: #ffffff;
+	color: #ffffff !important;
 }
 
 .ded-kpi-card.is-highlight .ded-highlight-spark-box svg {
@@ -604,19 +614,36 @@
 	height: 13px;
 }
 
+.ded-kpi-card.is-highlight .ded-kpi-label {
+	color: #ffffff !important;
+}
+
 .ded-kpi-card.is-highlight .ded-kpi-val {
 	font-size: 26px;
-	color: #ffffff;
+	color: #ffffff !important;
 	font-weight: 800;
 	margin: 1px 0 1px 0;
 }
 
+.ded-kpi-card.is-highlight .ded-kpi-sub,
 .ded-kpi-card.is-highlight .ded-kpi-sub-highlight {
 	font-size: 9.8px;
-	color: rgba(255, 255, 255, 0.95);
+	color: rgba(255, 255, 255, 0.95) !important;
 	font-weight: 400;
 	line-height: 1.2;
 	white-space: normal;
+}
+
+.ded-kpi-card.is-highlight .ded-kpi-badge-green {
+	background: rgba(255, 255, 255, 0.22) !important;
+	color: #ffffff !important;
+	border-color: rgba(255, 255, 255, 0.30) !important;
+}
+
+.ded-kpi-card.is-highlight .ded-pill-red {
+	background: rgba(254, 226, 226, 0.95) !important;
+	color: #dc2626 !important;
+	font-weight: 700 !important;
 }
 
 /* Tarjeta 7: Horas trabajadas con indicador circular de 91% */
@@ -1976,13 +2003,9 @@
 }
 
 .prod-kpi-card-green {
-	background: #10b981 !important;
-	border-color: #059669 !important;
-	color: #ffffff !important;
-}
-
-.prod-kpi-card-green:hover {
-	background: #059669 !important;
+	background: #ffffff;
+	border-color: #e2e8f0;
+	color: #0f172a;
 }
 
 /* Grillas de 2 Columnas */
@@ -2787,8 +2810,9 @@
 }
 
 .branch-kpi-card-green {
-	background: #15803d !important;
-	border-color: #166534 !important;
+	background: #ffffff;
+	border-color: #e2e8f0;
+	color: #0f172a;
 }
 
 .branch-kpi-header {
@@ -3727,8 +3751,9 @@
 }
 
 .hist-kpi-card-green {
-	background: #15803d !important;
-	border-color: #166534 !important;
+	background: #ffffff;
+	border-color: #e2e8f0;
+	color: #0f172a;
 }
 
 .hist-kpi-header {

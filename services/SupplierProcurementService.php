@@ -24,6 +24,10 @@ class SupplierProcurementService extends BaseService
 				IFNULL(sm.lead_time_days, 2) AS lead_time_days,
 				IFNULL(sm.min_order_amount, 0.0) AS min_order_amount,
 				IFNULL(sm.payment_terms, 'Contado') AS payment_terms,
+				IFNULL(sm.credit_days, 0) AS credit_days,
+				IFNULL(sm.currency_code, 'USD') AS currency_code,
+				sm.incoterm,
+				IFNULL(sm.commercial_terms_verified, 0) AS commercial_terms_verified,
 				IFNULL(sm.rating, 5.0) AS rating,
 				sm.notes,
 				(SELECT COUNT(*) FROM supplier_product_prices spp WHERE spp.supplier_id = sl.id AND spp.is_current = 1) AS products_count,
@@ -74,6 +78,10 @@ class SupplierProcurementService extends BaseService
 				IFNULL(sm.lead_time_days, 2) AS lead_time_days,
 				IFNULL(sm.min_order_amount, 0.0) AS min_order_amount,
 				IFNULL(sm.payment_terms, 'Contado') AS payment_terms,
+				IFNULL(sm.credit_days, 0) AS credit_days,
+				IFNULL(sm.currency_code, 'USD') AS currency_code,
+				sm.incoterm,
+				IFNULL(sm.commercial_terms_verified, 0) AS commercial_terms_verified,
 				IFNULL(sm.rating, 5.0) AS rating,
 				sm.notes
 			FROM shopping_locations sl
@@ -144,10 +152,14 @@ class SupplierProcurementService extends BaseService
 		$phone = trim($data['phone'] ?? '');
 		$taxId = trim($data['tax_id'] ?? '');
 		$address = trim($data['address'] ?? '');
-		$leadTimeDays = intval($data['lead_time_days'] ?? 2);
-		$minOrderAmount = floatval($data['min_order_amount'] ?? 0.0);
-		$paymentTerms = trim($data['payment_terms'] ?? 'Crédito 15 días');
-		$rating = floatval($data['rating'] ?? 5.0);
+		$leadTimeDays = isset($data['lead_time_days']) && $data['lead_time_days'] !== '' ? max(0, intval($data['lead_time_days'])) : 0;
+		$minOrderAmount = max(0.0, floatval($data['min_order_amount'] ?? 0.0));
+		$paymentTerms = trim(strval($data['payment_terms'] ?? ''));
+		$creditDays = max(0, intval($data['credit_days'] ?? (stripos($paymentTerms, '30') !== false ? 30 : (stripos($paymentTerms, '15') !== false ? 15 : 0))));
+		$currencyCode = strtoupper(substr(trim(strval($data['currency_code'] ?? 'USD')) ?: 'USD', 0, 5));
+		$incoterm = trim(strval($data['incoterm'] ?? '')) ?: null;
+		$termsVerified = ($leadTimeDays >= 1 && $paymentTerms !== '') ? 1 : 0;
+		$rating = min(5.0, max(1.0, floatval($data['rating'] ?? 5.0)));
 		$notes = trim($data['notes'] ?? '');
 		$active = isset($data['active']) ? intval($data['active']) : 1;
 
@@ -165,15 +177,17 @@ class SupplierProcurementService extends BaseService
 					UPDATE suppliers_meta 
 					SET contact_name = :contact_name, email = :email, phone = :phone, tax_id = :tax_id, 
 					    address = :address, lead_time_days = :lead_time_days, min_order_amount = :min_order_amount, 
-					    payment_terms = :payment_terms, rating = :rating, notes = :notes, active = :active
+					    payment_terms = :payment_terms, credit_days = :credit_days, currency_code = :currency_code,
+					    incoterm = :incoterm, commercial_terms_verified = :verified,
+					    rating = :rating, notes = :notes, active = :active
 					WHERE id = :id
 				");
 			}
 			else
 			{
 				$stmtMeta = $dbRaw->prepare("
-					INSERT INTO suppliers_meta (id, contact_name, email, phone, tax_id, address, lead_time_days, min_order_amount, payment_terms, rating, notes, active)
-					VALUES (:id, :contact_name, :email, :phone, :tax_id, :address, :lead_time_days, :min_order_amount, :payment_terms, :rating, :notes, :active)
+					INSERT INTO suppliers_meta (id, contact_name, email, phone, tax_id, address, lead_time_days, min_order_amount, payment_terms, credit_days, currency_code, incoterm, commercial_terms_verified, rating, notes, active)
+					VALUES (:id, :contact_name, :email, :phone, :tax_id, :address, :lead_time_days, :min_order_amount, :payment_terms, :credit_days, :currency_code, :incoterm, :verified, :rating, :notes, :active)
 				");
 			}
 			$stmtMeta->execute([
@@ -186,6 +200,10 @@ class SupplierProcurementService extends BaseService
 				':lead_time_days' => $leadTimeDays,
 				':min_order_amount' => $minOrderAmount,
 				':payment_terms' => $paymentTerms,
+				':credit_days' => $creditDays,
+				':currency_code' => $currencyCode,
+				':incoterm' => $incoterm,
+				':verified' => $termsVerified,
 				':rating' => $rating,
 				':notes' => $notes,
 				':active' => $active
@@ -202,8 +220,8 @@ class SupplierProcurementService extends BaseService
 
 			// Crear en suppliers_meta
 			$stmtMeta = $dbRaw->prepare("
-				INSERT INTO suppliers_meta (id, contact_name, email, phone, tax_id, address, lead_time_days, min_order_amount, payment_terms, rating, notes, active)
-				VALUES (:id, :contact_name, :email, :phone, :tax_id, :address, :lead_time_days, :min_order_amount, :payment_terms, :rating, :notes, :active)
+				INSERT INTO suppliers_meta (id, contact_name, email, phone, tax_id, address, lead_time_days, min_order_amount, payment_terms, credit_days, currency_code, incoterm, commercial_terms_verified, rating, notes, active)
+				VALUES (:id, :contact_name, :email, :phone, :tax_id, :address, :lead_time_days, :min_order_amount, :payment_terms, :credit_days, :currency_code, :incoterm, :verified, :rating, :notes, :active)
 			");
 			$stmtMeta->execute([
 				':id' => $newId,
@@ -215,6 +233,10 @@ class SupplierProcurementService extends BaseService
 				':lead_time_days' => $leadTimeDays,
 				':min_order_amount' => $minOrderAmount,
 				':payment_terms' => $paymentTerms,
+				':credit_days' => $creditDays,
+				':currency_code' => $currencyCode,
+				':incoterm' => $incoterm,
+				':verified' => $termsVerified,
 				':rating' => $rating,
 				':notes' => $notes,
 				':active' => $active
@@ -292,9 +314,11 @@ class SupplierProcurementService extends BaseService
 		{
 			throw new \Exception('Indique proveedor, producto y un precio mayor que 0');
 		}
-		$minQty = floatval($data['min_order_qty'] ?? 1.0);
-		$leadDays = intval($data['delivery_lead_days'] ?? 2);
+		$minQty = max(0.01, floatval($data['min_order_qty'] ?? 1.0));
+		$orderMultiple = max(1.0, floatval($data['order_multiple'] ?? 1.0));
+		$leadDays = max(0, intval($data['delivery_lead_days'] ?? 2));
 		$validFrom = $data['valid_from'] ?? date('Y-m-d');
+		$validTo = !empty($data['valid_to']) ? trim((string)$data['valid_to']) : null;
 		$notes = trim($data['notes'] ?? '');
 
 		// Marcar registros anteriores como no actuales
@@ -302,16 +326,18 @@ class SupplierProcurementService extends BaseService
 		      ->execute([':sid' => $supplierId, ':pid' => $productId]);
 
 		$stmt = $dbRaw->prepare("
-			INSERT INTO supplier_product_prices (supplier_id, product_id, price, min_order_qty, delivery_lead_days, valid_from, is_current, notes)
-			VALUES (:sid, :pid, :price, :min_order_qty, :delivery_lead_days, :valid_from, 1, :notes)
+			INSERT INTO supplier_product_prices (supplier_id, product_id, price, min_order_qty, order_multiple, delivery_lead_days, valid_from, valid_to, is_current, notes)
+			VALUES (:sid, :pid, :price, :min_order_qty, :order_multiple, :delivery_lead_days, :valid_from, :valid_to, 1, :notes)
 		");
 		$stmt->execute([
 			':sid' => $supplierId,
 			':pid' => $productId,
 			':price' => $price,
 			':min_order_qty' => $minQty,
+			':order_multiple' => $orderMultiple,
 			':delivery_lead_days' => $leadDays,
 			':valid_from' => $validFrom,
+			':valid_to' => $validTo,
 			':notes' => $notes
 		]);
 
@@ -329,12 +355,18 @@ class SupplierProcurementService extends BaseService
 				spp.id AS price_id,
 				spp.price,
 				spp.min_order_qty,
+				IFNULL(spp.order_multiple, 1) AS order_multiple,
 				spp.delivery_lead_days,
 				spp.valid_from,
+				spp.valid_to,
 				spp.notes AS price_notes,
 				sl.id AS supplier_id,
 				sl.name AS supplier_name,
 				sm.payment_terms AS payment_terms,
+				IFNULL(sm.credit_days, 15) AS credit_days,
+				IFNULL(sm.currency_code, 'USD') AS currency_code,
+				sm.incoterm AS incoterm,
+				IFNULL(sm.commercial_terms_verified, 0) AS commercial_terms_verified,
 				sm.rating AS supplier_rating,
 				IFNULL(sm.lead_time_days, spp.delivery_lead_days) AS lead_time_days,
 				(
@@ -437,11 +469,21 @@ class SupplierProcurementService extends BaseService
 		{
 			throw new \Exception('Indique la fecha de entrega comprometida y la real (AAAA-MM-DD)');
 		}
+		$supplierId = intval($data['supplier_id'] ?? 0);
+		$branchId = intval($data['branch_id'] ?? 1);
+		if ($supplierId <= 0 || $branchId <= 0)
+		{
+			throw new \Exception('Proveedor o sucursal inválidos');
+		}
 		$ordered = floatval($data['items_ordered'] ?? 0);
 		$received = floatval($data['items_received'] ?? 0);
-		if ($ordered < 0 || $received < 0)
+		if ($ordered <= 0 || $received < 0)
 		{
 			throw new \Exception('Cantidades inválidas');
+		}
+		if ($received > $ordered + 0.0001)
+		{
+			throw new \Exception("No se puede registrar una entrega mayor a lo autorizado/ordenado ({$ordered} u.)");
 		}
 		// OTIF: «on_time» solo si llegó a tiempo Y completa; rechazada se respeta si se informa
 		$data['status'] = ($data['status'] ?? '') === 'rejected' ? 'rejected' : ($actual > $expected ? 'delayed' : ($received + 0.0001 < $ordered ? 'partial' : 'on_time'));
@@ -571,10 +613,15 @@ class SupplierProcurementService extends BaseService
 			$recommendations[] = [
 				'product_id' => $i['product_id'],
 				'product_name' => $i['product_name'],
-				'sku' => '',
+				'sku' => $i['product_sku'] ?? '',
 				'qu_name' => $i['qu_name'],
 				'current_stock' => $i['usable_stock'],
 				'min_stock_amount' => $i['rop'],
+				'min_order_qty' => $i['min_order_qty'] ?? 1,
+				'order_multiple' => $i['order_multiple'] ?? 1,
+				'days_coverage' => $i['days_coverage_display'],
+				'forecast_confidence' => $i['forecast_confidence'] ?? 'none',
+				'commercial_terms_verified' => !empty($i['commercial_terms_verified']),
 				'recommended_order_qty' => $i['suggested_order'],
 				'estimated_cost' => $i['estimated_cost'],
 				'urgency' => $outOfStock ? 'critical' : 'high',
@@ -637,7 +684,7 @@ class SupplierProcurementService extends BaseService
 				$po = $db->query("SELECT po.order_code AS code, sl.name AS supplier, IFNULL(po.expected_delivery_date, date(po.created_at)) AS date, po.status,
 						SUM((IFNULL(poi.approved_amount, poi.suggested_amount) - poi.received_amount - poi.rejected_amount) * poi.unit_price) AS amount
 					FROM procurement_order_items poi JOIN procurement_orders po ON po.id = poi.order_id JOIN products p ON p.id = poi.product_id LEFT JOIN shopping_locations sl ON sl.id = po.supplier_id
-					WHERE po.branch_id = $bid AND po.status IN ('approved', 'sent', 'partially_received') AND $dept GROUP BY po.id HAVING amount > 0.009")->fetchAll(\PDO::FETCH_ASSOC);
+					WHERE po.branch_id = $bid AND po.status IN ('approved', 'sent', 'confirmed', 'partially_received') AND $dept GROUP BY po.id HAVING amount > 0.009")->fetchAll(\PDO::FETCH_ASSOC);
 				$registered = round(array_sum(array_column($rec, 'amount')), 2);
 				$committed = round(array_sum(array_column($po, 'amount')), 2);
 				if ($assigned + $registered + $committed <= 0)
@@ -651,8 +698,9 @@ class SupplierProcurementService extends BaseService
 				}
 				foreach ($po as $r)
 				{
+					$stLbl = $r['status'] === 'approved' ? 'Aprobada · por enviar' : ($r['status'] === 'confirmed' ? 'Confirmada por proveedor' : 'Comprometida en tránsito');
 					$records[] = ['type' => 'Orden de Compra', 'code' => $r['code'], 'supplier' => $r['supplier'] ?? '—', 'date' => $r['date'], 'amount' => round($r['amount'], 2),
-						'status' => $r['status'] === 'approved' ? 'Aprobada · por enviar' : 'Comprometida en tránsito', 'status_class' => 'badge-warning text-dark'];
+						'status' => $stLbl, 'status_class' => $r['status'] === 'confirmed' ? 'badge-info' : 'badge-warning text-dark'];
 				}
 				$cat['branches'][] = ['branch_id' => $bid, 'branch_name' => $bname, 'assigned' => $assigned, 'registered' => $registered, 'committed' => $committed,
 					'available' => round($assigned - $registered - $committed, 2), 'receipts' => count($rec), 'records' => $records];
@@ -679,11 +727,13 @@ class SupplierProcurementService extends BaseService
 		$bList = $branches ? implode(',', array_map('intval', array_keys($branches))) : '0';
 		foreach ($db->query("SELECT po.id, po.order_code, po.status, po.total_estimated_cost, IFNULL(po.expected_delivery_date, date(po.created_at)) AS date, sl.name AS supplier, b.name AS branch, u.username AS responsible
 			FROM procurement_orders po LEFT JOIN shopping_locations sl ON sl.id = po.supplier_id LEFT JOIN branches b ON b.id = po.branch_id LEFT JOIN users u ON u.id = po.approved_by_user_id
-			WHERE po.status IN ('approved', 'sent', 'partially_received') AND po.branch_id IN ($bList) ORDER BY date LIMIT 20")->fetchAll(\PDO::FETCH_ASSOC) as $o)
+			WHERE po.status IN ('approved', 'sent', 'confirmed', 'partially_received') AND po.branch_id IN ($bList) ORDER BY date LIMIT 20")->fetchAll(\PDO::FETCH_ASSOC) as $o)
 		{
+			$st = $o['status'] === 'approved' ? 'Por enviar' : ($o['status'] === 'confirmed' ? 'Confirmada' : 'En tránsito');
+			$cls = $o['status'] === 'approved' ? 'badge-info' : ($o['status'] === 'confirmed' ? 'badge-primary' : 'badge-warning text-dark');
 			$commitments[] = ['date' => $o['date'], 'concept' => $o['order_code'] . ' · ' . $o['branch'], 'supplier' => $o['supplier'] ?? '—', 'responsible' => $o['responsible'] ?? 'Sin aprobador',
-				'amount' => round(floatval($o['total_estimated_cost']), 2), 'status' => $o['status'] === 'approved' ? 'Por enviar' : 'En tránsito',
-				'status_class' => $o['status'] === 'approved' ? 'badge-info' : 'badge-warning text-dark', 'href' => '/mrp'];
+				'amount' => round(floatval($o['total_estimated_cost']), 2), 'status' => $st,
+				'status_class' => $cls, 'href' => '/mrp'];
 		}
 
 		return [
@@ -695,5 +745,103 @@ class SupplierProcurementService extends BaseService
 			'categories' => $cats,
 			'commitments' => $commitments
 		];
+	}
+
+	/**
+	 * Lista contratos comerciales reales registrados en daily_supplier_contracts
+	 */
+	public function GetContracts(?int $supplierId = null): array
+	{
+		$db = DatabaseService::GetInstance()->GetDbConnectionRaw();
+		$hasTbl = $db->query("SELECT name FROM sqlite_master WHERE type='table' AND name='daily_supplier_contracts'")->fetchColumn();
+		if (!$hasTbl)
+		{
+			return [];
+		}
+		$sql = "SELECT c.*, IFNULL(sl.name, c.supplier_name) AS supplier_name,
+			CAST(julianday(c.end_date) - julianday(date('now', 'localtime')) AS INTEGER) AS days_remaining
+			FROM daily_supplier_contracts c
+			LEFT JOIN shopping_locations sl ON sl.id = c.supplier_id
+			WHERE 1=1";
+		$params = [];
+		if ($supplierId)
+		{
+			$sql .= " AND c.supplier_id = :sid";
+			$params[':sid'] = $supplierId;
+		}
+		$sql .= " ORDER BY c.end_date ASC, c.id DESC";
+		$stmt = $db->prepare($sql);
+		$stmt->execute($params);
+		return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+	}
+
+	/**
+	 * Crea o actualiza un contrato comercial con proveedor
+	 */
+	public function SaveContract(array $data): int
+	{
+		$db = DatabaseService::GetInstance()->GetDbConnectionRaw();
+		$supplierId = intval($data['supplier_id'] ?? 0);
+		$title = trim((string)($data['title'] ?? ''));
+		$startDate = trim((string)($data['start_date'] ?? ''));
+		$endDate = trim((string)($data['end_date'] ?? ''));
+		if ($supplierId <= 0 || $title === '' || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $startDate) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $endDate))
+		{
+			throw new \Exception('Indique proveedor, título y fechas válidas (AAAA-MM-DD)');
+		}
+		if ($endDate < $startDate)
+		{
+			throw new \Exception('La fecha de vencimiento no puede ser anterior a la fecha de inicio');
+		}
+		$supName = $db->prepare('SELECT name FROM shopping_locations WHERE id = :id');
+		$supName->execute([':id' => $supplierId]);
+		$supplierName = (string)($supName->fetchColumn() ?: ($data['supplier_name'] ?? 'Proveedor #' . $supplierId));
+
+		$id = intval($data['id'] ?? 0);
+		$minVal = max(0.0, floatval($data['minimum_order_val'] ?? 0));
+		$payDays = max(0, intval($data['payment_terms_days'] ?? 30));
+		$status = trim((string)($data['status'] ?? 'active'));
+		if (!in_array($status, ['active', 'expiring_soon', 'expired', 'draft', 'terminated'], true))
+		{
+			$status = 'active';
+		}
+
+		if ($id > 0)
+		{
+			$stmt = $db->prepare("UPDATE daily_supplier_contracts SET
+				supplier_id = :sid, supplier_name = :sname, title = :title, start_date = :sd, end_date = :ed,
+				renewal_terms = :ren, minimum_order_val = :mval, payment_terms_days = :pdays, discount_terms = :disc,
+				status = :st, responsible_name = :resp
+				WHERE id = :id");
+			$stmt->execute([
+				':sid' => $supplierId, ':sname' => $supplierName, ':title' => $title,
+				':sd' => $startDate, ':ed' => $endDate,
+				':ren' => trim((string)($data['renewal_terms'] ?? '')),
+				':mval' => $minVal, ':pdays' => $payDays,
+				':disc' => trim((string)($data['discount_terms'] ?? '')),
+				':st' => $status, ':resp' => trim((string)($data['responsible_name'] ?? '')),
+				':id' => $id
+			]);
+			return $id;
+		}
+
+		$next = intval($db->query("SELECT IFNULL(MAX(id), 0) + 1 FROM daily_supplier_contracts")->fetchColumn());
+		$code = trim((string)($data['contract_code'] ?? ''));
+		if ($code === '')
+		{
+			$code = 'CTR-' . date('Y') . '-' . str_pad((string)$next, 4, '0', STR_PAD_LEFT);
+		}
+		$stmt = $db->prepare("INSERT INTO daily_supplier_contracts
+			(contract_code, supplier_id, supplier_name, title, start_date, end_date, renewal_terms, minimum_order_val, payment_terms_days, discount_terms, status, responsible_name)
+			VALUES (:code, :sid, :sname, :title, :sd, :ed, :ren, :mval, :pdays, :disc, :st, :resp)");
+		$stmt->execute([
+			':code' => $code, ':sid' => $supplierId, ':sname' => $supplierName, ':title' => $title,
+			':sd' => $startDate, ':ed' => $endDate,
+			':ren' => trim((string)($data['renewal_terms'] ?? '')),
+			':mval' => $minVal, ':pdays' => $payDays,
+			':disc' => trim((string)($data['discount_terms'] ?? '')),
+			':st' => $status, ':resp' => trim((string)($data['responsible_name'] ?? ''))
+		]);
+		return intval($db->lastInsertId());
 	}
 }

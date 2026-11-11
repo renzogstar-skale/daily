@@ -1,422 +1,232 @@
-/* ==========================================================================
-   DAILY — GESTIÓN DE CLIENTES (CRM RETAIL)
-   Identidad visual: Glass UI cristalino profesional, componentes Tablero de Ventas
-   Colores corporativos: Verde DAILY (#10b981 / #059669 / #16a34a), Amarillo (#f59e0b), Rojo (#ef4444)
-   SIN COLOR AZUL
-   ========================================================================== */
-
-.crm-dash-wrapper,
-.customers-page-wrapper {
-	background: transparent !important;
-	min-height: calc(100vh - 60px);
-	padding: 16px 20px 24px 20px;
-	font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-	color: #0f172a;
-	box-sizing: border-box;
-}
-
-/* ==========================================================================
-   BARRA DE PESTAÑAS DEL CRM (EXCLUSIVIDAD ESTRICTA)
-   ========================================================================== */
-.ded-nav-tabs-bar .ded-nav-tab:not(.active):not(.is-active) {
-	background: #ffffff !important;
-	color: #64748b !important;
-	border-color: #e2e8f0 !important;
-	font-weight: 500 !important;
-}
-
-.ded-nav-tabs-bar .ded-nav-tab:not(.active):not(.is-active) svg,
-.ded-nav-tabs-bar .ded-nav-tab:not(.active):not(.is-active) i {
-	color: #64748b !important;
-}
-
-.ded-nav-tabs-bar .ded-nav-tab.active,
-.ded-nav-tabs-bar .ded-nav-tab.is-active {
-	background: #0f172a !important;
-	color: #ffffff !important;
-	border-color: #0f172a !important;
-	font-weight: 600 !important;
-}
-
-.ded-nav-tabs-bar .ded-nav-tab.active svg,
-.ded-nav-tabs-bar .ded-nav-tab.is-active svg,
-.ded-nav-tabs-bar .ded-nav-tab.active i,
-.ded-nav-tabs-bar .ded-nav-tab.is-active i {
-	color: #ffffff !important;
-}
-
-/* ==========================================================================
-   FILA DE 5 KPIS EJECUTIVOS (ESTILO TABLERO DE VENTAS)
-   ========================================================================== */
-.crm-kpis-grid-5 {
-	display: grid;
-	grid-template-columns: 1.4fr 1.05fr 1.15fr 1.05fr 1.15fr;
-	gap: 10px;
-	margin-bottom: 14px;
-	align-items: stretch;
-}
-
-@media (max-width: 1200px) {
-	.crm-kpis-grid-5 {
-		grid-template-columns: repeat(3, 1fr);
-	}
-	.crm-kpis-grid-5 > *:first-child {
-		grid-column: span 2;
-	}
-}
-
-@media (max-width: 768px) {
-	.crm-kpis-grid-5 {
-		grid-template-columns: 1fr;
-	}
-	.crm-kpis-grid-5 > *:first-child {
-		grid-column: span 1;
-	}
-}
-
-/* ==========================================================================
-   MATRIZ DE SEGMENTOS RFM
-   ========================================================================== */
-.crm-segment-matrix-grid {
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-	gap: 10px;
-	margin-bottom: 12px;
-}
-
-.crm-segment-box {
-	background: rgba(255, 255, 255, 0.75);
-	backdrop-filter: blur(8px);
-	border: 1px solid rgba(226, 232, 240, 0.85);
-	border-radius: 10px;
-	padding: 12px;
-	transition: all 0.15s ease;
-	cursor: pointer;
-}
-
-.crm-segment-box:hover {
-	border-color: #10b981;
-	transform: translateY(-1px);
-	box-shadow: 0 4px 12px rgba(16, 185, 129, 0.08);
-}
-
-.crm-segment-box.is-vip { border-left: 4px solid #10b981; }
-.crm-segment-box.is-loyal { border-left: 4px solid #059669; }
-.crm-segment-box.is-new { border-left: 4px solid #34d399; }
-.crm-segment-box.is-occasional { border-left: 4px solid #94a3b8; }
-.crm-segment-box.is-atrisk { border-left: 4px solid #f59e0b; }
-.crm-segment-box.is-inactive { border-left: 4px solid #ef4444; }
-
-.crm-segment-top {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	margin-bottom: 6px;
-}
-
-.crm-segment-title {
-	font-size: 12.5px;
-	font-weight: 700;
-	color: #0f172a;
-}
-
-.crm-segment-count {
-	font-size: 14px;
-	font-weight: 800;
-	color: #0f172a;
-}
-
-.crm-segment-desc {
-	font-size: 11px;
-	color: #64748b;
-	line-height: 1.3;
-}
-
-/* ==========================================================================
-   PROGRAMA DE FIDELIZACIÓN (DAILY REWARDS)
-   ========================================================================== */
-.crm-tier-card {
-	background: rgba(255, 255, 255, 0.8);
-	border: 1px solid #e2e8f0;
-	border-radius: 12px;
-	padding: 14px;
-	text-align: center;
-	position: relative;
-	transition: all 0.15s ease;
-}
-
-.crm-tier-card:hover {
-	transform: translateY(-2px);
-	box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
-}
-
-.crm-tier-badge {
-	width: 44px;
-	height: 44px;
-	border-radius: 50%;
-	margin: 0 auto 10px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	font-size: 18px;
-}
-
-.crm-tier-bronze .crm-tier-badge { background: #fef3c7; color: #b45309; }
-.crm-tier-silver .crm-tier-badge { background: #f1f5f9; color: #475569; }
-.crm-tier-gold .crm-tier-badge { background: #fef9c3; color: #ca8a04; }
-.crm-tier-platinum .crm-tier-badge { background: #0f172a; color: #ffffff; }
-
-/* ==========================================================================
-   DIRECTORIO 2 COLUMNAS Y FICHA 360°
-   ========================================================================== */
-.customers-main-grid {
-	display: grid;
-	grid-template-columns: minmax(0, 1.35fr) minmax(360px, 0.95fr);
-	gap: 14px;
-	align-items: start;
-}
-
-@media (max-width: 1024px) {
-	.customers-main-grid {
-		grid-template-columns: 1fr;
-	}
-}
-
-.customers-card {
-	background: rgba(255, 255, 255, 0.8);
-	backdrop-filter: blur(12px);
-	-webkit-backdrop-filter: blur(12px);
-	border: 1px solid rgba(226, 232, 240, 0.85);
-	border-radius: 14px;
-	box-shadow: 0 2px 10px -2px rgba(15, 23, 42, 0.04);
-	overflow: hidden;
-}
-
-.customers-table-wrap {
-	max-height: 580px;
-	overflow-y: auto;
-	scrollbar-width: thin;
-}
-
-.customers-table {
-	width: 100%;
-	border-collapse: collapse;
-	font-size: 12px;
-}
-
-.customers-table thead th {
-	position: sticky;
-	top: 0;
-	background: #f8fafc;
-	padding: 8px 10px;
-	font-size: 10.5px;
-	font-weight: 700;
-	color: #64748b;
-	text-transform: uppercase;
-	border-bottom: 1px solid #e2e8f0;
-	z-index: 2;
-}
-
-.customers-table tbody tr {
-	border-bottom: 1px solid #f1f5f9;
-	cursor: pointer;
-	transition: background 0.12s ease;
-}
-
-.customers-table tbody tr:hover {
-	background: rgba(16, 185, 129, 0.04);
-}
-
-.customers-table tbody tr.is-selected {
-	background: #ecfdf5 !important;
-}
-
-.customers-table td {
-	padding: 9px 10px;
-	vertical-align: middle;
-}
-
-/* Ficha del Cliente (Derecha) */
-.customers-profile-top {
-	padding: 14px;
-	border-bottom: 1px solid #f1f5f9;
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-}
-
-.customers-profile-avatar {
-	width: 44px;
-	height: 44px;
-	border-radius: 50%;
-	background: #ecfdf5;
-	color: #059669;
-	font-size: 15px;
-	font-weight: 800;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	border: 1px solid #a7f3d0;
-	flex-shrink: 0;
-}
-
-.customers-meta-grid {
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	gap: 8px;
-	padding: 12px 14px;
-	background: rgba(248, 250, 252, 0.6);
-	border-bottom: 1px solid #f1f5f9;
-}
-
-.customers-meta-row {
+/* DAILY — CRM de Clientes (views/customers.blade.php, views/customer_profile.blade.php).
+   Usa íntegramente los tokens ded-* y Crystal Design de DAILY; respeta tarjetas KPI blancas con hover verde y Primera fija verde. */
+.crm {
+	--crm-good: #047857;
+	--crm-good-bg: #ecfdf5;
+	--crm-warn: #b45309;
+	--crm-warn-bg: #fffbeb;
+	--crm-bad: #b91c1c;
+	--crm-bad-bg: #fef2f2;
+	--crm-info: #1d4ed8;
+	--crm-info-bg: #eff6ff;
+	--crm-muted: #475569;
+	--crm-muted-bg: #f1f5f9;
+	--crm-series-1: #008E48;
+	--crm-series-2: #3b82f6;
 	display: flex;
 	flex-direction: column;
-	font-size: 11.5px;
-	margin-bottom: 4px;
+	gap: 14px;
 }
 
-.customers-meta-label {
-	font-size: 10px;
-	color: #64748b;
-	font-weight: 600;
+.crm .ded-header { flex-wrap: wrap; gap: 12px; }
+.crm .ded-header-right { flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+
+.crm-title-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.crm-region-pill {
+	display: inline-flex; align-items: center; gap: 5px;
+	padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700;
+	background: var(--crm-good-bg); color: var(--crm-good);
+}
+.crm-info-tip {
+	display: inline-flex; align-items: center; justify-content: center;
+	width: 18px; height: 18px; border-radius: 999px;
+	background: var(--crm-muted-bg); color: var(--crm-muted);
+	font-size: 11px; font-weight: 800; cursor: help; border: 0; padding: 0;
 }
 
-.customers-meta-val {
-	font-weight: 700;
-	color: #0f172a;
-}
+.crm-notice { display: flex; gap: 8px; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: 10px 14px; border-radius: var(--ded-radius-sm, 10px); background: var(--crm-info-bg); color: var(--crm-info); font-size: 13px; }
+.crm-notice-warn { background: var(--crm-warn-bg); color: var(--crm-warn); }
+.crm-notice-left { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 220px; }
+.crm-notice svg { width: 16px; height: 16px; flex: none; }
 
-/* Mini KPIs del Perfil */
-.customers-mini-kpis {
+.crm-btn-primary { background: var(--ded-primary-dark, #008E48) !important; color: #fff !important; border-color: transparent !important; }
+.crm-btn-primary svg { color: #fff !important; }
+
+/* Grid de 5 KPIs prioritarios en Centro de Control */
+.crm-kpis-grid-5 {
 	display: grid;
-	grid-template-columns: repeat(4, 1fr);
-	gap: 6px;
-	padding: 10px 14px;
-	background: #ffffff;
-	border-bottom: 1px solid #f1f5f9;
+	grid-template-columns: repeat(5, minmax(0, 1fr));
+	gap: 12px;
+}
+.crm-kpis-grid-4 {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 12px;
+}
+.crm .ded-kpi-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; }
+.crm .ded-kpi-sub { display: block !important; white-space: normal !important; line-height: 1.35; overflow-wrap: anywhere; }
+.crm-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+.crm-kpi { display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; background: var(--ded-card-bg, #fff); border: 1px solid var(--ded-border-subtle, #e2e8f0); border-radius: var(--ded-radius, 12px); color: inherit; }
+.crm-kpi-label { font-size: 12px; color: var(--ded-text-muted, #64748b); font-weight: 600; }
+.crm-kpi-val { font-size: 22px; font-weight: 700; color: var(--ded-text-main, #0f172a); font-variant-numeric: tabular-nums; line-height: 1.2; }
+.crm-kpi-sub { font-size: 12px; color: var(--ded-text-muted, #64748b); }
+.crm-kpi-clickable { cursor: pointer; text-decoration: none; color: inherit; }
+.crm-kpi-clickable:hover { text-decoration: none; }
+
+/* Pestañas horizontales (extiende .ded-nav-tabs-bar y .ded-nav-tab) */
+.crm-tabs-bar { display: flex; flex-direction: row; flex-wrap: wrap; gap: 6px; margin-bottom: 2px; overflow-x: auto; }
+.crm-tab-pill .crm-count { background: var(--crm-muted-bg); color: var(--crm-muted); border-radius: 999px; padding: 0 7px; font-size: 11px; font-weight: 700; }
+.crm-tab-pill.active .crm-count { background: rgba(255, 255, 255, 0.22); color: #fff; }
+
+.crm-tab-panel { display: none; flex-direction: column; gap: 14px; }
+.crm-tab-panel.active { display: flex; }
+
+/* Layout maestro */
+.crm-grid-2 { display: grid; grid-template-columns: 3fr 2fr; gap: 14px; align-items: start; }
+.crm-grid-360 { display: grid; grid-template-columns: minmax(0, 1fr) 290px; gap: 14px; align-items: start; }
+.crm-sticky-card { position: sticky; top: 14px; }
+
+/* Filtros */
+.crm-filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+.crm-filters select, .crm-form-grid input, .crm-form-grid select, .crm-form-grid textarea, .crm-inline input, .crm-inline select {
+	border: 1px solid #cbd5e1; border-radius: 7px; padding: 6px 9px; font-size: 13px; background: #fff; color: var(--ded-text-main, #0f172a); min-height: 34px;
+}
+.crm-search { display: flex; align-items: center; gap: 6px; flex: 1 1 240px; border: 1px solid #cbd5e1; border-radius: 7px; padding: 0 9px; background: #fff; margin: 0; }
+.crm-search svg { width: 15px; height: 15px; color: var(--ded-text-muted); }
+.crm-search input { border: 0; outline: 0; flex: 1; min-height: 34px; font-size: 13px; background: transparent; color: var(--ded-text-main, #0f172a); }
+.crm-search:focus-within { border-color: var(--crm-series-1); box-shadow: 0 0 0 3px rgba(0, 142, 72, .15); }
+
+/* Tablas */
+.crm-table { font-size: 13px; margin: 0; }
+.crm-table th { font-size: 11px; text-transform: uppercase; letter-spacing: .03em; color: var(--ded-text-muted); font-weight: 700; border-top: 0; white-space: nowrap; }
+.crm-table td { vertical-align: middle; border-color: var(--ded-border-subtle, #e2e8f0); }
+.crm-table .text-right { font-variant-numeric: tabular-nums; }
+.crm-table-compact td, .crm-table-compact th { padding: 7px 9px; }
+.crm-row-selectable { cursor: pointer; transition: background-color 0.14s ease; }
+.crm-row-selectable:hover td { background: rgba(0, 142, 72, 0.04); }
+.crm-row-selectable.is-selected td { background: rgba(0, 142, 72, 0.09); }
+.crm-row-overdue td { background: var(--crm-bad-bg); }
+.crm-scroll { max-height: 460px; overflow-y: auto; }
+.crm-name { font-weight: 600; color: var(--ded-text-main); }
+.crm-meta { font-size: 12px; color: var(--ded-text-muted, #64748b); }
+.crm-mono { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 11px; word-break: break-all; }
+.crm-empty { text-align: center; color: var(--ded-text-muted); padding: 20px !important; }
+.crm-foot { font-size: 12px; color: var(--ded-text-muted); margin: 10px 0 0; }
+.crm-link { background: none; border: 0; padding: 0; color: var(--crm-series-1); font-weight: 600; font-size: 12.5px; cursor: pointer; }
+.crm-link:hover { text-decoration: underline; }
+
+/* Pills & Tags */
+.crm-pill { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+.crm-good { background: var(--crm-good-bg); color: var(--crm-good); }
+.crm-warn { background: var(--crm-warn-bg); color: var(--crm-warn); }
+.crm-bad { color: var(--crm-bad); }
+.crm-pill.crm-bad { background: var(--crm-bad-bg); }
+.crm-info { background: var(--crm-info-bg); color: var(--crm-info); }
+.crm-muted { background: var(--crm-muted-bg); color: var(--crm-muted); }
+.crm-prio-urgent { background: var(--crm-bad-bg); color: var(--crm-bad); }
+.crm-prio-high { background: var(--crm-warn-bg); color: var(--crm-warn); }
+.crm-prio-normal { background: var(--crm-info-bg); color: var(--crm-info); }
+.crm-prio-low { background: var(--crm-muted-bg); color: var(--crm-muted); }
+.crm-tier { display: inline-block; padding: 1px 7px; border-radius: 5px; font-size: 11px; font-weight: 800; border: 1px solid currentColor; }
+.crm-tier-A { color: var(--crm-good); }
+.crm-tier-B { color: var(--crm-info); }
+.crm-tier-C { color: var(--crm-muted); }
+.crm-chip { display: inline-block; padding: 2px 8px; border-radius: 6px; background: var(--crm-muted-bg); color: var(--crm-muted); font-size: 11px; font-weight: 600; }
+.crm-seg { display: inline-flex; gap: 2px; background: var(--crm-muted-bg); border-radius: 8px; padding: 3px; flex-wrap: wrap; }
+.crm-seg a, .crm-seg button { padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; color: var(--crm-muted); border: 0; background: transparent; cursor: pointer; text-decoration: none; }
+.crm-seg a.is-active, .crm-seg button.is-active { background: #fff; color: var(--ded-text-main); box-shadow: 0 1px 2px rgba(0, 0, 0, .06); }
+
+/* Alertas en Centro de Control */
+.crm-alerts-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; }
+.crm-alert-item {
+	display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+	padding: 11px 14px; border-radius: 10px; border: 1px solid var(--ded-border-subtle, #e2e8f0);
+	background: var(--ded-card-bg, #fff);
+}
+.crm-alert-item.is-critical { border-left: 4px solid #dc2626; }
+.crm-alert-item.is-warning { border-left: 4px solid #d97706; }
+.crm-alert-item.is-info { border-left: 4px solid #2563eb; }
+
+/* Barras y gráficos */
+.crm-chart { position: relative; height: 270px; }
+.crm-chart-sm { height: 210px; }
+.crm-bars { list-style: none; padding: 0; margin: 0; display: grid; gap: 9px; }
+.crm-bars li { display: grid; grid-template-columns: minmax(115px, 1fr) 2fr auto; gap: 10px; align-items: center; font-size: 13px; }
+.crm-bar { height: 8px; border-radius: 4px; background: var(--crm-muted-bg); overflow: hidden; }
+.crm-bar-fill { display: block; height: 100%; border-radius: 4px; }
+.crm-bar-fill.crm-good { background: var(--crm-good); }
+.crm-bar-fill.crm-warn { background: #d97706; }
+.crm-bar-fill.crm-bad { background: #dc2626; }
+.crm-bar-fill.crm-info { background: var(--crm-series-2); }
+.crm-bar-fill.crm-muted { background: #94a3b8; }
+
+/* Campañas grid */
+.crm-campaigns-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+.crm-campaign-card { display: flex; flex-direction: column; gap: 8px; padding: 14px; border: 1px solid var(--ded-border-subtle, #e2e8f0); border-radius: 12px; background: var(--ded-card-bg, #fff); }
+
+/* Duplicados */
+.crm-dup { border: 1px solid var(--ded-border-subtle, #e2e8f0); border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; }
+.crm-dup-head { font-size: 13px; margin-bottom: 6px; }
+.crm-dup-warning { margin-top: 12px; padding: 10px 12px; border-radius: 8px; background: var(--crm-warn-bg); color: var(--crm-warn); font-size: 13px; }
+.crm-dup-warning ul { margin: 6px 0; padding-left: 18px; }
+
+/* Formularios */
+.crm-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-items: end; }
+.crm-form-1 { grid-template-columns: 1fr; }
+.crm-form-grid label, .crm-inline { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600; color: var(--ded-text-muted); margin: 0; }
+.crm-form-grid .crm-check { flex-direction: row; align-items: center; gap: 8px; color: var(--ded-text-main); font-weight: 500; }
+.crm-span-2 { grid-column: 1 / -1; }
+.crm-inline { margin-top: 8px; }
+.crm-modal .modal-title { font-size: 17px; font-weight: 700; }
+#crm-settings { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); margin-top: 10px; }
+
+/* Ficha individual */
+.crm-back { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; color: var(--ded-text-muted); }
+.crm-back svg { width: 15px; height: 15px; }
+.crm-profile-head { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: flex-start; }
+.crm-tags { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 6px 0 0; }
+.crm-profile-grid { display: grid; grid-template-columns: minmax(280px, 1fr) 2fr; gap: 14px; align-items: start; }
+.crm-col { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.crm-dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; font-size: 13px; margin: 0; }
+.crm-dl dt { color: var(--ded-text-muted); font-weight: 600; }
+.crm-dl dd { margin: 0; word-break: break-word; }
+.crm-notes { font-size: 13px; background: var(--crm-muted-bg); border-radius: 8px; padding: 8px 10px; margin: 10px 0 0; white-space: pre-line; }
+.crm-consents { list-style: none; padding: 0; margin: 0; }
+.crm-consents li { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; padding: 8px 0; border-bottom: 1px solid var(--ded-border-subtle, #e2e8f0); font-size: 13px; }
+.crm-consents li .crm-link { grid-column: 1 / -1; justify-self: start; font-size: 12px; }
+.crm-h3 { font-size: 13px; font-weight: 700; margin: 14px 0 8px; }
+.crm-details summary { cursor: pointer; font-size: 13px; font-weight: 600; color: var(--crm-series-1); margin-top: 8px; }
+.crm-timeline { list-style: none; padding: 0; margin: 12px 0 0; font-size: 13px; }
+.crm-timeline li { padding: 8px 0 8px 12px; border-left: 2px solid var(--ded-border-subtle, #e2e8f0); }
+#crm-interaction, #crm-loyalty { margin-bottom: 4px; }
+
+/* Responsive (Tablet & Mobile) */
+@media (max-width: 1199px) {
+	.crm-kpis-grid-5 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 991px) {
+	.crm-grid-2, .crm-grid-360, .crm-profile-grid { grid-template-columns: 1fr; }
+	.crm-sticky-card { position: static; }
+	.crm-kpis-grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+	.crm-kpis-grid-5 { grid-template-columns: 1fr 1fr; }
+	.crm-kpis-grid-5 > :first-child { grid-column: 1 / -1; }
+	.crm-kpis-grid-4, .crm-kpis { grid-template-columns: 1fr 1fr; }
+	.crm-form-grid { grid-template-columns: 1fr; }
+	.crm-bars li { grid-template-columns: 1fr 1fr auto; }
+	.crm-tab-pill { padding: 6px 10px; font-size: 12px; }
 }
 
-.customers-mini-kpi {
-	text-align: center;
-	padding: 6px 4px;
-	border-radius: 8px;
-	background: #f8fafc;
-	border: 1px solid #e2e8f0;
+body.night-mode .crm, body.dark-mode .crm {
+	--crm-good-bg: rgba(16, 185, 129, .15); --crm-good: #6ee7b7;
+	--crm-warn-bg: rgba(245, 158, 11, .15); --crm-warn: #fcd34d;
+	--crm-bad-bg: rgba(239, 68, 68, .15); --crm-bad: #fca5a5;
+	--crm-info-bg: rgba(59, 130, 246, .15); --crm-info: #93c5fd;
+	--crm-muted-bg: rgba(148, 163, 184, .15); --crm-muted: #cbd5e1;
 }
-
-.customers-mini-kpi .mk-label {
-	font-size: 9.5px;
-	color: #64748b;
-	font-weight: 600;
-	text-transform: uppercase;
+body.night-mode .crm-seg a.is-active, body.dark-mode .crm-seg a.is-active,
+body.night-mode .crm-seg button.is-active, body.dark-mode .crm-seg button.is-active {
+	background: #1e293b; color: #f8fafc;
 }
-
-.customers-mini-kpi .mk-val {
-	font-size: 13px;
-	font-weight: 800;
-	color: #0f172a;
+body.night-mode .crm-filters select, body.dark-mode .crm-filters select,
+body.night-mode .crm-search, body.dark-mode .crm-search,
+body.night-mode .crm-form-grid input, body.dark-mode .crm-form-grid input,
+body.night-mode .crm-form-grid select, body.dark-mode .crm-form-grid select,
+body.night-mode .crm-form-grid textarea, body.dark-mode .crm-form-grid textarea {
+	background: #0f172a; border-color: #334155; color: #f1f5f9;
 }
-
-/* Consentimiento RGPD / Privacidad */
-.crm-consent-pills {
-	display: flex;
-	gap: 6px;
-	padding: 8px 14px;
-	background: #ffffff;
-	border-bottom: 1px solid #f1f5f9;
-}
-
-.crm-consent-pill {
-	font-size: 10.5px;
-	font-weight: 700;
-	padding: 2px 8px;
-	border-radius: 12px;
-	display: inline-flex;
-	align-items: center;
-	gap: 4px;
-}
-
-.crm-consent-pill.is-granted {
-	background: #ecfdf5;
-	color: #059669;
-	border: 1px solid #a7f3d0;
-}
-
-.crm-consent-pill.is-denied {
-	background: #f1f5f9;
-	color: #94a3b8;
-	border: 1px solid #e2e8f0;
-}
-
-/* Botones de Acción de Ficha */
-.customers-profile-actions {
-	display: flex;
-	gap: 8px;
-	padding: 12px 14px;
-}
-
-.customers-act-btn {
-	flex: 1;
-	height: 36px;
-	border-radius: 8px;
-	font-size: 11.5px;
-	font-weight: 700;
-	border: 1px solid #cbd5e1;
-	background: #ffffff;
-	color: #334155;
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	gap: 5px;
-	cursor: pointer;
-	text-decoration: none;
-	transition: all 0.15s ease;
-}
-
-.customers-act-btn:hover {
-	background: #f8fafc;
-	border-color: #94a3b8;
-	text-decoration: none;
-	color: #0f172a;
-}
-
-.customers-act-btn.is-primary {
-	background: linear-gradient(135deg, #059669 0%, #10b981 100%);
-	border-color: #10b981;
-	color: #ffffff;
-	box-shadow: 0 2px 6px rgba(16, 185, 129, 0.2);
-}
-
-.customers-act-btn.is-primary:hover {
-	filter: brightness(1.05);
-	color: #ffffff;
-}
-
-/* ==========================================================================
-   CASOS DE ATENCIÓN Y RECLAMOS
-   ========================================================================== */
-.crm-case-row {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	padding: 10px 12px;
-	border-bottom: 1px solid #f1f5f9;
-	font-size: 12px;
-	transition: background 0.12s ease;
-}
-
-.crm-case-row:hover {
-	background: #f8fafc;
-}
-
-/* ==========================================================================
-   CAMPAÑAS DE RETENCIÓN
-   ========================================================================== */
-.crm-campaign-card {
-	background: rgba(255, 255, 255, 0.8);
-	border: 1px solid #e2e8f0;
-	border-radius: 12px;
-	padding: 14px;
-	margin-bottom: 10px;
+body.night-mode .crm-alert-item, body.dark-mode .crm-alert-item,
+body.night-mode .crm-campaign-card, body.dark-mode .crm-campaign-card {
+	background: rgba(15, 23, 42, 0.72); border-color: #334155;
 }

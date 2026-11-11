@@ -2,7 +2,7 @@ const pwDir = process.env.PW_DIR || 'C:\\Users\\renzo\\.antigravity-ide\\extensi
 const { chromium } = require(pwDir);
 
 (async () => {
-    console.log('=== TEST E2E: GESTIÓN DE DESPACHOS & ÚLTIMA MILLA (/dispatches & /dispatch) ===\n');
+    console.log('=== TEST E2E: GESTIÓN DE DESPACHOS OMS/WMS (/dispatches & /dispatch) ===\n');
     const browser = await chromium.launch({ channel: 'msedge' });
     let passed = 0;
     let failed = 0;
@@ -20,176 +20,148 @@ const { chromium } = require(pwDir);
     try {
         const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
 
-        // Capturar errores de consola no deseados
         const consoleErrors = [];
+        const pageErrors = [];
         page.on('console', msg => {
             if (msg.type() === 'error' && !msg.text().includes('favicon') && !msg.text().includes('404')) {
                 consoleErrors.push(msg.text());
             }
         });
+        page.on('pageerror', err => pageErrors.push(err.message));
 
-        // 1. CARGA DE /dispatches
-        console.log('1. Verificando carga principal de /dispatches...');
+        // 1. Carga de /dispatches y /dispatch
+        console.log('1. Verificando carga principal de /dispatches y /dispatch...');
         const responseDispatches = await page.goto('http://localhost:8080/dispatches', { waitUntil: 'networkidle', timeout: 30000 });
         assert(responseDispatches.status() === 200, 'HTTP Status 200 en /dispatches');
 
-        // 2. CARGA DE /dispatch (alias funcional)
-        console.log('2. Verificando alias /dispatch...');
         const responseDispatch = await page.goto('http://localhost:8080/dispatch', { waitUntil: 'networkidle', timeout: 30000 });
         assert(responseDispatch.status() === 200, 'HTTP Status 200 en /dispatch');
 
-        // 3. TÍTULO Y CABECERA DEL MÓDULO
+        // 2. Cabecera y ausencia de accesos fuera de alcance (/returns, /kardex en tarjeta hero/inferior)
         const pageHeader = await page.locator('h1.dp-hero-title:has-text("Gestión de Despachos")').isVisible();
         assert(pageHeader, 'Cabecera "Gestión de Despachos" visible');
+        assert(await page.locator('.dp-hero-actions a[href*="/returns"], .dp-bottom-grid a[href*="/returns"], .dp-bottom-grid a[href*="/kardex"]').count() === 0, 'Sin enlaces fuera de alcance (/returns, /kardex) dentro del workspace de despachos');
 
-        // 4. FLUJO OPERATIVO (9 PASOS OBLIGATORIOS)
-        console.log('\n3. Verificando Ciclo Operativo de Despacho (9 Fases Obligatorias)...');
+        // 3. Ciclo canónico de 7 etapas en Stepper superior y detalle
+        console.log('\n2. Verificando Ciclo Canónico de 7 Etapas (Pedido -> Reserva -> Picking -> Packing -> Despacho -> Entrega -> Conciliación)...');
         const stepper = page.locator('[data-testid="dispatch-lifecycle-stepper"]');
         assert(await stepper.isVisible(), 'Contenedor del stepper de ciclo de vida visible');
 
-        const expectedPhases = [
-            'Pedido',
-            'Validación',
-            'Reserva',
-            'Picking',
-            'Packing',
-            'Verificación',
-            'Despacho',
-            'Entrega',
-            'Conciliación'
-        ];
-
-        for (const phase of expectedPhases) {
-            const hasPhase = await stepper.locator(`.dp-lifecycle-step strong:has-text("${phase}")`).isVisible();
-            assert(hasPhase, `Fase: "${phase}" visible y rotulada en el stepper`);
+        const canonicalStages = ['Pedido', 'Reserva', 'Picking', 'Packing', 'Despacho', 'Entrega', 'Conciliación'];
+        assert(await stepper.locator('.dp-lifecycle-step').count() === 7, 'Exactamente 7 etapas en el ciclo superior');
+        for (const stage of canonicalStages) {
+            const hasStage = await stepper.locator(`.dp-lifecycle-step strong:has-text("${stage}")`).isVisible();
+            assert(hasStage, `Etapa "${stage}" visible en el stepper superior`);
         }
+        assert(await page.locator('#dpStepperTrack .dp-stepper-step').count() === 7, 'Detalle del pedido sincronizado con exactamente 7 etapas');
 
-        // 5. LOS 8 INDICADORES PRINCIPALES CONSOLIDADOS
-        console.log('\n4. Verificando los 8 Indicadores Clave de Despachos...');
+        // 4. Los 8 KPIs reales
+        console.log('\n3. Verificando los 8 Indicadores Reales de Despachos...');
         const kpisGrid = page.locator('[data-testid="dispatch-eight-kpis"]');
         assert(await kpisGrid.isVisible(), 'Rejilla de 8 KPIs visible');
 
-        const kpiTests = [
-            { id: 'kpi-pedidos-pendientes', name: 'Pedidos pendientes', minValLen: 1 },
-            { id: 'kpi-pedidos-despachados', name: 'Pedidos despachados', minValLen: 1 },
-            { id: 'kpi-entregas-atrasadas', name: 'Entregas atrasadas', minValLen: 1 },
-            { id: 'kpi-otif', name: 'OTIF (On-Time In-Full)', minValLen: 1 },
-            { id: 'kpi-exactitud-picking', name: 'Exactitud de picking', minValLen: 1 },
-            { id: 'kpi-tiempo-preparacion', name: 'Tiempo de preparación', minValLen: 1 },
-            { id: 'kpi-incidencias', name: 'Incidencias', minValLen: 1 },
-            { id: 'kpi-productividad', name: 'Productividad', minValLen: 1 }
+        const kpiIds = [
+            'kpi-pedidos-pendientes',
+            'kpi-pedidos-despachados',
+            'kpi-entregas-atrasadas',
+            'kpi-otif',
+            'kpi-exactitud-picking',
+            'kpi-tiempo-preparacion',
+            'kpi-incidencias',
+            'kpi-productividad'
         ];
-
-        for (const k of kpiTests) {
-            const card = page.locator(`[data-testid="${k.id}"]`);
-            const isVisible = await card.isVisible();
-            assert(isVisible, `KPI "${k.name}" visible`);
-            if (isVisible) {
-                const valText = await card.locator('.dp-kpi-val').innerText();
-                assert(valText.trim().length >= k.minValLen, `KPI "${k.name}" tiene valor: ${valText.trim()}`);
+        for (const kid of kpiIds) {
+            const card = page.locator(`[data-testid="${kid}"]`);
+            const vis = await card.isVisible();
+            assert(vis, `KPI "${kid}" visible`);
+            if (vis) {
+                const txt = (await card.locator('.dp-kpi-val').innerText()).trim();
+                assert(txt.length >= 1, `KPI "${kid}" tiene valor real: ${txt}`);
             }
         }
 
-        // 6. LOS 7 COMPONENTES OPERATIVOS (PESTAÑAS)
-        console.log('\n5. Verificando navegación interactiva en las 7 pestañas...');
-        const tabNav = page.locator('[data-testid="dispatch-main-tabs"]');
-        assert(await tabNav.isVisible(), 'Barra de pestañas principales visible');
-
-        const tabs = [
-            { id: '#tab-seguimiento-link', pane: '#tab-despachos-seguimiento', label: '1. Despachos y Seguimiento' },
-            { id: '#tab-pedidos-link', pane: '#tab-pedidos-prioridades', label: '2. Pedidos y Prioridades' },
-            { id: '#tab-picking-link', pane: '#tab-preparacion-picking', label: '3. Preparación y Picking' },
-            { id: '#tab-transporte-link', pane: '#tab-programacion-rutas', label: '4. Programación y Transporte' },
-            { id: '#tab-salidas-link', pane: '#tab-salidas-documentacion', label: '5. Salidas y Carga' },
-            { id: '#tab-entregas-link', pane: '#tab-entregas-evidencias', label: '6. Entregas y Evidencias' },
-            { id: '#tab-conciliacion-link', pane: '#tab-conciliacion-variaciones', label: '7. Conciliación y Variaciones' }
-        ];
-
-        for (const t of tabs) {
-            const tabBtn = page.locator(t.id);
-            assert(await tabBtn.isVisible(), `Pestaña "${t.label}" visible en navegación`);
-            await tabBtn.click();
-            await page.waitForTimeout(300);
-            const paneVisible = await page.locator(t.pane).isVisible();
-            assert(paneVisible, `Panel correspondiente "${t.pane}" se activa al hacer clic`);
+        // 5. Cambio reactivo entre pedidos & toggle 7 columnas
+        console.log('\n4. Verificando selección reactiva de pedidos y etiqueta imprimible...');
+        const cardsCount = await page.locator('.dp-order-card').count();
+        assert(cardsCount > 1, `Lista izquierda con ${cardsCount} pedidos`);
+        if (cardsCount > 1) {
+            const secondCard = page.locator('.dp-order-card').nth(1);
+            await secondCard.click();
+            await page.waitForTimeout(200);
+            assert(await secondCard.evaluate(el => el.classList.contains('is-active')), 'Cambio reactivo al segundo pedido funciona');
         }
 
-        // 7. VERIFICACIONES ESPECÍFICAS POR COMPONENTE
-        console.log('\n6. Verificando funcionalidades específicas de cada componente...');
+        await page.locator('label[for="toggle7Stages"]').click();
+        await page.waitForTimeout(150);
+        assert(await page.locator('#dpReconcileTable th.dp-col-7stage').first().isVisible(), 'Toggle "Ver 7 etapas" muestra columnas Devuelta y Dif. Final');
 
-        // Tab 2: Pedidos & Prioridades (Canales POS, Web, B2B y Prioridades Urgente/Alta/Normal)
-        await page.locator('#tab-pedidos-link').click();
-        await page.waitForTimeout(200);
-        const orderTable = page.locator('#tab-pedidos-prioridades table');
-        assert(await orderTable.isVisible(), 'Tabla de pedidos y prioridades visible');
-        const rowsCount = await orderTable.locator('tbody tr').count();
-        assert(rowsCount > 0, `Tabla de pedidos contiene ${rowsCount} pedidos registrados`);
+        // 6. Probar apertura de etiqueta de despacho real vía UI
+        const labelBtn = page.locator('.dp-detail-actions button:has-text("Etiqueta")').first();
+        if (await labelBtn.isVisible()) {
+            await labelBtn.click();
+            await page.waitForTimeout(400);
+            assert(await page.locator('#modalDispatchLabel').isVisible(), 'Modal de Etiqueta de Despacho se abre con datos reales');
+            const tagCode = (await page.locator('#lblTagCode').innerText()).trim();
+            assert(tagCode.startsWith('ETQ-'), `Código de etiqueta generado: ${tagCode}`);
+            await page.locator('#modalDispatchLabel button[data-dismiss="modal"]').first().click();
+            await page.waitForTimeout(250);
+        }
 
-        // Tab 4: Programación de Rutas (Flota de transporte con capacidad kg/volumen)
+        // 7. Navegación por las 7 pestañas y contenido real
+        console.log('\n5. Verificando navegación interactiva en las 7 pestañas...');
+        const tabs = [
+            { id: '#tab-seguimiento-link', pane: '#tab-despachos-seguimiento' },
+            { id: '#tab-pedidos-link', pane: '#tab-pedidos-prioridades' },
+            { id: '#tab-picking-link', pane: '#tab-preparacion-picking' },
+            { id: '#tab-transporte-link', pane: '#tab-programacion-rutas' },
+            { id: '#tab-salidas-link', pane: '#tab-salidas-documentacion' },
+            { id: '#tab-entregas-link', pane: '#tab-entregas-evidencias' },
+            { id: '#tab-conciliacion-link', pane: '#tab-conciliacion-variaciones' }
+        ];
+        for (const t of tabs) {
+            await page.locator(t.id).click();
+            await page.waitForTimeout(200);
+            assert(await page.locator(t.pane).isVisible(), `Pestaña ${t.id} activa su panel`);
+        }
+
         await page.locator('#tab-transporte-link').click();
         await page.waitForTimeout(200);
-        const fleetTitle = page.locator('h6:has-text("Unidades de Transporte Activas")');
-        assert(await fleetTitle.isVisible(), 'Catálogo de flota vehicular de transporte visible con capacidades');
+        assert(await page.locator('h6:has-text("Unidades de Transporte Activas")').isVisible(), 'Catálogo de flota visible en Transporte');
 
-        // Tab 5: Salidas & Documentación (Staging y Control de Seguridad en Muelle)
         await page.locator('#tab-salidas-link').click();
         await page.waitForTimeout(200);
-        const stagingChecklist = page.locator('text=Control de Seguridad en Muelle:');
-        assert(await stagingChecklist.isVisible(), 'Control de seguridad en muelle y salida de carga visible');
+        assert(await page.locator('text=Control de Salida en Muelle:').isVisible(), 'Control de salida en muelle visible');
 
-        // Tab 6: Entregas & Evidencias (Firma, PIN, QR y entregas parciales/rechazos)
-        await page.locator('#tab-entregas-link').click();
-        await page.waitForTimeout(200);
-        const deliveryRows = page.locator('#tab-entregas-evidencias tbody tr');
-        const deliveryCount = await deliveryRows.count();
-        assert(deliveryCount > 0, `Se visualizan ${deliveryCount} registros de control de entrega y evidencias`);
-
-        // Tab 7: Conciliación & Variaciones (Matriz de 7 cantidades obligatorias)
         await page.locator('#tab-conciliacion-link').click();
         await page.waitForTimeout(200);
-        const varianceHeaders = [
-            '1. Solicitada',
-            '2. Preparada',
-            '3. Escaneada',
-            '4. Despachada',
-            '5. Recibida',
-            '6. Devuelta',
-            '7. Dif. Final'
-        ];
-        for (const vh of varianceHeaders) {
-            const hasCol = await page.locator(`th:has-text("${vh}")`).first().isVisible();
-            assert(hasCol, `Columna de conciliación "${vh}" presente en matriz`);
+        assert(await page.locator('text=Regla de Cierre Logístico Obligatorio:').isVisible(), 'Regla de cierre obligatorio con POD visible en Conciliación');
+        assert(await page.locator('h6:has-text("Registro de Incidencias Logísticas")').isVisible(), 'Tabla de Incidencias Logísticas visible en Tab 7');
+
+        // 8. Modales en DOM
+        console.log('\n6. Verificando modales en DOM...');
+        for (const m of ['#modalNewOrder', '#modalPackOrder', '#modalDispatchLabel', '#modalScheduleRoute', '#modalConfirmExit', '#modalFastScanVerify', '#modalRecordDelivery', '#modalVerifyPickup', '#modalReportIncident', '#modalResolveVariance']) {
+            assert(await page.locator(m).count() === 1, `Modal ${m} presente en DOM`);
         }
 
-        // Salvaguarda: Política de NO doble contabilización en kardex
-        const policyNoDouble = await page.locator('text=Principio de No Doble Contabilización:').first().isVisible();
-        assert(policyNoDouble, 'Salvaguarda de no doble contabilización visible en conciliación');
+        // 9. Dark mode toggle y Crystal Light coherencia
+        console.log('\n7. Verificando tema oscuro/claro y responsividad móvil/PDA (390x844)...');
+        await page.evaluate(() => {
+            document.documentElement.classList.add('daily-dark');
+        });
+        await page.waitForTimeout(150);
+        const darkBg = await page.evaluate(() => getComputedStyle(document.querySelector('.dp-page-container')).backgroundColor);
+        assert(darkBg && darkBg !== 'rgba(0, 0, 0, 0)', `Estilos dark mode aplicados en contenedor (${darkBg})`);
 
-        // 8. VERIFICACIÓN DE MODALES OPERATIVOS
-        console.log('\n7. Verificando modales de acción en el DOM...');
-        assert(await page.locator('#modalScheduleRoute').count() > 0, 'Modal de Programación de Ruta existe en DOM');
-        assert(await page.locator('#modalAssignPicking').count() > 0, 'Modal de Asignación de Picking existe en DOM');
-        assert(await page.locator('#modalConfirmExit').count() > 0, 'Modal de Confirmación de Salida existe en DOM');
-
-        // 9. RESPONSIVIDAD MOBILE (390x844)
-        console.log('\n8. Verificando adaptación responsiva en mobile (390x844)...');
         await page.setViewportSize({ width: 390, height: 844 });
-        await page.waitForTimeout(500);
+        await page.waitForTimeout(350);
+        assert(await page.locator('h1.dp-hero-title:has-text("Gestión de Despachos")').isVisible(), 'Cabecera visible en móvil 390x844');
+        assert(await page.locator('[data-testid="dispatch-eight-kpis"]').isVisible(), 'KPIs visibles en móvil 390x844');
 
-        const mobileHeader = await page.locator('h1.dp-hero-title:has-text("Gestión de Despachos")').isVisible();
-        assert(mobileHeader, 'Cabecera visible en resolución móvil 390x844');
-
-        const mobileKpis = await page.locator('[data-testid="dispatch-eight-kpis"]').isVisible();
-        assert(mobileKpis, 'Grid de KPIs visible y adaptado en resolución móvil');
-
-        // 10. REVISIÓN DE ERRORES DE CONSOLA
-        console.log('\n9. Revisando logs y errores de consola...');
-        if (consoleErrors.length > 0) {
-            console.error('  [WARN] Errores de consola detectados:', consoleErrors);
-        } else {
-            console.log('  [PASS] Cero errores críticos de JavaScript en consola');
-            passed++;
-        }
+        // 10. Errores de consola y JS
+        console.log('\n8. Revisando consola y errores JS...');
+        assert(consoleErrors.length === 0 && pageErrors.length === 0, `Cero errores de consola/página (console: ${consoleErrors.length}, page: ${pageErrors.length})`);
+        if (consoleErrors.length > 0) console.error('Console errors:', consoleErrors);
+        if (pageErrors.length > 0) console.error('Page errors:', pageErrors);
 
     } catch (err) {
         console.error('Error durante la ejecución del test E2E:', err);
@@ -199,10 +171,6 @@ const { chromium } = require(pwDir);
         console.log(`\n========================================`);
         console.log(`TOTAL PRUEBAS: ${passed + failed} | EXITOSAS: ${passed} | FALLIDAS: ${failed}`);
         console.log(`========================================\n`);
-        if (failed > 0) {
-            process.exit(1);
-        } else {
-            process.exit(0);
-        }
+        process.exit(failed > 0 ? 1 : 0);
     }
 })();

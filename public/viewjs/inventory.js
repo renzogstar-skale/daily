@@ -59,6 +59,28 @@ $('#save-inventory-button').on('click', function (e)
 			Grocy.Api.Post('stock/products/' + jsonForm.product_id + '/inventory', jsonData,
 				function (result)
 				{
+					// El conteo ya no cambia el stock: deja un ajuste pendiente de aprobación (o informa que coincide)
+					if (result && !Array.isArray(result) && result.pending_approval !== undefined)
+					{
+						Grocy.FrontendHelpers.EndUiBusy("inventory-form");
+						if (result.pending_approval)
+						{
+							toastr.warning(result.message + '<br><a class="btn btn-secondary btn-sm mt-2" href="' + U('/stockoverview') + '#inv-ops-counts">Ver ajustes pendientes</a>');
+						}
+						else
+						{
+							toastr.success(result.message);
+						}
+						Grocy.Components.ProductAmountPicker.Reset();
+						$('#inventory-change-info').addClass('d-none');
+						$('#display_amount').val('');
+						$('#note').val('');
+						Grocy.Components.ProductPicker.Clear();
+						Grocy.Components.ProductPicker.GetInputElement().focus();
+						Grocy.FrontendHelpers.ValidateForm('inventory-form');
+						return;
+					}
+
 					bookingResponse = result;
 
 					if (GetUriParam("flow") === "InplaceAddBarcodeToExistingProduct")

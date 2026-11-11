@@ -226,6 +226,8 @@ $app->group('', function (RouteCollectorProxy $group)
 	$group->get('/pos/returns', [SalesController::class, 'PosReturns']);
 	$group->get('/sales', [SalesController::class, 'SalesHistory']);
 	$group->get('/customers', [SalesController::class, 'CustomersList']);
+	$group->get('/customers/export', [\Grocy\Controllers\Api\CustomerCrmApiController::class, 'Export']);
+	$group->get('/customers/{customerId:[0-9]+}', [SalesController::class, 'CustomerProfile']);
 
 	// Executive KPIs & Analytics
 	$group->get('/today', [KpiController::class, 'Today']);
@@ -438,6 +440,7 @@ $app->group('/api', function (RouteCollectorProxy $group)
 	$group->post('/waste/{wasteId}/approve', [WasteApiController::class, 'ApproveWaste']);
 	$group->post('/waste/{wasteId}/reject', [WasteApiController::class, 'RejectWaste']);
 	$group->post('/waste/{wasteId}/request-info', [WasteApiController::class, 'RequestWasteInfo']);
+	$group->post('/waste/{wasteId}/evidence', [WasteApiController::class, 'AttachWasteEvidence']);
 	$group->post('/waste/upload-photo', [WasteApiController::class, 'UploadWastePhoto']);
 	$group->get('/waste/photo/{fileName}', [WasteApiController::class, 'ServeWastePhoto']);
 	$group->post('/waste/action-plans', [WasteApiController::class, 'SaveActionPlan']);
@@ -454,6 +457,9 @@ $app->group('/api', function (RouteCollectorProxy $group)
 	$group->get('/sales/department-performance', [SalesApiController::class, 'GetDepartmentPerformance']);
 	$group->get('/sales/ty-ly', [SalesApiController::class, 'GetTyLyComparison']);
 	$group->get('/sales/department-performance/category/{groupId}', [SalesApiController::class, 'GetDepartmentCategoryProducts']);
+	$group->post('/sales/departments/config', [SalesApiController::class, 'SaveDepartmentConfig']);
+	$group->post('/sales/history/corrections', [SalesApiController::class, 'SaveHistoryCorrection']);
+	$group->post('/sales/history/closures', [SalesApiController::class, 'SaveHistoryClosure']);
 	$group->get('/sales/{saleId}', [SalesApiController::class, 'GetSale']);
 	$group->post('/sales', [SalesApiController::class, 'CreateSale']);
 	$group->post('/sales/{saleId}/cancel', [SalesApiController::class, 'CancelSale']);
@@ -489,6 +495,8 @@ $app->group('/api', function (RouteCollectorProxy $group)
 
 	// Suppliers & Procurement API
 	$group->get('/suppliers', [SupplierProcurementApiController::class, 'GetSuppliers']);
+	$group->get('/suppliers/contracts', [SupplierProcurementApiController::class, 'GetContracts']);
+	$group->post('/suppliers/contracts', [SupplierProcurementApiController::class, 'SaveContract']);
 	$group->get('/suppliers/{supplierId}', [SupplierProcurementApiController::class, 'GetSupplier']);
 	$group->post('/suppliers', [SupplierProcurementApiController::class, 'SaveSupplier']);
 	$group->post('/suppliers/{supplierId}/toggle-active', [SupplierProcurementApiController::class, 'ToggleActive']);
@@ -504,16 +512,26 @@ $app->group('/api', function (RouteCollectorProxy $group)
 
 	// MRP & Materials Planning API
 	$group->get('/mrp/calculate', [MrpApiController::class, 'GetMrpCalculations']);
+	$group->post('/mrp/simulate', [MrpApiController::class, 'SimulateDemand']);
+	$group->get('/mrp/forecast/branches', [MrpApiController::class, 'GetBranchForecast']);
+	$group->get('/mrp/transfers/recommendations', [MrpApiController::class, 'GetTransferRecommendations']);
+	$group->post('/mrp/transfers/execute', [MrpApiController::class, 'ExecuteTransferRecommendation']);
+	$group->get('/mrp/deliveries/pending', [MrpApiController::class, 'GetPendingDeliveries']);
+	$group->get('/mrp/history', [MrpApiController::class, 'GetSupplyHistory']);
 	$group->get('/mrp/orders', [MrpApiController::class, 'GetOrders']);
 	$group->post('/mrp/order/create', [MrpApiController::class, 'CreateOrder']);
 	$group->post('/mrp/orders/generate', [MrpApiController::class, 'GenerateOrders']);
 	$group->post('/mrp/orders/bulk-approve', [MrpApiController::class, 'BulkApproveOrders']);
 	$group->post('/mrp/quotations/request', [MrpApiController::class, 'RequestQuotation']);
+	$group->post('/mrp/order/{orderId}/draft-items', [MrpApiController::class, 'UpdateDraftOrder']);
 	$group->post('/mrp/order/{orderId}/approve', [MrpApiController::class, 'ApproveOrder']);
 	$group->get('/mrp/order/{orderId}', [MrpApiController::class, 'GetOrder']);
 	$group->post('/mrp/order/{orderId}/send', [MrpApiController::class, 'SendOrder']);
+	$group->post('/mrp/order/{orderId}/confirm', [MrpApiController::class, 'ConfirmOrder']);
 	$group->post('/mrp/order/{orderId}/close', [MrpApiController::class, 'CloseOrder']);
 	$group->post('/mrp/order/{orderId}/receive', [MrpApiController::class, 'ReceiveOrder']);
+	$group->post('/mrp/order/{orderId}/receive-admin', [MrpApiController::class, 'ReceiveOrderAdmin']);
+	$group->post('/mrp/receipts/{receiptId}/confirm-physical', [MrpApiController::class, 'ConfirmPhysicalReceipt']);
 	$group->post('/mrp/order/{orderId}/invoice', [MrpApiController::class, 'RegisterInvoice']);
 	$group->get('/mrp/invoices/{invoiceId}/items', [MrpApiController::class, 'GetInvoiceItems']);
 	$group->post('/mrp/invoices/{invoiceId}/decide', [MrpApiController::class, 'DecideInvoice']);
@@ -641,6 +659,12 @@ $app->group('/api', function (RouteCollectorProxy $group)
 	$group->post('/schedule/vacations', [ScheduleApiController::class, 'SaveVacation']);
 	$group->get('/schedule/holidays', [ScheduleApiController::class, 'GetHolidays']);
 	$group->get('/schedule/policies', [ScheduleApiController::class, 'GetCompanyPolicies']);
+	$group->post('/schedule/policies', [ScheduleApiController::class, 'SaveCompanyPolicy']);
+	$group->get('/schedule/jurisdictions', [ScheduleApiController::class, 'GetJurisdictions']);
+	$group->get('/schedule/coverage/hourly', [ScheduleApiController::class, 'GetDepartmentHourlyCoverage']);
+	$group->get('/schedule/compensatory', [ScheduleApiController::class, 'GetCompensatoryLedger']);
+	$group->post('/schedule/compensatory', [ScheduleApiController::class, 'AccrueOrRedeemCompensatory']);
+	$group->get('/schedule/vacations/balances', [ScheduleApiController::class, 'GetVacationBalances']);
 	$group->post('/schedule/collaborators', [ScheduleApiController::class, 'RegisterCollaborator']);
 
 	// DEMO · Tienda Integral (Escenario aislado de 25 personas y 7 áreas)
@@ -655,6 +679,10 @@ $app->group('/api', function (RouteCollectorProxy $group)
 	$group->get('/retail/expiry/rules', [RetailPreventionApiController::class, 'GetExpiryRules']);
 	$group->post('/retail/expiry/rules', [RetailPreventionApiController::class, 'SaveExpiryRule']);
 	$group->get('/retail/dispatch/orders/{id}', [RetailPreventionApiController::class, 'GetDispatchOrderDetail']);
+	$group->get('/retail/dispatch/orders/{id}/label', [RetailPreventionApiController::class, 'GetDispatchLabel']);
+	$group->post('/retail/dispatch/create-order', [RetailPreventionApiController::class, 'CreateDispatchOrder']);
+	$group->post('/retail/dispatch/reserve-order', [RetailPreventionApiController::class, 'ReserveOrder']);
+	$group->post('/retail/dispatch/pack-order', [RetailPreventionApiController::class, 'PackOrder']);
 	$group->post('/retail/dispatch/verify-pickup', [RetailPreventionApiController::class, 'VerifyPickup']);
 	$group->post('/retail/dispatch/record-delivery', [RetailPreventionApiController::class, 'RecordDelivery']);
 	$group->post('/retail/dispatch/scan-upc', [RetailPreventionApiController::class, 'FastScanUPC']);
@@ -662,10 +690,21 @@ $app->group('/api', function (RouteCollectorProxy $group)
 	$group->post('/retail/dispatch/assign-picking', [RetailPreventionApiController::class, 'AssignPicking']);
 	$group->post('/retail/dispatch/schedule-transport', [RetailPreventionApiController::class, 'ScheduleTransport']);
 	$group->post('/retail/dispatch/confirm-exit', [RetailPreventionApiController::class, 'ConfirmExit']);
+	$group->post('/retail/dispatch/report-incident', [RetailPreventionApiController::class, 'ReportIncident']);
+	$group->post('/retail/dispatch/resolve-incident', [RetailPreventionApiController::class, 'ResolveIncident']);
+	$group->post('/retail/dispatch/conciliate', [RetailPreventionApiController::class, 'ConciliateOrder']);
 	$group->post('/retail/dispatch/cancel-order', [RetailPreventionApiController::class, 'CancelOrder']);
 	$group->get('/retail/dispatch/analytics', [RetailPreventionApiController::class, 'GetDispatchAnalytics']);
 	$group->get('/retail/returns', [RetailPreventionApiController::class, 'GetReturns']);
+	$group->get('/retail/returns/scan-upc', [RetailPreventionApiController::class, 'ScanReturnUpc']);
+	$group->get('/retail/returns/{id:[0-9]+}', [RetailPreventionApiController::class, 'GetReturnDetail']);
 	$group->post('/retail/returns', [RetailPreventionApiController::class, 'CreateReturn']);
+	$group->post('/retail/returns/{id:[0-9]+}/receive', [RetailPreventionApiController::class, 'ReceiveReturn']);
+	$group->post('/retail/returns/{id:[0-9]+}/inspect', [RetailPreventionApiController::class, 'InspectReturn']);
+	$group->post('/retail/returns/{id:[0-9]+}/classify', [RetailPreventionApiController::class, 'ClassifyReturn']);
+	$group->post('/retail/returns/{id:[0-9]+}/disposition', [RetailPreventionApiController::class, 'AuthorizeReturnDisposition']);
+	$group->post('/retail/returns/{id:[0-9]+}/conciliate', [RetailPreventionApiController::class, 'ConciliateReturn']);
+	$group->post('/retail/returns/{id:[0-9]+}/evidence', [RetailPreventionApiController::class, 'AddReturnEvidence']);
 	$group->post('/retail/returns/{id}/advance', [RetailPreventionApiController::class, 'AdvanceReturn']);
 	$group->get('/retail/bakery/dashboard', [RetailPreventionApiController::class, 'GetBakeryDashboard']);
 
@@ -702,6 +741,28 @@ $app->group('/api', function (RouteCollectorProxy $group)
 	$group->post('/inventory-control/phantom/dismiss', [LossPreventionApiController::class, 'DismissPhantom']);
 	$group->post('/inventory-control/gondola-review', [LossPreventionApiController::class, 'RequestGondolaReview']);
 	$group->post('/inventory-control/reclassify', [LossPreventionApiController::class, 'ReclassifyAbcXyz']);
+
+	// Inventario y Almacenes (InventoryOperationsService): estáticas antes que las de {id}
+	$group->get('/inventory-ops/summary', [\Grocy\Controllers\Api\InventoryOpsApiController::class, 'Summary']);
+	$group->get('/inventory-ops/positions', [\Grocy\Controllers\Api\InventoryOpsApiController::class, 'Positions']);
+	$group->get('/inventory-ops/locations', [\Grocy\Controllers\Api\InventoryOpsApiController::class, 'Locations']);
+	$group->get('/inventory-ops/kardex', [\Grocy\Controllers\Api\InventoryOpsApiController::class, 'Kardex']);
+	$group->get('/inventory-ops/anomalies', [\Grocy\Controllers\Api\InventoryOpsApiController::class, 'Anomalies']);
+	$group->get('/inventory-ops/transfers', [\Grocy\Controllers\Api\InventoryOpsApiController::class, 'Transfers']);
+	$group->get('/inventory-ops/aging', [\Grocy\Controllers\Api\InventoryOpsApiController::class, 'Aging']);
+	$group->get('/inventory-ops/coverage', [\Grocy\Controllers\Api\InventoryOpsApiController::class, 'Coverage']);
+	$group->get('/inventory-ops/lots', [\Grocy\Controllers\Api\InventoryOpsApiController::class, 'Lots']);
+	$group->get('/inventory-ops/replenishment', [\Grocy\Controllers\Api\InventoryOpsApiController::class, 'Replenishment']);
+	$group->post('/inventory-ops/replenishment', [\Grocy\Controllers\Api\InventoryOpsApiController::class, 'CreateReplenishment']);
+	$group->post('/inventory-ops/replenishment/{taskId:[0-9]+}/confirm', [\Grocy\Controllers\Api\InventoryOpsApiController::class, 'ConfirmReplenishment']);
+	$group->post('/inventory-ops/replenishment/{taskId:[0-9]+}/cancel', [\Grocy\Controllers\Api\InventoryOpsApiController::class, 'CancelReplenishment']);
+	$group->get('/inventory-ops/reservations', [\Grocy\Controllers\Api\InventoryOpsApiController::class, 'Reservations']);
+	$group->get('/inventory-ops/audit', [\Grocy\Controllers\Api\InventoryOpsApiController::class, 'Audit']);
+	$group->get('/inventory-ops/scan/{code:.+}', [\Grocy\Controllers\Api\InventoryOpsApiController::class, 'Scan']);
+	$group->get('/inventory-ops/adjustments', [\Grocy\Controllers\Api\InventoryOpsApiController::class, 'Adjustments']);
+	$group->post('/inventory-ops/adjustments', [\Grocy\Controllers\Api\InventoryOpsApiController::class, 'RequestAdjustment']);
+	$group->post('/inventory-ops/adjustments/{adjustmentId:[0-9]+}/approve', [\Grocy\Controllers\Api\InventoryOpsApiController::class, 'ApproveAdjustment']);
+	$group->post('/inventory-ops/adjustments/{adjustmentId:[0-9]+}/reject', [\Grocy\Controllers\Api\InventoryOpsApiController::class, 'RejectAdjustment']);
 	$group->post('/inventory/counts', [PhysicalCountApiController::class, 'CreateCount']);
 	$group->post('/inventory/counts/{id}/start', [PhysicalCountApiController::class, 'StartCount']);
 	$group->post('/inventory/counts/{id}/scan', [PhysicalCountApiController::class, 'ScanItem']);
@@ -981,6 +1042,9 @@ $app->group('/api', function (RouteCollectorProxy $group)
 	$group->get('/loss-control/cases/{id}/wizard-state', [\Grocy\Controllers\Api\LossCaseApiController::class, 'GetWizardState']);
 	$group->post('/loss-control/cases/{id}/root-cause', [\Grocy\Controllers\Api\LossCaseApiController::class, 'SaveRootCause']);
 	$group->post('/loss-control/cases/{id}/financial-recovery', [\Grocy\Controllers\Api\LossCaseApiController::class, 'SaveFinancialRecovery']);
+	$group->post('/loss-control/cctv/access', [\Grocy\Controllers\Api\LossCaseApiController::class, 'RecordCctvAccess']);
+	$group->get('/loss-control/cctv/logs', [\Grocy\Controllers\Api\LossCaseApiController::class, 'CctvAccessLogs']);
+	$group->get('/loss-control/pos-anomalies', [\Grocy\Controllers\Api\LossCaseApiController::class, 'PosAnomalies']);
 	$group->get('/reconciliation/overview', [ReconciliationApiController::class, 'GetOverview']);
 	$group->get('/reconciliation/products', [ReconciliationApiController::class, 'GetProducts']);
 	$group->get('/reconciliation/product/{productId}', [ReconciliationApiController::class, 'GetProduct']);
@@ -1006,22 +1070,55 @@ $app->group('/api', function (RouteCollectorProxy $group)
 
 	// DAILY: Punto de Venta Rápido (POS) — Turnos de Caja y Ventas en Espera API
 	$group->get('/pos/state', [SalesApiController::class, 'GetPosState']);
-	$group->post('/pos/shift/open', [SalesApiController::class, 'OpenShift']);
-	$group->post('/pos/shift/close', [SalesApiController::class, 'CloseShift']);
+	// POS (PosService): cobro idempotente, autorizaciones de supervisor, turnos con arqueo, recibos y consulta
+	$group->post('/pos/quote', [\Grocy\Controllers\Api\PosApiController::class, 'Quote']);
+	$group->post('/pos/checkout', [\Grocy\Controllers\Api\PosApiController::class, 'Checkout']);
+	$group->post('/pos/authorize', [\Grocy\Controllers\Api\PosApiController::class, 'Authorize']);
+	$group->get('/pos/lookup', [\Grocy\Controllers\Api\PosApiController::class, 'Lookup']);
+	$group->get('/pos/shifts/current', [\Grocy\Controllers\Api\PosApiController::class, 'CurrentShift']);
+	$group->post('/pos/shifts/open', [\Grocy\Controllers\Api\PosApiController::class, 'OpenShift']);
+	$group->get('/pos/shifts/{id:[0-9]+}', [\Grocy\Controllers\Api\PosApiController::class, 'GetShift']);
+	$group->post('/pos/shifts/{id:[0-9]+}/movement', [\Grocy\Controllers\Api\PosApiController::class, 'CashMovement']);
+	$group->post('/pos/shifts/{id:[0-9]+}/close', [\Grocy\Controllers\Api\PosApiController::class, 'CloseShift']);
+	$group->get('/pos/transactions', [\Grocy\Controllers\Api\PosApiController::class, 'Transactions']);
+	$group->get('/pos/sales/{id:[0-9]+}', [\Grocy\Controllers\Api\PosApiController::class, 'GetSale']);
+	$group->post('/pos/sales/{id:[0-9]+}/void', [\Grocy\Controllers\Api\PosApiController::class, 'VoidSale']);
+	$group->post('/pos/sales/{id:[0-9]+}/reprint', [\Grocy\Controllers\Api\PosApiController::class, 'Reprint']);
+	$group->post('/pos/hold/{holdId:[0-9]+}/recall', [\Grocy\Controllers\Api\PosApiController::class, 'Recall']);
+	// Turno sin arqueo ni fondo contado: retirados (usar /pos/shifts/...)
+	$group->post('/pos/shift/open', [\Grocy\Controllers\Api\PosApiController::class, 'OpenShift']);
 	$group->post('/pos/hold', [SalesApiController::class, 'HoldSale']);
 	$group->delete('/pos/hold/{holdId}', [SalesApiController::class, 'DeleteHeldSale']);
 	$group->post('/pos/hold/{holdId}/delete', [SalesApiController::class, 'DeleteHeldSale']);
 
 	// DAILY: Devoluciones del POS API
-	$group->get('/pos/returns/lookup', [SalesApiController::class, 'LookupSaleForReturn']);
-	$group->post('/pos/returns/validate', [SalesApiController::class, 'ValidatePosReturn']);
-	$group->post('/pos/returns/process', [SalesApiController::class, 'ProcessPosReturn']);
+	// Devoluciones comerciales (PosReturnService): elegibilidad, reembolso al medio original, nota de crédito, inspección en /returns
+	$group->get('/pos/returns/lookup', [\Grocy\Controllers\Api\PosApiController::class, 'ReturnLookup']);
+	$group->post('/pos/returns/process', [\Grocy\Controllers\Api\PosApiController::class, 'ReturnProcess']);
+	$group->get('/pos/returns/history', [\Grocy\Controllers\Api\PosApiController::class, 'ReturnHistory']);
+	$group->get('/pos/returns/{id:[0-9]+}', [\Grocy\Controllers\Api\PosApiController::class, 'ReturnGet']);
+	$group->get('/pos/credit-notes/{code}', [\Grocy\Controllers\Api\PosApiController::class, 'CreditNote']);
+	$group->get('/pos/customers/{customerId}/loyalty', [\Grocy\Controllers\Api\PosApiController::class, 'CustomerLoyalty']);
 
 	// DAILY: Directorio de Clientes API
-	$group->get('/customers', [SalesApiController::class, 'GetCustomers']);
-	$group->post('/customers', [SalesApiController::class, 'SaveCustomer']);
-	$group->post('/customers/{customerId}/toggle-active', [SalesApiController::class, 'ToggleCustomerActive']);
-	$group->post('/customers/{customerId}/notes', [SalesApiController::class, 'SaveCustomerNotes']);
+	// CRM de clientes (CustomerCrmService): datos personales enmascarados sin CUSTOMERS_PII; cambios auditados
+	$group->get('/customers', [\Grocy\Controllers\Api\CustomerCrmApiController::class, 'Directory']);
+	$group->post('/customers', [\Grocy\Controllers\Api\CustomerCrmApiController::class, 'Save']);
+	$group->post('/customers/merge', [\Grocy\Controllers\Api\CustomerCrmApiController::class, 'Merge']);
+	$group->post('/customers/settings', [\Grocy\Controllers\Api\CustomerCrmApiController::class, 'Settings']);
+	$group->post('/customers/campaigns', [\Grocy\Controllers\Api\CustomerCrmApiController::class, 'SaveCampaign']);
+	$group->post('/customers/automations/run', [\Grocy\Controllers\Api\CustomerCrmApiController::class, 'RunAutomations']);
+	$group->post('/customers/automations/{ruleId}/toggle', [\Grocy\Controllers\Api\CustomerCrmApiController::class, 'ToggleAutomation']);
+	$group->post('/customers/requests', [\Grocy\Controllers\Api\CustomerCrmApiController::class, 'SaveRequest']);
+	$group->post('/customers/requests/{requestId}', [\Grocy\Controllers\Api\CustomerCrmApiController::class, 'SaveRequest']);
+	$group->post('/customers/requests/{requestId}/credit-decision', [\Grocy\Controllers\Api\CustomerCrmApiController::class, 'CreditDecision']);
+	$group->get('/customers/{customerId}', [\Grocy\Controllers\Api\CustomerCrmApiController::class, 'Profile']);
+	$group->post('/customers/{customerId}', [\Grocy\Controllers\Api\CustomerCrmApiController::class, 'Save']);
+	$group->post('/customers/{customerId}/active', [\Grocy\Controllers\Api\CustomerCrmApiController::class, 'SetActive']);
+	$group->post('/customers/{customerId}/consents', [\Grocy\Controllers\Api\CustomerCrmApiController::class, 'Consent']);
+	$group->post('/customers/{customerId}/preferences', [\Grocy\Controllers\Api\CustomerCrmApiController::class, 'Preferences']);
+	$group->post('/customers/{customerId}/interactions', [\Grocy\Controllers\Api\CustomerCrmApiController::class, 'Interaction']);
+	$group->post('/customers/{customerId}/loyalty', [\Grocy\Controllers\Api\CustomerCrmApiController::class, 'Loyalty']);
 })->add(new CorsMiddleware($container, $app->getResponseFactory()))->add(new JsonMiddleware($container, $app->getResponseFactory()));
 
 

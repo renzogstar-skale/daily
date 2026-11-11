@@ -11,1355 +11,708 @@
 
 @section('content')
 @php
-	$customersList = is_array($customers ?? null) ? $customers : [];
-	$branchesList = $branches ?? [];
-	$selectedBranchName = 'Todas las sucursales';
-	foreach ($branchesList as $b) {
-		$bid = intval(is_object($b) ? $b->id : $b['id']);
-		if ($bid === intval($selectedBranchId)) {
-			$selectedBranchName = is_object($b) ? $b->name : $b['name'];
+	$CRM = \Grocy\Services\CustomerCrmService::class;
+	$o = $overview;
+	$s = $o['settings'];
+	$reg = $o['regional'];
+	$sym = $reg['currency_symbol'];
+	$money = fn($v) => $sym . number_format((float)$v, 2);
+	$baseUrl = fn(array $add = []) => $U('/customers') . '?' . http_build_query(array_filter(array_merge([
+		'branch_id' => $selectedBranchId,
+		'days' => $days,
+		'tab' => $tab
+	], $add), fn($v) => $v !== null && $v !== ''));
+	$selCustomer = null;
+	foreach ($customers as $item)
+	{
+		if (intval($item['id']) === intval($selectedProfileId))
+		{
+			$selCustomer = $item;
 			break;
 		}
 	}
-
-	$totalCount = $crmData['total_count'] ?? count($customersList);
-	$activeCount = $crmData['active_count'] ?? count(array_filter($customersList, fn($c) => intval($c['active'] ?? 1) === 1));
-	$repurchaseRate = $crmData['repurchase_rate'] ?? 68.5;
-	$retentionRate = $crmData['retention_rate'] ?? 84.2;
-	$avgClv = $crmData['avg_clv'] ?? 1420.00;
-	$atRiskCount = $crmData['at_risk_count'] ?? 42;
-	$pendingCasesCount = $crmData['pending_cases_count'] ?? 5;
-	$casesList = $crmData['cases'] ?? [];
-	$campaignsList = $crmData['campaigns'] ?? [];
-	$automationsList = $crmData['automations'] ?? [];
-	$alertsList = $crmData['alerts'] ?? [];
-
-	$initialSelectedId = intval($selectedCustomerId ?? ($customersList[0]['id'] ?? 1));
+	if (!$selCustomer && !empty($customers))
+	{
+		$selCustomer = $customers[0];
+	}
+	$segTone = ['champions' => 'good', 'loyal' => 'good', 'potential' => 'info', 'attention' => 'warn', 'at_risk' => 'warn', 'hibernating' => 'bad', 'none' => 'muted'];
 @endphp
 
-<div class="ded-wrapper crm-dash-wrapper" id="crmRetailDashboard">
-
-	<!-- ====================================================================
-	     ENCABEZADO: TÍTULO, SUBTÍTULO Y SELECTORES SUPERIORES EJECUTIVOS
-	     ==================================================================== -->
+<div class="ded-wrapper crm" id="crmApp" data-active-tab="{{ $tab }}">
 	<header class="ded-header">
 		<div class="ded-header-left">
-			<h1 class="ded-title">Gestión de Clientes (CRM Retail)</h1>
-			<p class="ded-subtitle">Centro de fidelización, retención, segmentación RFM, valor de vida (CLV) y atención comercial</p>
+			<div class="ded-eyebrow">CRM Retail · Ciclo de Vida &amp; Fidelización</div>
+			<div class="crm-title-row">
+				<h1 class="ded-title mb-0">Gestión de Clientes</h1>
+				<span class="crm-region-pill" title="Moneda, identificación fiscal ({{ $reg['tax_id_label'] }}) y teléfonos adaptados a {{ $reg['country_label'] }}">
+					{{ $reg['country'] }} · {{ $reg['currency_code'] }} {{ $sym }}
+				</span>
+				<button type="button" class="crm-info-tip" title="CRM exclusivo para clientes identificados: registro, segmentación RFM, fidelización, casos y retención. No incluye inventario, logística ni RR.HH.">?</button>
+			</div>
 		</div>
-
 		<div class="ded-header-right">
-			<!-- Selector de Período -->
-			<div class="ded-dropdown-container position-relative">
-				<button type="button" class="ded-select-btn ded-dropdown-toggle" id="btnCrmPeriodSelect" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" title="Seleccionar período de análisis">
-					<i data-lucide="calendar"></i>
-					<span>{{ $period === 'year' ? 'Año 2026' : ($period === 'month' ? 'Este mes' : 'Últimos 30 días') }}</span>
-					<i data-lucide="chevron-down" class="ded-chevron"></i>
-				</button>
-				<div class="dropdown-menu dropdown-menu-right shadow-sm p-1" style="font-size:12px; border-radius:8px;">
-					<a class="dropdown-item py-1 font-weight-bold" href="{{ $U('/customers?period=30d&branch_id=' . ($selectedBranchId ?? '')) }}">Últimos 30 días</a>
-					<a class="dropdown-item py-1" href="{{ $U('/customers?period=month&branch_id=' . ($selectedBranchId ?? '')) }}">Mes actual en curso</a>
-					<a class="dropdown-item py-1" href="{{ $U('/customers?period=year&branch_id=' . ($selectedBranchId ?? '')) }}">Año acumulado 2026</a>
-				</div>
-			</div>
-
-			<!-- Selector de Sucursal -->
-			<div class="ded-dropdown-container position-relative">
-				<button type="button" class="ded-select-btn ded-dropdown-toggle" id="btnCrmBranchSelect" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" title="Filtrar por sucursal">
-					<i data-lucide="store"></i>
-					<span>{{ $selectedBranchName }}</span>
-					<i data-lucide="chevron-down" class="ded-chevron"></i>
-				</button>
-				<div class="dropdown-menu dropdown-menu-right shadow-sm p-1" style="font-size:12px; border-radius:8px;">
-					<a class="dropdown-item py-1 @if(!$selectedBranchId) font-weight-bold active @endif" href="{{ $U('/customers?branch_id=') }}">
-						Todas las sucursales (Consolidado)
-					</a>
-					<div class="dropdown-divider my-1"></div>
-					@foreach($branchesList as $b)
-						@php
-							$bid = intval(is_object($b) ? $b->id : $b['id']);
-							$bname = is_object($b) ? $b->name : $b['name'];
-						@endphp
-						<a class="dropdown-item py-1 @if($bid === intval($selectedBranchId)) font-weight-bold active @endif" href="{{ $U('/customers?branch_id=' . $bid) }}">
-							{{ $bname }}
-						</a>
+			<form method="get" action="{{ $U('/customers') }}" class="ded-controls-row" id="crm-global-filters">
+				<input type="hidden" name="tab" id="crm-filter-tab" value="{{ $tab }}">
+				<select name="branch_id" class="ded-select-btn" aria-label="Sucursal" onchange="this.form.submit()">
+					<option value="">Todas las sucursales</option>
+					@foreach($branches as $b)
+						@php $bid = is_object($b) ? $b->id : $b['id']; $bn = is_object($b) ? $b->name : $b['name']; @endphp
+						<option value="{{ $bid }}" @selected($selectedBranchId == $bid)>{{ $bn }}</option>
 					@endforeach
-				</div>
-			</div>
-
-			<!-- Botones de Acción Rápida -->
-			<button type="button" class="ded-select-btn" id="btn-header-new-customer" data-toggle="modal" data-target="#modal-customer-form" title="Registrar nuevo cliente">
-				<i data-lucide="user-plus" style="color:#10b981;"></i>
-				<span>Nuevo Cliente</span>
-			</button>
-
-			<button type="button" class="ded-select-btn" data-toggle="modal" data-target="#modal-crm-new-case" title="Abrir caso de atención">
-				<i data-lucide="message-square" style="color:#f59e0b;"></i>
-				<span>Nuevo Reclamo</span>
-			</button>
-
-			<div class="dropdown d-inline-block">
-				<button type="button" class="ded-select-btn dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" title="Exportar base de clientes">
-					<i data-lucide="download"></i>
-					<span>Exportar</span>
-				</button>
-				<div class="dropdown-menu dropdown-menu-right shadow-sm p-1" style="font-size:12px; border-radius:8px;">
-					<a class="dropdown-item py-1" href="#" id="btn-export-csv"><i data-lucide="file-spreadsheet" style="width:13px;height:13px;margin-right:6px;"></i>Exportar a CSV</a>
-					<a class="dropdown-item py-1" href="#" id="btn-export-excel"><i data-lucide="table" style="width:13px;height:13px;margin-right:6px;"></i>Exportar a Excel (TSV)</a>
-					<div class="dropdown-divider my-1"></div>
-					<a class="dropdown-item py-1" href="#" onclick="window.print();"><i data-lucide="printer" style="width:13px;height:13px;margin-right:6px;"></i>Imprimir Directorio</a>
-				</div>
-			</div>
-
-			<a href="{{ $U('/pos') }}" class="ded-select-btn" title="Ir a Punto de Venta">
-				<i data-lucide="shopping-cart"></i>
-				<span>Punto de Venta (POS)</span>
+				</select>
+				<select name="days" class="ded-select-btn" aria-label="Período" onchange="this.form.submit()">
+					<option value="30" @selected($days === 30)>Últimos 30 días</option>
+					<option value="90" @selected($days === 90)>Últimos 90 días</option>
+					<option value="365" @selected($days === 365)>Últimos 12 meses</option>
+				</select>
+			</form>
+			<a class="ded-select-btn" href="{{ $U('/customers/export') . '?' . http_build_query(array_filter($filters + ['branch_id' => $selectedBranchId, 'days' => $days])) }}" title="Exportar directorio filtrado a CSV (auditado)">
+				<i data-lucide="download"></i><span>Exportar</span>
 			</a>
+			@if($canManage)
+				<button type="button" class="ded-select-btn crm-btn-primary" data-toggle="modal" data-target="#crm-new-customer">
+					<i data-lucide="user-plus"></i><span>Nuevo Cliente</span>
+				</button>
+			@endif
 		</div>
 	</header>
 
-	<!-- ====================================================================
-	     PRIMERA FILA — 5 INDICADORES EJECUTIVOS DEL CRM RETAIL
-	     ==================================================================== -->
-	<section class="crm-kpis-grid-5" aria-label="Indicadores Clave de Gestión de Clientes">
-		<!-- 1. Clientes Activos (Tarjeta destacada en verde corporativo) -->
-		<article class="ded-kpi-card is-highlight" title="Clientes activos y compradores de la base" onclick="$('#pill-tab-directory').tab('show');">
-			<div class="ded-kpi-top-highlight">
-				<div class="ded-highlight-brand">
-					<i data-lucide="users"></i>
-					<span>Clientes Activos</span>
+	{{-- 7 Pestañas del CRM Retail (estilo nativo DAILY .ded-nav-tabs-bar) --}}
+	<nav class="ded-nav-tabs-bar crm-tabs-bar" aria-label="Módulos del CRM">
+		@foreach([
+			'overview'  => ['1. Centro de Control', 'layout-dashboard', null],
+			'directory' => ['2. Base de Clientes 360°', 'users', $o['registered']],
+			'rfm'       => ['3. Segmentación RFM', 'pie-chart', null],
+			'loyalty'   => ['4. Fidelización & Puntos', 'award', null],
+			'cases'     => ['5. Atención & Casos', 'inbox', $o['open_requests'] > 0 ? $o['open_requests'] : null],
+			'campaigns' => ['6. Campañas & Retención', 'megaphone', count($campaigns)],
+			'analytics' => ['7. Inteligencia & Automatización', 'cpu', count($automations)]
+		] as $k => [$label, $icon, $badge])
+			<a class="ded-nav-tab crm-tab-pill @if($tab === $k) active @endif" data-crm-tab="{{ $k }}" href="{{ $baseUrl(['tab' => $k]) }}">
+				<i data-lucide="{{ $icon }}"></i>
+				<span>{{ $label }}</span>
+				@if($badge !== null)<span class="crm-count">{{ $badge }}</span>@endif
+			</a>
+		@endforeach
+	</nav>
+
+	{{-- 1. CENTRO DE CONTROL: Solo 5 KPI prioritarios, 1 gráfica evolución, 1 resumen RFM y alertas accionables --}}
+	<section class="crm-tab-panel @if($tab === 'overview') active @endif" id="panel-overview" data-crm-panel="overview">
+		<div class="crm-kpis-grid-5" aria-label="Indicadores prioritarios CRM">
+			<article class="ded-kpi-card is-highlight" title="Clientes registrados activos (excluye Público General / Mostrador y fichas fusionadas)">
+				<div class="ded-kpi-header"><span class="ded-kpi-label">Clientes Activos</span><i data-lucide="users" class="ded-kpi-icon"></i></div>
+				<div class="ded-kpi-value">{{ number_format($o['active_registered']) }}</div>
+				<div class="ded-kpi-sub">{{ $o['registered'] }} registrados · {{ $o['buyers_period'] }} compraron en {{ $days }}d ({{ $o['new_period'] }} nuevos)</div>
+			</article>
+
+			<article class="ded-kpi-card" title="Porcentaje de compradores del período con al menos 2 compras netas en el período seleccionado">
+				<div class="ded-kpi-header"><span class="ded-kpi-label">Tasa de Recompra</span><i data-lucide="repeat" class="ded-kpi-icon"></i></div>
+				<div class="ded-kpi-value">{{ number_format($o['repurchase_pct'], 1) }} %</div>
+				<div class="ded-kpi-sub">
+					Meta {{ number_format($o['repurchase_goal_pct'], 0) }} %
+					(<strong>{{ ($o['repurchase_diff_pp'] >= 0 ? '+' : '') . number_format($o['repurchase_diff_pp'], 1) }} pp</strong>) · {{ $o['repurchase_buyers'] }}/{{ $o['buyers_period'] }}
 				</div>
-				<div class="ded-highlight-spark-box">
-					<i data-lucide="trending-up"></i>
+			</article>
+
+			<article class="ded-kpi-card" title="Valor anual promedio proyectado entre compradores reales identificados (sin Público General)">
+				<div class="ded-kpi-header"><span class="ded-kpi-label">CLV Promedio Anual</span><i data-lucide="gem" class="ded-kpi-icon"></i></div>
+				<div class="ded-kpi-value">{{ $money($o['avg_clv']) }}</div>
+				<div class="ded-kpi-sub">Ticket prom. {{ $money($o['avg_ticket']) }} · {{ number_format($o['avg_freq_month'], 2) }} compras/mes</div>
+			</article>
+
+			<a href="{{ $baseUrl(['tab' => 'rfm']) }}" class="ded-kpi-card crm-kpi-clickable" data-jump-tab="rfm" title="Clientes segmentados como En Riesgo (RFM). Clic para ver matriz RFM">
+				<div class="ded-kpi-header"><span class="ded-kpi-label">Clientes en Riesgo</span><i data-lucide="alert-triangle" class="ded-kpi-icon"></i></div>
+				<div class="ded-kpi-value">{{ number_format($o['at_risk']) }}</div>
+				<div class="ded-kpi-sub">{{ $o['inactive'] }} inactivos (&gt;{{ $s['inactive_days'] }}d) · {{ $o['segments']['champions']['count'] }} Champions</div>
+			</a>
+
+			<a href="{{ $baseUrl(['tab' => 'cases']) }}" class="ded-kpi-card crm-kpi-clickable" data-jump-tab="cases" title="Cumplimiento de SLA y casos pendientes en Atención & Casos">
+				<div class="ded-kpi-header"><span class="ded-kpi-label">Atención y SLA</span><i data-lucide="shield-check" class="ded-kpi-icon"></i></div>
+				<div class="ded-kpi-value">{{ number_format($o['sla_compliance_pct'], 1) }} %</div>
+				<div class="ded-kpi-sub">{{ $o['open_requests'] }} casos abiertos · {{ $o['overdue_requests'] }} vencidos</div>
+			</a>
+		</div>
+
+		<div class="crm-grid-2">
+			<article class="ded-card">
+				<div class="ded-card-header">
+					<div>
+						<span class="ded-card-title">Evolución de Clientes Identificados (12 meses)</span>
+						<span class="crm-meta d-block">Nuevos vs recurrentes e ingreso neto identificado (Mostrador sigue contabilizándose en POS)</span>
+					</div>
+					<span class="crm-pill crm-info">Cobertura POS: {{ $o['identified_share_pct'] !== null ? number_format($o['identified_share_pct'], 1) . ' %' : '—' }}</span>
 				</div>
-			</div>
-			<div class="ded-kpi-val">{{ number_format($activeCount, 0) }} clientes</div>
-			<div class="ded-kpi-sub-highlight">
-				▲ +8.4 % vs período anterior · Retención {{ $retentionRate }} %
-			</div>
-		</article>
+				<div class="crm-chart"><canvas id="crmEvolutionChart" role="img" aria-label="Evolución mensual de clientes"></canvas></div>
+			</article>
 
-		<!-- 2. Tasa de Recompra -->
-		<article class="ded-kpi-card" title="Porcentaje de clientes con dos o más compras en el período" onclick="$('#pill-tab-rfm').tab('show');">
-			<div class="ded-kpi-top">
-				<span class="ded-kpi-icon"><i data-lucide="refresh-cw"></i></span>
-			</div>
-			<div class="ded-kpi-label">Tasa de Recompra</div>
-			<div class="ded-kpi-val">{{ $repurchaseRate }} %</div>
-			<div class="ded-kpi-sub">
-				<span class="ded-kpi-badge-green">▲ +3.5 pp vs meta (65 %)</span>
-			</div>
-		</article>
+			<article class="ded-card">
+				<div class="ded-card-header">
+					<div>
+						<span class="ded-card-title">Resumen Segmentación RFM</span>
+						<span class="crm-meta d-block">Total segmentados = {{ $o['registered'] }} clientes reales</span>
+					</div>
+					<a href="{{ $baseUrl(['tab' => 'rfm']) }}" class="crm-link" data-jump-tab="rfm">Detalle RFM →</a>
+				</div>
+				<ul class="crm-bars">
+					@php $totRfm = max(1, $o['registered']); @endphp
+					@foreach($o['segments'] as $k => $seg)
+						<li>
+							<span>
+								<a href="{{ $baseUrl(['tab' => 'directory', 'segment' => $k]) }}" class="crm-link">{{ $seg['label'] }}</a>
+							</span>
+							<span class="crm-bar"><span class="crm-bar-fill crm-{{ $segTone[$k] ?? 'muted' }}" style="width: {{ round($seg['count'] / $totRfm * 100) }}%"></span></span>
+							<strong class="text-right">{{ $seg['count'] }} <span class="crm-meta">({{ number_format($seg['share_pct'], 0) }}%)</span></strong>
+						</li>
+					@endforeach
+				</ul>
+				<div class="crm-foot">Ingreso neto acumulado de clientes identificados: <strong>{{ $money($o['identified_revenue']) }}</strong> en los últimos {{ $days }} días.</div>
+			</article>
+		</div>
 
-		<!-- 3. Valor de Vida (CLV Promedio) -->
-		<article class="ded-kpi-card" title="Valor monetario proyectado a 3 años por cliente activo" onclick="$('#pill-tab-analytics').tab('show');">
-			<div class="ded-kpi-top">
-				<span class="ded-kpi-icon"><i data-lucide="circle-dollar-sign"></i></span>
+		<article class="ded-card">
+			<div class="ded-card-header">
+				<span class="ded-card-title">Alertas Accionables</span>
+				<span class="crm-meta">{{ count($o['alerts']) }} prioridad(es) detectadas automáticamente</span>
 			</div>
-			<div class="ded-kpi-label">CLV Promedio Estimado</div>
-			<div class="ded-kpi-val">${{ number_format($avgClv, 2) }}</div>
-			<div class="ded-kpi-sub">Frecuencia: 3.8 compras / mes</div>
-		</article>
-
-		<!-- 4. Clientes en Riesgo de Abandono -->
-		<article class="ded-kpi-card" title="Clientes con disminución de frecuencia de compra" onclick="$('#pill-tab-campaigns').tab('show');">
-			<div class="ded-kpi-top">
-				<span class="ded-kpi-icon" style="color:#f59e0b;"><i data-lucide="alert-triangle"></i></span>
-			</div>
-			<div class="ded-kpi-label">Clientes en Riesgo</div>
-			<div class="ded-kpi-val" style="color:#b45309;">{{ $atRiskCount }} clientes</div>
-			<div class="ded-kpi-sub">3.2 % de la base · > 35 días sin compra</div>
-		</article>
-
-		<!-- 5. Casos de Atención y Reclamos -->
-		<article class="ded-kpi-card" title="Reclamos y solicitudes de clientes en seguimiento" onclick="$('#pill-tab-cases').tab('show');">
-			<div class="ded-kpi-top">
-				<span class="ded-kpi-icon"><i data-lucide="shield-alert"></i></span>
-			</div>
-			<div class="ded-kpi-label">Casos de Atención</div>
-			<div class="ded-kpi-val">{{ $pendingCasesCount }} pendientes</div>
-			<div class="ded-kpi-sub">SLA cumplimiento: 94 % · 1 crítico</div>
+			@if(empty($o['alerts']))
+				<div class="crm-notice"><span class="crm-notice-left"><i data-lucide="check-circle-2"></i> Base saludable: sin casos vencidos, duplicados críticos ni riesgos urgentes en el período.</span></div>
+			@else
+				<div class="crm-alerts-list">
+					@foreach($o['alerts'] as $al)
+						<div class="crm-alert-item is-{{ $al['severity'] }}">
+							<div>
+								<strong class="d-block" style="font-size:13px;">{{ $al['title'] }}</strong>
+								<span class="crm-meta">{{ $al['detail'] }}</span>
+							</div>
+							@if(!empty($al['target_url']))
+								<a href="{{ $U($al['target_url']) }}" class="ded-select-btn" style="white-space:nowrap;">{{ $al['action_label'] }}</a>
+							@else
+								<a href="{{ $baseUrl(array_filter(['tab' => $al['target_tab'], ($al['filter_key'] ?? '') => ($al['filter_val'] ?? '')])) }}" class="ded-select-btn" style="white-space:nowrap;">{{ $al['action_label'] }}</a>
+							@endif
+						</div>
+					@endforeach
+				</div>
+			@endif
 		</article>
 	</section>
 
-	<!-- ====================================================================
-	     BARRA DE PESTAÑAS: 7 MÓDULOS DE GESTIÓN DE CLIENTES
-	     ==================================================================== -->
-	<nav class="nav ded-nav-tabs-bar mb-3" role="tablist" aria-label="Módulos de Gestión de Clientes">
-		<button type="button" class="ded-nav-tab active" data-toggle="pill" data-target="#crm-tab-overview" role="tab" id="pill-tab-overview" aria-selected="true">
-			<i data-lucide="layout-dashboard" class="mr-1"></i>
-			<span>1. Centro de Control</span>
-		</button>
-		<button type="button" class="ded-nav-tab" data-toggle="pill" data-target="#crm-tab-directory" role="tab" id="pill-tab-directory" aria-selected="false">
-			<i data-lucide="users" class="mr-1"></i>
-			<span>2. Base de Clientes 360°</span>
-		</button>
-		<button type="button" class="ded-nav-tab" data-toggle="pill" data-target="#crm-tab-rfm" role="tab" id="pill-tab-rfm" aria-selected="false">
-			<i data-lucide="pie-chart" class="mr-1"></i>
-			<span>3. Segmentación RFM</span>
-		</button>
-		<button type="button" class="ded-nav-tab" data-toggle="pill" data-target="#crm-tab-loyalty" role="tab" id="pill-tab-loyalty" aria-selected="false">
-			<i data-lucide="award" class="mr-1"></i>
-			<span>4. Fidelización & Puntos</span>
-		</button>
-		<button type="button" class="ded-nav-tab" data-toggle="pill" data-target="#crm-tab-cases" role="tab" id="pill-tab-cases" aria-selected="false">
-			<i data-lucide="headphones" class="mr-1"></i>
-			<span>5. Atención & Casos</span>
-		</button>
-		<button type="button" class="ded-nav-tab" data-toggle="pill" data-target="#crm-tab-campaigns" role="tab" id="pill-tab-campaigns" aria-selected="false">
-			<i data-lucide="send" class="mr-1"></i>
-			<span>6. Campañas & Retención</span>
-		</button>
-		<button type="button" class="ded-nav-tab" data-toggle="pill" data-target="#crm-tab-analytics" role="tab" id="pill-tab-analytics" aria-selected="false">
-			<i data-lucide="brain-circuit" class="mr-1"></i>
-			<span>7. Inteligencia & Automatización</span>
-		</button>
-	</nav>
+	{{-- 2. BASE DE CLIENTES 360°: Tabla unificada + Ficha 360° interactiva + Control de duplicados --}}
+	<section class="crm-tab-panel @if($tab === 'directory') active @endif" id="panel-directory" data-crm-panel="directory">
+		<article class="ded-card">
+			<form method="get" action="{{ $U('/customers') }}" class="crm-filters">
+				<input type="hidden" name="branch_id" value="{{ $selectedBranchId }}">
+				<input type="hidden" name="days" value="{{ $days }}">
+				<input type="hidden" name="tab" value="directory">
+				<label class="crm-search"><i data-lucide="search"></i><input type="search" name="q" value="{{ $filters['q'] ?? '' }}" placeholder="Buscar por nombre, {{ $reg['tax_id_label'] }}, correo o teléfono…"></label>
+				<select name="segment" aria-label="Segmento RFM">
+					<option value="">Todos los segmentos</option>
+					@foreach($CRM::SEGMENTS as $k => $l)<option value="{{ $k }}" @selected(($filters['segment'] ?? '') === $k)>{{ $l }}</option>@endforeach
+				</select>
+				<select name="lifecycle" aria-label="Ciclo de vida">
+					<option value="">Ciclo de vida</option>
+					@foreach($CRM::LIFECYCLE as $k => $m)<option value="{{ $k }}" @selected(($filters['lifecycle'] ?? '') === $k)>{{ $m['label'] }}</option>@endforeach
+				</select>
+				<select name="quality" aria-label="Calidad">
+					<option value="">Identificación</option>
+					<option value="complete" @selected(($filters['quality'] ?? '') === 'complete')>Completa</option>
+					<option value="basic" @selected(($filters['quality'] ?? '') === 'basic')>Básica</option>
+					<option value="insufficient" @selected(($filters['quality'] ?? '') === 'insufficient')>Sin identificar</option>
+				</select>
+				<select name="sort" aria-label="Orden">
+					<option value="revenue" @selected(($filters['sort'] ?? 'revenue') === 'revenue')>Mayor venta neta</option>
+					<option value="tx" @selected(($filters['sort'] ?? '') === 'tx')>Más compras</option>
+					<option value="recency" @selected(($filters['sort'] ?? '') === 'recency')>Compra más reciente</option>
+					<option value="ticket" @selected(($filters['sort'] ?? '') === 'ticket')>Mayor ticket</option>
+					<option value="points" @selected(($filters['sort'] ?? '') === 'points')>Más puntos</option>
+					<option value="name" @selected(($filters['sort'] ?? '') === 'name')>Nombre A–Z</option>
+				</select>
+				<button type="submit" class="ded-select-btn">Aplicar</button>
+				@if(array_filter(array_diff_key($filters, ['days' => 1])))<a class="crm-link" href="{{ $baseUrl(['tab' => 'directory']) }}">Limpiar</a>@endif
+			</form>
 
-	<!-- ====================================================================
-	     CONTENIDO DE LAS 7 PESTAÑAS DEL CRM
-	     ==================================================================== -->
-	<div class="tab-content" id="crmDashboardTabContent">
-
-		<!-- ================================================================
-		     PESTAÑA 1: CENTRO DE CONTROL (OVERVIEW)
-		     ================================================================ -->
-		<div class="tab-pane fade show active" id="crm-tab-overview" role="tabpanel">
-			<!-- Fila 1: Segmentos RFM + Alertas Ejecutivas (2 Columnas) -->
-			<div class="ded-row-2 mb-3">
-				<!-- Columna 1: Distribución por Segmento RFM -->
-				<div class="ded-card">
-					<div class="ded-card-header">
-						<span class="ded-card-title">
-							<i data-lucide="pie-chart" style="width:15px;height:15px;color:#10b981;margin-right:6px;"></i>
-							Distribución Dinámica de Clientes (Matriz RFM)
-						</span>
-						<a href="#crm-tab-rfm" class="btn btn-xs btn-outline-success font-weight-bold" onclick="$('#pill-tab-rfm').tab('show');">Ver Matriz RFM →</a>
-					</div>
-					<div class="p-3">
-						<div class="crm-segment-matrix-grid">
-							<div class="crm-segment-box is-vip" onclick="filterBySegment('VIP');">
-								<div class="crm-segment-top">
-									<span class="crm-segment-title">VIP / Campeones</span>
-									<span class="crm-segment-count">240</span>
-								</div>
-								<div class="crm-segment-desc">Gasto medio: $4,890 · Frecuencia semanal · 18.7% share</div>
-							</div>
-
-							<div class="crm-segment-box is-loyal" onclick="filterBySegment('Frecuente');">
-								<div class="crm-segment-top">
-									<span class="crm-segment-title">Frecuentes / Leales</span>
-									<span class="crm-segment-count">510</span>
-								</div>
-								<div class="crm-segment-desc">Gasto medio: $2,120 · Compra quincenal · 39.8% share</div>
-							</div>
-
-							<div class="crm-segment-box is-new" onclick="filterBySegment('Nuevo');">
-								<div class="crm-segment-top">
-									<span class="crm-segment-title">Nuevos Compradores</span>
-									<span class="crm-segment-count">195</span>
-								</div>
-								<div class="crm-segment-desc">Registrados < 30 días · Alto potencial · 15.2% share</div>
-							</div>
-
-							<div class="crm-segment-box is-occasional" onclick="filterBySegment('Ocasional');">
-								<div class="crm-segment-top">
-									<span class="crm-segment-title">Ocasionales</span>
-									<span class="crm-segment-count">293</span>
-								</div>
-								<div class="crm-segment-desc">Compras esporádicas en festivos · 22.8% share</div>
-							</div>
-
-							<div class="crm-segment-box is-atrisk" onclick="filterBySegment('Riesgo');">
-								<div class="crm-segment-top">
-									<span class="crm-segment-title">En Riesgo de Abandono</span>
-									<span class="crm-segment-count">42</span>
-								</div>
-								<div class="crm-segment-desc">> 35 días sin visita · Requieren reactivación</div>
-							</div>
-						</div>
-					</div>
+			<div class="crm-grid-360">
+				<div class="table-responsive crm-scroll">
+					<table class="table crm-table" id="crm-directory-table">
+						<thead><tr>
+							<th>Cliente</th>
+							<th>Contacto</th>
+							<th>Segmento / Nivel</th>
+							<th class="text-right">Compras ({{ $days }}d)</th>
+							<th class="text-right">Venta neta</th>
+							<th class="text-right">Pts</th>
+						</tr></thead>
+						<tbody>
+						@forelse($customers as $c)
+							@php $life = $CRM::LIFECYCLE[$c['lifecycle']]; $isSel = $selCustomer && intval($selCustomer['id']) === intval($c['id']); @endphp
+							<tr class="crm-row-selectable @if($isSel) is-selected @endif" data-select-customer="{{ intval($c['id']) }}">
+								<td>
+									<a class="crm-name" href="{{ $U('/customers/' . $c['id']) }}">{{ $c['name'] }}</a>
+									@if(!intval($c['active']))<span class="crm-pill crm-bad">Inactivo</span>@endif
+									<div class="crm-meta">{{ $c['customer_type'] }} · {{ $c['branch_name'] ?: 'Sin sucursal' }}</div>
+								</td>
+								<td>
+									<div>{{ $c['tax_id'] ?: ($c['quality']['key'] === 'insufficient' ? 'Sin identificación' : '—') }}</div>
+									<div class="crm-meta">{{ $c['phone'] ?: ($c['email'] ?: '—') }}</div>
+								</td>
+								<td>
+									<span class="crm-pill crm-{{ $segTone[$c['segment']] ?? 'muted' }}">{{ $CRM::SEGMENTS[$c['segment']] }}</span>
+									<span class="crm-tier crm-tier-{{ $c['value_tier'] ?: 'C' }}" title="Pareto Valor">{{ $c['value_tier'] ?: 'C' }}</span>
+									<div class="crm-meta mt-1">{{ $life['label'] }} · {{ $c['loyalty_tier'] }}</div>
+								</td>
+								<td class="text-right">
+									<div><strong>{{ $c['tx'] }}</strong> <span class="crm-meta">({{ $c['tx_period'] }})</span></div>
+									<div class="crm-meta">{{ $c['last_purchase'] ? substr($c['last_purchase'], 0, 10) : 'Sin compras' }}</div>
+								</td>
+								<td class="text-right"><strong>{{ $money($c['revenue']) }}</strong><div class="crm-meta">{{ $money($c['avg_ticket']) }} tkt</div></td>
+								<td class="text-right">{{ number_format($c['points_balance']) }}</td>
+							</tr>
+						@empty
+							<tr><td colspan="6" class="crm-empty">Sin clientes identificados para estos filtros. Público General / Mostrador se gestiona en POS.</td></tr>
+						@endforelse
+						</tbody>
+					</table>
 				</div>
 
-				<!-- Columna 2: Alertas y Oportunidades Comerciales -->
-				<div class="ded-card">
-					<div class="ded-card-header">
-						<span class="ded-card-title">
-							<i data-lucide="bell" style="width:15px;height:15px;color:#f59e0b;margin-right:6px;"></i>
-							Alertas Accionables y Oportunidades de Retención
-						</span>
-						<span class="badge badge-light border text-muted">{{ count($alertsList) }} activas</span>
-					</div>
-					<div class="p-3">
-						@foreach($alertsList as $alt)
-						<div class="d-flex align-items-start justify-content-between p-2 mb-2 rounded border" style="background:rgba(255,255,255,0.7); font-size:12px;">
-							<div class="d-flex align-items-start gap-2">
-								<span class="badge @if($alt['severity'] === 'danger') badge-danger @elseif($alt['severity'] === 'warning') badge-warning @else badge-info @endif px-2 py-1 mt-1 font-weight-bold">
-									{{ strtoupper($alt['type']) }}
-								</span>
-								<div>
-									<div class="font-weight-bold text-dark">{{ $alt['title'] }}</div>
-									<div class="text-muted" style="font-size:11.5px;">{{ $alt['desc'] }}</div>
-								</div>
-							</div>
-							<button type="button" class="btn btn-xs btn-outline-dark font-weight-bold ml-2" onclick="handleCrmAlertAction('{{ $alt['target_tab'] }}');">
-								{{ $alt['action_label'] }}
-							</button>
-						</div>
-						@endforeach
-					</div>
-				</div>
-			</div>
-
-			<!-- Fila 2: Evolución CLV + Top Clientes (2 Columnas) -->
-			<div class="ded-row-2">
-				<!-- Curva de Evolución de Retención y CLV -->
-				<div class="ded-card">
-					<div class="ded-card-header">
-						<span class="ded-card-title">
-							<i data-lucide="trending-up" style="width:15px;height:15px;color:#10b981;margin-right:6px;"></i>
-							Evolución de Retención y Valor de Vida (CLV)
-						</span>
-						<span class="badge badge-success font-weight-bold">Retención 84.2%</span>
-					</div>
-					<div class="p-3">
-						<canvas id="crmClvChart" height="175"></canvas>
-					</div>
-				</div>
-
-				<!-- Top Clientes de Mayor Valor -->
-				<div class="ded-card">
-					<div class="ded-card-header">
-						<span class="ded-card-title">
-							<i data-lucide="award" style="width:15px;height:15px;color:#10b981;margin-right:6px;"></i>
-							Top Clientes de Mayor Aporte Comercial
-						</span>
-						<span class="badge badge-light border text-muted">Tier Platinum & Gold</span>
-					</div>
-					<div class="p-3">
-						<div class="table-responsive">
-							<table class="table table-sm mb-0" style="font-size:11.5px;">
-								<thead class="bg-light">
-									<tr>
-										<th>Cliente</th>
-										<th>Membresía</th>
-										<th class="text-right">Total Comprado</th>
-										<th class="text-right">Puntos</th>
-										<th class="text-right">Acción</th>
-									</tr>
-								</thead>
-								<tbody>
-									@foreach(array_slice($customersList, 0, 5) as $topC)
-									<tr>
-										<td class="font-weight-bold text-dark">
-											<div class="text-truncate" style="max-width:160px;">{{ $topC['name'] }}</div>
-										</td>
-										<td>
-											<span class="badge" style="background:{{ $topC['loyalty_color'] ?? '#0f172a' }}; color:#fff;">
-												{{ $topC['loyalty_tier'] ?? 'Gold' }}
-											</span>
-										</td>
-										<td class="text-right font-weight-bold text-dark">${{ number_format($topC['total_spent'] ?? 2450, 2) }}</td>
-										<td class="text-right font-weight-bold text-success">{{ number_format($topC['points_balance'] ?? 850, 0) }} pts</td>
-										<td class="text-right">
-											<button type="button" class="btn btn-xs btn-outline-success" onclick="selectCustomerInDirectory({{ $topC['id'] }});">Ver 360°</button>
-										</td>
-									</tr>
-									@endforeach
-								</tbody>
-							</table>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<!-- ================================================================
-		     PESTAÑA 2: BASE DE CLIENTES 360° (DIRECTORIO Y PERFIL)
-		     ================================================================ -->
-		<div class="tab-pane fade" id="crm-tab-directory" role="tabpanel">
-			<!-- Barra de Filtros del Directorio -->
-			<div class="customers-filter-bar mb-3 p-2 bg-white rounded border d-flex align-items-center justify-content-between flex-wrap gap-2">
-				<div class="customers-search-wrap position-relative flex-1" style="min-width:260px;">
-					<i data-lucide="search" style="position:absolute;left:10px;top:9px;width:14px;height:14px;color:#94a3b8;"></i>
-					<input type="text" id="crm-cust-search" class="form-control form-control-sm" placeholder="Buscar por nombre, RFC/Tax ID, correo, teléfono..." style="padding-left:32px;font-size:12px;">
-				</div>
-
-				<div class="d-flex align-items-center gap-2 flex-wrap">
-					<select id="crm-filter-type" class="custom-select custom-select-sm" style="width:130px;font-size:11.5px;">
-						<option value="all">Tipo: Todos</option>
-						<option value="Comercial">Comercial</option>
-						<option value="Institucional">Institucional</option>
-						<option value="Minorista">Minorista</option>
-						<option value="Corporativo">Corporativo</option>
-					</select>
-
-					<select id="crm-filter-segment" class="custom-select custom-select-sm" style="width:150px;font-size:11.5px;">
-						<option value="all">Segmento: Todos</option>
-						<option value="VIP">VIP / Campeón</option>
-						<option value="Frecuente">Frecuente / Leal</option>
-						<option value="Nuevo">Nuevo Comprador</option>
-						<option value="Riesgo">En Riesgo</option>
-					</select>
-
-					<button type="button" class="btn btn-sm btn-outline-secondary" id="btn-reset-filters" style="font-size:11.5px;">
-						<i data-lucide="rotate-ccw" style="width:12px;height:12px;margin-right:3px;"></i>Limpiar
-					</button>
-				</div>
-			</div>
-
-			<!-- Grid 2 Columnas: Lista de Clientes (Izq) + Ficha 360° (Der) -->
-			<div class="customers-main-grid">
-				<!-- Columna Izquierda: Tabla del Directorio -->
-				<div class="customers-card">
-					<div class="customers-table-wrap">
-						<table class="customers-table" id="crm-customers-table">
-							<thead>
-								<tr>
-									<th style="width:65px;"># ID</th>
-									<th>CLIENTE</th>
-									<th>IDENTIFICACIÓN</th>
-									<th>SEGMENTO</th>
-									<th class="text-right">TOTAL GASTO</th>
-									<th class="text-right">ACCIONES</th>
-								</tr>
-							</thead>
-							<tbody id="crm-customers-tbody">
-								@foreach($customersList as $cust)
-								@php
-									$cId = intval($cust['id']);
-									$cName = $cust['name'] ?? 'Cliente';
-									$cTax = $cust['tax_id'] ?? '—';
-									$cSegment = $cust['rfm_segment'] ?? 'Ocasional';
-									$cBadge = $cust['rfm_badge_class'] ?? 'badge-secondary';
-									$cSpent = floatval($cust['total_spent'] ?? 0);
-									$isSelected = ($cId === $initialSelectedId);
-								@endphp
-								<tr class="crm-customer-row @if($isSelected) is-selected @endif" data-id="{{ $cId }}" onclick="selectCustomerInDirectory({{ $cId }});">
-									<td class="font-mono text-muted">#{{ $cId }}</td>
-									<td>
-										<div class="font-weight-bold text-dark">{{ $cName }}</div>
-										<small class="text-muted">{{ $cust['email'] ?? $cust['phone'] ?? 'Sin contacto' }}</small>
-									</td>
-									<td class="font-mono">{{ $cTax }}</td>
-									<td>
-										<span class="badge {{ $cBadge }}">{{ $cSegment }}</span>
-									</td>
-									<td class="text-right font-weight-bold text-dark">${{ number_format($cSpent, 2) }}</td>
-									<td class="text-right">
-										<button type="button" class="btn btn-xs btn-outline-success font-weight-bold">Ver</button>
-									</td>
-								</tr>
-								@endforeach
-							</tbody>
-						</table>
-					</div>
-				</div>
-
-				<!-- Columna Derecha: Ficha 360° del Cliente -->
-				<div class="customers-card" id="crm-profile-card">
-					@php
-						$currentCust = null;
-						foreach ($customersList as $c) {
-							if (intval($c['id']) === $initialSelectedId) {
-								$currentCust = $c;
-								break;
-							}
-						}
-						if (!$currentCust && !empty($customersList)) {
-							$currentCust = $customersList[0];
-						}
-					@endphp
-					<div class="customers-profile-top">
-						<div class="d-flex align-items-center gap-3">
-							<div class="customers-profile-avatar" id="crm-avatar">
-								{{ substr($currentCust['name'] ?? 'CL', 0, 2) }}
-							</div>
+				{{-- Vista rápida 360° sincronizada con /api/customers/{id} --}}
+				<aside class="ded-card crm-sticky-card" id="crm-360-preview" aria-label="Vista rápida 360 del cliente">
+					@if($selCustomer)
+						@php $selLife = $CRM::LIFECYCLE[$selCustomer['lifecycle']]; @endphp
+						<div class="ded-card-header">
 							<div>
-								<div class="d-flex align-items-center gap-2">
-									<h4 class="font-weight-bold text-dark mb-0" id="crm-name" style="font-size:15px;">{{ $currentCust['name'] ?? 'Selecciona un cliente' }}</h4>
-									<span class="badge badge-success" id="crm-active-tag">Activo</span>
-								</div>
-								<div class="d-flex align-items-center gap-2 mt-1">
-									<span class="badge {{ $currentCust['rfm_badge_class'] ?? 'badge-success' }}" id="crm-segment-tag">{{ $currentCust['rfm_segment'] ?? 'VIP' }}</span>
-									<span class="badge" id="crm-tier-tag" style="background:{{ $currentCust['loyalty_color'] ?? '#0f172a' }}; color:#fff;">{{ $currentCust['loyalty_tier'] ?? 'Gold' }}</span>
-									<span class="text-muted font-mono" id="crm-code-tag" style="font-size:11px;">#{{ $currentCust['id'] ?? 1 }}</span>
-								</div>
+								<span class="crm-meta d-block">#{{ $selCustomer['id'] }} · {{ $selCustomer['customer_type'] }}</span>
+								<strong class="ded-card-title" id="crm-360-name">{{ $selCustomer['name'] }}</strong>
 							</div>
+							<span class="crm-pill crm-{{ $segTone[$selCustomer['segment']] ?? 'muted' }}" id="crm-360-segment">{{ $CRM::SEGMENTS[$selCustomer['segment']] }}</span>
 						</div>
-
-						<div class="dropdown">
-							<button class="btn btn-sm btn-light border" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-								<i data-lucide="more-vertical" style="width:14px;height:14px;"></i>
-							</button>
-							<div class="dropdown-menu dropdown-menu-right shadow-sm p-1" style="font-size:12px; border-radius:8px;">
-								<a class="dropdown-item py-1" href="#" onclick="openEditCustomerModal();"><i data-lucide="edit-3" style="width:12px;height:12px;margin-right:6px;"></i>Editar datos</a>
-								<a class="dropdown-item py-1" href="#" onclick="openCustomerNotesModal();"><i data-lucide="file-text" style="width:12px;height:12px;margin-right:6px;"></i>Notas y etiquetas</a>
-								<a class="dropdown-item py-1" href="#" onclick="openMergeDuplicateModal();"><i data-lucide="git-merge" style="width:12px;height:12px;margin-right:6px;"></i>Fusionar duplicado</a>
-								<div class="dropdown-divider my-1"></div>
-								<a class="dropdown-item py-1 text-success font-weight-bold" href="{{ $U('/pos') }}"><i data-lucide="shopping-cart" style="width:12px;height:12px;margin-right:6px;"></i>Cobrar en POS</a>
-							</div>
+						<dl class="crm-dl mb-2" id="crm-360-dl">
+							<dt>{{ $reg['tax_id_label'] }}</dt><dd>{{ $selCustomer['tax_id'] ?: '—' }}</dd>
+							<dt>Teléfono</dt><dd>{{ $selCustomer['phone'] ?: '—' }}</dd>
+							<dt>Correo</dt><dd>{{ $selCustomer['email'] ?: '—' }}</dd>
+							<dt>Ciclo / Nivel</dt><dd>{{ $selLife['label'] }} · {{ $selCustomer['loyalty_tier'] }} ({{ number_format($selCustomer['points_balance']) }} pts)</dd>
+							<dt>Compras netas</dt><dd>{{ $selCustomer['tx'] }} tickets · {{ $money($selCustomer['revenue']) }}</dd>
+							<dt>Frecuencia</dt><dd>{{ $selCustomer['frequency_days'] !== null ? 'cada ' . $selCustomer['frequency_days'] . ' días' : 'Compra única / sin compras' }}</dd>
+							<dt>CLV anual est.</dt><dd><strong>{{ $money($selCustomer['annual_value']) }}</strong></dd>
+						</dl>
+						<div class="d-flex flex-wrap" style="gap:6px;" id="crm-360-actions">
+							<a href="{{ $U('/customers/' . $selCustomer['id']) }}" class="ded-select-btn crm-btn-primary">Abrir ficha 360°</a>
+							<a href="{{ $U('/pos?customer_id=' . $selCustomer['id']) }}" class="ded-select-btn">Venta en POS</a>
 						</div>
-					</div>
-
-					<!-- Datos de Contacto y Fiscales -->
-					<div class="customers-meta-grid">
-						<div class="customers-meta-row">
-							<span class="customers-meta-label">Identificación Fiscal</span>
-							<span class="customers-meta-val" id="crm-tax-id">{{ $currentCust['tax_id'] ?? '—' }}</span>
-						</div>
-						<div class="customers-meta-row">
-							<span class="customers-meta-label">Teléfono de Contacto</span>
-							<span class="customers-meta-val" id="crm-phone">{{ $currentCust['phone'] ?? '—' }}</span>
-						</div>
-						<div class="customers-meta-row">
-							<span class="customers-meta-label">Correo Electrónico</span>
-							<span class="customers-meta-val" id="crm-email">{{ $currentCust['email'] ?? '—' }}</span>
-						</div>
-						<div class="customers-meta-row">
-							<span class="customers-meta-label">Sucursal Principal</span>
-							<span class="customers-meta-val" id="crm-branch">{{ $currentCust['branch_name'] ?? 'Flagship Store' }}</span>
-						</div>
-					</div>
-
-					<!-- 4 Mini KPIs del Cliente -->
-					<div class="customers-mini-kpis">
-						<div class="customers-mini-kpi">
-							<div class="mk-label">Compras</div>
-							<div class="mk-val" id="crm-kpi-tx">{{ $currentCust['total_tx'] ?? 0 }}</div>
-						</div>
-						<div class="customers-mini-kpi">
-							<div class="mk-label">Monto Total</div>
-							<div class="mk-val text-success" id="crm-kpi-spent">${{ number_format($currentCust['total_spent'] ?? 0, 0) }}</div>
-						</div>
-						<div class="customers-mini-kpi">
-							<div class="mk-label">Puntos</div>
-							<div class="mk-val text-dark" id="crm-kpi-pts">{{ number_format($currentCust['points_balance'] ?? 100, 0) }}</div>
-						</div>
-						<div class="customers-mini-kpi">
-							<div class="mk-label">Crédito</div>
-							<div class="mk-val" id="crm-kpi-credit">${{ number_format($currentCust['credit_limit'] ?? 500, 0) }}</div>
-						</div>
-					</div>
-
-					<!-- Consentimiento y Preferencias RGPD -->
-					<div class="crm-consent-pills">
-						<span class="crm-consent-pill is-granted"><i data-lucide="check" style="width:10px;height:10px;"></i> Email</span>
-						<span class="crm-consent-pill is-granted"><i data-lucide="check" style="width:10px;height:10px;"></i> SMS</span>
-						<span class="crm-consent-pill is-granted"><i data-lucide="check" style="width:10px;height:10px;"></i> WhatsApp</span>
-						<span class="crm-consent-pill is-granted" style="margin-left:auto;font-size:9.5px;color:#059669;">Consentimiento al día</span>
-					</div>
-
-					<!-- Historial de Compras Recientes -->
-					<div class="p-3 border-bottom">
-						<div class="d-flex justify-content-between align-items-center mb-2">
-							<span class="font-weight-bold text-dark" style="font-size:12px;">Últimas Compras en POS & Pedidos</span>
-							<a href="{{ $U('/sales?tab=detalle') }}" class="small font-weight-bold text-success">Ver todas</a>
-						</div>
-						<div class="table-responsive">
-							<table class="table table-sm mb-0" style="font-size:11px;">
-								<thead>
-									<tr class="text-muted border-bottom">
-										<th>Folio</th>
-										<th>Fecha</th>
-										<th class="text-right">Monto</th>
-										<th class="text-center">Estado</th>
-									</tr>
-								</thead>
-								<tbody id="crm-recent-sales-tbody">
-									<tr>
-										<td class="font-mono font-weight-bold">VTA-{{ date('Ymd') }}-0045</td>
-										<td>Hoy 11:32 AM</td>
-										<td class="text-right font-weight-bold text-dark">$48.50</td>
-										<td class="text-center"><span class="badge badge-success">Pagado</span></td>
-									</tr>
-									<tr>
-										<td class="font-mono font-weight-bold">VTA-20261104-B102</td>
-										<td>04/11 15:20 PM</td>
-										<td class="text-right font-weight-bold text-dark">$124.00</td>
-										<td class="text-center"><span class="badge badge-success">Pagado</span></td>
-									</tr>
-								</tbody>
-							</table>
-						</div>
-					</div>
-
-					<!-- Acciones Principales de la Ficha -->
-					<div class="customers-profile-actions">
-						<a href="{{ $U('/orders') }}" class="customers-act-btn">
-							<i data-lucide="package" style="width:13px;height:13px;"></i>
-							<span>Ver Pedidos</span>
-						</a>
-						<button type="button" class="customers-act-btn" onclick="openCustomerNotesModal();">
-							<i data-lucide="file-text" style="width:13px;height:13px;"></i>
-							<span>Notas</span>
-						</button>
-						<a href="{{ $U('/pos') }}" class="customers-act-btn is-primary" id="btn-profile-new-sale">
-							<i data-lucide="shopping-cart" style="width:13px;height:13px;"></i>
-							<span>Nueva Venta POS</span>
-						</a>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<!-- ================================================================
-		     PESTAÑA 3: SEGMENTACIÓN INTELIGENTE (ANÁLISIS RFM)
-		     ================================================================ -->
-		<div class="tab-pane fade" id="crm-tab-rfm" role="tabpanel">
-			<div class="ded-card mb-3">
-				<div class="ded-card-header">
-					<span class="ded-card-title">
-						<i data-lucide="pie-chart" style="width:15px;height:15px;color:#10b981;margin-right:6px;"></i>
-						Matriz de Segmentación RFM (Recencia, Frecuencia, Valor Monetario)
-					</span>
-					<button type="button" class="btn btn-xs btn-outline-success font-weight-bold" onclick="toastr.success('Segmentos recalculados con transacciones de los últimos 90 días.');">
-						<i data-lucide="refresh-cw" style="width:12px;height:12px;margin-right:3px;"></i>Recalcular RFM
-					</button>
-				</div>
-				<div class="p-3">
-					<p class="text-muted small mb-3">
-						La segmentación RFM clasifica automáticamente a los clientes según cuándo compraron por última vez (Recencia), con qué periodicidad compran (Frecuencia) y cuánto gastan en total (Monto).
-					</p>
-
-					<div class="row">
-						<div class="col-md-4 mb-3">
-							<div class="p-3 rounded border bg-white h-100">
-								<div class="d-flex justify-content-between align-items-center mb-2">
-									<h6 class="font-weight-bold text-success mb-0">Campeones (RFM 5-5-5)</h6>
-									<span class="badge badge-success">240 clientes</span>
-								</div>
-								<p class="text-muted small mb-2">Compran con alta frecuencia y gastan el mayor monto. Máxima lealtad de marca.</p>
-								<div class="small font-weight-bold mb-3">Acción: Trato preferente, acceso anticipado y recompensas exclusivas.</div>
-								<button type="button" class="btn btn-xs btn-outline-success btn-block" onclick="filterBySegment('VIP'); $('#pill-tab-directory').tab('show');">Ver Clientes Campeones</button>
-							</div>
-						</div>
-
-						<div class="col-md-4 mb-3">
-							<div class="p-3 rounded border bg-white h-100">
-								<div class="d-flex justify-content-between align-items-center mb-2">
-									<h6 class="font-weight-bold text-dark mb-0">Leales / Frecuentes (RFM 4-4-3)</h6>
-									<span class="badge badge-info">510 clientes</span>
-								</div>
-								<p class="text-muted small mb-2">Responden bien a promociones y mantienen recompra quincenal constante.</p>
-								<div class="small font-weight-bold mb-3">Acción: Venta cruzada, puntos de fidelización y recomendaciones.</div>
-								<button type="button" class="btn btn-xs btn-outline-info btn-block" onclick="filterBySegment('Frecuente'); $('#pill-tab-directory').tab('show');">Ver Clientes Leales</button>
-							</div>
-						</div>
-
-						<div class="col-md-4 mb-3">
-							<div class="p-3 rounded border bg-white h-100">
-								<div class="d-flex justify-content-between align-items-center mb-2">
-									<h6 class="font-weight-bold text-warning mb-0">En Riesgo (RFM 2-4-4)</h6>
-									<span class="badge badge-warning">42 clientes</span>
-								</div>
-								<p class="text-muted small mb-2">Gastaban montos altos pero llevan más de 35 días sin registrar actividad.</p>
-								<div class="small font-weight-bold mb-3">Acción: Campaña personalizada de recuperación con cupón directo.</div>
-								<button type="button" class="btn btn-xs btn-outline-warning btn-block" onclick="filterBySegment('Riesgo'); $('#pill-tab-directory').tab('show');">Ver Clientes en Riesgo</button>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<!-- ================================================================
-		     PESTAÑA 4: PROGRAMA DE FIDELIZACIÓN & PUNTOS (DAILY REWARDS)
-		     ================================================================ -->
-		<div class="tab-pane fade" id="crm-tab-loyalty" role="tabpanel">
-			<!-- Resumen de Niveles de Membresía -->
-			<div class="row mb-3">
-				<div class="col-md-3 mb-2">
-					<div class="crm-tier-card crm-tier-bronze">
-						<div class="crm-tier-badge"><i data-lucide="shield"></i></div>
-						<h5 class="font-weight-bold text-dark mb-1">Bronze</h5>
-						<div class="small text-muted mb-2">0 - 1,000 puntos</div>
-						<div class="badge badge-light border">1% Cashback en Puntos</div>
-					</div>
-				</div>
-
-				<div class="col-md-3 mb-2">
-					<div class="crm-tier-card crm-tier-silver">
-						<div class="crm-tier-badge"><i data-lucide="award"></i></div>
-						<h5 class="font-weight-bold text-dark mb-1">Silver</h5>
-						<div class="small text-muted mb-2">1,001 - 2,500 puntos</div>
-						<div class="badge badge-light border">2% Cashback + Cupones Mes</div>
-					</div>
-				</div>
-
-				<div class="col-md-3 mb-2">
-					<div class="crm-tier-card crm-tier-gold">
-						<div class="crm-tier-badge"><i data-lucide="star"></i></div>
-						<h5 class="font-weight-bold text-dark mb-1">Gold</h5>
-						<div class="small text-muted mb-2">2,501 - 5,000 puntos</div>
-						<div class="badge badge-warning text-dark font-weight-bold">3% Cashback + Fila Rápida</div>
-					</div>
-				</div>
-
-				<div class="col-md-3 mb-2">
-					<div class="crm-tier-card crm-tier-platinum">
-						<div class="crm-tier-badge"><i data-lucide="crown"></i></div>
-						<h5 class="font-weight-bold text-white mb-1" style="color:#0f172a !important;">Platinum</h5>
-						<div class="small text-muted mb-2">> 5,000 puntos</div>
-						<div class="badge badge-dark">5% Cashback + Envíos Gratis</div>
-					</div>
-				</div>
+					@else
+						<p class="crm-empty">Seleccione un cliente del listado para consultar su resumen 360°.</p>
+					@endif
+				</aside>
 			</div>
 
-			<!-- Calculadora de Canje y Reglas -->
-			<div class="ded-row-2">
-				<div class="ded-card">
-					<div class="ded-card-header">
-						<span class="ded-card-title">
-							<i data-lucide="calculator" style="width:15px;height:15px;color:#10b981;margin-right:6px;"></i>
-							Simulador de Canje de Puntos en Caja
-						</span>
-						<span class="badge badge-success">Equivalencia: 100 pts = $1.00</span>
-					</div>
-					<div class="p-3">
-						<div class="form-group mb-2">
-							<label class="small font-weight-bold text-muted mb-1">Puntos a Canjear:</label>
-							<input type="number" id="calc-points-input" class="form-control form-control-sm font-weight-bold" value="500" step="50" oninput="$('#calc-points-result').text('$' + (parseFloat(this.value)/100).toFixed(2));">
-						</div>
-						<div class="alert alert-light border d-flex justify-content-between align-items-center mb-3">
-							<span class="text-muted small">Descuento aplicable en el ticket POS:</span>
-							<strong class="text-success h5 mb-0" id="calc-points-result">$5.00</strong>
-						</div>
-						<button type="button" class="btn btn-sm btn-success font-weight-bold btn-block" onclick="toastr.success('Cupón de canje generado exitosamente para aplicar en POS');">
-							<i data-lucide="ticket" style="width:13px;height:13px;margin-right:4px;"></i> Generar Cupón de Canje
-						</button>
-					</div>
-				</div>
+			@if(!$canPii)<p class="crm-foot">Datos personales enmascarados para su rol (requiere permiso CUSTOMERS_PII). La búsqueda exacta por documento, correo o teléfono sigue operativa.</p>@endif
+		</article>
 
-				<div class="ded-card">
-					<div class="ded-card-header">
-						<span class="ded-card-title">
-							<i data-lucide="shield-check" style="width:15px;height:15px;color:#10b981;margin-right:6px;"></i>
-							Reglas de Acumulación y Devoluciones
-						</span>
-						<span class="badge badge-light border text-muted">Auditoría inmutable</span>
-					</div>
-					<div class="p-3" style="font-size:12px;">
-						<ul class="pl-3 mb-2 text-muted">
-							<li class="mb-1"><strong>Emisión:</strong> Por cada $1.00 cobrado en POS se emite 1 punto automáticamente.</li>
-							<li class="mb-1"><strong>Reversión en Devolución:</strong> Si se anula un ticket o se procesa una devolución en el módulo de Devoluciones del POS, los puntos asociados se descuentan de forma reversible.</li>
-							<li class="mb-1"><strong>Vigencia:</strong> Los puntos tienen una caducidad de 180 días con alertas preventivas.</li>
-						</ul>
-					</div>
-				</div>
+		@if($duplicates)
+		<article class="ded-card">
+			<div class="ded-card-header">
+				<span class="ded-card-title">Higiene de Datos · Posibles Duplicados ({{ count($duplicates) }})</span>
+				<span class="crm-meta">Unifique fichas con el mismo documento, teléfono o correo para conservar un historial limpio.</span>
 			</div>
-		</div>
+			@foreach($duplicates as $idx => $g)
+				<div class="crm-dup">
+					<div class="crm-dup-head">
+						<span class="crm-pill crm-{{ $g['confidence'] === 'alta' ? 'warn' : 'info' }}">Confianza {{ $g['confidence'] }}</span>
+						Coincide por <strong>{{ implode(', ', $g['reasons']) }}</strong>
+					</div>
+					<div class="table-responsive"><table class="table crm-table crm-table-compact">
+						<thead><tr><th>Conservar</th><th>Cliente</th><th>{{ $reg['tax_id_label'] }}</th><th>Teléfono</th><th>Correo</th><th class="text-right">Compras</th><th class="text-right">Venta neta</th></tr></thead>
+						<tbody>
+						@foreach($g['customers'] as $i => $c)
+							<tr>
+								<td><input type="radio" name="keep-{{ $idx }}" value="{{ $c['id'] }}" @checked($i === 0)></td>
+								<td><a href="{{ $U('/customers/' . $c['id']) }}">#{{ $c['id'] }} {{ $c['name'] }}</a></td>
+								<td>{{ $c['tax_id'] ?: '—' }}</td><td>{{ $c['phone'] ?: '—' }}</td><td>{{ $c['email'] ?: '—' }}</td>
+								<td class="text-right">{{ $c['tx'] }}</td><td class="text-right">{{ $money($c['revenue']) }}</td>
+							</tr>
+						@endforeach
+						</tbody>
+					</table></div>
+					@if($canManage)
+						<button type="button" class="ded-select-btn mt-2 crm-merge" data-group="{{ $idx }}" data-ids="{{ implode(',', array_column($g['customers'], 'id')) }}">Fusionar en el seleccionado</button>
+					@endif
+				</div>
+			@endforeach
+		</article>
+		@endif
+	</section>
 
-		<!-- ================================================================
-		     PESTAÑA 5: ATENCIÓN AL CLIENTE & CASOS
-		     ================================================================ -->
-		<div class="tab-pane fade" id="crm-tab-cases" role="tabpanel">
-			<div class="ded-card">
-				<div class="ded-card-header">
-					<div class="d-flex align-items-center gap-2">
-						<span class="ded-card-title">
-							<i data-lucide="headphones" style="width:15px;height:15px;color:#10b981;margin-right:6px;"></i>
-							Bandeja de Reclamos y Solicitudes de Clientes
-						</span>
-						<span class="badge badge-warning">{{ count($casesList) }} casos en curso</span>
-					</div>
-					<button type="button" class="btn btn-xs btn-success font-weight-bold" data-toggle="modal" data-target="#modal-crm-new-case">
-						<i data-lucide="plus" style="width:12px;height:12px;margin-right:3px;"></i>Nuevo Reclamo
-					</button>
+	{{-- 3. SEGMENTACIÓN RFM --}}
+	<section class="crm-tab-panel @if($tab === 'rfm') active @endif" id="panel-rfm" data-crm-panel="rfm">
+		<article class="ded-card">
+			<div class="ded-card-header">
+				<div class="d-flex align-items-center" style="gap:8px;">
+					<span class="ded-card-title">Matriz RFM (Recencia · Frecuencia · Monto)</span>
+					<button type="button" class="crm-info-tip" title="Recencia evalúa días desde la última compra frente al umbral de inactividad ({{ $s['inactive_days'] }}d). Frecuencia y Monto usan quintiles entre compradores reales. La suma coincide 1:1 con {{ $o['registered'] }} clientes registrados.">?</button>
 				</div>
-				<div class="p-3">
-					<div class="table-responsive">
-						<table class="table table-sm table-hover mb-0" style="font-size:12px;">
-							<thead class="bg-light">
-								<tr>
-									<th>Código</th>
-									<th>Cliente</th>
-									<th>Motivo / Título</th>
-									<th>Categoría</th>
-									<th class="text-center">Prioridad</th>
-									<th>Responsable</th>
-									<th>Plazo SLA</th>
-									<th class="text-center">Estado</th>
-									<th class="text-right">Acción</th>
-								</tr>
-							</thead>
-							<tbody>
-								@foreach($casesList as $cs)
-								<tr id="case-row-{{ $cs['id'] }}">
-									<td class="font-mono font-weight-bold">{{ $cs['case_number'] }}</td>
-									<td class="font-weight-bold text-dark">{{ $cs['customer_name'] }}</td>
-									<td>{{ $cs['title'] }}</td>
-									<td><span class="badge badge-light border">{{ $cs['category'] }}</span></td>
-									<td class="text-center">
-										@if($cs['priority'] === 'Crítica')
-											<span class="badge badge-danger">Crítica</span>
-										@elseif($cs['priority'] === 'Alta')
-											<span class="badge badge-warning">Alta</span>
-										@else
-											<span class="badge badge-secondary">Media</span>
-										@endif
-									</td>
-									<td>{{ $cs['assigned_to'] }}</td>
-									<td>
-										@if($cs['is_overdue'])
-											<span class="text-danger font-weight-bold"><i data-lucide="alert-triangle" style="width:11px;height:11px;"></i> {{ $cs['due_date'] }} (Vencido)</span>
-										@else
-											<span class="text-muted">{{ $cs['due_date'] }}</span>
-										@endif
-									</td>
-									<td class="text-center">
-										@if($cs['status'] === 'Resuelto')
-											<span class="badge badge-success">Resuelto</span>
-										@elseif($cs['status'] === 'Escalado')
-											<span class="badge badge-danger">Escalado</span>
-										@else
-											<span class="badge badge-warning text-dark">{{ $cs['status'] }}</span>
-										@endif
-									</td>
-									<td class="text-right">
-										@if($cs['status'] !== 'Resuelto')
-											<button type="button" class="btn btn-xs btn-success font-weight-bold" onclick="resolveCustomerCase({{ $cs['id'] }});">Resolver</button>
-										@else
-											<span class="text-muted small">Cerrado</span>
-										@endif
-									</td>
-								</tr>
-								@endforeach
-							</tbody>
-						</table>
-					</div>
-				</div>
+				<span class="crm-meta">Total segmentados: <strong>{{ $o['registered'] }}</strong> · En riesgo: <strong>{{ $o['at_risk'] }}</strong></span>
 			</div>
-		</div>
-
-		<!-- ================================================================
-		     PESTAÑA 6: CAMPAÑAS & RETENCIÓN
-		     ================================================================ -->
-		<div class="tab-pane fade" id="crm-tab-campaigns" role="tabpanel">
-			<div class="d-flex justify-content-between align-items-center mb-3">
-				<div>
-					<h5 class="font-weight-bold text-dark mb-0">Campañas Comerciales por Segmento</h5>
-					<small class="text-muted">Estrategias automáticas de reactivación, bienvenida y aumento de ticket promedio.</small>
-				</div>
-				<button type="button" class="btn btn-sm btn-success font-weight-bold" data-toggle="modal" data-target="#modal-crm-new-campaign">
-					<i data-lucide="plus" style="width:13px;height:13px;margin-right:4px;"></i>Nueva Campaña
-				</button>
-			</div>
-
-			<div class="row">
-				@foreach($campaignsList as $cmp)
-				<div class="col-md-4 mb-3">
-					<div class="crm-campaign-card bg-white h-100 d-flex flex-column justify-content-between">
-						<div>
-							<div class="d-flex justify-content-between align-items-center mb-2">
-								<span class="badge badge-success">{{ $cmp['status'] }}</span>
-								<span class="text-muted font-mono small">{{ $cmp['code'] }}</span>
-							</div>
-							<h6 class="font-weight-bold text-dark mb-1">{{ $cmp['name'] }}</h6>
-							<div class="text-muted small mb-2">Segmento: <strong>{{ $cmp['segment'] }}</strong> · {{ $cmp['channel'] }}</div>
-							<div class="p-2 bg-light rounded border mb-3 small font-weight-bold text-dark">
-								{{ $cmp['offer'] }}
-							</div>
-						</div>
-
-						<div>
-							<div class="d-flex justify-content-between small text-muted mb-1">
-								<span>Conversión:</span>
-								<strong class="text-success">{{ $cmp['conversion_rate'] }}% ({{ $cmp['converted_count'] }} clientes)</strong>
-							</div>
-							<div class="d-flex justify-content-between small text-muted mb-3">
-								<span>Ventas Generadas:</span>
-								<strong class="text-dark">${{ number_format($cmp['revenue_generated'], 2) }}</strong>
-							</div>
-							<button type="button" class="btn btn-xs btn-outline-dark btn-block font-weight-bold" onclick="toastr.info('Campaña {{ $cmp['code'] }} sincronizada con pasarela de mensajería');">
-								Gestionar Envíos
-							</button>
-						</div>
-					</div>
-				</div>
+			<div class="crm-kpis-grid-4 mb-3">
+				@foreach(['champions', 'loyal', 'at_risk', 'hibernating'] as $rk)
+					@php $rseg = $o['segments'][$rk]; @endphp
+					<a href="{{ $baseUrl(['tab' => 'directory', 'segment' => $rk]) }}" class="ded-kpi-card crm-kpi-clickable">
+						<div class="ded-kpi-header"><span class="ded-kpi-label">{{ $rseg['label'] }}</span><span class="crm-pill crm-{{ $segTone[$rk] }}">{{ number_format($rseg['share_pct'], 1) }} %</span></div>
+						<div class="ded-kpi-value">{{ $rseg['count'] }}</div>
+						<div class="ded-kpi-sub">{{ $money($rseg['revenue']) }} histórico · Ticket {{ $money($rseg['avg_ticket']) }}</div>
+					</a>
 				@endforeach
 			</div>
-		</div>
-
-		<!-- ================================================================
-		     PESTAÑA 7: INTELIGENCIA & AUTOMATIZACIÓN
-		     ================================================================ -->
-		<div class="tab-pane fade" id="crm-tab-analytics" role="tabpanel">
-			<div class="ded-card">
-				<div class="ded-card-header">
-					<span class="ded-card-title">
-						<i data-lucide="zap" style="width:15px;height:15px;color:#10b981;margin-right:6px;"></i>
-						Disparadores Automáticos Activos (Retail Automation Engine)
-					</span>
-					<span class="badge badge-success">4 Reglas Activas</span>
+			<div class="crm-grid-2">
+				<div class="table-responsive">
+					<table class="table crm-table crm-table-compact">
+						<thead><tr><th>Segmento RFM</th><th class="text-right">Clientes</th><th class="text-right">% Base</th><th class="text-right">Venta histórica</th><th class="text-right">Venta ({{ $days }}d)</th><th></th></tr></thead>
+						<tbody>
+						@foreach($o['segments'] as $k => $seg)
+							<tr>
+								<td><span class="crm-pill crm-{{ $segTone[$k] ?? 'muted' }}">{{ $seg['label'] }}</span></td>
+								<td class="text-right"><strong>{{ $seg['count'] }}</strong></td>
+								<td class="text-right">{{ number_format($seg['share_pct'], 1) }} %</td>
+								<td class="text-right">{{ $money($seg['revenue']) }}</td>
+								<td class="text-right">{{ $money($seg['revenue_period']) }}</td>
+								<td class="text-right"><a href="{{ $baseUrl(['tab' => 'directory', 'segment' => $k]) }}" class="crm-link">Ver →</a></td>
+							</tr>
+						@endforeach
+						</tbody>
+					</table>
 				</div>
-				<div class="p-3">
-					<div class="table-responsive">
-						<table class="table table-sm mb-0" style="font-size:12px;">
-							<thead class="bg-light">
-								<tr>
-									<th>Regla Automática</th>
-									<th>Condición / Disparador</th>
-									<th>Acción Ejecutada</th>
-									<th class="text-center">Ejecuciones</th>
-									<th>Última Corrida</th>
-									<th class="text-center">Estado</th>
-								</tr>
-							</thead>
-							<tbody>
-								@foreach($automationsList as $aut)
-								<tr>
-									<td class="font-weight-bold text-dark">{{ $aut['title'] }}</td>
-									<td class="text-muted">{{ $aut['trigger'] }}</td>
-									<td><span class="badge badge-light border">{{ $aut['action'] }}</span></td>
-									<td class="text-center font-weight-bold">{{ $aut['executions_count'] }}</td>
-									<td class="text-muted small">{{ $aut['last_executed'] }}</td>
-									<td class="text-center"><span class="badge badge-success"><i data-lucide="check" style="width:10px;height:10px;"></i> Activo</span></td>
-								</tr>
-								@endforeach
-							</tbody>
-						</table>
-					</div>
+				<div>
+					<h3 class="crm-h3 mt-0">Ciclo de vida operativo</h3>
+					<ul class="crm-bars">
+						@php $totLife = max(1, $o['registered']); @endphp
+						@foreach($o['lifecycle'] as $k => $m)
+							<li>
+								<a href="{{ $baseUrl(['tab' => 'directory', 'lifecycle' => $k]) }}" class="crm-link">{{ $m['label'] }}</a>
+								<span class="crm-bar"><span class="crm-bar-fill crm-{{ $m['tone'] }}" style="width: {{ round($m['count'] / $totLife * 100) }}%"></span></span>
+								<strong>{{ $m['count'] }}</strong>
+							</li>
+						@endforeach
+					</ul>
 				</div>
 			</div>
+		</article>
+	</section>
+
+	{{-- 4. FIDELIZACIÓN & PUNTOS: Configuración, saldos e historial; el canje operativo ocurre en POS --}}
+	<section class="crm-tab-panel @if($tab === 'loyalty') active @endif" id="panel-loyalty" data-crm-panel="loyalty">
+		<div class="crm-notice">
+			<span class="crm-notice-left">
+				<i data-lucide="credit-card"></i>
+				<span><strong>Operación de canje centralizada en caja:</strong> la redención de puntos durante una compra se ejecuta en el Punto de Venta (POS). Desde CRM se administran las reglas, niveles, saldos e historial.</span>
+			</span>
+			<a href="{{ $U('/pos') }}" class="ded-select-btn crm-btn-primary">Ir al POS para canjear →</a>
 		</div>
 
-	</div>
-</div>
+		<div class="crm-kpis-grid-4">
+			<article class="ded-kpi-card is-highlight">
+				<div class="ded-kpi-header"><span class="ded-kpi-label">Puntos Circulantes</span><i data-lucide="award" class="ded-kpi-icon"></i></div>
+				<div class="ded-kpi-value">{{ number_format($loyalty['total_points']) }} pts</div>
+				<div class="ded-kpi-sub">Pasivo en puntos: {{ $money($loyalty['points_liability']) }}</div>
+			</article>
+			<article class="ded-kpi-card">
+				<div class="ded-kpi-header"><span class="ded-kpi-label">Emitidos ({{ $days }}d)</span><i data-lucide="trending-up" class="ded-kpi-icon"></i></div>
+				<div class="ded-kpi-value">+{{ number_format($loyalty['earned_period']) }}</div>
+				<div class="ded-kpi-sub">Canjeados en período: −{{ number_format($loyalty['redeemed_period']) }} pts</div>
+			</article>
+			<article class="ded-kpi-card">
+				<div class="ded-kpi-header"><span class="ded-kpi-label">Niveles Gold &amp; Platinum</span><i data-lucide="crown" class="ded-kpi-icon"></i></div>
+				<div class="ded-kpi-value">{{ ($loyalty['tiers']['Gold'] ?? 0) + ($loyalty['tiers']['Platinum'] ?? 0) }}</div>
+				<div class="ded-kpi-sub">Platinum {{ $loyalty['tiers']['Platinum'] ?? 0 }} · Gold {{ $loyalty['tiers']['Gold'] ?? 0 }}</div>
+			</article>
+			<article class="ded-kpi-card">
+				<div class="ded-kpi-header"><span class="ded-kpi-label">Silver &amp; Bronze</span><i data-lucide="medal" class="ded-kpi-icon"></i></div>
+				<div class="ded-kpi-value">{{ ($loyalty['tiers']['Silver'] ?? 0) + ($loyalty['tiers']['Bronze'] ?? 0) }}</div>
+				<div class="ded-kpi-sub">Silver {{ $loyalty['tiers']['Silver'] ?? 0 }} · Bronze {{ $loyalty['tiers']['Bronze'] ?? 0 }}</div>
+			</article>
+		</div>
 
-<!-- =========================================================================
-     MODALES DEL CRM RETAIL
-     ========================================================================= -->
+		<div class="crm-grid-2">
+			<article class="ded-card">
+				<div class="ded-card-header"><span class="ded-card-title">Saldos de Puntos por Cliente</span></div>
+				<div class="table-responsive crm-scroll">
+					<table class="table crm-table crm-table-compact">
+						<thead><tr><th>Cliente</th><th>Nivel</th><th class="text-right">Saldo pts</th><th class="text-right">Valor</th><th></th></tr></thead>
+						<tbody>
+						@forelse($loyalty['balances'] as $bc)
+							<tr>
+								<td><a href="{{ $U('/customers/' . $bc['id']) }}" class="crm-name">{{ $bc['name'] }}</a></td>
+								<td><span class="crm-pill crm-muted">{{ $bc['loyalty_tier'] }}</span></td>
+								<td class="text-right"><strong>{{ number_format($bc['points_balance']) }}</strong></td>
+								<td class="text-right">{{ $money($bc['points_balance'] * $s['point_value']) }}</td>
+								<td class="text-right"><a href="{{ $U('/customers/' . $bc['id'] . '#puntos') }}" class="crm-link">Ajuste / ver</a></td>
+							</tr>
+						@empty
+							<tr><td colspan="5" class="crm-empty">{{ $loyalty['enabled'] ? 'Aún no hay movimientos de puntos en esta selección.' : 'El programa de puntos está desactivado.' }}</td></tr>
+						@endforelse
+						</tbody>
+					</table>
+				</div>
+			</article>
 
-<!-- MODAL: REGISTRAR / EDITAR CLIENTE -->
-<div class="modal fade" id="modal-customer-form" tabindex="-1" role="dialog" aria-hidden="true">
-	<div class="modal-dialog modal-lg modal-dialog-centered" role="document">
-		<div class="modal-content border-0 shadow" style="border-radius:14px;">
-			<div class="modal-header border-bottom py-3 px-4">
-				<h5 class="modal-title font-weight-bold text-dark" id="modal-customer-title">
-					<i data-lucide="user-plus" style="width:18px;height:18px;color:#10b981;margin-right:6px;"></i>
-					Registro de Cliente 360°
-				</h5>
-				<button type="button" class="close" data-dismiss="modal" aria-label="Cerrar"><span aria-hidden="true">&times;</span></button>
+			<article class="ded-card">
+				<div class="ded-card-header"><span class="ded-card-title">Historial de Movimientos ({{ $days }}d)</span></div>
+				<div class="table-responsive crm-scroll">
+					<table class="table crm-table crm-table-compact">
+						<thead><tr><th>Fecha</th><th>Cliente</th><th>Motivo</th><th class="text-right">Puntos</th></tr></thead>
+						<tbody>
+						@forelse($loyalty['ledger'] as $ld)
+							<tr>
+								<td>{{ substr($ld['created_at'], 0, 10) }}</td>
+								<td><a href="{{ $U('/customers/' . $ld['customer_id']) }}">{{ $ld['customer_name'] }}</a></td>
+								<td>{{ $ld['reason'] }}</td>
+								<td class="text-right {{ intval($ld['points']) < 0 ? 'crm-bad' : 'crm-good' }}"><strong>{{ intval($ld['points']) > 0 ? '+' : '' }}{{ $ld['points'] }}</strong></td>
+							</tr>
+						@empty
+							<tr><td colspan="4" class="crm-empty">Sin movimientos en los últimos {{ $days }} días.</td></tr>
+						@endforelse
+						</tbody>
+					</table>
+				</div>
+			</article>
+		</div>
+
+		<article class="ded-card">
+			<div class="ded-card-header">
+				<span class="ded-card-title">Parámetros del Programa, Ciclo de Vida y Región</span>
+				<button type="button" class="crm-info-tip" title="Configura tasa de acumulación/valor de punto (usados en POS), umbrales de recencia y región fiscal.">?</button>
 			</div>
-			<form id="form-customer">
-				<div class="modal-body px-4 py-3">
-					<input type="hidden" id="cust-form-id" value="">
-					<div class="form-row">
-						<div class="form-group col-md-7">
-							<label class="small font-weight-bold text-muted mb-1">Nombre o Razón Social <span class="text-danger">*</span></label>
-							<input type="text" class="form-control form-control-sm" id="cust-form-name" required placeholder="Ej. Distribuidora del Norte S.A.">
-						</div>
-						<div class="form-group col-md-5">
-							<label class="small font-weight-bold text-muted mb-1">Identificación Fiscal (RFC / RUC / Tax ID)</label>
-							<input type="text" class="form-control form-control-sm" id="cust-form-tax-id" placeholder="Ej. J-30491823-1">
-						</div>
-					</div>
-
-					<div class="form-row">
-						<div class="form-group col-md-4">
-							<label class="small font-weight-bold text-muted mb-1">Tipo de Cliente</label>
-							<select class="custom-select custom-select-sm" id="cust-form-type">
-								<option value="Comercial">Comercial</option>
-								<option value="Institucional">Institucional</option>
-								<option value="Minorista">Minorista</option>
-								<option value="Corporativo">Corporativo</option>
-							</select>
-						</div>
-						<div class="form-group col-md-4">
-							<label class="small font-weight-bold text-muted mb-1">Sucursal Principal</label>
-							<select class="custom-select custom-select-sm" id="cust-form-branch">
-								@foreach($branchesList as $br)
-									<option value="{{ $br->id }}">{{ $br->name }}</option>
-								@endforeach
-							</select>
-						</div>
-						<div class="form-group col-md-4">
-							<label class="small font-weight-bold text-muted mb-1">Estado</label>
-							<select class="custom-select custom-select-sm" id="cust-form-active">
-								<option value="1">Activo</option>
-								<option value="0">Inactivo</option>
-							</select>
-						</div>
-					</div>
-
-					<div class="form-row">
-						<div class="form-group col-md-6">
-							<label class="small font-weight-bold text-muted mb-1">Teléfono</label>
-							<input type="text" class="form-control form-control-sm" id="cust-form-phone" placeholder="Ej. +58 414-234-5678">
-						</div>
-						<div class="form-group col-md-6">
-							<label class="small font-weight-bold text-muted mb-1">Correo Electrónico</label>
-							<input type="email" class="form-control form-control-sm" id="cust-form-email" placeholder="contacto@empresa.com">
-						</div>
-					</div>
-
-					<div class="form-row">
-						<div class="form-group col-md-8">
-							<label class="small font-weight-bold text-muted mb-1">Dirección Fiscal / Entrega</label>
-							<input type="text" class="form-control form-control-sm" id="cust-form-address" placeholder="Av. Principal 123, Zona Centro">
-						</div>
-						<div class="form-group col-md-4">
-							<label class="small font-weight-bold text-muted mb-1">Límite de Crédito ($)</label>
-							<input type="number" step="0.01" min="0" class="form-control form-control-sm" id="cust-form-credit-limit" value="500.00">
-						</div>
-					</div>
-				</div>
-				<div class="modal-footer border-top py-2 px-4">
-					<button type="button" class="btn btn-sm btn-light border font-weight-bold" data-dismiss="modal">Cancelar</button>
-					<button type="submit" class="btn btn-sm btn-success font-weight-bold px-3">
-						<i data-lucide="check" style="width:13px;height:13px;margin-right:4px;"></i> Guardar Cliente
-					</button>
-				</div>
+			<form id="crm-settings" class="crm-form-grid">
+				<label class="crm-check crm-span-2">
+					<input type="checkbox" name="loyalty_enabled" value="1" @checked($s['loyalty_enabled']) @disabled(!$canManage)>
+					<span>Programa de puntos activo en POS</span>
+				</label>
+				<label>Cada {{ $sym }} de compra = 1 punto<input type="number" name="amount_per_point" value="{{ $s['amount_per_point'] }}" min="0.01" step="0.01" @disabled(!$canManage)></label>
+				<label>Valor de cada punto ({{ $sym }})<input type="number" name="point_value" value="{{ $s['point_value'] }}" min="0" step="0.0001" @disabled(!$canManage)></label>
+				<label>Acumula compras desde<input type="date" name="loyalty_start" value="{{ $s['loyalty_start'] }}" @disabled(!$canManage)></label>
+				<label>Días cliente nuevo<input type="number" name="new_days" value="{{ $s['new_days'] }}" min="7" max="180" @disabled(!$canManage)></label>
+				<label>Días cliente inactivo<input type="number" name="inactive_days" value="{{ $s['inactive_days'] }}" min="7" max="365" @disabled(!$canManage)></label>
+				<label>Meta de recompra (%)<input type="number" name="repurchase_goal_pct" value="{{ $s['repurchase_goal_pct'] }}" min="5" max="95" step="0.5" @disabled(!$canManage)></label>
+				<label>País / formato fiscal
+					<select name="country" @disabled(!$canManage)>
+						@foreach($CRM::REGIONS as $rk => $rm)<option value="{{ $rk }}" @selected($s['country'] === $rk)>{{ $rm['country_name'] }} ({{ $rm['tax_id_label'] }})</option>@endforeach
+					</select>
+				</label>
+				@if($canManage)<div class="crm-span-2"><button type="submit" class="ded-select-btn crm-btn-primary">Guardar parámetros</button></div>@endif
 			</form>
-		</div>
-	</div>
-</div>
+		</article>
+	</section>
 
-<!-- MODAL: NUEVO RECLAMO / CASO -->
-<div class="modal fade" id="modal-crm-new-case" tabindex="-1" role="dialog" aria-hidden="true">
-	<div class="modal-dialog modal-dialog-centered" role="document">
-		<div class="modal-content border-0 shadow" style="border-radius:12px;">
-			<div class="modal-header bg-light border-bottom py-2">
-				<h6 class="modal-title font-weight-bold text-dark mb-0">
-					<i data-lucide="message-square" style="width:15px;height:15px;color:#10b981;margin-right:6px;"></i>
-					Abrir Caso de Atención al Cliente
-				</h6>
-				<button type="button" class="close" data-dismiss="modal" aria-label="Cerrar"><span aria-hidden="true">&times;</span></button>
+	{{-- 5. ATENCIÓN & CASOS: Reclamos de entrega enlazados a Despachos y crédito con aprobación financiera separada --}}
+	<section class="crm-tab-panel @if($tab === 'cases') active @endif" id="panel-cases" data-crm-panel="cases">
+		<article class="ded-card">
+			<div class="crm-filters">
+				<button type="button" class="ded-select-btn crm-btn-primary" data-toggle="modal" data-target="#crm-new-request">
+					<i data-lucide="message-square-plus"></i><span>Nuevo Caso</span>
+				</button>
+				<div class="crm-seg" aria-label="Filtrar estado de casos">
+					@foreach(['pending' => 'Pendientes', 'resolved' => 'Resueltos', 'cancelled' => 'Anulados', 'all' => 'Todos'] as $sk => $sl)
+						<a href="{{ $baseUrl(['tab' => 'cases', 'req_status' => $sk, 'req_category' => $reqCategory]) }}" class="@if(($reqStatus ?: 'all') === $sk) is-active @endif">{{ $sl }}</a>
+					@endforeach
+				</div>
+				<form method="get" action="{{ $U('/customers') }}" class="d-inline-flex align-items-center" style="gap:6px;">
+					<input type="hidden" name="branch_id" value="{{ $selectedBranchId }}">
+					<input type="hidden" name="days" value="{{ $days }}">
+					<input type="hidden" name="tab" value="cases">
+					<input type="hidden" name="req_status" value="{{ $reqStatus ?: 'all' }}">
+					<select name="req_category" aria-label="Filtrar categoría" onchange="this.form.submit()">
+						<option value="">Todas las categorías</option>
+						@foreach($CRM::REQUEST_CATEGORIES as $ck => $cl)<option value="{{ $ck }}" @selected($reqCategory === $ck)>{{ $cl }}</option>@endforeach
+					</select>
+				</form>
 			</div>
-			<div class="modal-body p-3">
-				<form id="form-crm-new-case">
-					<div class="form-group mb-2">
-						<label class="small font-weight-bold text-muted mb-1">Cliente Afectado:</label>
-						<select class="custom-select custom-select-sm" id="case-customer-id">
-							@foreach($customersList as $csSelect)
-								<option value="{{ $csSelect['id'] }}">{{ $csSelect['name'] }}</option>
-							@endforeach
-						</select>
-					</div>
-					<div class="form-group mb-2">
-						<label class="small font-weight-bold text-muted mb-1">Título / Motivo:</label>
-						<input type="text" class="form-control form-control-sm" id="case-title" placeholder="Ej. Discrepancia de cobro o demora en entrega" required>
-					</div>
-					<div class="form-row mb-2">
-						<div class="col-6">
-							<label class="small font-weight-bold text-muted mb-1">Categoría:</label>
-							<select class="custom-select custom-select-sm" id="case-category">
-								<option value="Calidad de Producto">Calidad de Producto</option>
-								<option value="Facturación & Cobro">Facturación & Cobro</option>
-								<option value="Entrega & Rutas">Entrega & Rutas</option>
-								<option value="Puntos & Fidelización">Puntos & Fidelización</option>
-							</select>
-						</div>
-						<div class="col-6">
-							<label class="small font-weight-bold text-muted mb-1">Prioridad SLA:</label>
-							<select class="custom-select custom-select-sm" id="case-priority">
-								<option value="Crítica">Crítica (SLA 12h)</option>
-								<option value="Alta" selected>Alta (SLA 24h)</option>
-								<option value="Media">Media (SLA 48h)</option>
-							</select>
-						</div>
-					</div>
-					<div class="form-group mb-3">
-						<label class="small font-weight-bold text-muted mb-1">Observaciones Iniciales:</label>
-						<textarea class="form-control form-control-sm" rows="3" id="case-notes" placeholder="Detalla lo ocurrido y evidencia aportada..."></textarea>
-					</div>
-					<button type="submit" class="btn btn-sm btn-success btn-block font-weight-bold">
-						<i data-lucide="check-circle" style="width:14px;height:14px;margin-right:4px;"></i> Registrar Caso y Asignar Responsable
+
+			<div class="table-responsive">
+				<table class="table crm-table">
+					<thead><tr><th>Código</th><th>Cliente</th><th>Categoría</th><th>Asunto y detalle</th><th>Prioridad</th><th>Responsable</th><th>SLA / Vence</th><th>Estado</th><th></th></tr></thead>
+					<tbody>
+					@forelse($requests as $r)
+						<tr @if($r['overdue']) class="crm-row-overdue" @endif>
+							<td><strong>{{ $r['code'] }}</strong></td>
+							<td><a href="{{ $U('/customers/' . $r['customer_id']) }}">{{ $r['customer_name'] }}</a></td>
+							<td>
+								<span class="crm-chip">{{ $CRM::REQUEST_CATEGORIES[$r['category']] ?? $r['category'] }}</span>
+								@if($r['category'] === 'credit')
+									@php $fs = $r['financial_status'] ?? 'pending_finance'; $fTone = ['approved_finance' => 'good', 'rejected_finance' => 'bad', 'pending_finance' => 'warn'][$fs] ?? 'muted'; @endphp
+									<span class="crm-pill crm-{{ $fTone }} d-block mt-1">Finanzas: {{ $CRM::FINANCIAL_STATUSES[$fs] ?? $fs }}</span>
+								@endif
+							</td>
+							<td>
+								{{ $r['subject'] }}
+								@if($r['requested_credit_limit'] !== null)<div class="crm-meta">Cupo solicitado: <strong>{{ $money($r['requested_credit_limit']) }}</strong></div>@endif
+								@if($r['dispatch_order_id'])<div class="crm-meta">Despacho vinculado #{{ $r['dispatch_order_id'] }}</div>@endif
+								@if($r['resolution'])<div class="crm-meta">{{ $r['resolution'] }}</div>@endif
+							</td>
+							<td><span class="crm-pill crm-prio-{{ $r['priority'] }}">{{ $CRM::REQUEST_PRIORITIES[$r['priority']] }}</span></td>
+							<td>{{ $r['assigned_to'] ?: 'Sin asignar' }}</td>
+							<td>{{ $r['due_date'] ?: '—' }}@if($r['overdue']) <span class="crm-pill crm-bad">Vencida</span>@endif</td>
+							<td>{{ $CRM::REQUEST_STATUSES[$r['status']] }}</td>
+							<td class="text-right" style="white-space:nowrap;">
+								@if($r['category'] === 'delivery')
+									<a href="{{ $U('/dispatches') }}" class="crm-link mr-2" title="La resolución operativa logística se ejecuta en Despachos">Despachos →</a>
+								@endif
+								@if($r['category'] === 'credit' && ($r['financial_status'] ?? 'pending_finance') === 'pending_finance' && $canApproveFinance)
+									<button type="button" class="crm-link mr-2 text-primary" data-credit-decision="{{ json_encode(array_intersect_key($r, array_flip(['id', 'code', 'subject', 'customer_name', 'requested_credit_limit']))) }}">Aprobar crédito</button>
+								@endif
+								<button type="button" class="crm-link" data-request="{{ json_encode(array_intersect_key($r, array_flip(['id', 'code', 'subject', 'status', 'assigned_user_id', 'due_date', 'resolution', 'dispatch_order_id']))) }}">Gestionar</button>
+							</td>
+						</tr>
+					@empty
+						<tr><td colspan="9" class="crm-empty">Sin casos ni solicitudes para este filtro.</td></tr>
+					@endforelse
+					</tbody>
+				</table>
+			</div>
+		</article>
+	</section>
+
+	{{-- 6. CAMPAÑAS & RETENCIÓN --}}
+	<section class="crm-tab-panel @if($tab === 'campaigns') active @endif" id="panel-campaigns" data-crm-panel="campaigns">
+		<article class="ded-card">
+			<div class="ded-card-header">
+				<div>
+					<span class="ded-card-title">Campañas de Retención y Reactivación</span>
+					<span class="crm-meta d-block">Audiencia calculada según consentimiento vigente por canal y compras reales posteriores al inicio</span>
+				</div>
+				@if($canManage)
+					<button type="button" class="ded-select-btn crm-btn-primary" data-toggle="modal" data-target="#crm-new-campaign">
+						<i data-lucide="plus"></i><span>Nueva Campaña</span>
 					</button>
-				</form>
+				@endif
 			</div>
-		</div>
-	</div>
-</div>
 
-<!-- MODAL: NUEVA CAMPAÑA DE RETENCIÓN -->
-<div class="modal fade" id="modal-crm-new-campaign" tabindex="-1" role="dialog" aria-hidden="true">
-	<div class="modal-dialog modal-dialog-centered" role="document">
-		<div class="modal-content border-0 shadow" style="border-radius:12px;">
-			<div class="modal-header bg-light border-bottom py-2">
-				<h6 class="modal-title font-weight-bold text-dark mb-0">
-					<i data-lucide="send" style="width:15px;height:15px;color:#10b981;margin-right:6px;"></i>
-					Crear Campaña Comercial de Retención
-				</h6>
-				<button type="button" class="close" data-dismiss="modal" aria-label="Cerrar"><span aria-hidden="true">&times;</span></button>
+			<div class="crm-campaigns-grid">
+				@forelse($campaigns as $cp)
+					@php
+						$stTone = ['active' => 'good', 'paused' => 'warn', 'scheduled' => 'info', 'completed' => 'muted'][$cp['status']] ?? 'muted';
+						$stLabel = ['active' => 'Activa', 'paused' => 'Pausada', 'scheduled' => 'Programada', 'completed' => 'Finalizada'][$cp['status']] ?? $cp['status'];
+					@endphp
+					<div class="crm-campaign-card">
+						<div class="d-flex justify-content-between align-items-start" style="gap:8px;">
+							<div>
+								<strong style="font-size:14px;">{{ $cp['name'] }}</strong>
+								<div class="crm-meta">{{ $CRM::CAMPAIGN_CHANNELS[$cp['channel']] ?? $cp['channel'] }} · Segmento: {{ $CRM::SEGMENTS[$cp['target_segment']] ?? 'Todos' }}</div>
+							</div>
+							<span class="crm-pill crm-{{ $stTone }}">{{ $stLabel }}</span>
+						</div>
+						@if($cp['offer_text'])<p class="crm-meta mb-0">{{ $cp['offer_text'] }}</p>@endif
+						<div class="d-flex justify-content-between pt-2 border-top" style="font-size:12px;">
+							<span>Audiencia con permiso: <strong>{{ $cp['eligible_count'] }}</strong> / {{ $cp['target_count'] }}</span>
+							<span>Conversión: <strong>{{ $cp['converted_count'] }}</strong> ({{ number_format($cp['conversion_pct'], 1) }} %)</span>
+						</div>
+						<div class="d-flex justify-content-between align-items-center" style="font-size:12px;">
+							<span class="crm-meta">Ingreso medido: <strong>{{ $money($cp['converted_revenue']) }}</strong></span>
+							<div class="d-flex" style="gap:10px;">
+								<a href="{{ $baseUrl(['tab' => 'directory', 'segment' => $cp['target_segment'] !== 'all' ? $cp['target_segment'] : '']) }}" class="crm-link">Audiencia →</a>
+								@if($canManage)
+									<button type="button" class="crm-link crm-campaign-toggle" data-campaign-id="{{ $cp['id'] }}" data-next-status="{{ $cp['status'] === 'active' ? 'paused' : 'active' }}">
+										{{ $cp['status'] === 'active' ? 'Pausar' : 'Activar' }}
+									</button>
+								@endif
+							</div>
+						</div>
+					</div>
+				@empty
+					<p class="crm-empty">Aún no hay campañas registradas.</p>
+				@endforelse
 			</div>
-			<div class="modal-body p-3">
-				<form id="form-crm-new-campaign">
-					<div class="form-group mb-2">
-						<label class="small font-weight-bold text-muted mb-1">Nombre de la Campaña:</label>
-						<input type="text" class="form-control form-control-sm" id="cmp-name" placeholder="Ej. Reactivación Fin de Mes" required>
-					</div>
-					<div class="form-row mb-2">
-						<div class="col-6">
-							<label class="small font-weight-bold text-muted mb-1">Segmento Objetivo:</label>
-							<select class="custom-select custom-select-sm" id="cmp-segment">
-								<option value="En Riesgo VIP">En Riesgo VIP (42 clientes)</option>
-								<option value="Nuevos Compradores">Nuevos Compradores (65 clientes)</option>
-								<option value="Frecuentes / Leales">Frecuentes / Leales (120 clientes)</option>
-							</select>
-						</div>
-						<div class="col-6">
-							<label class="small font-weight-bold text-muted mb-1">Canal de Envío:</label>
-							<select class="custom-select custom-select-sm" id="cmp-channel">
-								<option value="WhatsApp + Email">WhatsApp + Email</option>
-								<option value="SMS + Notificación POS">SMS + Notificación POS</option>
-								<option value="Solo Email">Solo Email</option>
-							</select>
-						</div>
-					</div>
-					<div class="form-group mb-3">
-						<label class="small font-weight-bold text-muted mb-1">Oferta / Beneficio:</label>
-						<input type="text" class="form-control form-control-sm" id="cmp-offer" placeholder="Ej. Cupón de 15% de descuento en lácteos y carnes" required>
-					</div>
-					<button type="submit" class="btn btn-sm btn-success btn-block font-weight-bold">
-						<i data-lucide="check" style="width:14px;height:14px;margin-right:4px;"></i> Lanzar Campaña
+		</article>
+	</section>
+
+	{{-- 7. INTELIGENCIA & AUTOMATIZACIÓN (incluye auditoría PII para gerencia) --}}
+	<section class="crm-tab-panel @if($tab === 'analytics') active @endif" id="panel-analytics" data-crm-panel="analytics">
+		<article class="ded-card">
+			<div class="ded-card-header">
+				<div>
+					<span class="ded-card-title">Reglas Inteligentes y Automatización</span>
+					<span class="crm-meta d-block">Evaluación en tiempo real sobre clientes identificados de {{ $selectedBranchId ? 'la sucursal seleccionada' : 'todas las sucursales' }}</span>
+				</div>
+				@if($canManage)
+					<button type="button" class="ded-select-btn crm-btn-primary" id="crm-run-automations">
+						<i data-lucide="play"></i><span>Evaluar reglas ahora</span>
 					</button>
-				</form>
+				@endif
 			</div>
-		</div>
-	</div>
+
+			<div class="table-responsive">
+				<table class="table crm-table">
+					<thead><tr><th>Regla</th><th>Disparador</th><th>Acción / Canal</th><th class="text-right">Coincidencias reales</th><th>Última ejecución</th><th>Estado</th><th></th></tr></thead>
+					<tbody>
+					@forelse($automations as $au)
+						<tr>
+							<td><strong>{{ $au['name'] }}</strong></td>
+							<td class="crm-meta">{{ $au['trigger_type'] }}</td>
+							<td>{{ $au['action_text'] }}</td>
+							<td class="text-right"><strong>{{ $au['live_matches'] }}</strong> <span class="crm-meta">registros</span></td>
+							<td>{{ $au['last_run_at'] ? substr($au['last_run_at'], 0, 16) : 'Sin ejecutar' }}</td>
+							<td><span class="crm-pill crm-{{ intval($au['active']) ? 'good' : 'muted' }}">{{ intval($au['active']) ? 'Activa' : 'Pausada' }}</span></td>
+							<td class="text-right">
+								@if($canManage)
+									<button type="button" class="crm-link crm-auto-toggle" data-rule-id="{{ $au['id'] }}" data-next-active="{{ intval($au['active']) ? 0 : 1 }}">
+										{{ intval($au['active']) ? 'Pausar' : 'Activar' }}
+									</button>
+								@endif
+							</td>
+						</tr>
+					@empty
+						<tr><td colspan="7" class="crm-empty">Sin reglas configuradas.</td></tr>
+					@endforelse
+					</tbody>
+				</table>
+			</div>
+		</article>
+
+		@if($canManage)
+		<article class="ded-card">
+			<div class="ded-card-header">
+				<span class="ded-card-title">Auditoría y Trazabilidad CRM</span>
+				<span class="crm-meta">Consultas PII, ediciones, fusiones, aprobaciones financieras y automatizaciones</span>
+			</div>
+			<div class="table-responsive crm-scroll">
+				<table class="table crm-table crm-table-compact">
+					<thead><tr><th>Fecha</th><th>Usuario</th><th>Acción</th><th>Cliente</th><th>Detalle</th></tr></thead>
+					<tbody>
+					@forelse($audit as $a)
+						<tr>
+							<td>{{ $a['created_at'] }}</td>
+							<td>{{ $a['username'] ?? '—' }}</td>
+							<td><span class="crm-chip">{{ $a['action'] }}</span></td>
+							<td>@if($a['customer_id'])<a href="{{ $U('/customers/' . $a['customer_id']) }}">{{ $a['customer_name'] ?: '#' . $a['customer_id'] }}</a>@else — @endif</td>
+							<td class="crm-meta crm-mono">{{ $a['detail'] }}</td>
+						</tr>
+					@empty
+						<tr><td colspan="5" class="crm-empty">Sin eventos registrados.</td></tr>
+					@endforelse
+					</tbody>
+				</table>
+			</div>
+		</article>
+		@endif
+	</section>
 </div>
 
-<!-- MODAL: NOTAS Y ETIQUETAS -->
-<div class="modal fade" id="modal-customer-notes" tabindex="-1" role="dialog" aria-hidden="true">
-	<div class="modal-dialog modal-dialog-centered" role="document">
-		<div class="modal-content border-0 shadow" style="border-radius:12px;">
-			<div class="modal-header bg-light border-bottom py-2">
-				<h6 class="modal-title font-weight-bold text-dark mb-0">Notas Internas y Preferencias</h6>
-				<button type="button" class="close" data-dismiss="modal" aria-label="Cerrar"><span aria-hidden="true">&times;</span></button>
-			</div>
-			<div class="modal-body p-3">
-				<form id="form-customer-notes">
-					<input type="hidden" id="notes-cust-id" value="">
-					<div class="form-group mb-2">
-						<label class="small font-weight-bold text-muted mb-1">Etiquetas (separadas por coma):</label>
-						<input type="text" class="form-control form-control-sm" id="notes-cust-tags" placeholder="VIP, Frecuente, Pago 15d">
-					</div>
-					<div class="form-group mb-3">
-						<label class="small font-weight-bold text-muted mb-1">Observaciones Comerciales:</label>
-						<textarea class="form-control form-control-sm" rows="3" id="notes-cust-text" placeholder="Horario de recepción, persona de contacto..."></textarea>
-					</div>
-					<button type="submit" class="btn btn-sm btn-success btn-block font-weight-bold">Guardar Notas</button>
-				</form>
-			</div>
-		</div>
-	</div>
-</div>
+@include('components.crm_modals', [
+	'customersForSelect' => $customers,
+	'branches' => $branches,
+	'users' => $users,
+	'canPii' => $canPii,
+	'regional' => $reg,
+	'fixedCustomerId' => null
+])
+
+<script type="application/json" id="crm-monthly-data">{!! json_encode($o['monthly'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) !!}</script>
+<script type="application/json" id="crm-boot">{!! json_encode([
+	'canManage' => $canManage,
+	'canPii' => $canPii,
+	'canApproveFinance' => $canApproveFinance,
+	'branchId' => $selectedBranchId,
+	'days' => $days,
+	'regional' => $reg
+], JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) !!}</script>
+@endsection
 
 @push('pageScripts')
 <script src="{{ $U('/js/lucide.min.js') }}"></script>
-<script>
-$(document).ready(function() {
-	if (typeof lucide !== 'undefined') {
-		lucide.createIcons();
-	}
-
-	var rawCustomers = {!! json_encode($customersList) !!};
-
-	// 1. Sincronización Estricta de Pestañas Principales (Solo 1 Activa a la vez)
-	function syncCrmNavTabs($activeBtn) {
-		$('.ded-nav-tabs-bar .ded-nav-tab').not($activeBtn).removeClass('active is-active').attr('aria-selected', 'false');
-		$activeBtn.addClass('active is-active').attr('aria-selected', 'true');
-	}
-
-	$(document).on('click', '.ded-nav-tabs-bar .ded-nav-tab', function() {
-		syncCrmNavTabs($(this));
-	});
-
-	$('.ded-nav-tabs-bar .ded-nav-tab').on('show.bs.tab shown.bs.tab', function() {
-		syncCrmNavTabs($(this));
-	});
-
-	// 2. Gráfico Chart.js de Evolución CLV y Retención
-	var ctx = document.getElementById('crmClvChart');
-	if (ctx) {
-		new Chart(ctx, {
-			type: 'line',
-			data: {
-				labels: ['Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov'],
-				datasets: [
-					{
-						label: 'CLV Estimado ($)',
-						data: [1180, 1240, 1290, 1340, 1380, 1420],
-						borderColor: '#10b981',
-						backgroundColor: 'rgba(16, 185, 129, 0.08)',
-						fill: true,
-						tension: 0.35,
-						yAxisID: 'y-axis-clv'
-					},
-					{
-						label: 'Tasa de Retención (%)',
-						data: [78.2, 79.5, 81.0, 82.4, 83.8, 84.2],
-						borderColor: '#0f172a',
-						borderDash: [4, 4],
-						tension: 0.35,
-						fill: false,
-						yAxisID: 'y-axis-retention'
-					}
-				]
-			},
-			options: {
-				responsive: true,
-				maintainAspectRatio: false,
-				scales: {
-					yAxes: [
-						{
-							id: 'y-axis-clv',
-							type: 'linear',
-							position: 'left',
-							ticks: {
-								callback: function(val) { return '$' + val; }
-							}
-						},
-						{
-							id: 'y-axis-retention',
-							type: 'linear',
-							position: 'right',
-							gridLines: {
-								drawOnChartArea: false
-							},
-							ticks: {
-								callback: function(val) { return val + '%'; }
-							}
-						}
-					]
-				}
-			}
-		});
-	}
-
-	// 3. Selección Interactiva de Cliente en Ficha 360°
-	window.selectCustomerInDirectory = function(id) {
-		var cust = rawCustomers.find(function(c) { return parseInt(c.id, 10) === parseInt(id, 10); });
-		if (!cust) return;
-
-		$('.crm-customer-row').removeClass('is-selected');
-		$('.crm-customer-row[data-id="' + id + '"]').addClass('is-selected');
-
-		$('#crm-avatar').text(cust.name.substring(0, 2).toUpperCase());
-		$('#crm-name').text(cust.name);
-		$('#crm-tax-id').text(cust.tax_id || '—');
-		$('#crm-phone').text(cust.phone || '—');
-		$('#crm-email').text(cust.email || '—');
-		$('#crm-branch').text(cust.branch_name || 'Flagship Store');
-		$('#crm-segment-tag').text(cust.rfm_segment || 'VIP').attr('class', 'badge ' + (cust.rfm_badge_class || 'badge-success'));
-		$('#crm-tier-tag').text(cust.loyalty_tier || 'Gold').css('background', cust.loyalty_color || '#0f172a');
-		$('#crm-code-tag').text('#' + cust.id);
-
-		$('#crm-kpi-tx').text(cust.total_tx || 0);
-		$('#crm-kpi-spent').text('$' + (parseFloat(cust.total_spent) || 0).toLocaleString('en-US', { minimumFractionDigits: 0 }));
-		$('#crm-kpi-pts').text((cust.points_balance || 100).toLocaleString());
-		$('#crm-kpi-credit').text('$' + (parseFloat(cust.credit_limit) || 500).toFixed(0));
-
-		$('#btn-profile-new-sale').attr('href', U('/pos?customer_id=' + cust.id));
-
-		if (typeof lucide !== 'undefined') lucide.createIcons();
-	};
-
-	// 4. Búsqueda y Filtros en Directorio
-	function filterDirectory() {
-		var q = $.trim($('#crm-cust-search').val()).toLowerCase();
-		var typeFilter = $('#crm-filter-type').val();
-		var segFilter = $('#crm-filter-segment').val();
-
-		$('.crm-customer-row').each(function() {
-			var $row = $(this);
-			var text = $row.text().toLowerCase();
-			var matchQ = (q === '' || text.indexOf(q) !== -1);
-			var matchType = (typeFilter === 'all' || text.indexOf(typeFilter.toLowerCase()) !== -1);
-			var matchSeg = (segFilter === 'all' || text.indexOf(segFilter.toLowerCase()) !== -1);
-
-			$row.toggle(matchQ && matchType && matchSeg);
-		});
-	}
-
-	$('#crm-cust-search').on('input', filterDirectory);
-	$('#crm-filter-type, #crm-filter-segment').on('change', filterDirectory);
-
-	$('#btn-reset-filters').on('click', function() {
-		$('#crm-cust-search').val('');
-		$('#crm-filter-type').val('all');
-		$('#crm-filter-segment').val('all');
-		filterDirectory();
-	});
-
-	window.filterBySegment = function(seg) {
-		$('#crm-filter-segment').val(seg);
-		filterDirectory();
-		$('#pill-tab-directory').tab('show');
-	};
-
-	window.handleCrmAlertAction = function(targetTab) {
-		$('#pill-tab-' + targetTab).tab('show');
-	};
-
-	// 5. Casos de Atención
-	window.resolveCustomerCase = function(caseId) {
-		$('#case-row-' + caseId).find('.badge-warning, .badge-danger').removeClass('badge-warning badge-danger').addClass('badge-success').text('Resuelto');
-		$('#case-row-' + caseId).find('button').replaceWith('<span class="text-success font-weight-bold small"><i data-lucide="check"></i> Resuelto</span>');
-		toastr.success('Caso de atención marcado como resuelto.');
-		if (typeof lucide !== 'undefined') lucide.createIcons();
-	};
-
-	$('#form-crm-new-case').on('submit', function(e) {
-		e.preventDefault();
-		toastr.success('Nuevo caso registrado exitosamente.');
-		$('#modal-crm-new-case').modal('hide');
-		this.reset();
-	});
-
-	$('#form-crm-new-campaign').on('submit', function(e) {
-		e.preventDefault();
-		toastr.success('Campaña creada y activada.');
-		$('#modal-crm-new-campaign').modal('hide');
-		this.reset();
-	});
-
-	$('#form-customer').on('submit', function(e) {
-		e.preventDefault();
-		var payload = {
-			name: $('#cust-form-name').val(),
-			tax_id: $('#cust-form-tax-id').val(),
-			type: $('#cust-form-type').val(),
-			branch_id: $('#cust-form-branch').val(),
-			active: $('#cust-form-active').val(),
-			phone: $('#cust-form-phone').val(),
-			email: $('#cust-form-email').val(),
-			address: $('#cust-form-address').val(),
-			credit_limit: $('#cust-form-credit-limit').val()
-		};
-
-		$.ajax({
-			url: U('/api/customers'),
-			method: 'POST',
-			contentType: 'application/json',
-			data: JSON.stringify(payload),
-			success: function() {
-				toastr.success('Cliente registrado exitosamente en el directorio.');
-				$('#modal-customer-form').modal('hide');
-				setTimeout(function() { window.location.reload(); }, 800);
-			},
-			error: function() {
-				toastr.success('Cliente guardado exitosamente.');
-				$('#modal-customer-form').modal('hide');
-			}
-		});
-	});
-
-	window.openCustomerNotesModal = function() {
-		var selectedRow = $('.crm-customer-row.is-selected');
-		var cid = selectedRow.data('id') || 1;
-		$('#notes-cust-id').val(cid);
-		$('#modal-customer-notes').modal('show');
-	};
-
-	$('#form-customer-notes').on('submit', function(e) {
-		e.preventDefault();
-		toastr.success('Notas y etiquetas comerciales actualizadas.');
-		$('#modal-customer-notes').modal('hide');
-	});
-});
-</script>
+<script src="{{ $U('/js/daily_customers.js?v=', true) }}{{ daily_asset_version('/js/daily_customers.js') }}"></script>
 @endpush
-@endsection

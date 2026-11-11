@@ -49,7 +49,8 @@ class SalesController extends BaseController
 				IFNULL(cur.amount, 0) AS stock_amount,
 				cur.next_bbd,
 				IFNULL(cur.lots_count, 0) AS fefo_lots_count,
-				p.picture_file_name
+				p.picture_file_name,
+				p.department
 			FROM products p
 			JOIN quantity_units qu ON p.qu_id_stock = qu.id
 			LEFT JOIN product_groups pg ON p.product_group_id = pg.id
@@ -130,6 +131,15 @@ class SalesController extends BaseController
 
 		$markdowns = MarkdownService::GetInstance()->GetActiveMarkdowns();
 		$categoriesSet = [];
+		$posSet = \Grocy\Services\PosService::GetInstance()->Settings();
+		$deptOf = [];
+		foreach (\Grocy\Services\DailyMetricsService::Departments() as $dk => $dd)
+		{
+			foreach ($dd[2] ?? [] as $dv)
+			{
+				$deptOf[$dv] = $dk;
+			}
+		}
 
 		foreach ($products as $prod)
 		{
@@ -145,205 +155,42 @@ class SalesController extends BaseController
 			$prod->effective_price = $prod->markdown_pct > 0
 				? round(floatval($prod->default_sale_price) * (1.0 - ($prod->markdown_pct / 100.0)), 2)
 				: round(floatval($prod->default_sale_price), 2);
+			// Impuesto del departamento (misma regla que PosService::Quote)
+			$prod->tax_rate = floatval($posSet['tax_rates'][$deptOf[(string) $prod->department] ?? 'otros'] ?? $posSet['default_tax_rate']);
 
 			$cat = trim((string)$prod->category_name) ?: 'General';
 			$categoriesSet[$cat] = ($categoriesSet[$cat] ?? 0) + 1;
 		}
 
-		$customers = $this->DB->customers()->where('active = 1')->orderBy('id')->fetchAll();
-		$currentShift = $salesService->GetCurrentShift($selectedBranchId);
+		// Clientes vigentes (sin fusionados); el documento se enmascara si el rol no puede ver datos personales
+		$canPii = \Grocy\Services\CustomerCrmService::CanSeePii();
+		$customers = array_map(function ($c) use ($canPii) {
+			$c->tax_id = $canPii || intval($c->is_anonymous) === 1 ? $c->tax_id : \Grocy\Services\CustomerCrmService::MaskTail($c->tax_id, 3);
+			return $c;
+		}, DatabaseService::GetInstance()->GetDbConnectionRaw()->query('SELECT id, name, tax_id, is_anonymous FROM customers WHERE active = 1 AND merged_into_id IS NULL ORDER BY id')->fetchAll(\PDO::FETCH_OBJ));
 		$heldSales = $salesService->GetHeldSales($selectedBranchId);
-		$recentSales = $salesService->GetSales($selectedBranchId, null, null, 50);
+		// Caja: la elegida (parámetro register) o la primera; su turno abierto con totales reales de pagos
+		$pos = \Grocy\Services\PosService::GetInstance();
+		$registers = $pos->Registers($selectedBranchId);
+		$register = in_array($queryParams['register'] ?? '', $registers, true) ? $queryParams['register'] : $registers[0];
+		$openShift = $pos->OpenShiftFor($selectedBranchId, $register);
 
-		$rawDb = \Grocy\Services\DatabaseService::GetInstance()->GetDbConnectionRaw();
-		$cashReconciliations = $rawDb->query("SELECT * FROM daily_pos_cash_reconciliations ORDER BY id DESC LIMIT 15")->fetchAll(\PDO::FETCH_ASSOC);
-
-		// Datos operacionales para el Centro de Gestión y Supervisión POS
-		$activeRegisters = [
-			[
-				'id' => 1,
-				'name' => 'Caja 01 - Principal',
-				'code' => 'REG-01',
-				'status' => ($currentShift && ($currentShift->status ?? '') === 'open') ? 'open' : 'open',
-				'cashier_name' => 'Carlos Ruiz',
-				'cashier_role' => 'Cajero Senior',
-				'shift_name' => 'Mañana',
-				'opened_at' => '08:00',
-				'sales_count' => 45,
-				'total_sales' => 1420.50,
-				'cash_sales' => 520.50,
-				'card_sales' => 780.00,
-				'transfer_sales' => 120.00,
-				'drawer_cash' => 520.50,
-				'cash_limit' => 500.00,
-				'avg_speed_sec' => 36,
-				'queue_count' => 2,
-				'alert_text' => 'Gaveta sobre umbral ($520.50 > $500). Se sugiere retiro parcial.',
-				'alert_level' => 'warning'
-			],
-			[
-				'id' => 2,
-				'name' => 'Caja 02 - Rápida (10 ítems)',
-				'code' => 'REG-02',
-				'status' => 'open',
-				'cashier_name' => 'Ana Gómez',
-				'cashier_role' => 'Cajera',
-				'shift_name' => 'Mañana',
-				'opened_at' => '08:15',
-				'sales_count' => 62,
-				'total_sales' => 1890.00,
-				'cash_sales' => 680.00,
-				'card_sales' => 1050.00,
-				'transfer_sales' => 160.00,
-				'drawer_cash' => 680.00,
-				'cash_limit' => 500.00,
-				'avg_speed_sec' => 28,
-				'queue_count' => 1,
-				'alert_text' => 'Umbral de gaveta excedido ($680.00). Retiro de remesa pendiente.',
-				'alert_level' => 'warning'
-			],
-			[
-				'id' => 3,
-				'name' => 'Caja 03 - Autoservicio',
-				'code' => 'REG-03',
-				'status' => 'open',
-				'cashier_name' => 'Roberto Silva',
-				'cashier_role' => 'Asistente Autoservicio',
-				'shift_name' => 'Mañana',
-				'opened_at' => '08:00',
-				'sales_count' => 28,
-				'total_sales' => 982.00,
-				'cash_sales' => 0.00,
-				'card_sales' => 840.00,
-				'transfer_sales' => 142.00,
-				'drawer_cash' => 0.00,
-				'cash_limit' => 0.00,
-				'avg_speed_sec' => 22,
-				'queue_count' => 0,
-				'alert_text' => null,
-				'alert_level' => 'none'
-			],
-			[
-				'id' => 4,
-				'name' => 'Caja 04 - Mayorista & Crédito',
-				'code' => 'REG-04',
-				'status' => 'paused',
-				'cashier_name' => 'Diego Morales',
-				'cashier_role' => 'Cajero B2B',
-				'shift_name' => 'Mañana',
-				'opened_at' => '09:00',
-				'sales_count' => 7,
-				'total_sales' => 600.00,
-				'cash_sales' => 320.00,
-				'card_sales' => 280.00,
-				'transfer_sales' => 0.00,
-				'drawer_cash' => 320.00,
-				'cash_limit' => 800.00,
-				'avg_speed_sec' => 55,
-				'queue_count' => 0,
-				'alert_text' => 'En arqueo preliminar de cambio de turno.',
-				'alert_level' => 'info'
-			],
-			[
-				'id' => 5,
-				'name' => 'Caja 05 - Respaldo / Drive-Thru',
-				'code' => 'REG-05',
-				'status' => 'closed',
-				'cashier_name' => 'Sin asignar',
-				'cashier_role' => 'Terminal cerrada',
-				'shift_name' => '—',
-				'opened_at' => '—',
-				'sales_count' => 0,
-				'total_sales' => 0.00,
-				'cash_sales' => 0.00,
-				'card_sales' => 0.00,
-				'transfer_sales' => 0.00,
-				'drawer_cash' => 0.00,
-				'cash_limit' => 500.00,
-				'avg_speed_sec' => 0,
-				'queue_count' => 0,
-				'alert_text' => 'Terminal cerrada lista para apertura.',
-				'alert_level' => 'none'
-			]
-		];
-
-		// Alertas operativas en vivo de POS
-		$posAlerts = [
-			[
-				'id' => 1,
-				'register' => 'Caja 02 - Rápida',
-				'level' => 'warning',
-				'badge' => 'Umbral de Efectivo',
-				'message' => 'Gaveta acumula $680.00 en efectivo (umbral seguro: $500.00). Se recomienda realizar sangría parcial a bóveda.',
-				'time' => '10:42 AM',
-				'action_label' => 'Realizar Retiro'
-			],
-			[
-				'id' => 2,
-				'register' => 'Caja 04 - Mayorista',
-				'level' => 'danger',
-				'badge' => 'Diferencia en Arqueo',
-				'message' => 'Diferencia de -$14.50 reportada en corte preliminar. Requiere visado y firma de Supervisor.',
-				'time' => '11:15 AM',
-				'action_label' => 'Auditar Corte'
-			],
-			[
-				'id' => 3,
-				'register' => 'Caja 01 - Principal',
-				'level' => 'success',
-				'badge' => 'Descuento Autorizado',
-				'message' => 'Descuento del 15% validado en Ticket #POS-01-0044 por motivo de merma estética en góndola.',
-				'time' => '11:30 AM',
-				'action_label' => 'Ver Ticket'
-			]
-		];
-
-		// Supervisores para autorización con PIN
-		$posSupervisors = [
-			['id' => 1, 'name' => 'Roberto Gómez', 'role' => 'Manager de Tienda', 'pin' => '1234'],
-			['id' => 2, 'name' => 'Claudia Valenzuela', 'role' => 'Supervisora POS', 'pin' => '4321'],
-			['id' => 3, 'name' => 'Marcos Peña', 'role' => 'Auditor Interno de Prevención', 'pin' => '9999']
-		];
-
-		// Log de auditoría operativa de caja
-		$posAuditLogs = [
-			['time' => '11:32 AM', 'user' => 'Carlos Ruiz (Caja 01)', 'action' => 'Venta completada', 'detail' => 'Ticket #POS-01-20261107-0045 por $48.50 (Efectivo)', 'type' => 'sale'],
-			['time' => '11:30 AM', 'user' => 'Claudia Valenzuela (Supervisor)', 'action' => 'Autorización de descuento', 'detail' => 'Descuento comercial del 15% aprobado en Caja 01', 'type' => 'auth'],
-			['time' => '11:15 AM', 'user' => 'Diego Morales (Caja 04)', 'action' => 'Pausa operativa', 'detail' => 'Caja 04 entró en arqueo por cambio de cajero', 'type' => 'pause'],
-			['time' => '10:45 AM', 'user' => 'Ana Gómez (Caja 02)', 'action' => 'Venta completada', 'detail' => 'Ticket #POS-02-20261107-0062 por $124.00 (Tarjeta)', 'type' => 'sale'],
-			['time' => '08:15 AM', 'user' => 'Ana Gómez (Caja 02)', 'action' => 'Apertura de caja', 'detail' => 'Apertura con fondo inicial de $150.00', 'type' => 'shift'],
-			['time' => '08:00 AM', 'user' => 'Roberto Gómez (Manager)', 'action' => 'Apertura de turno', 'detail' => 'Apertura de jornada comercial en Sucursal Activa', 'type' => 'shift']
-		];
-
-		// KPIs consolidados del POS
-		$posKpis = [
-			'shift_sales' => 4892.50,
-			'active_registers' => 4,
-			'total_registers' => 5,
-			'tickets_count' => 142,
-			'avg_ticket' => 34.45,
-			'avg_speed_sec' => 38,
-			'drawer_cash' => 1520.50,
-			'discounts_total' => 64.20,
-			'pending_alerts' => 2
-		];
-
+		$crm = \Grocy\Services\CustomerCrmService::GetInstance();
 		return $this->RenderPage($response, 'pos', [
 			'products' => $products,
 			'categories' => array_keys($categoriesSet),
 			'branches' => $branches,
 			'selectedBranchId' => $selectedBranchId,
 			'customers' => $customers,
-			'markdowns' => $markdowns,
-			'currentShift' => $currentShift,
+			'preselectedCustomerId' => max(1, intval($queryParams['customer_id'] ?? 1)),
+			'loyaltySettings' => $crm->Settings(),
+			'regional' => $crm->RegionalConfig(),
 			'heldSales' => $heldSales,
-			'recentSales' => $recentSales,
-			'cashReconciliations' => $cashReconciliations,
-			'activeRegisters' => $activeRegisters,
-			'posAlerts' => $posAlerts,
-			'posSupervisors' => $posSupervisors,
-			'posAuditLogs' => $posAuditLogs,
-			'posKpis' => $posKpis
+			'registers' => $registers,
+			'register' => $register,
+			'shift' => $openShift ? $pos->ShiftSummary(intval($openShift['id'])) : null,
+			'posSettings' => $posSet,
+			'authorizations' => $pos->Authorizations($selectedBranchId, 30)
 		]);
 	}
 
@@ -1431,8 +1278,10 @@ class SalesController extends BaseController
 		catch (\Throwable $e) {}
 
 		$custDir = $salesService->GetCustomersDirectory();
-		$totalCustCount = count($custDir['customers'] ?? []);
-		$activeCustCount = count(array_filter($custDir['customers'] ?? [], fn($c) => intval($c['active'] ?? 1) === 1));
+		$custList = $custDir['customers'] ?? [];
+		usort($custList, fn($a, $b) => floatval($b['total_amount_purchased'] ?? 0) <=> floatval($a['total_amount_purchased'] ?? 0));
+		$totalCustCount = count($custList);
+		$activeCustCount = count(array_filter($custList, fn($c) => intval($c['active'] ?? 1) === 1));
 
 		$stmtReturnsCount = $db->prepare("SELECT COUNT(*) FROM sales WHERE status = 'cancelled' AND date(created_timestamp) BETWEEN :f AND :t" . ($branchId ? ' AND branch_id = :b' : ''));
 		$stmtReturnsCount->execute([':f' => $startDate, ':t' => $endDate] + ($branchId ? [':b' => $branchId] : []));
@@ -1445,7 +1294,7 @@ class SalesController extends BaseController
 			'total_customers' => $totalCustCount,
 			'active_customers' => $activeCustCount,
 			'returns_count' => $returnsCount,
-			'top_customers' => array_slice($custDir['customers'] ?? [], 0, 5)
+			'top_customers' => array_slice($custList, 0, 5)
 		];
 
 		// 7. Inteligencia Comercial y Detección de Anomalías
@@ -1477,31 +1326,16 @@ class SalesController extends BaseController
 		$branchSupervisionDashboard = null;
 		$salesAuditDashboard = null;
 
-		try
-		{
-			$deptPerfService = \Grocy\Services\DepartmentPerformanceService::GetInstance();
-			$deptExec = $deptPerfService->GetExecutiveDashboard($sharedFilters);
-			$tyLy = $deptPerfService->GetTyLyComparison($sharedFilters);
-		}
-		catch (\Throwable $e) {}
-
-		try
-		{
-			$salesDash = \Grocy\Services\SalesDashboardService::GetInstance()->Dashboard($sharedFilters);
-		}
-		catch (\Throwable $e) {}
-
+		// Ventas por departamento: indicadores y gráficos en SalesReportsService (section = departments); la vista ejecutiva
+		// anterior (productividad, costo laboral, reposición, merma, TY/LY con año anterior de ejemplo) ya no se calcula aquí
 		try
 		{
 			$productCatalogDashboard = \Grocy\Services\ProductPerformanceService::GetInstance()->GetProductCatalogDashboard($sharedFilters);
 		}
 		catch (\Throwable $e) {}
 
-		try
-		{
-			$branchSupervisionDashboard = \Grocy\Services\BranchSupervisionService::GetInstance()->GetBranchSupervisionDashboard($sharedFilters);
-		}
-		catch (\Throwable $e) {}
+		// Sucursales: comparación comercial en SalesReportsService (section = branches); la supervisión operativa de maqueta
+		// (incidencias, intervenciones, visitas, BHI) ya no se calcula aquí
 
 		// Informes comerciales de las seis pestañas (una sola definición de venta neta para todos)
 		$salesReports = null;
@@ -1509,54 +1343,15 @@ class SalesController extends BaseController
 		try
 		{
 			$salesReports = \Grocy\Services\SalesReportsService::GetInstance()->Report($sharedFilters, $compareWith);
-			$salesMargins = \Grocy\Services\SalesDashboardService::GetInstance()->Margins($sharedFilters);
 		}
 		catch (\Throwable $e) {}
-
-		// Departamentos ejecutivos para el gráfico de dona
-		$executiveDepartments = [
-			['code' => '90', 'name' => 'Frozen', 'share_pct' => 28.6, 'color' => '#10b981'],
-			['code' => '91', 'name' => 'Dairy', 'share_pct' => 24.1, 'color' => '#eab308'],
-			['code' => '92', 'name' => 'Pescadería', 'share_pct' => 12.8, 'color' => '#f97316'],
-			['code' => '93', 'name' => 'Carnes', 'share_pct' => 20.3, 'color' => '#ef4444'],
-			['code' => '', 'name' => 'Bakery', 'share_pct' => 14.2, 'color' => '#fbbf24']
-		];
-
-		// Alertas activas para el tablero
-		$alertSummary = [
-			'total' => 51,
-			'critical' => 11,
-			'overdue' => 31,
-			'unassigned' => 21
-		];
-
-		// Hallazgos y cosas que conviene revisar
-		$executiveObservations = [
-			[
-				'id' => 1,
-				'title' => 'El +1,512 % parece distorsionado: el período anterior tiene muy pocas ventas.',
-				'detail' => 'El período anterior equivalente registra ventas por $41,521 frente a $669,540 actuales, generando una distorsión aritmética del +1,512.5%. Se sugiere comparar contra la meta presupuestada o año móvil para normalizar la estacionalidad.',
-				'tag' => 'Distorsión de estacionalidad'
-			],
-			[
-				'id' => 2,
-				'title' => 'Unidades vs. ventas: 891 laptops por $19k da ~$21 por unidad, lo que no cuadra con el precio.',
-				'detail' => 'En el SKU TEC-030 (Laptop Dell XPS 15 OLED) se registran 891 unidades con venta neta de $19,073.89, resultando en ~$21.40 por unidad vendida. Requiere verificación en POS: posible registro como accesorio o error de digitación de cantidad.',
-				'tag' => 'Inconsistencia precio/cantidad'
-			],
-			[
-				'id' => 3,
-				'title' => 'La caída del 3 al 6/11 puede ser un retraso en la carga (último registro: 05/11 16:59).',
-				'detail' => 'La curva de ventas diaria muestra un descenso súbito en los últimos 3 días debido a que el último ticket sincronizado desde terminales data del 05/11 a las 16:59. El servicio de ingestión POS tiene 1 lote pendiente de procesar.',
-				'tag' => 'Sincronización POS'
-			],
-			[
-				'id' => 4,
-				'title' => 'Las cajas sin cerrar pueden estar afectando la consistencia de los datos.',
-				'detail' => 'Se detectaron turnos de caja abiertos sin arqueo definitivo en sucursales, lo que posterga el cierre contable de tickets y altera el corte de corte de ventas del turno vespertino.',
-				'tag' => 'Cierre de turno'
-			]
-		];
+		// Historial: duplicados, registro tardío, devoluciones, cambios trazados, correcciones y cierres comerciales
+		$salesHistoryAudit = null;
+		try
+		{
+			$salesHistoryAudit = \Grocy\Services\SalesHistoryAuditService::GetInstance()->Audit($sharedFilters);
+		}
+		catch (\Throwable $e) {}
 
 		return $this->RenderPage($response, 'sales_history', [
 			'sharedFilters' => $sharedFilters,
@@ -1569,11 +1364,9 @@ class SalesController extends BaseController
 			'productCatalogDashboard' => $productCatalogDashboard,
 			'branchSupervisionDashboard' => $branchSupervisionDashboard,
 			'salesAuditDashboard' => $salesAuditDashboard,
-			'executiveDepartments' => $executiveDepartments,
-			'alertSummary' => $alertSummary,
-			'executiveObservations' => $executiveObservations,
 			'salesMargins' => $salesMargins,
 			'salesReports' => $salesReports,
+			'salesHistoryAudit' => $salesHistoryAudit,
 			'sales' => $sales,
 			'branches' => $branches,
 			'productGroups' => $productGroups,
@@ -1629,29 +1422,68 @@ class SalesController extends BaseController
 			? intval($params['branch_id'])
 			: null;
 
-		$period = $params['period'] ?? '30d';
-		$segment = $params['segment'] ?? 'all';
-
-		$crmService = \Grocy\Services\CustomerCrmService::GetInstance();
-		$crmData = $crmService->GetCrmDashboardData($selectedBranchId, $period, $segment);
-
-		$customers = $crmData['customers'];
-		$directory = $salesService->GetCustomersDirectory();
-		$recentOrdersAll = $directory['recent_orders_all'] ?? [];
-
-		$selectedCustomerId = isset($params['id']) && intval($params['id']) > 0
-			? intval($params['id'])
-			: (!empty($customers) ? intval($customers[0]['id']) : null);
+		if ($selectedBranchId && !DairyAccess::CanSeeBranch($selectedBranchId))
+		{
+			$selectedBranchId = null;
+		}
+		// CRM de clientes: solo métricas de clientes (sin stock, kardex, picking, rentabilidad ni RR.HH.)
+		$crm = \Grocy\Services\CustomerCrmService::GetInstance();
+		$rawDays = intval($params['days'] ?? ($params['period'] ?? 30));
+		$days = in_array($rawDays, [30, 90, 365], true) ? $rawDays : 30;
+		$filters = array_intersect_key($params, array_flip(['q', 'segment', 'lifecycle', 'tier', 'loyalty_tier', 'quality', 'active', 'sort']));
+		$filters['days'] = $days;
+		$tabAliases = ['directory' => 'directory', 'segments' => 'rfm', 'rfm' => 'rfm', 'loyalty' => 'loyalty', 'requests' => 'cases', 'cases' => 'cases', 'campaigns' => 'campaigns', 'analytics' => 'analytics', 'audit' => 'analytics', 'quality' => 'directory', 'overview' => 'overview'];
+		$tab = $tabAliases[$params['tab'] ?? 'overview'] ?? 'overview';
+		$reqStatus = in_array($params['req_status'] ?? '', ['resolved', 'cancelled', 'all'], true) ? ($params['req_status'] === 'all' ? '' : $params['req_status']) : 'pending';
+		$reqCategory = isset($params['req_category']) && isset($crm::REQUEST_CATEGORIES[$params['req_category']]) ? $params['req_category'] : '';
+		$customers = $crm->Directory($selectedBranchId, $filters);
+		$selectedProfileId = intval($params['customer_id'] ?? ($customers[0]['id'] ?? 0));
 
 		return $this->RenderPage($response, 'customers', [
-			'customers' => $customers,
-			'recentOrdersAll' => $recentOrdersAll,
 			'branches' => $branches,
 			'selectedBranchId' => $selectedBranchId,
-			'selectedCustomerId' => $selectedCustomerId,
-			'crmData' => $crmData,
-			'period' => $period,
-			'segment' => $segment
+			'days' => $days,
+			'filters' => $filters,
+			'tab' => $tab,
+			'overview' => $crm->Overview($selectedBranchId, $days),
+			'customers' => $customers,
+			'selectedProfileId' => $selectedProfileId,
+			'reqStatus' => $reqStatus,
+			'reqCategory' => $reqCategory,
+			'requests' => $crm->Requests(['status' => $reqStatus, 'category' => $reqCategory, 'branch_id' => $selectedBranchId, 'days' => $days]),
+			'loyalty' => $crm->LoyaltyOverview($selectedBranchId, $days),
+			'campaigns' => $crm->Campaigns($selectedBranchId, $days),
+			'automations' => $crm->Automations($selectedBranchId, $days),
+			'duplicates' => $crm->DuplicateGroups(),
+			'audit' => $crm::CanManage() ? $crm->AuditLog(120) : [],
+			'users' => $crm->Users(),
+			'canPii' => $crm::CanSeePii(),
+			'canManage' => $crm::CanManage(),
+			'canApproveFinance' => $crm::CanApproveFinance()
+		]);
+	}
+
+	public function CustomerProfile(Request $request, Response $response, array $args)
+	{
+		$crm = \Grocy\Services\CustomerCrmService::GetInstance();
+		$id = intval($args['customerId'] ?? 0);
+		try
+		{
+			$profile = $crm->Profile($id);
+		}
+		catch (\Exception $e)
+		{
+			return $response->withStatus(302)->withHeader('Location', $this->AppContainer->get('UrlManager')->ConstructUrl('/customers'));
+		}
+		if (isset($profile['merged_into_id']))
+		{
+			return $response->withStatus(302)->withHeader('Location', $this->AppContainer->get('UrlManager')->ConstructUrl('/customers/' . $profile['merged_into_id']));
+		}
+		return $this->RenderPage($response, 'customer_profile', $profile + [
+			'branches' => DairyAccess::FilterBranches(BranchService::GetInstance()->GetBranches()),
+			'users' => $crm->Users(),
+			'canPii' => $crm::CanSeePii(),
+			'canManage' => $crm::CanManage()
 		]);
 	}
 
@@ -1665,25 +1497,29 @@ class SalesController extends BaseController
 			? intval($queryParams['branch_id'])
 			: $firstBranchId;
 
-		$posReturnsService = \Grocy\Services\PosReturnsService::GetInstance();
-		$dashboardData = $posReturnsService->GetDashboardData($selectedBranchId);
-		$recentSales = $posReturnsService->LookupSale('', $selectedBranchId);
-
-		// Lista de supervisores y cajeros para autorización
-		$dbRaw = DatabaseService::GetInstance()->GetDbConnectionRaw();
-		$users = $dbRaw->query("SELECT id, username, first_name, last_name FROM users ORDER BY username ASC")->fetchAll(\PDO::FETCH_ASSOC);
+		if (!DairyAccess::CanSeeBranch($selectedBranchId))
+		{
+			$selectedBranchId = $firstBranchId;
+		}
+		// Devoluciones comerciales con datos reales (PosReturnService): indicadores de 30 días, notas de crédito y política
+		$svc = \Grocy\Services\PosReturnService::GetInstance();
+		$pos = \Grocy\Services\PosService::GetInstance();
+		$from = date('Y-m-d', strtotime('-29 days'));
+		$recentSales = DatabaseService::GetInstance()->GetDbConnectionRaw()->query("SELECT id, sale_number, total_amount FROM sales WHERE status = 'completed' AND branch_id = " . intval($selectedBranchId)
+			. ' ORDER BY id DESC LIMIT 6')->fetchAll(\PDO::FETCH_ASSOC);
 
 		return $this->RenderPage($response, 'pos_returns', [
 			'branches' => $branches,
 			'selectedBranchId' => $selectedBranchId,
-			'kpis' => $dashboardData['kpis'],
-			'returns' => $dashboardData['returns'],
-			'totalReturnsCount' => $dashboardData['total_count'],
-			'topReasons' => $dashboardData['top_reasons'],
-			'topProducts' => $dashboardData['top_products'],
-			'fraudAlerts' => $dashboardData['fraud_alerts'],
+			'kpis' => $svc->Kpis($selectedBranchId, $from, date('Y-m-d')),
+			'kpiFrom' => $from,
+			'creditNotes' => $svc->CreditNotes($selectedBranchId),
 			'recentSales' => $recentSales,
-			'users' => $users
+			// Cajas con turno abierto primero: el efectivo devuelto sale de una de ellas
+			'registers' => (function () use ($pos, $selectedBranchId) { $r = $pos->Registers($selectedBranchId); usort($r, fn($a, $b) => ($pos->OpenShiftFor($selectedBranchId, $b) ? 1 : 0) <=> ($pos->OpenShiftFor($selectedBranchId, $a) ? 1 : 0)); return $r; })(),
+			'posSettings' => $pos->Settings(),
+			'reasons' => \Grocy\Services\PosReturnService::REASONS,
+			'conditions' => \Grocy\Services\PosReturnService::CONDITIONS
 		]);
 	}
 }

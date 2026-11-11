@@ -7,7 +7,7 @@ class WasteService extends BaseService
 	/**
 	 * Get Waste Reasons (Matriz de Causales) with optional filtering and aggregate stats
 	 */
-	public function GetWasteReasons(bool $activeOnly = true, ?string $category = null, ?string $riskLevel = null, ?string $area = null)
+	public function GetWasteReasons(bool $activeOnly = true, ?string $category = null, ?string $riskLevel = null, ?string $area = null, bool $excludeSecurityReasons = false)
 	{
 		$sql = "
 			SELECT 
@@ -24,6 +24,10 @@ class WasteService extends BaseService
 		if ($activeOnly)
 		{
 			$sql .= " AND wr.active = 1";
+		}
+		if ($excludeSecurityReasons)
+		{
+			$sql .= " AND IFNULL(wr.censo_category, '') NOT IN ('robo_interno', 'robo_externo') AND UPPER(IFNULL(wr.code, '')) NOT IN ('M03', 'M04', 'FPO01', 'FEL01')";
 		}
 		if (!empty($category) && $category !== 'all')
 		{
@@ -239,6 +243,7 @@ class WasteService extends BaseService
 				wr.name AS reason_name,
 				wr.category AS reason_category,
 				wr.risk_level AS reason_risk_level,
+				wr.requires_evidence AS requires_evidence,
 				wr.color_class AS reason_color_class,
 				wr.icon AS reason_icon,
 				wr.responsible_area AS reason_area,
@@ -419,7 +424,12 @@ class WasteService extends BaseService
 		}
 
 		// Evidencia: solo fotos subidas por /waste/upload-photo (sin rutas arbitrarias)
-		if (!empty($evidencePhotoPath) && !preg_match('#^(/api/waste/photo/)?waste_[A-Za-z0-9_.-]+\.(jpe?g|png|webp|gif|heic)$#i', strval($evidencePhotoPath)))
+		$evidencePhotoPath = $evidencePhotoPath !== null ? trim(strval($evidencePhotoPath)) : null;
+		if ($evidencePhotoPath === '')
+		{
+			$evidencePhotoPath = null;
+		}
+		if (!empty($evidencePhotoPath) && !preg_match('#^(/api/waste/photo/)?waste_[A-Za-z0-9_.-]+\.(jpe?g|png|webp|gif|heic)$#i', $evidencePhotoPath))
 		{
 			throw new \Exception('Evidencia inválida: adjunte la foto desde la cámara o galería');
 		}
@@ -430,13 +440,21 @@ class WasteService extends BaseService
 			throw new \Exception('El producto no existe');
 		}
 
+		if ($wasteReasonId <= 0)
+		{
+			throw new \Exception('Debe seleccionar una causal válida de merma');
+		}
 		$reason = $this->DB->waste_reasons($wasteReasonId);
 		if (!$reason)
 		{
 			throw new \Exception('El motivo de merma seleccionado no es válido');
 		}
+		if (intval($reason->active ?? 1) !== 1)
+		{
+			throw new \Exception('La causal de merma seleccionada está inactiva');
+		}
 
-		if ($reason->requires_evidence == 1 && empty($evidencePhotoPath))
+		if (intval($reason->requires_evidence) === 1 && empty($evidencePhotoPath))
 		{
 			throw new \Exception('Este motivo de merma requiere fotografía de evidencia obligatoria');
 		}
@@ -520,6 +538,10 @@ class WasteService extends BaseService
 					true // consumeExactAmount = true
 				);
 
+				if (empty(trim(strval($transactionId))))
+				{
+					throw new \Exception('Error de integridad: no se pudo generar la transacción de descuento de inventario');
+				}
 				$inventoryDeducted = 1;
 
 				// Retrieve consumed entries from stock_log to calculate accurate cost
@@ -786,6 +808,12 @@ class WasteService extends BaseService
 			throw new \Exception('El registro ya fue dictaminado como ' . $wasteRecord->status);
 		}
 
+		$reason = $this->DB->waste_reasons(intval($wasteRecord->waste_reason_id));
+		if ($reason && intval($reason->requires_evidence) === 1 && empty(trim((string) ($wasteRecord->evidence_photo_path ?? ''))))
+		{
+			throw new \Exception('Este motivo de merma requiere fotografía de evidencia antes de aprobar. Adjúntela en el caso.');
+		}
+
 		$this->AssertSegregationOfDuties($wasteRecord, $approverUserId);
 		$this->AssertApprovalLevel(max(floatval($wasteRecord->total_cost), $this->EstimateUnitCost(intval($wasteRecord->product_id), $wasteRecord->location_id ? intval($wasteRecord->location_id) : null) * floatval($wasteRecord->amount)));
 
@@ -804,13 +832,18 @@ class WasteService extends BaseService
 			{
 				throw new \Exception('El registro ya fue dictaminado como ' . $wasteRecord->status);
 			}
+			if ($reason && intval($reason->requires_evidence) === 1 && empty(trim((string) ($wasteRecord->evidence_photo_path ?? ''))))
+			{
+				throw new \Exception('Este motivo de merma requiere fotografía de evidencia antes de aprobar. Adjúntela en el caso.');
+			}
 			$transactionId = $wasteRecord->transaction_id;
 			$unitCost = $wasteRecord->unit_cost;
 			$totalCost = $wasteRecord->total_cost;
 
-			// Only deduct from stock if not already deducted!
-			if (intval($wasteRecord->inventory_deducted) !== 1)
+			// Only deduct from stock if not already deducted with a valid stock transaction
+			if (intval($wasteRecord->inventory_deducted) !== 1 || empty(trim((string) $transactionId)))
 			{
+				$transactionId = null;
 				$stockService = StockService::GetInstance();
 				$approveLocation = $wasteRecord->location_id ?: (empty($wasteRecord->stock_id) ? $this->BranchLocation(intval($wasteRecord->product_id), intval($wasteRecord->branch_id), floatval($wasteRecord->amount)) : null);
 				$transactionId = $stockService->ConsumeProduct(
@@ -825,6 +858,10 @@ class WasteService extends BaseService
 					false,
 					true
 				);
+				if (empty(trim((string) $transactionId)))
+				{
+					throw new \Exception('No se pudo registrar la transacción de descarga de inventario');
+				}
 
 				// Recalculate actual cost from stock_log
 				$consumedEntries = $this->DB->stock_log()->where('transaction_id = :1 AND spoiled = 1', $transactionId)->fetchAll();
@@ -1420,5 +1457,59 @@ class WasteService extends BaseService
 	{
 		$analytics = $this->GetWasteAnalytics($branchId, 'month', $startDate, $endDate);
 		return $analytics['summary'];
+	}
+
+	/**
+	 * Adjunta o reemplaza fotografía de evidencia en un incidente de merma ya registrado.
+	 */
+	public function AttachEvidence(int $wasteRecordId, string $evidencePhotoPath, int $userId = GROCY_USER_ID)
+	{
+		$evidencePhotoPath = trim($evidencePhotoPath);
+		if (empty($evidencePhotoPath) || !preg_match('#^(/api/waste/photo/)?waste_[A-Za-z0-9_.-]+\.(jpe?g|png|webp|gif|heic)$#i', $evidencePhotoPath))
+		{
+			throw new \Exception('Evidencia inválida: adjunte la foto desde la cámara o galería');
+		}
+		$record = $this->GetWasteRecord($wasteRecordId);
+		if (!$record)
+		{
+			throw new \Exception('Registro de merma no encontrado');
+		}
+		if (strpos($evidencePhotoPath, '/api/waste/photo/') !== 0)
+		{
+			$evidencePhotoPath = '/api/waste/photo/' . ltrim($evidencePhotoPath, '/');
+		}
+
+		$dbRaw = DatabaseService::GetInstance()->GetDbConnectionRaw();
+		$dbRaw->prepare('UPDATE waste_records SET evidence_photo_path = :p WHERE id = :id')
+			->execute([':p' => $evidencePhotoPath, ':id' => $wasteRecordId]);
+
+		$dbRaw->prepare("
+			INSERT INTO waste_action_logs (waste_record_id, user_id, previous_status, new_status, action_title, action_details)
+			VALUES (:record_id, :user_id, :prev, :prev, 'Evidencia fotográfica adjuntada', :details)
+		")->execute([
+			':record_id' => $wasteRecordId,
+			':user_id' => $userId,
+			':prev' => $record->status,
+			':details' => 'Evidencia registrada: ' . basename($evidencePhotoPath)
+		]);
+
+		return $this->GetWasteRecord($wasteRecordId);
+	}
+
+	/**
+	 * Corrige banderas incoherentes donde una merma aún pendiente fue marcada con inventory_deducted=1 sin transaction_id.
+	 */
+	public function ReconcileIntegrity(): int
+	{
+		$dbRaw = DatabaseService::GetInstance()->GetDbConnectionRaw();
+		$stmt = $dbRaw->prepare("
+			UPDATE waste_records
+			SET inventory_deducted = 0
+			WHERE status = 'pending_approval'
+			  AND inventory_deducted = 1
+			  AND TRIM(IFNULL(transaction_id, '')) = ''
+		");
+		$stmt->execute();
+		return $stmt->rowCount();
 	}
 }

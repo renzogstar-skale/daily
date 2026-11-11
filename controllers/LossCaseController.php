@@ -36,7 +36,13 @@ class LossCaseController extends BaseController
 		$data = $svc->Dashboard($q, $unit);
 
 		$departments = $db->query('SELECT DISTINCT department FROM products WHERE department IS NOT NULL AND department <> "" UNION SELECT DISTINCT department FROM sensitive_investigation_cases WHERE department IS NOT NULL AND department <> "" ORDER BY 1')->fetchAll(\PDO::FETCH_COLUMN);
-		$usersList = $db->query('SELECT id, username, first_name, last_name FROM users ORDER BY username')->fetchAll(\PDO::FETCH_ASSOC);
+		$usersList = $db->query("SELECT u.id, u.username, u.first_name, u.last_name,
+			(SELECT GROUP_CONCAT(ph.name, ',') FROM user_permissions up JOIN permission_hierarchy ph ON ph.id = up.permission_id WHERE up.user_id = u.id) AS perms
+			FROM users u ORDER BY u.username")->fetchAll(\PDO::FETCH_ASSOC);
+		$productsList = $db->query("SELECT p.id, p.name, p.sku, p.department, p.is_sensitive, p.device_control, p.sale_price,
+			(SELECT b.barcode FROM product_barcodes b WHERE b.product_id = p.id LIMIT 1) AS barcode
+			FROM products p WHERE p.active = 1 ORDER BY p.device_control DESC, p.is_sensitive DESC, p.name LIMIT 150")->fetchAll(\PDO::FETCH_ASSOC);
+		$devDash = \Grocy\Services\DeviceService::GetInstance()->Dashboard($branchId ? ['branch_id' => $branchId] : []);
 
 		return $this->RenderPage($response, 'loss_prevention', [
 			'data' => $data,
@@ -45,6 +51,9 @@ class LossCaseController extends BaseController
 			'selectedBranchId' => $branchId,
 			'departments' => $departments,
 			'usersList' => $usersList,
+			'productsList' => $productsList,
+			'devicesList' => array_slice($devDash['units'] ?? [], 0, 25),
+			'canRevealImei' => \Grocy\Services\DeviceService::CanReveal(),
 			'unit' => $unit,
 			'statuses' => SensitiveCaseService::STATUSES,
 			'frequencies' => SensitiveCaseService::FREQUENCIES,

@@ -94,8 +94,11 @@ else
 	$forbidden('no abre expediente de otra sucursal', fn() => $svc->Detail($d1));
 	$forbidden('no cuenta en otra sucursal', fn() => $svc->RegisterCount(1, 9001, 6, [], $uid));
 	$forbidden('no cierra expediente de otra sucursal', fn() => $svc->CloseCase($d1, 'resuelto', 'cierre indebido', $uid));
-	ok('su resumen no incluye la sucursal ajena', $svc->Summary()['open_value'] == 0);
-	ok('su lista tampoco', count($svc->Cases()) === 0);
+	$b2Open = floatval($val("SELECT IFNULL(SUM(financial_impact), 0) FROM sensitive_investigation_cases WHERE branch_id = 2 AND workflow_status NOT IN ('resuelto','no_resuelto','closed','resolved')"));
+	$b1Open = floatval($val("SELECT IFNULL(SUM(financial_impact), 0) FROM sensitive_investigation_cases WHERE branch_id = 1 AND workflow_status NOT IN ('resuelto','no_resuelto','closed','resolved')"));
+	ok('su resumen no incluye la sucursal ajena', abs($svc->Summary()['open_value'] - $b2Open) < 0.01 && ($b1Open <= 0 || $svc->Summary()['open_value'] < ($b1Open + $b2Open)));
+	$foreignCases = array_filter($svc->Cases(), fn($c) => intval($c['branch_id'] ?? 0) !== 2);
+	ok('su lista tampoco', count($foreignCases) === 0);
 }
 
 echo "$count verificaciones · $fails FALLAS\n";

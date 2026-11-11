@@ -167,6 +167,8 @@ class KpiService extends BaseService
 		$perishablesWidget = $this->GetPerishablesRiskWidget($branchId);
 
 		// 9. Procurement & Suppliers KPIs
+		$procB = ($branchId !== null && $branchId > 0) ? ' WHERE branch_id = ' . intval($branchId) : '';
+		$procAndB = ($branchId !== null && $branchId > 0) ? ' AND branch_id = ' . intval($branchId) : '';
 		$procSql = "
 			SELECT 
 				(SELECT COUNT(*) FROM shopping_locations WHERE active = 1) AS active_suppliers,
@@ -174,10 +176,11 @@ class KpiService extends BaseService
 					SELECT ROUND(AVG(otif), 1) FROM (
 						SELECT (SUM(CASE WHEN sd.status = 'on_time' THEN 1.0 ELSE 0.0 END) / COUNT(*)) * 100 AS otif
 						FROM supplier_deliveries sd
+						$procB
 						GROUP BY sd.supplier_id
 					)
 				) AS avg_otif,
-				(SELECT COUNT(*) FROM supplier_incidents WHERE status IN ('open', 'claimed')) AS pending_incidents
+				(SELECT COUNT(*) FROM supplier_incidents WHERE status IN ('open', 'claimed')$procAndB) AS pending_incidents
 		";
 		$stmtProc = $dbRaw->query($procSql);
 		$procStats = $stmtProc->fetch(\PDO::FETCH_OBJ);
@@ -269,7 +272,11 @@ class KpiService extends BaseService
 		{
 			return DailyMetricsService::PeriodRange($period, $anchorDate);
 		}
-		if ($period === 'custom' && !empty($customStart) && !empty($customEnd))
+		if ($period === 'custom' && !empty($customStart) && !empty($customEnd)
+			&& preg_match('/^\d{4}-\d{2}-\d{2}$/', $customStart)
+			&& preg_match('/^\d{4}-\d{2}-\d{2}$/', $customEnd)
+			&& strtotime($customStart) !== false
+			&& strtotime($customEnd) !== false)
 		{
 			return ['start' => min($customStart, $customEnd), 'end' => max($customStart, $customEnd)];
 		}
@@ -1130,9 +1137,10 @@ class KpiService extends BaseService
 		$dbRaw = DatabaseService::GetInstance()->GetDbConnectionRaw();
 		$m = DailyMetricsService::GetInstance();
 
-		$branches = $dbRaw->query("SELECT id, name, code FROM branches WHERE active = 1 ORDER BY id ASC")->fetchAll(\PDO::FETCH_OBJ);
+		$branches = $dbRaw->query("SELECT id, name, code, IFNULL(address, '') AS address FROM branches WHERE active = 1 ORDER BY id ASC")->fetchAll(\PDO::FETCH_OBJ);
 		// Mismo resumen que HOY y los KPI del panel (venta neta, meta registrada, % de merma sobre la base configurada)
 		$to = min($endDate, date('Y-m-d'));
+		$elapsedDays = max(1, intval((strtotime($to) - strtotime($startDate)) / 86400) + 1);
 
 		$ranking = [];
 		foreach ($branches as $b)
@@ -1151,17 +1159,19 @@ class KpiService extends BaseService
 			$wasteCost = $sum['waste']['cost'];
 			$wasteRatioPct = $sum['waste_pct'];
 
-			// Branch Inventory valuation
-			$invStmt = $dbRaw->prepare("SELECT IFNULL(SUM(s.amount * IFNULL(s.price, IFNULL(plp.price, 0))), 0) AS valuation FROM stock s JOIN locations l ON s.location_id = l.id JOIN products p ON s.product_id = p.id LEFT JOIN cache__products_last_purchased plp ON p.id = plp.product_id WHERE l.branch_id = :bid");
+			// Branch Inventory valuation (excluye ubicaciones en tránsito is_transit=1)
+			$invStmt = $dbRaw->prepare("SELECT IFNULL(SUM(s.amount * IFNULL(s.price, IFNULL(plp.price, 0))), 0) AS valuation FROM stock s JOIN locations l ON s.location_id = l.id JOIN products p ON s.product_id = p.id LEFT JOIN cache__products_last_purchased plp ON p.id = plp.product_id WHERE l.branch_id = :bid AND IFNULL(l.is_transit, 0) = 0");
 			$invStmt->execute([':bid' => $bid]);
 			$invVal = floatval($invStmt->fetchColumn() ?? 0);
 			$turnover = ($invVal > 0 && $cogs > 0) ? round($cogs / $invVal, 2) : null;
+			$coverageDays = ($cogs > 0 && $invVal > 0) ? round($invVal / ($cogs / $elapsedDays), 1) : null;
 
 			// Net Operating Result = Margin - Waste
 			$netResult = round($margin - $wasteCost, 2);
 
 			$salesTarget = $sum['sales_target'];
-			$vsMetaPct = $sum['compliance_pct'] !== null ? round($sum['compliance_pct'] - 100, 1) : null;
+			$compliancePct = $sum['compliance_pct'];
+			$vsMetaPct = $compliancePct !== null ? round($compliancePct - 100, 1) : null;
 
 			// Estado = el peor entre cumplimiento de ventas y merma (reglas centrales). Nunca verde sin registros.
 			$hasActivity = ($tickets > 0 || $wasteEvents > 0);
@@ -1175,17 +1185,19 @@ class KpiService extends BaseService
 			$status = ['ok' => '🟢 ', 'warn' => '🟡 ', 'crit' => '🔴 ', 'no_data' => '⚪ '][$execState] . $execStateLabel;
 			$statusBadge = ['ok' => 'success', 'warn' => 'warning', 'crit' => 'danger', 'no_data' => 'secondary'][$execState];
 
-			// Sparkline de 7 puntos de la sucursal
-			$bSpark = $this->RealSparklines($startDate, $endDate, $bid);
+			// Sparkline de 7 puntos de la sucursal hasta la fecha de corte
+			$bSpark = $this->RealSparklines($startDate, $to, $bid);
 
 			$ranking[] = [
 				'branch_id' => $bid,
 				'name' => $b->name,
 				'clean_name' => trim(str_replace('[DEMO]', '', $b->name)),
 				'code' => $b->code,
+				'city' => trim(strval($b->address ?? '')),
 				'has_activity' => $hasActivity,
 				'sales' => $sales,
 				'sales_target' => $salesTarget,
+				'compliance_pct' => $compliancePct,
 				'vs_meta_pct' => $vsMetaPct,
 				'tickets' => $tickets,
 				'avg_ticket' => $avgTicket,
@@ -1197,6 +1209,7 @@ class KpiService extends BaseService
 				'waste_ratio_pct' => $wasteRatioPct ?? 0.0,
 				'inventory_valuation' => $invVal,
 				'turnover' => $turnover,
+				'coverage_days' => $coverageDays,
 				'net_result' => $netResult,
 				'status' => $status,
 				'status_badge' => $statusBadge,
@@ -1456,7 +1469,7 @@ class KpiService extends BaseService
 				'title' => "Lotes en Riesgo Crítico de Caducidad (\${$perishables['total_risk_value']})",
 				'description' => "Se detectaron {$u3['count']} lotes (\${$u3['cost']}) con vencimiento en ≤ 3 días. Sugerencia IA: Activar descuento dinámico de liquidación (-{$u3['suggested_discount']}) para recuperar costo de oportunidad antes de merma.",
 				'action_label' => 'Revisar Lotes Críticos',
-				'action_url' => '/quality',
+				'action_url' => '/traceability',
 				'action_icon' => 'fa-boxes-stacked'
 			];
 		}
@@ -1716,27 +1729,29 @@ class KpiService extends BaseService
 			. ($lowCoverageBranches > 0 ? " Pronóstico próximos días: {$lowCoverageBranches} sucursal(es) bajo " . intval(DailyMetricsService::RULES['coverage_ok']) . "% (mínimo {$minCoveragePct}%)." : '');
 
 		$priorityDecisions = [];
+		$salesGapMoney = ($salesMeta !== null && $sl['has_data']) ? round($salesVal - $salesMeta, 2) : null;
 		foreach ([
-			[$sum['sales_level'], 'fa-triangle-exclamation', 'Cumplimiento de la meta de ventas', $salesDesc, 'Ventas', 'Gerente de sucursal', '/sales'],
-			[$sum['waste_level'], 'fa-basket-shopping', 'Merma frente al objetivo', $wasteDesc, 'Mermas y Control de Inventario', 'Jefe de Operaciones', '/waste'],
-			[$covLevel, 'fa-users', 'Cobertura de personal', $covDesc, 'Operaciones y Personal · Turnos', 'Jefe de Personal', '/schedule']
-		] as [$level, $icon, $title, $desc, $proc, $resp, $url])
+			[$sum['sales_level'], 'fa-triangle-exclamation', 'Cumplimiento de la meta de ventas', $salesDesc, 'Ventas', 'Gerente Comercial', '/sales', $salesGapMoney],
+			[$sum['waste_level'], 'fa-basket-shopping', 'Merma frente al objetivo', $wasteDesc, 'Mermas y Prevención', 'Jefe de Operaciones', '/waste', -$wasteVal],
+			[$covLevel, 'fa-users', 'Cobertura de personal', $covDesc, 'Operaciones y Personal · Turnos', 'Jefe de Personal', '/operations/scheduling', null]
+		] as [$level, $icon, $title, $desc, $proc, $resp, $url, $econImpact])
 		{
 			$priorityDecisions[] = ['tone' => $tone($level), 'icon' => $icon, 'title' => $title, 'description' => $desc, 'priority_badge' => $badge($level), 'status_badge' => $statusBadge($level),
-				'branch_or_process' => ($branchId ? 'Sucursal seleccionada · ' : 'Red consolidada · ') . $proc, 'responsible' => $resp, 'due_date' => $due($level), 'action_label' => 'Ver detalle', 'url' => $url, 'level' => $level];
+				'branch_or_process' => ($branchId ? 'Sucursal seleccionada · ' : 'Red consolidada · ') . $proc, 'responsible' => $resp, 'due_date' => $due($level),
+				'economic_impact' => $econImpact, 'action_label' => 'Ver detalle', 'url' => $url, 'level' => $level];
 		}
 		// Primero lo crítico
 		$rank = ['danger' => 0, 'warning' => 1, 'neutral' => 2, 'success' => 3];
 		usort($priorityDecisions, fn($a, $b) => $rank[$a['level']] <=> $rank[$b['level']]);
 
 		// 4. Presupuesto de compras: no hay uno cargado, se deriva de la meta (costo planificado = meta de ventas × (1 − margen objetivo)).
-		// Ejecutado = recepciones aceptadas del período; comprometido = OC enviadas aún sin recibir. Sin facturas ni pagos registrados no se inventan.
+		// Ejecutado = recepciones aceptadas del período; comprometido = OC aprobadas/enviadas/confirmadas aún sin recibir. Sin facturas ni pagos registrados no se inventan.
 		$poB = ($branchId !== null && $branchId > 0) ? ' AND branch_id = ' . intval($branchId) : '';
 		$rq = $dbRaw->prepare("SELECT IFNULL(SUM(total_accepted_cost), 0) FROM procurement_receipts WHERE date(received_at) BETWEEN :s AND :e$poB");
 		$rq->execute([':s' => $startDate, ':e' => $endDate]);
 		$receivedTotal = round(floatval($rq->fetchColumn()), 2);
-		$openPo = $dbRaw->query("SELECT status, IFNULL(SUM(total_estimated_cost), 0) FROM procurement_orders WHERE status IN ('approved', 'sent', 'partially_received')$poB GROUP BY status")->fetchAll(\PDO::FETCH_KEY_PAIR);
-		$inTransit = round(floatval($openPo['sent'] ?? 0) + floatval($openPo['partially_received'] ?? 0), 2);
+		$openPo = $dbRaw->query("SELECT status, IFNULL(SUM(total_estimated_cost), 0) FROM procurement_orders WHERE status IN ('approved', 'sent', 'confirmed', 'partially_received')$poB GROUP BY status")->fetchAll(\PDO::FETCH_KEY_PAIR);
+		$inTransit = round(floatval($openPo['sent'] ?? 0) + floatval($openPo['confirmed'] ?? 0) + floatval($openPo['partially_received'] ?? 0), 2);
 		$toSend = round(floatval($openPo['approved'] ?? 0), 2);
 		$invQ = $dbRaw->prepare("SELECT IFNULL(SUM(total), 0) FROM supplier_invoices WHERE invoice_date BETWEEN :s AND :e$poB");
 		$invQ->execute([':s' => $startDate, ':e' => $endDate]);
@@ -1803,24 +1818,32 @@ class KpiService extends BaseService
 			: ($kpiData['sparklines'] ?? []);
 
 		$procDefs = [
-			['purchasing', 'compras', 'Compras', 'Planeación y Compras', 'fa-cart-shopping', '/mrp'],
-			['inventory', 'inventario', 'Inventario', 'Inventario y Almacenes', 'fa-boxes-stacked', '/reconciliation'],
-			['sales', 'ventas', 'Ventas', 'Ventas y Rentabilidad', 'fa-chart-column', '/sales'],
-			['dispatch', 'despachos', 'Despachos', 'Despachos y Devoluciones', 'fa-truck', '/dispatch'],
-			['workforce', 'personal', 'Personal', 'Operaciones y Personal', 'fa-users', '/operations/scheduling'],
-			['quality', 'calidad', 'Calidad', 'Calidad y Vencimientos', 'fa-shield-halved', '/quality'],
-			['waste', 'mermas', 'Mermas', 'Mermas y Prevención', 'fa-trash-can', '/waste']
+			['purchasing', 'compras', 'Compras', 'Planeación y Compras', 'fa-cart-shopping', '/mrp', 'Jefe de Compras'],
+			['inventory', 'inventario', 'Inventario', 'Inventario y Almacenes', 'fa-boxes-stacked', '/reconciliation', 'Jefe de Inventario'],
+			['sales', 'ventas', 'Ventas', 'Ventas y Rentabilidad', 'fa-chart-column', '/sales', 'Gerente Comercial'],
+			['dispatch', 'despachos', 'Despachos', 'Despachos y Devoluciones', 'fa-truck', '/dispatches', 'Jefe de Despachos'],
+			['workforce', 'personal', 'Personal', 'Operaciones y Personal', 'fa-users', '/operations/scheduling', 'Jefe de Personal'],
+			['quality', 'calidad', 'Calidad', 'Calidad y Vencimientos', 'fa-shield-halved', '/traceability', 'Líder de Calidad'],
+			['waste', 'mermas', 'Mermas', 'Mermas y Prevención', 'fa-trash-can', '/waste', 'Jefe de Mermas']
 		];
 		$operationsStatus = [];
-		foreach ($procDefs as [$todayKey, $key, $name, $full, $icon, $url])
+		foreach ($procDefs as [$todayKey, $key, $name, $full, $icon, $url, $defaultOwner])
 		{
 			$spark = [];
+			$t = $todayStatuses[$todayKey] ?? null;
+			$deviation = $t['deviation'] ?? null;
+			$econImpact = $t['economic_impact'] ?? null;
+			$econImpactLabel = $t['economic_impact_label'] ?? 'Sin cuantificar';
+			$owner = $t['owner'] ?? $defaultOwner;
 			if ($key === 'ventas')
 			{
 				$level = $sum['sales_level'];
 				$metric = $salesVsMetaPct === null ? ($sl['has_data'] ? 'Sin meta' : 'Sin ventas') : ($salesVsMetaPct >= 0 ? '+' : '') . number_format($salesVsMetaPct, 1) . '%';
 				$sub = $salesVsMetaPct === null ? ($sl['tickets'] . ' tickets en el período') : 'Vs. meta del período (' . $sl['tickets'] . ' tickets)';
 				$spark = array_values($daily);
+				$deviation = $salesVsMetaPct === null ? 'Sin meta' : (($salesVsMetaPct >= 0 ? '+' : '') . number_format($salesVsMetaPct, 1) . ' pp (' . number_format($sum['compliance_pct'] ?? 0, 1) . '%)');
+				$econImpact = ($salesMeta !== null && $sl['has_data']) ? round($salesVal - $salesMeta, 2) : null;
+				$econImpactLabel = $econImpact === null ? 'Sin meta' : (($econImpact >= 0 ? '+$' : '-$') . number_format(abs($econImpact), 0));
 			}
 			elseif ($key === 'mermas')
 			{
@@ -1828,18 +1851,31 @@ class KpiService extends BaseService
 				$metric = $wasteRatioPct === null ? 'Sin base' : number_format($wasteRatioPct, 1) . '%';
 				$sub = $wasteRatioPct === null ? 'Sin ventas para calcular el %' : 'De la venta · objetivo ≤ ' . number_format($sum['waste_target_pct'], 1) . '%';
 				$spark = $wasteSeries;
+				$wDev = $wasteRatioPct !== null ? round($wasteRatioPct - $sum['waste_target_pct'], 1) : null;
+				$deviation = $wDev === null ? 'Sin base' : (($wDev > 0 ? '+' : '') . number_format($wDev, 1) . ' pp vs ≤' . number_format($sum['waste_target_pct'], 1) . '%');
+				$econImpact = -$wasteVal;
+				$econImpactLabel = '-$' . number_format($wasteVal, 0);
 			}
 			else
 			{
-				$t = $todayStatuses[$todayKey] ?? null;
 				$level = $t['status'] ?? 'neutral';
 				$metric = $t === null ? 'Sin datos' : $t['status_label'];
 				$sub = $t['situation'] ?? 'Sin información';
 				$url = $t['href'] ?? $url;
 			}
 			[$state, $label] = DailyMetricsService::PanelState($level);
-			$operationsStatus[] = ['key' => $key, 'name' => $name, 'full_name' => $full, 'icon' => $icon, 'state' => $state, 'state_label' => $label, 'metric' => $metric,
-				'subtitle' => $sub, 'trend' => in_array($level, ['danger', 'warning'], true) ? 'down' : 'up', 'spark' => $spark, 'url' => preg_replace('/\?.*$/', '', $url)];
+			$operationsStatus[] = [
+				'key' => $key, 'name' => $name, 'full_name' => $full, 'icon' => $icon,
+				'state' => $state, 'state_label' => $label, 'metric' => $metric, 'subtitle' => $sub,
+				'deviation' => $deviation ?? $metric,
+				'economic_impact' => $econImpact,
+				'economic_impact_label' => $econImpactLabel,
+				'owner' => $owner,
+				'last_updated' => $lastUpdatedFormatted,
+				'trend' => in_array($level, ['danger', 'warning'], true) ? 'down' : 'up',
+				'spark' => $spark,
+				'url' => preg_replace('/\?.*$/', '', $url)
+			];
 		}
 
 		// 6. Evolución: ventas netas reales, meta diaria registrada y el mismo tramo del período anterior (todo leído, nada estimado)
@@ -1894,395 +1930,103 @@ class KpiService extends BaseService
 			}
 		}
 
-		// --- PANEL EJECUTIVO INTELIGENTE (RÉPLICA FOTO HOY - RESUMEN OPERATIVO) ---
-		$colombiaBranches = [
-			[
-				'id' => 1,
-				'name' => 'Calle 80',
-				'city' => 'Bogotá',
-				'full_label' => 'Calle 80 - Bogotá',
-				'status' => 'operativa',
-				'status_label' => 'Operativa',
-				'status_tone' => 'success',
-				'compliance_pct' => 98,
-				'alerts_count' => 0,
-				'manager' => 'Carlos Mendoza',
-				'coords' => [4.695, -74.085],
-				'svg_x' => 48.5,
-				'svg_y' => 44.5
-			],
-			[
-				'id' => 2,
-				'name' => 'Tintal',
-				'city' => 'Bogotá',
-				'full_label' => 'Tintal - Bogotá',
-				'status' => 'operativa',
-				'status_label' => 'Operativa',
-				'status_tone' => 'success',
-				'compliance_pct' => 97,
-				'alerts_count' => 0,
-				'manager' => 'Lucía Restrepo',
-				'coords' => [4.645, -74.155],
-				'svg_x' => 46.2,
-				'svg_y' => 46.8
-			],
-			[
-				'id' => 3,
-				'name' => 'Villas',
-				'city' => 'Bogotá',
-				'full_label' => 'Villas - Bogotá',
-				'status' => 'atencion',
-				'status_label' => 'Atención',
-				'status_tone' => 'warning',
-				'compliance_pct' => 92,
-				'alerts_count' => 2,
-				'manager' => 'Jorge Pineda',
-				'coords' => [4.715, -74.070],
-				'svg_x' => 49.5,
-				'svg_y' => 42.2
-			],
-			[
-				'id' => 4,
-				'name' => '170',
-				'city' => 'Bogotá',
-				'full_label' => '170 - Bogotá',
-				'status' => 'operativa',
-				'status_label' => 'Operativa',
-				'status_tone' => 'success',
-				'compliance_pct' => 98,
-				'alerts_count' => 0,
-				'manager' => 'Diana Morales',
-				'coords' => [4.755, -74.045],
-				'svg_x' => 50.8,
-				'svg_y' => 39.8
-			],
-			[
-				'id' => 5,
-				'name' => 'Suba',
-				'city' => 'Bogotá',
-				'full_label' => 'Suba - Bogotá',
-				'status' => 'operativa',
-				'status_label' => 'Operativa',
-				'status_tone' => 'success',
-				'compliance_pct' => 99,
-				'alerts_count' => 0,
-				'manager' => 'Andrés Cepeda',
-				'coords' => [4.740, -74.090],
-				'svg_x' => 47.1,
-				'svg_y' => 39.0
-			],
-			[
-				'id' => 6,
-				'name' => 'Cali Sur',
-				'city' => 'Cali',
-				'full_label' => 'Cali Sur - Cali',
-				'status' => 'critica',
-				'status_label' => 'Crítica',
-				'status_tone' => 'danger',
-				'compliance_pct' => 88,
-				'alerts_count' => 4,
-				'manager' => 'Felipe Guzmán',
-				'coords' => [3.375, -76.535],
-				'svg_x' => 33.8,
-				'svg_y' => 53.2
-			],
-			[
-				'id' => 7,
-				'name' => 'Cali Norte',
-				'city' => 'Cali',
-				'full_label' => 'Cali Norte - Cali',
-				'status' => 'operativa',
-				'status_label' => 'Operativa',
-				'status_tone' => 'success',
-				'compliance_pct' => 97,
-				'alerts_count' => 1,
-				'manager' => 'Mariana Ruiz',
-				'coords' => [3.475, -76.515],
-				'svg_x' => 35.2,
-				'svg_y' => 49.8
-			],
-			[
-				'id' => 8,
-				'name' => 'Medellín - Envigado',
-				'city' => 'Envigado',
-				'full_label' => 'Medellín - Envigado',
-				'status' => 'atencion',
-				'status_label' => 'Atención',
-				'status_tone' => 'warning',
-				'compliance_pct' => 93,
-				'alerts_count' => 2,
-				'manager' => 'Mateo Valencia',
-				'coords' => [6.170, -75.580],
-				'svg_x' => 41.5,
-				'svg_y' => 34.5
-			],
-			[
-				'id' => 9,
-				'name' => 'Barranquilla',
-				'city' => 'Barranquilla',
-				'full_label' => 'Barranquilla',
-				'status' => 'operativa',
-				'status_label' => 'Operativa',
-				'status_tone' => 'success',
-				'compliance_pct' => 98,
-				'alerts_count' => 1,
-				'manager' => 'Sandra Peñaranda',
-				'coords' => [10.995, -74.815],
-				'svg_x' => 45.2,
-				'svg_y' => 13.5
-			],
-			[
-				'id' => 10,
-				'name' => 'Bucaramanga',
-				'city' => 'Bucaramanga',
-				'full_label' => 'Bucaramanga',
-				'status' => 'operativa',
-				'status_label' => 'Operativa',
-				'status_tone' => 'success',
-				'compliance_pct' => 97,
-				'alerts_count' => 1,
-				'manager' => 'Óscar Duarte',
-				'coords' => [7.125, -73.120],
-				'svg_x' => 55.4,
-				'svg_y' => 28.2
-			]
+		// 7. Resumen financiero consolidado del período (solo cifras reales de DailyMetricsService / KpiService)
+		$recoveredAmt = round(floatval($kpiData['waste_recovered'] ?? 0), 2);
+		$netWasteCost = round(max(0.0, $wasteVal - $recoveredAmt), 2);
+		$netOpContribution = round($marginVal - $netWasteCost, 2);
+		$financialSummary = [
+			'has_data' => $sl['has_data'] || $wasteVal > 0 || $invValuation > 0,
+			'gross_sales' => round(floatval($sl['gross_sales'] ?? 0), 2),
+			'tax' => round(floatval($sl['tax'] ?? 0), 2),
+			'net_sales' => round($salesVal, 2),
+			'sales_target' => $salesMeta,
+			'compliance_pct' => $sum['compliance_pct'],
+			'cogs' => round(floatval($sl['cogs'] ?? 0), 2),
+			'gross_margin' => round($marginVal, 2),
+			'margin_pct' => $marginPct,
+			'margin_target_pct' => $sum['margin_target_pct'],
+			'waste_cost' => round($wasteVal, 2),
+			'waste_recovered' => $recoveredAmt,
+			'net_waste_cost' => $netWasteCost,
+			'waste_pct' => $wasteRatioPct,
+			'waste_target_pct' => $sum['waste_target_pct'],
+			'net_operating_contribution' => $netOpContribution,
+			'net_operating_margin_pct' => $salesVal > 0 ? round($netOpContribution / $salesVal * 100, 1) : null,
+			'inventory_valuation' => round($invValuation, 2),
+			'dsi_days' => $kpiData['days_of_inventory'] ?? null,
+			'turnover' => $turnoverVal
 		];
 
-		if ($branchId !== null && $branchId > 0)
+		// 8. Seguimiento de acciones correctivas reales (planes de merma, alertas P1/P2 y tareas vencidas)
+		$correctiveActions = ['total' => 0, 'open' => 0, 'in_progress' => 0, 'completed' => 0, 'overdue' => 0, 'compliance_rate' => null, 'cost_avoided_total' => 0.0, 'items' => []];
+		try
 		{
-			foreach ($colombiaBranches as &$cb)
+			$apData = AkcalMetricsService::GetInstance()->GetActionPlansMatrix($branchId);
+			$apKpis = $apData['kpis'] ?? [];
+			$items = [];
+			foreach (($apData['plans'] ?? []) as $pl)
 			{
-				$cb['is_selected'] = ($cb['id'] === $branchId);
+				if (($pl['status'] ?? '') === 'completed') continue;
+				$items[] = [
+					'source' => 'Plan de merma',
+					'title' => $pl['title'] ?? ($pl['reason_name'] ?? 'Acción correctiva'),
+					'branch' => $pl['branch_name'] ?? '',
+					'owner' => $pl['assigned_username'] ?? 'Responsable asignado',
+					'due_date' => $pl['due_date'] ?? null,
+					'is_overdue' => !empty($pl['is_overdue']),
+					'status' => $pl['status'] ?? 'open',
+					'impact' => floatval($pl['cost_avoided_estimate'] ?? 0),
+					'url' => '/waste' . ($branchId ? '?branch_id=' . $branchId : '')
+				];
 			}
-			unset($cb);
+			$bAlertSql = $branchId ? ' AND a.branch_id = ' . intval($branchId) : '';
+			$openAl = $dbRaw->query("SELECT a.title, a.priority, a.due_at, a.status, IFNULL(b.name,'Red') AS branch_name FROM dairy_alerts a LEFT JOIN branches b ON b.id=a.branch_id WHERE a.status IN ('open','in_progress') AND a.priority IN ('P1','P2')$bAlertSql ORDER BY CASE WHEN a.priority='P1' THEN 0 ELSE 1 END, a.id DESC LIMIT 6")->fetchAll(\PDO::FETCH_ASSOC);
+			foreach ($openAl as $al)
+			{
+				$isOv = !empty($al['due_at']) && $al['due_at'] < date('Y-m-d H:i:s');
+				$items[] = [
+					'source' => 'Alerta ' . ($al['priority'] ?? 'P1'),
+					'title' => $al['title'] ?? 'Alerta operativa',
+					'branch' => $al['branch_name'] ?? '',
+					'owner' => 'Centro de Alertas',
+					'due_date' => !empty($al['due_at']) ? substr($al['due_at'], 0, 10) : null,
+					'is_overdue' => $isOv,
+					'status' => $al['status'] ?? 'open',
+					'impact' => null,
+					'url' => '/alerts' . ($branchId ? '?branch_id=' . $branchId : '')
+				];
+			}
+			$correctiveActions = [
+				'total' => intval($apKpis['total'] ?? 0),
+				'open' => intval($apKpis['open'] ?? 0),
+				'in_progress' => intval($apKpis['in_progress'] ?? 0),
+				'completed' => intval($apKpis['completed'] ?? 0),
+				'overdue' => intval($apKpis['overdue'] ?? 0) + count(array_filter($items, fn($x) => ($x['source'] !== 'Plan de merma') && !empty($x['is_overdue']))),
+				'compliance_rate' => ($apKpis['total'] ?? 0) > 0 ? floatval($apKpis['compliance_rate']) : null,
+				'cost_avoided_total' => round(floatval($apKpis['cost_avoided_total'] ?? 0), 2),
+				'items' => array_slice($items, 0, 8)
+			];
 		}
+		catch (\Throwable $e) {}
 
-		$branchCounts = [
-			'operativa' => 7,
-			'atencion' => 2,
-			'critica' => 1,
-			'total' => count($colombiaBranches)
-		];
+		// 9. Catálogo real de definiciones y responsables por KPI
+		$kpiDefinitions = [];
+		try
+		{
+			foreach (KpiCatalogService::GetInstance()->Catalog() as $def)
+			{
+				$kpiDefinitions[$def['code']] = $def;
+			}
+		}
+		catch (\Throwable $e) {}
 
-		$salesValExec = ($salesVal > 0) ? $salesVal : 128450.0;
-		$salesMetaExec = ($salesMeta > 0) ? $salesMeta : 133800.0;
-
-		$photoKpis = [
-			'sales' => [
-				'label' => 'Ventas',
-				'value' => $salesValExec,
-				'formatted_value' => '$' . number_format($salesValExec, 0, ',', '.'),
-				'subtitle' => '96 % de la meta',
-				'delta' => '▲ +5,2 % vs. ayer',
-				'delta_direction' => 'up',
-				'delta_tone' => 'success',
-				'tone' => 'success',
-				'icon' => 'fa-cart-shopping',
-				'spark' => [0, 22, 48, 71, 89, 95, 106, 118, 128],
-				'tooltip' => 'Total de ventas brutas menos devoluciones y notas de crédito.',
-				'url' => '/sales'
-			],
-			'margin' => [
-				'label' => 'Margen',
-				'value' => 28.4,
-				'formatted_value' => '28,4 %',
-				'subtitle' => 'Meta: 27,0 %',
-				'delta' => '▲ +1,4 pp',
-				'delta_direction' => 'up',
-				'delta_tone' => 'success',
-				'tone' => 'success',
-				'icon' => 'fa-coins',
-				'spark' => [26.8, 27.1, 27.4, 27.9, 28.1, 28.3, 28.4],
-				'tooltip' => 'Margen comercial bruto: (Venta neta - CMV) / Venta neta.',
-				'url' => '/sales'
-			],
-			'waste' => [
-				'label' => 'Mermas',
-				'value' => 1.92,
-				'formatted_value' => '1,92 %',
-				'subtitle' => 'Meta: ≤ 1,50 %',
-				'delta' => '▲ +0,42 pp',
-				'delta_direction' => 'up',
-				'delta_tone' => 'danger',
-				'tone' => 'danger',
-				'icon' => 'fa-trash-can',
-				'spark' => [1.4, 1.45, 1.55, 1.62, 1.75, 1.88, 1.92],
-				'tooltip' => 'Merma neta operativa como porcentaje de la venta neta.',
-				'url' => '/waste'
-			],
-			'inventory' => [
-				'label' => 'Inventario',
-				'value' => 98.1,
-				'formatted_value' => '98,1 %',
-				'subtitle' => 'Exactitud',
-				'delta' => '▼ -0,6 pp',
-				'delta_direction' => 'down',
-				'delta_tone' => 'warning',
-				'tone' => 'warning',
-				'icon' => 'fa-box',
-				'spark' => [99.2, 99.0, 98.8, 98.6, 98.4, 98.2, 98.1],
-				'tooltip' => 'Exactitud del registro de inventario (IRA) tras conteos cíclicos.',
-				'url' => '/stockoverview'
-			],
-			'labor' => [
-				'label' => 'Personal',
-				'value' => 87.0,
-				'formatted_value' => '87 %',
-				'subtitle' => 'Cobertura',
-				'delta' => '▼ -6,0 pp',
-				'delta_direction' => 'down',
-				'delta_tone' => 'warning',
-				'tone' => 'warning',
-				'icon' => 'fa-users',
-				'spark' => [94, 93, 91, 90, 89, 88, 87],
-				'tooltip' => 'Cobertura de personal en turnos frente a la dotación presupuestada.',
-				'url' => '/schedule'
-			],
-			'quality' => [
-				'label' => 'Calidad',
-				'value' => 99.1,
-				'formatted_value' => '99,1 %',
-				'subtitle' => 'Sin novedades',
-				'delta' => '▲ +0,9 pp',
-				'delta_direction' => 'up',
-				'delta_tone' => 'success',
-				'tone' => 'success',
-				'icon' => 'fa-shield-halved',
-				'spark' => [97.8, 98.2, 98.4, 98.7, 98.9, 99.0, 99.1],
-				'tooltip' => 'Índice de cumplimiento de estándares de calidad y vencimientos.',
-				'url' => '/quality'
-			]
-		];
-
-		$topDepartments = [
-			['name' => 'Electrodomésticos', 'sales' => 34250, 'formatted' => '$34,250', 'share_pct' => 26.6, 'bar_pct' => 100],
-			['name' => 'Tecnología',        'sales' => 28170, 'formatted' => '$28,170', 'share_pct' => 21.9, 'bar_pct' => 82],
-			['name' => 'Hogar',             'sales' => 18450, 'formatted' => '$18,450', 'share_pct' => 14.4, 'bar_pct' => 54],
-			['name' => 'Alimentos',         'sales' => 16920, 'formatted' => '$16,920', 'share_pct' => 13.2, 'bar_pct' => 49],
-			['name' => 'Frescos',           'sales' => 12340, 'formatted' => '$12,340', 'share_pct' => 9.6,  'bar_pct' => 36]
-		];
-
-		$priorityAlertsList = [
-			[
-				'id' => 'alt-1',
-				'level' => 'danger',
-				'title' => '4 pedidos fuera de plazo',
-				'source' => 'Despachos · 2 sucursales',
-				'time_ago' => 'Hace 12 min',
-				'url' => '/dispatch'
-			],
-			[
-				'id' => 'alt-2',
-				'level' => 'warning',
-				'title' => 'Personal: cobertura insuficiente',
-				'source' => 'Cajas · 3 sucursales',
-				'time_ago' => 'Hace 18 min',
-				'url' => '/schedule'
-			],
-			[
-				'id' => 'alt-3',
-				'level' => 'warning',
-				'title' => '2 recepciones atrasadas',
-				'source' => 'Compras · 1 sucursal',
-				'time_ago' => 'Hace 27 min',
-				'url' => '/mrp'
-			],
-			[
-				'id' => 'alt-4',
-				'level' => 'danger',
-				'title' => '5 lotes requieren intervención',
-				'source' => 'Calidad · Vencimientos próximos',
-				'time_ago' => 'Hace 36 min',
-				'url' => '/quality'
-			]
-		];
-
-		$urgentActionsList = [
-			['id' => 'act-inv',  'label' => 'Aprobar 3 ajustes de inventario',      'url' => '/reconciliation', 'done' => false],
-			['id' => 'act-ret',  'label' => 'Gestionar 4 devoluciones pendientes',  'url' => '/dispatch',       'done' => false],
-			['id' => 'act-pers', 'label' => 'Asignar refuerzo en Cajas (2 turnos)', 'url' => '/schedule',       'done' => false],
-			['id' => 'act-qual', 'label' => 'Revisar vencidos (5 lotes)',           'url' => '/quality',        'done' => false]
-		];
-
-		$quickActionsList = [
-			['label' => 'Escanear UPC',    'icon' => 'fa-barcode',       'color' => '#16a34a', 'bg' => '#f0fdf4', 'url' => '/scan'],
-			['label' => 'Registrar Merma', 'icon' => 'fa-trash-can',     'color' => '#dc2626', 'bg' => '#fef2f2', 'url' => '/waste'],
-			['label' => 'Crear Pedido',    'icon' => 'fa-cart-shopping', 'color' => '#16a34a', 'bg' => '#f0fdf4', 'url' => '/purchaseorders'],
-			['label' => 'Reporte Diario',  'icon' => 'fa-chart-simple',   'color' => '#16a34a', 'bg' => '#f0fdf4', 'url' => '/reports']
-		];
-
-		$processCards = [
-			[
-				'name' => 'Compras',
-				'icon' => 'fa-cart-shopping',
-				'icon_tone' => 'success',
-				'status_label' => 'Atención',
-				'status_tone' => 'warning',
-				'description' => '2 recepciones atrasadas',
-				'url' => '/mrp'
-			],
-			[
-				'name' => 'Inventario',
-				'icon' => 'fa-boxes-stacked',
-				'icon_tone' => 'success',
-				'status_label' => 'Atención',
-				'status_tone' => 'warning',
-				'description' => '3 diferencias en conteos',
-				'url' => '/reconciliation'
-			],
-			[
-				'name' => 'Ventas',
-				'icon' => 'fa-chart-column',
-				'icon_tone' => 'success',
-				'status_label' => 'OK',
-				'status_tone' => 'success',
-				'description' => '96 % de la meta',
-				'url' => '/sales'
-			],
-			[
-				'name' => 'Despachos',
-				'icon' => 'fa-truck',
-				'icon_tone' => 'danger',
-				'status_label' => 'Crítico',
-				'status_tone' => 'danger',
-				'description' => '4 pedidos fuera de plazo',
-				'url' => '/dispatch'
-			],
-			[
-				'name' => 'Personal',
-				'icon' => 'fa-users',
-				'icon_tone' => 'warning',
-				'status_label' => 'Atención',
-				'status_tone' => 'warning',
-				'description' => 'Cobertura insuficiente en Cajas',
-				'url' => '/operations/scheduling'
-			],
-			[
-				'name' => 'Calidad',
-				'icon' => 'fa-shield-halved',
-				'icon_tone' => 'success',
-				'status_label' => 'OK',
-				'status_tone' => 'success',
-				'description' => '5 lotes requieren intervención',
-				'url' => '/quality'
-			],
-			[
-				'name' => 'Mermas',
-				'icon' => 'fa-trash-can',
-				'icon_tone' => 'danger',
-				'status_label' => 'Crítico',
-				'status_tone' => 'danger',
-				'description' => '1,92 % (sobre objetivo)',
-				'url' => '/waste'
-			]
-		];
-
-		$salesDayCurve = [
-			'headline' => '$128,450',
-			'delta_badge' => '+5,2 %',
-			'labels' => ['6:00', '8:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00', '22:00'],
-			'values' => [0, 22100, 48500, 71200, 89400, 94800, 106300, 118700, 128450]
-		];
+		// 10. Desempeño real por departamento del período
+		$departmentBreakdown = [];
+		try
+		{
+			$departmentBreakdown = $m->SalesByDepartment($branchId, $startDate, $endDate);
+		}
+		catch (\Throwable $e) {}
 
 		return [
 			'strategic_kpis' => $strategicKpis,
@@ -2291,15 +2035,10 @@ class KpiService extends BaseService
 			'priority_decisions' => $priorityDecisions,
 			'budget_summary' => $budgetSummary,
 			'operations_status' => $operationsStatus,
-			'colombia_branches' => $colombiaBranches,
-			'branch_counts' => $branchCounts,
-			'photo_kpis' => $photoKpis,
-			'top_departments' => $topDepartments,
-			'priority_alerts_list' => $priorityAlertsList,
-			'urgent_actions_list' => $urgentActionsList,
-			'quick_actions_list' => $quickActionsList,
-			'process_cards' => $processCards,
-			'sales_day_curve' => $salesDayCurve,
+			'financial_summary' => $financialSummary,
+			'corrective_actions' => $correctiveActions,
+			'kpi_definitions' => $kpiDefinitions,
+			'department_breakdown' => $departmentBreakdown,
 			'evolution_chart' => [
 				'labels' => $chartLabels,
 				'sales_real' => $chartSalesReal,

@@ -56,74 +56,74 @@ class SupplierInvoiceService extends BaseService
 		$tax = max(0, floatval($data['tax_amount'] ?? 0));
 		$tolerance = defined('GROCY_INVOICE_PRICE_TOLERANCE_PCT') ? floatval(GROCY_INVOICE_PRICE_TOLERANCE_PCT) : 2;
 
-		$orderItems = [];
-		foreach ($db->query('SELECT * FROM procurement_order_items WHERE order_id = ' . $orderId)->fetchAll(\PDO::FETCH_OBJ) as $oi)
-		{
-			$orderItems[$oi->id] = $oi;
-		}
-		$prevStmt = $db->prepare("SELECT IFNULL(SUM(ii.invoiced_amount), 0) FROM supplier_invoice_items ii JOIN supplier_invoices i ON i.id = ii.invoice_id WHERE ii.order_item_id = :oi AND i.status != 'rejected'");
-
-		$lines = [];
-		$subtotal = 0.0;
-		$risk = 0.0;
-		foreach ($data['items'] ?? [] as $it)
-		{
-			$oiId = intval($it['order_item_id'] ?? 0);
-			$qty = floatval($it['invoiced_amount'] ?? 0);
-			$price = floatval($it['unit_price'] ?? 0);
-			if (!isset($orderItems[$oiId]))
-			{
-				throw new \Exception('Línea de factura que no pertenece a la orden');
-			}
-			if ($qty < 0 || $price < 0)
-			{
-				throw new \Exception('Cantidades y precios no pueden ser negativos');
-			}
-			if ($qty == 0)
-			{
-				continue;
-			}
-			$oi = $orderItems[$oiId];
-			$ordered = floatval($oi->approved_amount ?? $oi->suggested_amount);
-			$received = floatval($oi->received_amount);
-			$prevStmt->execute([':oi' => $oiId]);
-			$prev = floatval($prevStmt->fetchColumn());
-			$poPrice = $oi->unit_price !== null ? floatval($oi->unit_price) : null;
-
-			$issues = [];
-			$qtyDiff = round($prev + $qty - $received, 4);
-			$lineRisk = 0.0;
-			if ($qtyDiff > 0.0001)
-			{
-				$issues[] = 'qty_over_received';
-				$lineRisk += min($qty, $qtyDiff) * $price;
-			}
-			if ($prev + $qty - $ordered > 0.0001)
-			{
-				$issues[] = 'qty_over_ordered';
-			}
-			$pricePct = ($poPrice !== null && $poPrice > 0) ? round(($price - $poPrice) / $poPrice * 100, 2) : null;
-			if ($pricePct !== null && $pricePct > $tolerance)
-			{
-				$issues[] = 'price_over_po';
-				$lineRisk += max(0, min($qty, max(0, $received - $prev))) * ($price - $poPrice);
-			}
-			$subtotal += $qty * $price;
-			$risk += $lineRisk;
-			$lines[] = [
-				':oi' => $oiId, ':p' => $oi->product_id, ':o' => $ordered, ':r' => $received, ':pv' => $prev, ':q' => $qty, ':op' => $poPrice, ':ip' => $price,
-				':qd' => $qtyDiff, ':pd' => $pricePct, ':risk' => round($lineRisk, 2), ':iss' => implode(',', $issues) ?: null
-			];
-		}
-		if (count($lines) === 0)
-		{
-			throw new \Exception('La factura no tiene líneas con cantidad');
-		}
-		$status = array_filter($lines, fn($l) => $l[':iss'] !== null) ? 'discrepancy' : 'matched';
-
-		$db->beginTransaction();
+		$dbLocked = DatabaseService::GetInstance()->BeginWriteTransaction();
 		try
 		{
+			$orderItems = [];
+			foreach ($db->query('SELECT * FROM procurement_order_items WHERE order_id = ' . $orderId)->fetchAll(\PDO::FETCH_OBJ) as $oi)
+			{
+				$orderItems[$oi->id] = $oi;
+			}
+			$prevStmt = $db->prepare("SELECT IFNULL(SUM(ii.invoiced_amount), 0) FROM supplier_invoice_items ii JOIN supplier_invoices i ON i.id = ii.invoice_id WHERE ii.order_item_id = :oi AND i.status != 'rejected'");
+
+			$lines = [];
+			$subtotal = 0.0;
+			$risk = 0.0;
+			foreach ($data['items'] ?? [] as $it)
+			{
+				$oiId = intval($it['order_item_id'] ?? 0);
+				$qty = floatval($it['invoiced_amount'] ?? 0);
+				$price = floatval($it['unit_price'] ?? 0);
+				if (!isset($orderItems[$oiId]))
+				{
+					throw new \Exception('Línea de factura que no pertenece a la orden');
+				}
+				if ($qty < 0 || $price < 0)
+				{
+					throw new \Exception('Cantidades y precios no pueden ser negativos');
+				}
+				if ($qty == 0)
+				{
+					continue;
+				}
+				$oi = $orderItems[$oiId];
+				$ordered = floatval($oi->approved_amount ?? $oi->suggested_amount);
+				$received = floatval($oi->received_amount);
+				$prevStmt->execute([':oi' => $oiId]);
+				$prev = floatval($prevStmt->fetchColumn());
+				$poPrice = $oi->unit_price !== null ? floatval($oi->unit_price) : null;
+
+				$issues = [];
+				$qtyDiff = round($prev + $qty - $received, 4);
+				$lineRisk = 0.0;
+				if ($qtyDiff > 0.0001)
+				{
+					$issues[] = 'qty_over_received';
+					$lineRisk += min($qty, $qtyDiff) * $price;
+				}
+				if ($prev + $qty - $ordered > 0.0001)
+				{
+					$issues[] = 'qty_over_ordered';
+				}
+				$pricePct = ($poPrice !== null && $poPrice > 0) ? round(($price - $poPrice) / $poPrice * 100, 2) : null;
+				if ($pricePct !== null && $pricePct > $tolerance)
+				{
+					$issues[] = 'price_over_po';
+					$lineRisk += max(0, min($qty, max(0, $received - $prev))) * ($price - $poPrice);
+				}
+				$subtotal += $qty * $price;
+				$risk += $lineRisk;
+				$lines[] = [
+					':oi' => $oiId, ':p' => $oi->product_id, ':o' => $ordered, ':r' => $received, ':pv' => $prev, ':q' => $qty, ':op' => $poPrice, ':ip' => $price,
+					':qd' => $qtyDiff, ':pd' => $pricePct, ':risk' => round($lineRisk, 2), ':iss' => implode(',', $issues) ?: null
+				];
+			}
+			if (count($lines) === 0)
+			{
+				throw new \Exception('La factura no tiene líneas con cantidad');
+			}
+			$status = array_filter($lines, fn($l) => $l[':iss'] !== null) ? 'discrepancy' : 'matched';
+
 			$next = intval($db->query('SELECT IFNULL(MAX(id), 0) + 1 FROM supplier_invoices')->fetchColumn());
 			$code = 'FAC-' . date('Y') . '-' . str_pad((string) $next, 5, '0', STR_PAD_LEFT);
 			$db->prepare("INSERT INTO supplier_invoices (invoice_code, supplier_id, order_id, branch_id, invoice_number, invoice_date, subtotal, tax_amount, total, amount_at_risk, status, notes, created_by_user_id, created_timestamp)
@@ -139,11 +139,14 @@ class SupplierInvoiceService extends BaseService
 			{
 				$ins->execute($l + [':id' => $id]);
 			}
-			$db->commit();
+			$dbLocked->commit();
 		}
 		catch (\Throwable $ex)
 		{
-			$db->rollBack();
+			if ($dbLocked->inTransaction())
+			{
+				$dbLocked->rollBack();
+			}
 			throw $ex;
 		}
 		return ['id' => $id, 'invoice_code' => $code, 'status' => $status, 'amount_at_risk' => round($risk, 2), 'total' => round($subtotal + $tax, 2)];

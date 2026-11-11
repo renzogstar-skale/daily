@@ -1967,8 +1967,21 @@ class AlertCenterService extends BaseService
 			'per' => $per,
 			'pages' => max(1, (int) ceil($counts[$tab] / $per)),
 			'counts' => $counts,
+			'status_counts' => $this->StatusCounts($where, $p),
 			'tab' => $tab
 		];
+	}
+
+	/** Estado de resolución sobre todas las activas del filtro (la bandeja trae solo una página): sin actividad, en proceso y vencidas */
+	private function StatusCounts(string $where, array $p): array
+	{
+		$p[':snow'] = $this->Now();
+		unset($p[':now']);
+		$late = 'a.status IN (' . self::In(self::WORKING) . ') AND a.due_at < :snow';
+		$idle = "a.status = 'open' AND a.owner_user_id IS NULL";
+		$r = $this->Row("SELECT SUM(CASE WHEN $late THEN 1 ELSE 0 END) AS overdue, SUM(CASE WHEN NOT ($late) AND $idle THEN 1 ELSE 0 END) AS idle,
+			SUM(CASE WHEN NOT ($late) AND NOT ($idle) THEN 1 ELSE 0 END) AS in_process FROM dairy_alerts a $where", $p);
+		return ['overdue' => intval($r['overdue'] ?? 0), 'idle' => intval($r['idle'] ?? 0), 'in_process' => intval($r['in_process'] ?? 0)];
 	}
 
 	public function Detail(int $id): array

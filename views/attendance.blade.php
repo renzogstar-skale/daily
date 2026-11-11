@@ -78,7 +78,30 @@
 @endpush
 
 @section('content')
+@php $canSupervise = ($canAttendance ?? false) || ($canManage ?? false); @endphp
 <div class="daily-att-wrapper">
+
+	<!-- Ciclo Operativo Laboral de 7 Etapas (Etapa 4 activa: Registrar asistencia) -->
+	<div class="card shadow-sm border-0 mb-3 bg-white" id="att-cycle-banner">
+		<div class="card-body py-2 px-3 d-flex flex-wrap align-items-center justify-content-between" style="gap: 8px;">
+			<span class="small font-weight-bold text-uppercase text-muted"><i class="fa-solid fa-arrows-spin mr-1 text-success"></i>Ciclo de Operaciones y Personal</span>
+			<div class="d-flex flex-wrap align-items-center small" style="gap: 6px;">
+				<span class="badge badge-light border text-muted">1. Planificar</span>
+				<i class="fa-solid fa-chevron-right text-muted" style="font-size: .65rem;"></i>
+				<span class="badge badge-light border text-muted">2. Programar</span>
+				<i class="fa-solid fa-chevron-right text-muted" style="font-size: .65rem;"></i>
+				<span class="badge badge-light border text-muted">3. Asignar</span>
+				<i class="fa-solid fa-chevron-right text-muted" style="font-size: .65rem;"></i>
+				<span class="badge badge-success px-2 py-1"><i class="fa-solid fa-fingerprint mr-1"></i>4. Registrar asistencia</span>
+				<i class="fa-solid fa-chevron-right text-muted" style="font-size: .65rem;"></i>
+				<span class="badge badge-light border text-muted">5. Ejecutar</span>
+				<i class="fa-solid fa-chevron-right text-muted" style="font-size: .65rem;"></i>
+				<span class="badge badge-light border text-muted">6. Evaluar</span>
+				<i class="fa-solid fa-chevron-right text-muted" style="font-size: .65rem;"></i>
+				<span class="badge badge-light border text-muted">7. Ajustar</span>
+			</div>
+		</div>
+	</div>
 
 	<!-- 1. BARRA DE SELECCIÓN DE ROL (EMPLEADO VS SUPERVISOR) -->
 	<div class="daily-role-bar">
@@ -91,15 +114,18 @@
 				   class="role-pill-btn {{ $roleView === 'employee' ? 'is-active' : '' }}">
 					<i class="fa-solid fa-id-card"></i> Vista Empleado (Reloj de Fichaje)
 				</a>
+				@if($canSupervise)
 				<a href="?role_view=supervisor&branch_id={{ $overview['branch_id'] }}&date={{ $overview['selected_date'] }}" 
 				   class="role-pill-btn {{ $roleView === 'supervisor' ? 'is-active' : '' }}">
 					<i class="fa-solid fa-chart-pie"></i> Vista Supervisor (Control WFM)
 				</a>
+				@endif
 			</div>
 		</div>
 
 		@if($roleView === 'employee')
-			<!-- Selector interactivo de colaborador para demostración y gerencia -->
+			@if($canSupervise && count($employees) > 1)
+			<!-- Selector interactivo de colaborador para gerencia/supervisión -->
 			<div class="d-flex align-items-center gap-2">
 				<label class="small text-muted font-weight-600 mb-0">Simular como:</label>
 				<select class="form-control form-control-sm daily-filter-input" style="width: 250px; height: 32px;" onchange="switchPortalEmployee(this.value)">
@@ -110,6 +136,13 @@
 					@endforeach
 				</select>
 			</div>
+			@else
+			<div class="d-flex align-items-center gap-2">
+				<span class="badge badge-light border px-2 py-1" style="font-size: 0.76rem;">
+					<i class="fa-solid fa-user-shield mr-1 text-primary"></i> Mi Portal de Fichaje ({{ $currentUserRole }})
+				</span>
+			</div>
+			@endif
 		@else
 			<div class="d-flex align-items-center gap-2">
 				<span class="badge badge-success px-2 py-1" style="font-size: 0.76rem;">
@@ -490,7 +523,7 @@
 							<span class="daily-kpi-label">Ausencias</span>
 						</div>
 						<div class="daily-kpi-val">{{ $overview['kpis']['absent_count'] }}</div>
-						<div class="daily-kpi-sub">{{ $overview['kpis']['scheduled_count'] > 0 ? round(($overview['kpis']['absent_count'] / $overview['kpis']['scheduled_count']) * 100) : 0 }}% del personal</div>
+						<div class="daily-kpi-sub">Permiso o sin fichaje tras gracia ({{ $overview['kpis']['scheduled_count'] > 0 ? round(($overview['kpis']['absent_count'] / $overview['kpis']['scheduled_count']) * 100) : 0 }}%)</div>
 					</div>
 
 					<!-- Pendientes -->
@@ -500,7 +533,7 @@
 							<span class="daily-kpi-label">Entrada Pendiente</span>
 						</div>
 						<div class="daily-kpi-val">{{ $overview['kpis']['pending_count'] }}</div>
-						<div class="daily-kpi-sub">Por iniciar o sin marcar</div>
+						<div class="daily-kpi-sub">Turno próximo o dentro de tolerancia</div>
 					</div>
 				</div>
 
@@ -583,6 +616,56 @@
 						</div>
 					</div>
 				</div>
+
+				@if($canSupervise && !empty($coverageByDeptHour['departments']))
+				<!-- Resumen de Cobertura por Departamento, Franjas (Apertura/Cierre/Nocturno) y Brechas por Hora -->
+				<div class="daily-table-card mb-3" id="att-dept-hour-coverage">
+					<div class="daily-table-header">
+						<h3 class="daily-table-title">
+							<i class="fa-solid fa-layer-group text-primary"></i> Cobertura por Departamento y Bandas Operativas
+							<span class="badge {{ ($coverageByDeptHour['gap_count'] ?? 0) > 0 ? 'badge-warning text-dark' : 'badge-success' }} ml-2">
+								{{ $coverageByDeptHour['gap_count'] ?? 0 }} franjas con déficit
+							</span>
+						</h3>
+						<span class="small text-muted">Jurisdicción: <strong>{{ $coverageByDeptHour['jurisdiction'] ?? 'CO-GEN' }}</strong> · Apertura: {{ $coverageByDeptHour['bands']['apertura'] ?? 0 }} · Cierre: {{ $coverageByDeptHour['bands']['cierre'] ?? 0 }} · Nocturno: {{ $coverageByDeptHour['bands']['nocturno'] ?? 0 }}</span>
+					</div>
+					<div class="daily-table-responsive">
+						<table class="daily-table">
+							<thead>
+								<tr>
+									<th>Departamento</th>
+									<th class="text-center">Apertura</th>
+									<th class="text-center">Intermedio</th>
+									<th class="text-center">Cierre</th>
+									<th class="text-center">Nocturno</th>
+									<th class="text-center">Horas Efectivas (días-h)</th>
+									<th>Brechas Horarias</th>
+								</tr>
+							</thead>
+							<tbody>
+								@foreach($coverageByDeptHour['departments'] as $dCov)
+								<tr>
+									<td class="font-weight-bold text-dark">{{ $dCov['department'] }}</td>
+									<td class="text-center">{{ $dCov['bands']['apertura'] ?? 0 }}</td>
+									<td class="text-center">{{ $dCov['bands']['intermedio'] ?? 0 }}</td>
+									<td class="text-center">{{ $dCov['bands']['cierre'] ?? 0 }}</td>
+									<td class="text-center">{{ $dCov['bands']['nocturno'] ?? 0 }}</td>
+									<td class="text-center font-weight-bold text-primary">{{ number_format(array_sum($dCov['effective_hourly'] ?? []), 1) }} h</td>
+									<td>
+										@if(empty($dCov['gaps']))
+											<span class="badge badge-success">Cobertura completa</span>
+										@else
+											<span class="badge badge-danger">{{ count($dCov['gaps']) }} déficit(s)</span>
+											<small class="text-muted ml-1">ej. {{ $dCov['gaps'][0]['hour_label'] }} (-{{ $dCov['gaps'][0]['deficit'] }})</small>
+										@endif
+									</td>
+								</tr>
+								@endforeach
+							</tbody>
+						</table>
+					</div>
+				</div>
+				@endif
 
 				<!-- Acceso claro a Análisis y Detalle -->
 				<div class="d-flex justify-content-between align-items-center bg-white p-3 rounded border">

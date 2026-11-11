@@ -71,27 +71,56 @@
 			<span class="sch-badge sch-badge-gray">
 				{{ date('d/m/Y', strtotime($monday)) }} - {{ date('d/m/Y', strtotime($monday . ' +6 day')) }}
 			</span>
-			<span class="sch-badge sch-badge-green">
-				<span class="sch-badge-dot"></span> Presupuesto: {{ $kpiData['labor_budget']['value'] ?? '$19,083' }} (8.5%)
+			<span class="sch-badge sch-badge-gray" id="schJurisdictionBadge">
+				<i class="fa-solid fa-globe mr-1"></i> {{ $jurisdictionPolicy['jurisdiction_code'] ?? 'CO-GEN' }} ({{ $jurisdictionPolicy['max_weekly_hours'] ?? 42 }}h/sem · Descanso {{ $jurisdictionPolicy['min_rest_hours'] ?? 12 }}h)
 			</span>
+			@if($canManage)
+			<span class="sch-badge sch-badge-green">
+				<span class="sch-badge-dot"></span> Presupuesto: {{ $kpiData['labor_budget']['value'] ?? 'Sin información' }}
+			</span>
+			@endif
 			<span class="sch-badge sch-badge-amber">
 				<span class="sch-badge-dot"></span> Cobertura: {{ $kpiData['demand_coverage']['value'] ?? '96%' }}
 			</span>
-			@if(!empty($sidebarData['potential_savings']) && $sidebarData['potential_savings'] > 0)
+			@if($canManage && !empty($sidebarData['potential_savings']) && $sidebarData['potential_savings'] > 0)
 				<span class="sch-badge sch-badge-purple">
 					<i class="fa-solid fa-piggy-bank mr-1"></i> Ahorro potencial: ${{ number_format($sidebarData['potential_savings'], 2) }}
 				</span>
 			@endif
 		</div>
+		@if($canManage)
 		<div class="sch-header-clock-box d-none d-md-block">
 			<div class="text-muted small font-weight-600">Planificación Dinámica por Ventas</div>
 			<div class="sch-clock-time">Ventas: {{ isset($dyn['sales']['total_projected']) ? '$' . number_format($dyn['sales']['total_projected']) : 'Sin información' }}</div>
-			<div class="sch-clock-meta">SPLH Tienda: {{ $kpiData['splh']['value'] ?? '$138.2 /h' }}</div>
+			<div class="sch-clock-meta">SPLH Tienda: {{ $kpiData['splh']['value'] ?? 'Sin información' }}</div>
+		</div>
+		@endif
+	</div>
+
+	<!-- Ciclo Operativo Laboral de 7 Etapas -->
+	<div class="card shadow-sm border-0 mb-2 bg-white" id="sch-cycle-banner">
+		<div class="card-body py-2 px-3 d-flex flex-wrap align-items-center justify-content-between" style="gap: 8px;">
+			<span class="small font-weight-bold text-uppercase text-muted"><i class="fa-solid fa-arrows-spin mr-1 text-primary"></i>Ciclo Laboral</span>
+			<div class="d-flex flex-wrap align-items-center small" style="gap: 6px;">
+				<span class="badge badge-primary px-2 py-1">1. Planificar</span>
+				<i class="fa-solid fa-chevron-right text-muted" style="font-size: .65rem;"></i>
+				<span class="badge badge-primary px-2 py-1">2. Programar</span>
+				<i class="fa-solid fa-chevron-right text-muted" style="font-size: .65rem;"></i>
+				<span class="badge badge-primary px-2 py-1">3. Asignar</span>
+				<i class="fa-solid fa-chevron-right text-muted" style="font-size: .65rem;"></i>
+				<span class="badge badge-light border text-muted">4. Registrar asistencia</span>
+				<i class="fa-solid fa-chevron-right text-muted" style="font-size: .65rem;"></i>
+				<span class="badge badge-light border text-muted">5. Ejecutar</span>
+				<i class="fa-solid fa-chevron-right text-muted" style="font-size: .65rem;"></i>
+				<span class="badge badge-light border text-muted">6. Evaluar</span>
+				<i class="fa-solid fa-chevron-right text-muted" style="font-size: .65rem;"></i>
+				<span class="badge badge-light border text-muted">7. Ajustar</span>
+			</div>
 		</div>
 	</div>
 
 	<!-- 2. DEMO SCENARIO BANNER & CONTROLS -->
-	@if(!empty($isDemoScenario))
+	@if($canManage && !empty($isDemoScenario))
 		<div class="sch-demo-banner d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3 p-2 px-3 rounded shadow-sm" style="background: linear-gradient(135deg, #064e3b 0%, #065f46 100%); color: #fff; border: 1px solid #10b981;">
 			<div class="d-flex align-items-center flex-wrap gap-2">
 				<span class="badge badge-warning text-dark font-weight-bold px-2 py-1" style="font-size: 0.75rem; letter-spacing: 0.5px;">
@@ -138,6 +167,11 @@
 
 			<button type="button" class="sch-btn sch-btn-icon" id="calendarPickerBtn" title="Seleccionar fecha"><i class="fa-solid fa-calendar-days"></i></button>
 
+			<button type="button" class="sch-btn" id="btnOpenSwapModal" data-toggle="modal" data-target="#modalRequestSwap">
+				<i class="fa-solid fa-right-left mr-1 text-primary"></i> Cambio de turno
+			</button>
+
+			@if($canManage)
 			<button type="button" class="sch-btn sch-btn-emerald" id="btnGenerarProgramacionHeader" data-toggle="modal" data-target="#modalGenerarProgramacion">
 				<i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Generar programación
 			</button>
@@ -163,7 +197,7 @@
 					<i class="fa-solid fa-gear mr-1 text-muted"></i> Acciones
 				</button>
 				<div class="dropdown-menu dropdown-menu-right">
-					<a class="dropdown-item font-weight-bold" href="#" id="btnCompanyPolicies" data-toggle="modal" data-target="#modalCompanyLaborPolicies"><i class="fa-solid fa-building-shield mr-2 text-success"></i>Políticas Laborales de Empresa</a>
+					<a class="dropdown-item font-weight-bold" href="#" id="btnCompanyPolicies" data-toggle="modal" data-target="#modalCompanyLaborPolicies"><i class="fa-solid fa-building-shield mr-2 text-success"></i>Políticas Laborales y Jurisdicción</a>
 					<div class="dropdown-divider"></div>
 					<a class="dropdown-item" href="#" id="btnTriggerDailyAutomation" data-toggle="modal" data-target="#modalDailyAutomation"><i class="fa-solid fa-robot mr-2 text-primary"></i>Automatización diaria (10 pasos)</a>
 					<a class="dropdown-item" href="#" id="btnDeptStandards" data-toggle="modal" data-target="#modalDeptStandards"><i class="fa-solid fa-sliders mr-2 text-teal"></i>Estándares de productividad y SPLH</a>
@@ -175,11 +209,12 @@
 					<a class="dropdown-item text-danger font-weight-bold" href="#" id="btnDropdownRestoreDemo" onclick="window.triggerRestoreDemo()"><i class="fa-solid fa-rotate-left mr-2"></i>Restaurar únicamente el escenario de ejemplo</a>
 				</div>
 			</div>
+			@endif
 		</div>
 	</div>
 
 	<!-- ALERTA CRÍTICA DE PRESUPUESTO (Si presupuesto < dotación mínima de seguridad) -->
-	@if(!empty($sidebarData['budget_deficit_alert']))
+	@if($canManage && !empty($sidebarData['budget_deficit_alert']))
 		<div class="sch-budget-alert-banner">
 			<div>
 				<strong class="text-danger"><i class="fa-solid fa-triangle-exclamation mr-2"></i> {{ $sidebarData['budget_deficit_alert']['title'] }}</strong>
@@ -227,7 +262,7 @@
 					<path d="M2,8 C14,14 26,22 38,20 C50,18 60,16 70,10" fill="none" stroke="#f87171" stroke-width="2.2" stroke-linecap="round"/>
 				</svg>
 			</div>
-			<div class="sch-kpi-sub">Costo programado · {{ $kpiData['scheduled_hours']['labor_cost'] ?? 'Sin información' }}</div>
+			<div class="sch-kpi-sub">@if($canManage) Costo programado · {{ $kpiData['scheduled_hours']['labor_cost'] ?? 'Sin información' }} @else Carga horaria de turnos programados @endif</div>
 			<div class="sch-kpi-footer">
 				<span class="sch-kpi-delta warning"><i class="fa-solid fa-arrow-up"></i> {{ $kpiData['scheduled_hours']['delta'] ?? '+3%' }} {{ $kpiData['scheduled_hours']['delta_label'] ?? 'vs. semana anterior' }}</span>
 				<span class="sch-kpi-arrow"><i class="fa-solid fa-arrow-right"></i></span>
@@ -246,7 +281,7 @@
 					<path d="M2,18 C14,12 26,4 38,6 C50,8 60,16 70,14" fill="none" stroke="#10b981" stroke-width="2.2" stroke-linecap="round"/>
 				</svg>
 			</div>
-			<div class="sch-kpi-sub">{{ $kpiData['demand_coverage']['sub'] ?? 'Horas óptimas por ventas' }}</div>
+			<div class="sch-kpi-sub">{{ $kpiData['demand_coverage']['sub'] ?? 'Horas óptimas por demanda' }}</div>
 			<div class="sch-kpi-footer">
 				<span class="sch-badge sch-badge-green" style="padding: 0.15rem 0.5rem; font-size: 0.6875rem;">
 					<span class="sch-badge-dot"></span> {{ $kpiData['demand_coverage']['status'] ?? 'En rango objetivo' }}
@@ -255,6 +290,7 @@
 			</div>
 		</div>
 
+		@if($canManage)
 		<!-- KPI 4: Presupuesto laboral -->
 		<div class="sch-kpi-card">
 			<div class="sch-kpi-head">
@@ -262,12 +298,12 @@
 				<span class="sch-kpi-icon tone-primary" style="background-color: #ede9fe; color: #7c3aed;"><i class="fa-solid fa-wallet"></i></span>
 			</div>
 			<div class="sch-kpi-body">
-				<div class="sch-kpi-value">{{ $kpiData['labor_budget']['value'] ?? '$19,083' }}</div>
+				<div class="sch-kpi-value">{{ $kpiData['labor_budget']['value'] ?? 'Sin información' }}</div>
 				<svg class="sch-kpi-sparkline" viewBox="0 0 72 28">
 					<path d="M2,20 C14,18 26,14 38,12 C50,10 60,6 70,4" fill="none" stroke="#7c3aed" stroke-width="2.2" stroke-linecap="round"/>
 				</svg>
 			</div>
-			<div class="sch-kpi-sub">{{ $kpiData['labor_budget']['target_pct'] ?? '8.5% de ventas' }}</div>
+			<div class="sch-kpi-sub">{{ $kpiData['labor_budget']['target_pct'] ?? '' }}</div>
 			<div class="sch-kpi-footer">
 				<span class="sch-badge sch-badge-green" style="padding: 0.15rem 0.5rem; font-size: 0.6875rem;">
 					<span class="sch-badge-dot"></span> {{ $kpiData['labor_budget']['status'] ?? 'Bajo presupuesto' }}
@@ -288,9 +324,9 @@
 					<path d="M2,16 C14,14 26,18 38,12 C50,14 60,8 70,10" fill="none" stroke="#0284c7" stroke-width="2.2" stroke-linecap="round"/>
 				</svg>
 			</div>
-			<div class="sch-kpi-sub">Base: {{ $kpiData['scheduled_cost']['base_cost'] ?? '$15,420' }} + Cargas: {{ $kpiData['scheduled_cost']['burden_cost'] ?? '$2,900' }}</div>
+			<div class="sch-kpi-sub">Base: {{ $kpiData['scheduled_cost']['base_cost'] ?? '—' }} + Cargas: {{ $kpiData['scheduled_cost']['burden_cost'] ?? '—' }}</div>
 			<div class="sch-kpi-footer">
-				<span class="sch-kpi-delta good"><i class="fa-solid fa-check"></i> {{ $kpiData['scheduled_cost']['pct_sales'] ?? '8.1% de ventas' }}</span>
+				<span class="sch-kpi-delta good"><i class="fa-solid fa-check"></i> {{ $kpiData['scheduled_cost']['pct_sales'] ?? '—' }}</span>
 				<span class="sch-kpi-arrow"><i class="fa-solid fa-arrow-right"></i></span>
 			</div>
 		</div>
@@ -302,17 +338,18 @@
 				<span class="sch-kpi-icon tone-info" style="background-color: #ecfdf5; color: #059669;"><i class="fa-solid fa-chart-pie"></i></span>
 			</div>
 			<div class="sch-kpi-body">
-				<div class="sch-kpi-value">{{ $kpiData['splh']['value'] ?? '$138.2 /h' }}</div>
+				<div class="sch-kpi-value">{{ $kpiData['splh']['value'] ?? 'Sin información' }}</div>
 				<svg class="sch-kpi-sparkline" viewBox="0 0 72 28">
 					<path d="M2,22 C14,18 26,16 38,12 C50,8 60,6 70,2" fill="none" stroke="#059669" stroke-width="2.2" stroke-linecap="round"/>
 				</svg>
 			</div>
-			<div class="sch-kpi-sub">Meta objetivo: {{ $kpiData['splh']['target'] ?? '$140.0 /h' }}</div>
+			<div class="sch-kpi-sub">Meta objetivo: {{ $kpiData['splh']['target'] ?? '—' }}</div>
 			<div class="sch-kpi-footer">
 				<span class="sch-kpi-delta good"><i class="fa-solid fa-arrow-up"></i> {{ $kpiData['splh']['status'] ?? 'Eficiencia óptima' }}</span>
 				<span class="sch-kpi-arrow"><i class="fa-solid fa-arrow-right"></i></span>
 			</div>
 		</div>
+		@endif
 
 		<!-- KPI 7: Horas extras -->
 		<div class="sch-kpi-card">
@@ -353,8 +390,50 @@
 		</div>
 	</div>
 
+	<!-- 3b. Indicadores laborales (movidos desde Ventas › Rendimiento por departamento) -->
+	<div class="sch-kpis-grid sch-kpis-grid-labor">
+		<div class="sch-kpi-card" title="Unidades proyectadas por hora de trabajo programada">
+			<div class="sch-kpi-head">
+				<span class="sch-kpi-title">Productividad laboral</span>
+				<span class="sch-kpi-icon tone-primary"><i class="fa-solid fa-people-carry-box"></i></span>
+			</div>
+			<div class="sch-kpi-body">
+				<div class="sch-kpi-value">{{ $kpiData['labor_productivity']['value'] ?? 'Sin información' }}</div>
+			</div>
+			<div class="sch-kpi-sub">{{ $kpiData['labor_productivity']['sub'] ?? '' }}</div>
+		</div>
+
+		@if($canManage)
+		<div class="sch-kpi-card" title="Proporción del costo laboral programado sobre las ventas proyectadas">
+			<div class="sch-kpi-head">
+				<span class="sch-kpi-title">Costo laboral / ventas</span>
+				<span class="sch-kpi-icon tone-warning"><i class="fa-solid fa-percent"></i></span>
+			</div>
+			<div class="sch-kpi-body">
+				<div class="sch-kpi-value">{{ $kpiData['labor_cost_pct']['value'] ?? 'Sin información' }}</div>
+			</div>
+			<div class="sch-kpi-sub">{{ $kpiData['labor_cost_pct']['sub'] ?? '' }}</div>
+			<div class="sch-kpi-footer">
+				<span class="sch-kpi-delta {{ $kpiData['labor_cost_pct']['tone'] ?? 'warning' }}">{{ $kpiData['labor_cost_pct']['status'] ?? '' }}</span>
+			</div>
+		</div>
+		@endif
+
+		<div class="sch-kpi-card" title="Tareas de tienda completadas a tiempo sobre las vencidas en la semana">
+			<div class="sch-kpi-head">
+				<span class="sch-kpi-title">Eficiencia operativa</span>
+				<span class="sch-kpi-icon tone-success"><i class="fa-solid fa-bullseye"></i></span>
+			</div>
+			<div class="sch-kpi-body">
+				<div class="sch-kpi-value">{{ $kpiData['operating_efficiency']['value'] ?? 'Sin información' }}</div>
+			</div>
+			<div class="sch-kpi-sub">{{ $kpiData['operating_efficiency']['sub'] ?? '' }}</div>
+		</div>
+	</div>
+
 	<!-- 4. CENTRAL ANALYTICS ROW -->
 	<div class="sch-analytics-row">
+		@if($canManage)
 		<!-- Card A: Ventas Proyectadas vs. Horas Programadas -->
 		<div class="sch-card">
 			<div class="sch-card-header">
@@ -370,21 +449,24 @@
 				<canvas id="chartDemandCoverage"></canvas>
 			</div>
 		</div>
+		@endif
 
-		<!-- Card B: Productividad por Departamento (SPLH) -->
+		<!-- Card B: Productividad y Cobertura por Departamento -->
 		<div class="sch-card">
 			<div class="sch-card-header">
-				<h3 class="sch-card-title">Productividad por Departamento (SPLH)</h3>
-				<span class="badge badge-light border text-muted">Ventas / Hora Laboral</span>
+				<h3 class="sch-card-title">{{ $canManage ? 'Productividad por Departamento (SPLH)' : 'Cobertura Operativa por Departamento' }}</h3>
+				<span class="badge badge-light border text-muted">{{ $canManage ? 'Ventas / Hora Laboral' : 'Por Área' }}</span>
 			</div>
 			<div class="sch-dist-list">
 				@foreach($deptList as $d)
 					<div class="sch-dist-row">
 						<span class="sch-dist-name" title="{{ $d['department'] }}">{{ $d['department'] }}</span>
 						<div class="sch-dist-bar-bg">
-							<div class="sch-dist-bar-fill" style="width: {{ min(100, $d['sales_share_pct'] * 3.2) }}%; background-color: {{ $d['color'] }};"></div>
+							<div class="sch-dist-bar-fill" style="width: {{ min(100, floatval($d['coverage_pct'] ?? ($d['sales_share_pct'] * 3.2))) }}%; background-color: {{ $d['color'] }};"></div>
 						</div>
+						@if($canManage)
 						<span class="sch-dist-count">${{ number_format($d['current_splh'] ?? $d['target_splh'], 0) }}/h</span>
+						@endif
 						<span class="sch-dist-pct" style="font-size: 0.6875rem; color: {{ $d['risk_level'] === 'Alto' ? '#ef4444' : '#10b981' }};">
 							{{ $d['coverage_pct'] }}% cob.
 						</span>
@@ -393,6 +475,7 @@
 			</div>
 		</div>
 
+		@if($canManage)
 		<!-- Card C: Costo Laboral vs. Presupuesto -->
 		<div class="sch-card">
 			<div class="sch-card-header">
@@ -424,13 +507,14 @@
 			</div>
 			<div class="sch-cost-footer">
 				<span class="sch-badge sch-badge-green" style="padding: 0.15rem 0.5rem;">
-					Presupuesto: {{ $kpiData['labor_budget']['value'] ?? '$19,083' }}
+					Presupuesto: {{ $kpiData['labor_budget']['value'] ?? 'Sin información' }}
 				</span>
 				<span class="text-muted" style="font-size: 0.7rem;">
-					Costo vs. Ventas: <strong>{{ $analyticsData['labor_cost']['pct_sales'] ?? '8.1%' }}</strong>
+					Costo vs. Ventas: <strong>{{ $analyticsData['labor_cost']['pct_sales'] ?? '—' }}</strong>
 				</span>
 			</div>
 		</div>
+		@endif
 	</div>
 
 	<!-- 5. MAIN SCHEDULING CALENDAR -->
@@ -617,8 +701,12 @@
 														elseif (str_contains($deptLower, 'venta') || str_contains($deptLower, 'operaci')) $colorClass = 'sch-shift-orange';
 														elseif (str_contains($deptLower, 'virtual')) $colorClass = 'sch-shift-coral';
 														else $colorClass = 'sch-shift-blue';
+														$sBand = !empty($s->shift_band) ? $s->shift_band : \Grocy\Services\WorkforceLaborRulesService::DetectShiftBand($s->start_time, $s->end_time, $jurisdictionPolicy ?? null);
+														$bandLabels = ['apertura' => 'Apertura', 'intermedio' => 'Interm.', 'cierre' => 'Cierre', 'nocturno' => 'Nocturno'];
+														$bandLabel = $bandLabels[$sBand] ?? 'Turno';
+														$isNightShift = ($sBand === 'nocturno' || !empty($s->is_overnight));
 													@endphp
-													<div class="sch-shift-card {{ $colorClass }}" data-shift-id="{{ $s->id }}" draggable="true" onclick="window.showShiftDetail({
+													<div class="sch-shift-card {{ $colorClass }}" data-shift-id="{{ $s->id }}" draggable="{{ $canManage ? 'true' : 'false' }}" onclick="window.showShiftDetail({
 														id: {{ $s->id }},
 														start_time: '{{ $s->start_time }}',
 														end_time: '{{ $s->end_time }}',
@@ -632,19 +720,23 @@
 														role: '{{ $s->role ?: $emp->position }}',
 														status: '{{ $s->status === 'published' ? 'Confirmado' : 'Borrador' }}',
 														branch: '{{ \Grocy\Services\BranchService::NameById(intval($s->branch_id ?? $branchId ?? 1)) }}',
-														cost: '${{ number_format($s->hours * floatval($emp->hourly_cost ?: 16), 2) }}'
+														cost: @if($canManage) '${{ number_format($s->hours * floatval($emp->hourly_cost ?: 16), 2) }}' @else 'Restringido' @endif
 													})">
 														<div class="sch-shift-header">
 															<span class="sch-shift-time">{{ $s->start_time }} - {{ $s->end_time }}</span>
-															<span class="sch-shift-dots"><i class="fa-solid fa-ellipsis-vertical"></i></span>
+															<span class="badge {{ $isNightShift ? 'badge-dark' : 'badge-light border text-muted' }}" style="font-size: 0.62rem; padding: 1px 4px;">{{ $bandLabel }}</span>
 														</div>
 														<div class="sch-shift-dept">{{ $s->department ?: $emp->department }}</div>
 													</div>
 												@endforeach
 											@else
+												@if($canManage)
 												<div class="sch-shift-empty" onclick="window.createShiftForCell({{ $emp->id }}, '{{ $dateKey }}')">
 													Libre
 												</div>
+												@else
+												<div class="sch-shift-empty" style="cursor: default;">Libre</div>
+												@endif
 											@endif
 										</div>
 									</td>
@@ -658,6 +750,7 @@
 			<!-- Right Sidebar: Intelligent Panel & Shift Detail -->
 			<div class="sch-sidebar-panel">
 
+				@if($canManage)
 				<!-- Panel Inteligente: Recomendaciones de Ajuste según Ventas -->
 				<div class="sch-side-card">
 					<div class="sch-side-card-title d-flex align-items-center justify-content-between">
@@ -707,14 +800,17 @@
 						@endforelse
 					</div>
 				</div>
+				@endif
 
 				<!-- Shift Detail Card (Interactive Live Preview) -->
 				<div class="sch-side-card" id="schDetailCard">
 					<div class="sch-detail-head">
 						<span class="sch-side-card-title" style="margin: 0;">Detalle del turno</span>
+						@if($canManage)
 						<button type="button" class="sch-detail-edit-btn" id="btnEditSelectedShift">
 							<i class="fa-solid fa-pen-to-square"></i> Editar
 						</button>
+						@endif
 					</div>
 					<div class="sch-detail-date" id="detailShiftDate">{{ $selectedShift['date_formatted'] }}</div>
 					<div class="sch-detail-time" id="detailShiftTime">{{ $selectedShift['start_time'] }} - {{ $selectedShift['end_time'] }} ({{ $selectedShift['duration'] }})</div>
@@ -745,19 +841,24 @@
 							<span>Rol</span>
 							<strong id="detailShiftRole">{{ $selectedShift['role'] }}</strong>
 						</div>
+						@if($canManage)
 						<div class="sch-detail-row">
 							<span>Costo estimado</span>
 							<strong id="detailShiftCost">{{ $selectedShift['cost'] }}</strong>
 						</div>
+						@endif
 					</div>
 
+					@if($canManage)
 					<div class="sch-detail-actions">
 						<button type="button" class="sch-btn" id="btnMoveShift">Mover</button>
 						<button type="button" class="sch-btn" id="btnDuplicateShift">Duplicar</button>
 						<button type="button" class="sch-btn text-danger" id="btnDeleteShift">Eliminar</button>
 					</div>
+					@endif
 				</div>
 
+				@if($canManage)
 				<!-- Quick Actions Card -->
 				<div class="sch-side-card">
 					<div class="sch-side-card-title">
@@ -781,16 +882,18 @@
 						</button>
 					</div>
 			</div>
+			@endif
 		</div>
 		</div><!-- #schStandardViewsContainer -->
 	</div>
 
 	<!-- 6. BOTTOM ROW: 4 CARDS -->
 	<div class="sch-bottom-grid">
+		@if($canManage)
 		<!-- Card 1: Ausencias y solicitudes -->
 		<div class="sch-card">
 			<div class="sch-card-header">
-				<h3 class="sch-card-title">Ausencias y solicitudes (7)</h3>
+				<h3 class="sch-card-title">Ausencias y solicitudes ({{ count($bottomCards['requests'] ?? []) }})</h3>
 				<a href="#tab-requests" class="text-primary font-weight-600 small">Ver todas</a>
 			</div>
 			<div class="sch-abs-list">
@@ -821,6 +924,8 @@
 			</div>
 		</div>
 
+		@endif
+
 		<!-- Card 2: Cobertura por franja horaria -->
 		<div class="sch-card">
 			<div class="sch-card-header">
@@ -837,6 +942,7 @@
 			</div>
 		</div>
 
+		@if($canManage)
 		<!-- Card 3: Comparativa Horario Original vs. Optimizado -->
 		<div class="sch-card">
 			<div class="sch-card-header">
@@ -847,10 +953,10 @@
 				<div class="d-flex align-items-center justify-content-between mb-2 p-2 rounded bg-light border">
 					<div>
 						<div class="small text-muted">Horas Planificadas</div>
-						<div class="font-weight-bold text-dark">{{ $analyticsData['schedule_comparison']['original_hours'] ?? '1,024' }} h → <span class="text-purple">{{ $analyticsData['schedule_comparison']['optimized_hours'] ?? '976' }} h</span></div>
+						<div class="font-weight-bold text-dark">{{ $analyticsData['schedule_comparison']['original_hours'] ?? '—' }} h → <span class="text-purple">{{ $analyticsData['schedule_comparison']['optimized_hours'] ?? '—' }} h</span></div>
 					</div>
 					<div class="text-right">
-						<span class="badge badge-success">-{{ $analyticsData['schedule_comparison']['hours_saved'] ?? '48' }} h</span>
+						<span class="badge badge-success">-{{ $analyticsData['schedule_comparison']['hours_saved'] ?? '0' }} h</span>
 					</div>
 				</div>
 
@@ -869,6 +975,7 @@
 				</div>
 			</div>
 		</div>
+		@endif
 
 		<!-- Card 4: Productividad y cumplimiento -->
 		<div class="sch-card">
@@ -897,6 +1004,122 @@
 							</div>
 						</div>
 					@endforeach
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- 7. COBERTURA POR DEPARTAMENTO × HORA, BANDAS Y ALERTAS REALES -->
+	<div class="row mt-3">
+		<div class="col-lg-7 mb-3">
+			<div class="sch-card h-100" id="schDeptHourCoveragePanel">
+				<div class="sch-card-header">
+					<h3 class="sch-card-title"><i class="fa-solid fa-layer-group text-primary mr-1"></i> Cobertura por Departamento, Hora y Bandas</h3>
+					<span class="badge {{ ($coverageByDeptHour['gap_count'] ?? 0) > 0 ? 'badge-danger' : 'badge-success' }}">
+						{{ $coverageByDeptHour['gap_count'] ?? 0 }} brecha(s) · {{ $coverageByDeptHour['jurisdiction'] ?? 'CO-GEN' }}
+					</span>
+				</div>
+				<div class="small text-muted mb-2">
+					Bandas del día ({{ $coverageByDeptHour['date'] ?? $monday }}):
+					<span class="badge badge-light border">Apertura: {{ $coverageByDeptHour['bands']['apertura'] ?? 0 }}</span>
+					<span class="badge badge-light border">Intermedio: {{ $coverageByDeptHour['bands']['intermedio'] ?? 0 }}</span>
+					<span class="badge badge-light border">Cierre: {{ $coverageByDeptHour['bands']['cierre'] ?? 0 }}</span>
+					<span class="badge badge-dark">Nocturno: {{ $coverageByDeptHour['bands']['nocturno'] ?? 0 }}</span>
+				</div>
+				<div class="table-responsive" style="max-height: 240px;">
+					<table class="table table-sm table-hover mb-0" style="font-size: 0.78rem;">
+						<thead class="thead-light">
+							<tr>
+								<th>Departamento</th>
+								<th class="text-center">Ap / Int / Cie / Noc</th>
+								<th class="text-center">Horas Efec. (netas)</th>
+								<th>Estado de Cobertura</th>
+							</tr>
+						</thead>
+						<tbody>
+							@forelse(($coverageByDeptHour['departments'] ?? []) as $dc)
+							<tr>
+								<td class="font-weight-bold">{{ $dc['department'] }}</td>
+								<td class="text-center">{{ $dc['bands']['apertura'] ?? 0 }} / {{ $dc['bands']['intermedio'] ?? 0 }} / {{ $dc['bands']['cierre'] ?? 0 }} / {{ $dc['bands']['nocturno'] ?? 0 }}</td>
+								<td class="text-center font-weight-bold text-primary">{{ number_format(array_sum($dc['effective_hourly'] ?? []), 1) }}h</td>
+								<td>
+									@if(empty($dc['gaps']))
+										<span class="badge badge-success">Cubierto</span>
+									@else
+										<span class="badge badge-danger">{{ count($dc['gaps']) }} déficit</span>
+										<small class="text-danger ml-1">{{ $dc['gaps'][0]['hour_label'] }} (-{{ $dc['gaps'][0]['deficit'] }})</small>
+									@endif
+								</td>
+							</tr>
+							@empty
+							<tr><td colspan="4" class="text-center text-muted py-3">Sin turnos asignados en la fecha base.</td></tr>
+							@endforelse
+						</tbody>
+					</table>
+				</div>
+				@if($canManage && !empty($coverageAlerts))
+				<div class="alert alert-warning py-2 px-3 mt-2 mb-0 small">
+					<strong><i class="fa-solid fa-bell mr-1"></i> {{ count($coverageAlerts) }} alerta(s) reales de cobertura insuficiente</strong> registradas para seguimiento inmediato.
+				</div>
+				@endif
+			</div>
+		</div>
+
+		<!-- 8. LIBRO DE COMPENSATORIOS Y SALDOS DE VACACIONES -->
+		<div class="col-lg-5 mb-3">
+			<div class="sch-card h-100" id="schCompensatoryVacationPanel">
+				<div class="sch-card-header">
+					<h3 class="sch-card-title"><i class="fa-solid fa-calendar-check text-success mr-1"></i> Compensatorios y Vacaciones</h3>
+					<span class="badge badge-light border">{{ $canManage ? 'Equipo completo' : 'Mi saldo' }}</span>
+				</div>
+				<div class="table-responsive" style="max-height: 140px;">
+					<table class="table table-sm mb-2" style="font-size: 0.76rem;">
+						<thead class="thead-light">
+							<tr>
+								<th>Colaborador</th>
+								<th class="text-center">Comp. Pend.</th>
+								<th class="text-center">Tomados</th>
+								<th>Vencimiento</th>
+							</tr>
+						</thead>
+						<tbody>
+							@forelse(($compensatoryLedger['balances'] ?? []) as $cb)
+							<tr>
+								<td class="font-weight-bold">{{ $cb['name'] }}</td>
+								<td class="text-center"><span class="badge {{ $cb['pending_days'] > 0 ? 'badge-warning text-dark' : 'badge-light' }}">{{ $cb['pending_days'] }}</span></td>
+								<td class="text-center">{{ $cb['taken_days'] }}</td>
+								<td class="small text-muted">{{ $cb['next_due_date'] ?: '—' }}</td>
+							</tr>
+							@empty
+							<tr><td colspan="4" class="text-center text-muted">Sin compensatorios pendientes.</td></tr>
+							@endforelse
+						</tbody>
+					</table>
+				</div>
+				<h6 class="font-weight-bold small text-muted text-uppercase mt-2 mb-1">Saldos de Vacaciones ({{ $selectedYear ?? 2026 }})</h6>
+				<div class="table-responsive" style="max-height: 120px;">
+					<table class="table table-sm mb-0" style="font-size: 0.76rem;">
+						<thead class="thead-light">
+							<tr>
+								<th>Colaborador</th>
+								<th class="text-center">Acum.</th>
+								<th class="text-center">Tomados</th>
+								<th class="text-center">Disponibles</th>
+							</tr>
+						</thead>
+						<tbody>
+							@forelse(array_slice($vacationBalances ?? [], 0, 8) as $vb)
+							<tr>
+								<td class="font-weight-bold">{{ $vb['name'] }}</td>
+								<td class="text-center">{{ $vb['accrued_days'] }}d</td>
+								<td class="text-center">{{ $vb['taken_days'] }}d</td>
+								<td class="text-center font-weight-bold text-success">{{ $vb['available_days'] }}d</td>
+							</tr>
+							@empty
+							<tr><td colspan="4" class="text-center text-muted">Sin registros de vacaciones.</td></tr>
+							@endforelse
+						</tbody>
+					</table>
 				</div>
 			</div>
 		</div>
@@ -1231,20 +1454,92 @@
 	</div>
 </div>
 
+<!-- Modal Solicitud de Cambio / Permuta de Turno -->
+<div class="modal fade" id="modalRequestSwap" tabindex="-1" role="dialog" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered" role="document">
+		<div class="modal-content" style="border-radius: 12px; border: 1px solid var(--sch-border);">
+			<div class="modal-header">
+				<h5 class="modal-title font-weight-bold text-primary">
+					<i class="fa-solid fa-right-left mr-2"></i> Solicitar Cambio o Permuta de Turno
+				</h5>
+				<button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+			</div>
+			<form id="formRequestSwap" autocomplete="off">
+				<div class="modal-body">
+					<div class="form-group">
+						<label class="font-weight-600 small">Mi turno a ceder / intercambiar</label>
+						<select name="shift_id" id="swapSourceShiftId" class="custom-select custom-select-sm" required>
+							<option value="">Seleccione un turno...</option>
+							@foreach(($w['shifts'] ?? []) as $sh)
+								<option value="{{ $sh->id }}">{{ $sh->shift_date }} · {{ $sh->start_time }}-{{ $sh->end_time }} ({{ $sh->department }})</option>
+							@endforeach
+						</select>
+					</div>
+					<div class="form-group">
+						<label class="font-weight-600 small">Colaborador receptor</label>
+						<select name="to_employee_id" id="swapTargetEmpId" class="custom-select custom-select-sm" required>
+							<option value="">Seleccione colaborador...</option>
+							@foreach(($w['employees'] ?? []) as $emp)
+								<option value="{{ $emp->id }}">{{ $emp->name }} ({{ $emp->department }})</option>
+							@endforeach
+						</select>
+					</div>
+					<div class="form-group">
+						<label class="font-weight-600 small">Turno en contraprestación (opcional — dejar vacío para cesión simple)</label>
+						<select name="target_shift_id" id="swapTargetShiftId" class="custom-select custom-select-sm">
+							<option value="">Cesión unidireccional (sin turno de intercambio)</option>
+							@foreach(($w['shifts'] ?? []) as $sh)
+								<option value="{{ $sh->id }}" data-emp="{{ $sh->employee_id }}">{{ $sh->shift_date }} · {{ $sh->start_time }}-{{ $sh->end_time }} ({{ $sh->department }})</option>
+							@endforeach
+						</select>
+					</div>
+					<div class="form-group mb-0">
+						<label class="font-weight-600 small">Motivo / Notas</label>
+						<input type="text" name="notes" id="swapNotesInput" class="form-control form-control-sm" placeholder="Ej. Cita médica o ajuste de franja">
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-sm btn-light border" data-dismiss="modal">Cancelar</button>
+					<button type="submit" class="btn btn-sm btn-primary font-weight-bold" id="btnSubmitSwapRequest">
+						<i class="fa-solid fa-paper-plane mr-1"></i> Enviar Solicitud Validada
+					</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+
 @include('components.schedule_policies_modal')
 
+@php
+	$safeAnalytics = $analyticsData;
+	$safeBottom = $bottomCards;
+	$safeSelected = $selectedShift;
+	$safeDynamic = $dynamicPlan ?? [];
+	$safeSidebar = $sidebarData;
+	$safeEquity = $equityData ?? [];
+	if (!$canManage) {
+		unset($safeAnalytics['labor_cost'], $safeAnalytics['schedule_comparison']);
+		$safeBottom['requests'] = [];
+		$safeSelected['cost'] = null;
+		$safeDynamic = [];
+		$safeSidebar = ['recommendations' => [], 'potential_savings' => 0];
+		$safeEquity = [];
+	}
+@endphp
 <script>
 window.DairyScheduleData = {
 	branchId: {{ $branchId }},
+	canManage: {{ $canManage ? 'true' : 'false' }},
 	monthlyDraftId: {{ intval($monthlyScheduleData['draft_id'] ?? 0) }},
 	monday: '{{ $monday }}',
 	sunday: '{{ $sunday }}',
-	analytics: {!! json_encode($analyticsData) !!},
-	bottomCards: {!! json_encode($bottomCards) !!},
-	selectedShift: {!! json_encode($selectedShift) !!},
-	dynamicPlan: {!! json_encode($dynamicPlan ?? []) !!},
-	sidebar: {!! json_encode($sidebarData) !!},
-	equityData: {!! json_encode($equityData ?? []) !!}
+	analytics: {!! json_encode($safeAnalytics) !!},
+	bottomCards: {!! json_encode($safeBottom) !!},
+	selectedShift: {!! json_encode($safeSelected) !!},
+	dynamicPlan: {!! json_encode($safeDynamic) !!},
+	sidebar: {!! json_encode($safeSidebar) !!},
+	equityData: {!! json_encode($safeEquity) !!}
 };
 
 window.switchScheduleView = function(view, btn) {

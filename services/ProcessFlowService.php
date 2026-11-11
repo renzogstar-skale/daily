@@ -467,29 +467,53 @@ class ProcessFlowService extends BaseService
 	private function FlowCustomerReturn(int $id): array
 	{
 		$r = $this->Must($this->Row('SELECT * FROM customer_returns_exchanges WHERE id = :id', [':id' => $id]), 'Devolución');
-		$seq = ['solicitud' => 'Solicitud', 'identificacion' => 'Identificación', 'inspeccion' => 'Inspección', 'clasificacion' => 'Clasificación',
-			'aprobada' => 'Autorización', 'disposicion' => 'Disposición (stock, cuarentena o merma)', 'conciliada' => 'Conciliación', 'cerrada' => 'Cierre'];
-		$pos = array_search($r['status'], array_keys($seq), true);
-		$at = ['solicitud' => $r['created_at'], 'inspeccion' => $r['inspected_at'], 'aprobada' => $r['approved_at']];
-		$by = ['inspeccion' => $r['inspected_by_user_id'], 'aprobada' => $r['approved_by_user_id']];
+		$seq = [
+			'solicitud' => 'Solicitud',
+			'recepcion' => 'Recepción física',
+			'inspeccion' => 'Inspección',
+			'clasificacion' => 'Clasificación',
+			'disposicion' => 'Disposición autorizada',
+			'conciliacion' => 'Conciliación',
+		];
+		$stMap = [
+			'identificacion' => 'recepcion',
+			'pending_inspection' => 'recepcion',
+			'aprobada' => 'clasificacion',
+			'conciliada' => 'conciliacion',
+			'cerrada' => 'conciliacion',
+		];
+		$curStatus = $stMap[$r['status']] ?? $r['status'];
+		$pos = array_search($curStatus, array_keys($seq), true);
+		$at = [
+			'solicitud' => $r['created_at'],
+			'recepcion' => $r['received_at'] ?? null,
+			'inspeccion' => $r['inspected_at'] ?? null,
+			'disposicion' => $r['disposition_authorized_at'] ?? ($r['approved_at'] ?? null),
+			'conciliacion' => $r['conciliated_at'] ?? null,
+		];
+		$by = [
+			'recepcion' => $r['received_by_user_id'] ?? null,
+			'inspeccion' => $r['inspected_by_user_id'] ?? null,
+			'disposicion' => $r['disposition_authorized_by'] ?? ($r['approved_by_user_id'] ?? null),
+			'conciliacion' => $r['conciliated_by_user_id'] ?? null,
+		];
 		$steps = [];
 		$i = 0;
 		foreach ($seq as $code => $label)
 		{
-			// El estado del documento solo avanza en orden: los pasos anteriores al estado actual están hechos; el actual también, salvo «solicitud» recién creada
 			$done = $pos !== false && $i <= $pos;
 			$steps[] = $this->S($code, $label, $done ? ($at[$code] ?? true) : null, $by[$code] ?? null);
 			$i++;
 		}
 		$related = [$this->Rel('customer_order', $r['order_id'], 'Pedido de origen #' . $r['order_id']),
 			$this->Rel('waste_record', $r['waste_record_id'], 'Merma generada #' . $r['waste_record_id']),
-			$this->Rel('stock_booking', $r['stock_booking_id'], 'Reingreso a stock ' . $r['stock_booking_id'], '/kardex')];
+			$this->Rel('stock_booking', $r['stock_booking_id'], 'Reingreso a stock ' . ($r['stock_reentry_tx_id'] ?? $r['stock_booking_id']), '/kardex')];
 		return $this->Build('customer_return', [
-			'id' => $id, 'code' => $r['return_code'], 'title' => 'Devolución ' . $r['return_code'] . ' · ' . $r['return_type'], 'branch_id' => $r['branch_id'],
-			'status' => $r['status'], 'status_label' => $seq[$r['status']] ?? $r['status'], 'created_at' => $r['created_at'],
-			'owner_id' => $r['inspected_by_user_id'], 'responsible_role' => $r['status'] === 'cerrada' ? null : 'Encargado de devoluciones',
+			'id' => $id, 'code' => $r['rma_number'] ?: $r['return_code'], 'title' => 'Devolución ' . ($r['rma_number'] ?: $r['return_code']) . ' · ' . $r['return_type'], 'branch_id' => $r['branch_id'],
+			'status' => $curStatus, 'status_label' => $seq[$curStatus] ?? $curStatus, 'created_at' => $r['created_at'],
+			'owner_id' => $r['inspected_by_user_id'], 'responsible_role' => $curStatus === 'conciliacion' ? null : 'Encargado de devoluciones logísticas',
 			'evidence' => [$r['evidence_photo_url'] ? ['kind' => 'photo', 'reference' => $r['evidence_photo_url'], 'description' => 'Foto de inspección'] : null],
-			'related' => $related, 'next_module' => 'Inventario, cuarentena o merma',
+			'related' => $related, 'next_module' => 'Inventario, RTV o merma',
 		], $steps);
 	}
 

@@ -2,14 +2,25 @@
 
 namespace Grocy\Controllers\Api;
 
+use Grocy\Controllers\Users\User;
+use Grocy\Helpers\DairyAccess;
 use Grocy\Services\HrService;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
 class HrApiController extends BaseApiController
 {
+	private function RequireManager(Request $request): void
+	{
+		if (DairyAccess::GetSimulatedRole() === 'empleado' || !DairyAccess::HasAny([User::PERMISSION_WORKFORCE_SCHEDULE_MANAGE, User::PERMISSION_ADMIN]))
+		{
+			throw new \Grocy\Middleware\PermissionMissingException($request, User::PERMISSION_WORKFORCE_SCHEDULE_MANAGE);
+		}
+	}
+
 	public function UpdateCandidateStage(Request $request, Response $response, array $args)
 	{
+		$this->RequireManager($request);
 		$data = $request->getParsedBody();
 		$candidateId = intval($args['id'] ?? ($data['id'] ?? 0));
 		$stage = $data['stage'] ?? 'postulado';
@@ -26,6 +37,7 @@ class HrApiController extends BaseApiController
 
 	public function ToggleOnboardingTask(Request $request, Response $response, array $args)
 	{
+		$this->RequireManager($request);
 		$data = $request->getParsedBody();
 		$taskId = intval($args['id'] ?? ($data['id'] ?? 0));
 		$completed = !empty($data['completed']);
@@ -41,6 +53,7 @@ class HrApiController extends BaseApiController
 
 	public function DecideRequest(Request $request, Response $response, array $args)
 	{
+		$this->RequireManager($request);
 		$data = $request->getParsedBody();
 		$requestId = intval($args['id'] ?? ($data['id'] ?? 0));
 		$decision = $data['decision'] ?? 'approved';
@@ -57,6 +70,7 @@ class HrApiController extends BaseApiController
 
 	public function PostCommunication(Request $request, Response $response, array $args)
 	{
+		$this->RequireManager($request);
 		$data = $request->getParsedBody();
 		$branchId = intval($data['branch_id'] ?? 1);
 		$title = trim($data['title'] ?? '');

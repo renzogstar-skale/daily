@@ -23,7 +23,7 @@
 
 		<div class="d-flex align-items-center flex-wrap gap-2">
 			<span class="hr-badge-live">
-				<span class="hr-badge-dot"></span> Motor HCM Activo
+				<span class="hr-badge-dot"></span> Motor HCM Activo · {{ $payroll['jurisdiction'] ?? 'CO-GEN' }}
 			</span>
 
 			<form method="GET" action="{{ $U('/hr') }}" class="d-inline-flex align-items-center gap-1">
@@ -368,6 +368,11 @@
 				</table>
 			</div>
 		</div>
+
+					</tbody>
+				</table>
+			</div>
+		</div>
 	</div>
 
 	<!-- ========================================== -->
@@ -556,6 +561,11 @@
 				</table>
 			</div>
 		</div>
+
+					</tbody>
+				</table>
+			</div>
+		</div>
 	</div>
 
 	<!-- ========================================== -->
@@ -617,6 +627,11 @@
 				</table>
 			</div>
 		</div>
+
+					</tbody>
+				</table>
+			</div>
+		</div>
 	</div>
 
 	<!-- ========================================== -->
@@ -672,6 +687,75 @@
 						@endforeach
 					</tbody>
 				</table>
+			</div>
+		</div>
+
+		<div class="row mt-3">
+			<div class="col-lg-6 mb-3">
+				<div class="hr-card h-100" id="hr-compensatory-panel">
+					<div class="hr-card-header">
+						<h3 class="hr-card-title"><i class="fa-solid fa-calendar-plus text-warning"></i> Libro de Compensatorios ({{ $compensatoryLedger['jurisdiction'] ?? ($payroll['jurisdiction'] ?? 'CO-GEN') }})</h3>
+					</div>
+					<div class="table-responsive">
+						<table class="hr-table">
+							<thead>
+								<tr>
+									<th>Colaborador</th>
+									<th class="text-center">Pendientes</th>
+									<th class="text-center">Tomados</th>
+									<th class="text-right">Pago Vencido/Ocasional</th>
+									<th>Próximo Límite</th>
+								</tr>
+							</thead>
+							<tbody>
+								@forelse(($compensatoryLedger['balances'] ?? []) as $cb)
+									<tr>
+										<td><strong>{{ $cb['name'] }}</strong> <small class="text-muted">({{ $cb['department'] }})</small></td>
+										<td class="text-center"><span class="badge {{ $cb['pending_days'] > 0 ? 'badge-warning text-dark' : 'badge-light' }}">{{ $cb['pending_days'] }}</span></td>
+										<td class="text-center">{{ $cb['taken_days'] }}</td>
+										<td class="text-right">${{ number_format($cb['total_payout_due'] ?? 0, 2) }}</td>
+										<td class="small">{{ $cb['next_due_date'] ?: '—' }}</td>
+									</tr>
+								@empty
+									<tr><td colspan="5" class="text-center text-muted py-3">Sin saldos compensatorios registrados en la sucursal.</td></tr>
+								@endforelse
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+			<div class="col-lg-6 mb-3">
+				<div class="hr-card h-100" id="hr-vacations-panel">
+					<div class="hr-card-header">
+						<h3 class="hr-card-title"><i class="fa-solid fa-umbrella-beach text-success"></i> Control de Saldos de Vacaciones</h3>
+					</div>
+					<div class="table-responsive">
+						<table class="hr-table">
+							<thead>
+								<tr>
+									<th>Colaborador</th>
+									<th>Departamento</th>
+									<th class="text-center">Acumulados</th>
+									<th class="text-center">Tomados</th>
+									<th class="text-center">Disponibles</th>
+								</tr>
+							</thead>
+							<tbody>
+								@forelse(($vacationBalances ?? []) as $vb)
+									<tr>
+										<td><strong>{{ $vb['name'] }}</strong></td>
+										<td><span class="badge badge-light">{{ $vb['department'] }}</span></td>
+										<td class="text-center">{{ $vb['accrued_days'] }}d</td>
+										<td class="text-center">{{ $vb['taken_days'] }}d</td>
+										<td class="text-center font-weight-bold text-success">{{ $vb['available_days'] }}d</td>
+									</tr>
+								@empty
+									<tr><td colspan="5" class="text-center text-muted py-3">Sin saldos de vacaciones cargados.</td></tr>
+								@endforelse
+							</tbody>
+						</table>
+					</div>
+				</div>
 			</div>
 		</div>
 	</div>

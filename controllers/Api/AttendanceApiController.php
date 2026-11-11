@@ -35,6 +35,10 @@ class AttendanceApiController extends BaseApiController
 
 	public function GetOverview(Request $request, Response $response, array $args)
 	{
+		if (DairyAccess::GetSimulatedRole() === 'empleado' || !DairyAccess::HasAny([User::PERMISSION_WORKFORCE_ATTENDANCE_MANAGE, User::PERMISSION_WORKFORCE_SCHEDULE_MANAGE, User::PERMISSION_ADMIN]))
+		{
+			throw new \Grocy\Middleware\PermissionMissingException($request, User::PERMISSION_WORKFORCE_ATTENDANCE_MANAGE);
+		}
 		$q = $request->getQueryParams();
 		$branchId = !empty($q['branch_id']) ? intval($q['branch_id']) : null;
 		$date = !empty($q['date']) ? strval($q['date']) : '2026-11-04';
@@ -161,9 +165,9 @@ class AttendanceApiController extends BaseApiController
 	public function StartBreak(Request $request, Response $response, array $args)
 	{
 		$body = $this->Body($request);
-		$empId = intval($body['employee_id'] ?? 0);
 
-		return $this->Run($response, function () use ($empId) {
+		return $this->Run($response, function () use ($request, $body) {
+			$empId = $this->TargetEmployee($request, $body);
 			return $this->Svc()->StartBreak($empId, GROCY_USER_ID);
 		});
 	}
@@ -171,9 +175,9 @@ class AttendanceApiController extends BaseApiController
 	public function EndBreak(Request $request, Response $response, array $args)
 	{
 		$body = $this->Body($request);
-		$empId = intval($body['employee_id'] ?? 0);
 
-		return $this->Run($response, function () use ($empId) {
+		return $this->Run($response, function () use ($request, $body) {
+			$empId = $this->TargetEmployee($request, $body);
 			return $this->Svc()->EndBreak($empId, GROCY_USER_ID);
 		});
 	}

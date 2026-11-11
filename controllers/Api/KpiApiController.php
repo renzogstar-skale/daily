@@ -15,11 +15,45 @@ class KpiApiController extends BaseApiController
 		User::CheckPermission($request, User::PERMISSION_KPIS_VIEW);
 
 		$params = $request->getQueryParams();
-		$branchId = isset($params['branch_id']) ? intval($params['branch_id']) : null;
-		$period = $params['period'] ?? 'month'; // 'day', 'week', 'month', 'year'
+		$rawBranch = trim((string) ($params['branch_id'] ?? ''));
+		$branchId = ($rawBranch !== '' && $rawBranch !== 'all' && intval($rawBranch) > 0) ? intval($rawBranch) : null;
+		$allowed = \Grocy\Helpers\DairyAccess::AllowedBranches();
+		if ($allowed !== null && ($branchId === null || !in_array($branchId, $allowed, true)))
+		{
+			$branchId = $allowed[0];
+		}
+		$period = $params['period'] ?? 'month'; // 'day', 'week', 'month', 'quarter', 'year', 'custom'
+		$customStart = !empty($params['start_date']) ? trim($params['start_date']) : null;
+		$customEnd = !empty($params['end_date']) ? trim($params['end_date']) : null;
+		$anchorDate = \Grocy\Services\DailyMetricsService::AnchorDate($params['date'] ?? null);
 
 		$kpiService = KpiService::GetInstance();
-		$data = $kpiService->GetExecutiveDashboardData($branchId, $period);
+		$data = $kpiService->GetExecutiveDashboardData($branchId, $period, $customStart, $customEnd, $anchorDate);
+		$data['branch_ranking'] = \Grocy\Helpers\DairyAccess::FilterBranches($data['branch_ranking'] ?? []);
+		$data['branch_heatmap']['matrix'] = \Grocy\Helpers\DairyAccess::FilterBranches($data['branch_heatmap']['matrix'] ?? []);
+
+		$alertCount = 0;
+		if (\Grocy\Helpers\DairyAccess::CanOpen('/alerts'))
+		{
+			try
+			{
+				$f = ['allowed' => $allowed, 'branch_id' => $branchId];
+				$alertsResult = \Grocy\Services\AlertCenterService::GetInstance()->List(array_filter($f, fn($v) => $v !== null && $v !== ''), 'all', 1, 1);
+				$alertCount = intval($alertsResult['counts']['all'] ?? 0);
+			}
+			catch (\Throwable $e)
+			{
+				$alertCount = 0;
+			}
+		}
+
+		$branches = \Grocy\Helpers\DairyAccess::FilterBranches(\Grocy\Services\BranchService::GetInstance()->GetBranches());
+		$laborOutlook = \Grocy\Services\LaborForecastService::GetInstance()->Outlook(
+			$branchId
+				? (\Grocy\Helpers\DairyAccess::CanSeeBranch($branchId) ? [$branchId] : [])
+				: array_map(fn($b) => intval(is_array($b) ? $b['id'] : $b->id), $branches)
+		);
+		$data['executive_panel'] = $kpiService->BuildExecutivePanelOverview($branchId, $period, $data, $laborOutlook, $alertCount);
 		return $this->ApiResponse($response, $data);
 	}
 
@@ -52,6 +86,11 @@ class KpiApiController extends BaseApiController
 		if (!\Grocy\Helpers\DairyAccess::CanOpen('/today'))
 		{
 			throw new \Grocy\Controllers\Users\PermissionMissingException($request, User::PERMISSION_KPIS_VIEW);
+		}
+		$allowed = \Grocy\Helpers\DairyAccess::AllowedBranches();
+		if ($allowed !== null && ($branchId === null || !in_array($branchId, $allowed, true)))
+		{
+			$branchId = $allowed[0];
 		}
 		$date = !empty($params['date']) ? strval($params['date']) : null;
 		$department = !empty($params['department']) ? strval($params['department']) : null;

@@ -685,6 +685,16 @@ class DairyDynamicScheduleService extends BaseService
 		$storeSplh = $totalScheduledHours > 0 ? round($totalProjectedSales / $totalScheduledHours, 1) : 0.0;
 		$netGapHours = round($totalScheduledHours - $totalRequiredHours, 1);
 
+		// Indicadores laborales (antes en Ventas › Rendimiento por departamento)
+		$unitsPerHour = $totalScheduledHours > 0 ? round($totalProjectedUnits / $totalScheduledHours, 1) : null;
+		$laborCostPctSales = $totalProjectedSales > 0 ? round(($scheduledCostTotal / $totalProjectedSales) * 100, 1) : null;
+		$sunday = date('Y-m-d', strtotime("$monday +6 day"));
+		$taskStmt = $this->Db()->prepare("SELECT COUNT(*) AS due, SUM(CASE WHEN completed_at IS NOT NULL AND completed_at <= IFNULL(due_time, completed_at) THEN 1 ELSE 0 END) AS on_time FROM workforce_store_tasks WHERE branch_id = :b AND date(due_time) BETWEEN :f AND :t AND date(due_time) <= date('now', 'localtime')");
+		$taskStmt->execute([':b' => $branchId, ':f' => $monday, ':t' => $sunday]);
+		$taskRow = $taskStmt->fetch(\PDO::FETCH_ASSOC) ?: ['due' => 0, 'on_time' => 0];
+		$tasksDue = intval($taskRow['due']);
+		$opEfficiency = $tasksDue > 0 ? round((intval($taskRow['on_time']) / $tasksDue) * 100, 1) : null;
+
 		$kpis = [
 			'scheduled_employees' => [
 				'value' => $scheduledEmpCount ?: $activeEmpCount,
@@ -742,6 +752,21 @@ class DairyDynamicScheduleService extends BaseService
 				'hours_unassigned' => count($departmentsUnderCovered),
 				'status' => abs($netGapHours) <= 12 ? 'Balance equilibrado' : ($netGapHours < 0 ? 'Faltante operativo' : 'Exceso de dotación'),
 				'tone' => abs($netGapHours) <= 12 ? 'success' : ($netGapHours < 0 ? 'danger' : 'warning')
+			],
+			'labor_productivity' => [
+				'value' => $unitsPerHour === null ? 'Sin información' : number_format($unitsPerHour, 1) . ' uds/h',
+				'sub' => 'Unidades proyectadas por hora programada'
+			],
+			'labor_cost_pct' => [
+				'value' => $laborCostPctSales === null ? 'Sin información' : $laborCostPctSales . ' %',
+				'sub' => 'Meta: ' . $targetLaborPct . ' % de ventas',
+				'status' => $laborCostPctSales === null ? 'Sin ventas proyectadas' : ($laborCostPctSales <= $targetLaborPct ? 'Dentro de la meta' : 'Sobre la meta'),
+				'tone' => ($laborCostPctSales !== null && $laborCostPctSales <= $targetLaborPct) ? 'good' : 'warning'
+			],
+			'operating_efficiency' => [
+				'value' => $opEfficiency === null ? 'Sin información' : $opEfficiency . ' %',
+				'sub' => $tasksDue > 0 ? intval($taskRow['on_time']) . ' de ' . $tasksDue . ' tareas a tiempo' : 'Sin tareas vencidas en la semana',
+				'tone' => ($opEfficiency !== null && $opEfficiency >= 90) ? 'good' : 'warning'
 			]
 		];
 

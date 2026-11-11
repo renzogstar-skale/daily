@@ -23,6 +23,15 @@ $r = \Grocy\Services\DailyCompanySeedService::GetInstance()->CatchUp(300);
 if (isset($r['until']))
 {
 	echo date('Y-m-d H:i:s') . " demo: operación simulada {$r['from']} → {$r['until']} en {$r['seconds']} s\n";
+	// Ejemplos del día para Supervisión y Control (descuentos, devoluciones, mermas, alertas en curso)
+	try
+	{
+		require __DIR__ . '/dairy_demo_examples.php';
+	}
+	catch (\Throwable $e)
+	{
+		echo 'demo: ejemplos del día: ' . $e->getMessage() . "\n";
+	}
 	// Deja listo el tablero de entrada (Stock) para que el próximo inicio de sesión no lo recalcule
 	try
 	{

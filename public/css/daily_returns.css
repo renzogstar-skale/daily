@@ -1258,3 +1258,222 @@
 	color: #94a3b8;
 	font-size: 0.85rem;
 }
+
+/* ==========================================================================
+   6-Stage Top Reverse-Logistics Stepper, Scanner Bar & Evidence Gallery
+   ========================================================================== */
+.ret-lifecycle-banner {
+	background: #ffffff;
+	border: 1px solid var(--ret-border);
+	border-radius: var(--ret-radius-md);
+	padding: 0.85rem 1.15rem;
+	margin-bottom: 1rem;
+	box-shadow: var(--ret-shadow-sm);
+	overflow-x: auto;
+}
+
+.ret-lifecycle-steps {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	min-width: 720px;
+	gap: 0.5rem;
+}
+
+.ret-lc-step {
+	display: flex;
+	align-items: center;
+	gap: 0.55rem;
+	cursor: pointer;
+	padding: 0.35rem 0.55rem;
+	border-radius: 8px;
+	transition: background 0.15s ease;
+}
+
+.ret-lc-step:hover {
+	background: #ecfdf5;
+}
+
+.ret-lc-num {
+	width: 26px;
+	height: 26px;
+	border-radius: 50%;
+	background: #f1f5f9;
+	color: #475569;
+	border: 1.5px solid #cbd5e1;
+	font-size: 0.75rem;
+	font-weight: 700;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+}
+
+.ret-lc-step.is-active .ret-lc-num {
+	background: var(--ret-primary);
+	border-color: var(--ret-primary);
+	color: #ffffff;
+}
+
+.ret-lc-div {
+	flex: 1;
+	height: 2px;
+	background: #e2e8f0;
+	min-width: 16px;
+}
+
+.ret-upc-bar {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	background: #f8fafc;
+	border: 1px dashed #94a3b8;
+	border-radius: var(--ret-radius-sm);
+	padding: 0.5rem 0.75rem;
+	margin-bottom: 0.75rem;
+}
+
+.ret-evidence-grid {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: 0.5rem;
+	margin-top: 0.65rem;
+}
+
+.ret-evidence-thumb {
+	border: 1px solid var(--ret-border);
+	border-radius: 8px;
+	overflow: hidden;
+	background: #ffffff;
+}
+
+.ret-evidence-thumb img {
+	width: 100%;
+	height: 82px;
+	object-fit: cover;
+	display: block;
+}
+
+.ret-evidence-caption {
+	font-size: 0.68rem;
+	padding: 0.3rem 0.45rem;
+	color: #475569;
+	line-height: 1.2;
+}
+
+/* Hover verde consistente DAILY en KPIs */
+.ret-kpi-card {
+	transition: transform 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.ret-kpi-card:hover {
+	border-color: #10b981;
+	background-color: #f0fdf4;
+	transform: translateY(-1px);
+}
+
+@media (max-width: 576px) {
+	.ret-header-controls {
+		width: 100%;
+	}
+	.ret-btn-primary,
+	.ret-btn-secondary,
+	.ret-select {
+		min-height: 40px;
+	}
+	.ret-upc-bar {
+		flex-direction: column;
+		align-items: stretch;
+	}
+}
+
+/* ==========================================================================
+   DAILY DARK MODE (html.daily-dark)
+   ========================================================================== */
+html.daily-dark .ret-container {
+	color: #e2e8f0;
+}
+
+html.daily-dark .ret-header-title,
+html.daily-dark .ret-kpi-value,
+html.daily-dark .ret-table-title,
+html.daily-dark .ret-bottom-title,
+html.daily-dark .ret-detail-folio,
+html.daily-dark .ret-detail-product-title,
+html.daily-dark .ret-product-name,
+html.daily-dark .ret-mod-name,
+html.daily-dark .ret-destino-name,
+html.daily-dark .ret-econ-value {
+	color: #f8fafc !important;
+}
+
+html.daily-dark .ret-header-desc,
+html.daily-dark .ret-kpi-sub,
+html.daily-dark .ret-kpi-header,
+html.daily-dark .ret-bottom-sub,
+html.daily-dark .ret-mod-desc,
+html.daily-dark .ret-date-sub,
+html.daily-dark .ret-branch-sub,
+html.daily-dark .ret-econ-label {
+	color: #94a3b8 !important;
+}
+
+html.daily-dark .ret-kpi-card,
+html.daily-dark .ret-lifecycle-banner,
+html.daily-dark .ret-banner-quality,
+html.daily-dark .ret-table-card,
+html.daily-dark .ret-detail-panel,
+html.daily-dark .ret-bottom-card,
+html.daily-dark .ret-select,
+html.daily-dark .ret-search-input,
+html.daily-dark .ret-evidence-thumb {
+	background-color: #111827 !important;
+	border-color: #1f2937 !important;
+	color: #e2e8f0 !important;
+}
+
+html.daily-dark .ret-kpi-card:hover {
+	background-color: #064e3b !important;
+	border-color: #10b981 !important;
+}
+
+html.daily-dark .ret-table th {
+	background-color: #0f172a !important;
+	color: #94a3b8 !important;
+	border-color: #1f2937 !important;
+}
+
+html.daily-dark .ret-table td {
+	border-color: #1f2937 !important;
+	color: #e2e8f0 !important;
+}
+
+html.daily-dark .ret-table-row:hover {
+	background-color: #1e293b !important;
+}
+
+html.daily-dark .ret-table-row.is-active {
+	background-color: rgba(16, 185, 129, 0.14) !important;
+}
+
+html.daily-dark .ret-detail-product-card,
+html.daily-dark .ret-mod-item,
+html.daily-dark .ret-upc-bar,
+html.daily-dark .ret-stepper-container,
+html.daily-dark .ret-destino-item {
+	background-color: #0f172a !important;
+	border-color: #1f2937 !important;
+	color: #e2e8f0 !important;
+}
+
+html.daily-dark .ret-tab-pill {
+	background-color: #0f172a;
+	border-color: #1f2937;
+	color: #cbd5e1;
+}
+
+html.daily-dark .ret-tab-pill.active {
+	background-color: #059669;
+	border-color: #059669;
+	color: #ffffff;
+}

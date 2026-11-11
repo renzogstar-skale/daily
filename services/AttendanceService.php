@@ -173,63 +173,52 @@ class AttendanceService extends BaseService
 	}
 
 	/**
-	 * Sincroniza las alertas del día en la tabla dairy_alerts para que aparezcan en el Centro de Alertas
+	 * Sincroniza las alertas reales del día en la tabla dairy_alerts desde registros verificados (sin datos demo fijos)
 	 */
 	public function SyncDailyAttendanceAlerts(int $branchId, string $date): void
 	{
 		$db = $this->Db();
-		$alerts = [
-			[
-				'rule_code' => 'attendance_unjustified',
-				'dedupe_key' => "attendance:unjustified:$branchId:$date:DEMO-003",
-				'severity' => 'danger',
-				'title' => 'Ausencia sin justificar: Nicolás Torres (Electrónica)',
-				'detail' => 'No se presentó a su turno 08:00–17:00. Se requiere asignación de cobertura o contacto.',
-				'department' => 'Electrónica',
-				'href' => '/operations/attendance?date=' . $date,
-				'priority' => 'P1'
-			],
-			[
-				'rule_code' => 'attendance_justified',
-				'dedupe_key' => "attendance:justified:$branchId:$date:DEMO-009",
-				'severity' => 'danger',
-				'title' => 'Ausencia justificada: Gabriel Castro (Lácteos)',
-				'detail' => 'Inasistencia con certificado médico cargado para el turno 08:00–17:00.',
-				'department' => 'Dairy / Lácteos',
-				'href' => '/operations/attendance?date=' . $date,
-				'priority' => 'P2'
-			],
-			[
-				'rule_code' => 'attendance_late_15',
-				'dedupe_key' => "attendance:late15:$branchId:$date:DEMO-011",
-				'severity' => 'warning',
-				'title' => 'Tardanza de 15 minutos: Diego Vargas (Frutas y Verduras)',
-				'detail' => 'Entrada registrada a las 08:15 (programado 08:00). Motivo: Congestión vehicular.',
-				'department' => 'Frutas y Verduras',
-				'href' => '/operations/attendance?date=' . $date,
-				'priority' => 'P3'
-			],
-			[
-				'rule_code' => 'attendance_late_5',
-				'dedupe_key' => "attendance:late5:$branchId:$date:DEMO-004",
-				'severity' => 'warning',
-				'title' => 'Tardanza de 5 minutos: Camila Soto (Electrónica)',
-				'detail' => 'Entrada registrada a las 10:05 (programado 10:00).',
-				'department' => 'Electrónica',
-				'href' => '/operations/attendance?date=' . $date,
-				'priority' => 'P3'
-			],
-			[
-				'rule_code' => 'attendance_pending',
-				'dedupe_key' => "attendance:pending:$branchId:$date:DEMO-005",
-				'severity' => 'info',
-				'title' => 'Entrada pendiente: Sebastián Díaz (Electrónica)',
-				'detail' => 'Turno inició a las 08:00 y aún no registra marcación de entrada.',
-				'department' => 'Electrónica',
-				'href' => '/operations/attendance?date=' . $date,
-				'priority' => 'P4'
-			]
-		];
+		$overview = $this->GetAttendanceOverview($branchId, $date);
+		$rows = $overview['rows'] ?? [];
+		$alerts = [];
+
+		foreach ($rows as $row)
+		{
+			$empId = intval($row['employee_id'] ?? 0);
+			$empName = strval($row['employee_name'] ?? 'Colaborador');
+			$dept = strval($row['department'] ?? 'General');
+			$shiftStart = strval($row['scheduled_start'] ?? '');
+			$shiftEnd = strval($row['scheduled_end'] ?? '');
+			$status = strval($row['status'] ?? '');
+
+			if ($status === 'ausente' && empty($row['absence_id']))
+			{
+				$alerts[] = [
+					'rule_code' => 'attendance_unjustified',
+					'dedupe_key' => "attendance:unjustified:$branchId:$date:emp-$empId-s-" . intval($row['shift_id']),
+					'severity' => 'danger',
+					'title' => "Inasistencia sin aviso: $empName ($dept)",
+					'detail' => "No registró entrada para el turno $shiftStart–$shiftEnd.",
+					'department' => $dept,
+					'href' => "/operations/attendance?branch_id=$branchId&date=$date",
+					'priority' => 'P1'
+				];
+			}
+			elseif ($status === 'tardanza' && intval($row['diff_minutes'] ?? 0) >= 15)
+			{
+				$lateMin = intval($row['diff_minutes']);
+				$alerts[] = [
+					'rule_code' => 'attendance_late_15',
+					'dedupe_key' => "attendance:late:$branchId:$date:emp-$empId-s-" . intval($row['shift_id']),
+					'severity' => 'warning',
+					'title' => "Tardanza de {$lateMin} min: $empName ($dept)",
+					'detail' => "Entrada registrada a las " . ($row['clock_in'] ?: '—') . " (programado $shiftStart).",
+					'department' => $dept,
+					'href' => "/operations/attendance?branch_id=$branchId&date=$date",
+					'priority' => 'P3'
+				];
+			}
+		}
 
 		foreach ($alerts as $a)
 		{
@@ -375,11 +364,11 @@ class AttendanceService extends BaseService
 			FROM employee_shifts s
 			JOIN employees e ON e.id = s.employee_id
 			LEFT JOIN branches b ON b.id = s.branch_id
-			LEFT JOIN employee_attendance a ON a.shift_id = s.id
+			LEFT JOIN employee_attendance a ON (a.shift_id = s.id OR (a.shift_id IS NULL AND a.employee_id = s.employee_id AND date(a.clock_in) = s.shift_date AND ABS(strftime('%s', a.clock_in) - strftime('%s', s.shift_date || ' ' || s.start_time)) <= 7200))
 			LEFT JOIN employee_absences abs ON abs.employee_id = e.id AND abs.start_date <= s.shift_date AND abs.end_date >= s.shift_date
-				AND abs.status IN ('approved', 'pending') -- 'pending' = inasistencia injustificada; solicitudes 'requested'/'rejected' no cuentan
+				AND abs.status IN ('approved', 'pending', 'requested')
 			LEFT JOIN employee_attendance_adjustments adj ON adj.attendance_id = a.id AND adj.status = 'requested'
-			WHERE s.branch_id = :bid AND s.shift_date = :dt
+			WHERE s.branch_id = :bid AND s.shift_date = :dt AND s.status != 'cancelled'
 		";
 
 		$params = [':bid' => $resolvedBranchId, ':dt' => $date];
@@ -521,7 +510,7 @@ class AttendanceService extends BaseService
 					$observations = $r['attendance_notes'] ?: 'Turno puntual';
 				}
 
-				// Cálculo de horas trabajadas
+				// Cálculo de horas trabajadas (soportando turnos nocturnos que cruzan medianoche)
 				if (!empty($clockOut))
 				{
 					$clockOutTs = strtotime($r['clock_out']);
@@ -530,8 +519,13 @@ class AttendanceService extends BaseService
 				}
 				else
 				{
-					// En turno: estimación hasta la hora actual o la duración programada
-					$progHours = max(0, (strtotime("$date $progEnd:00") - $progStartTs) / 3600);
+					// En turno: estimación hasta la hora programada (ajustando cruce de medianoche)
+					$progEndTs = strtotime("$date $progEnd:00");
+					if ($progEndTs <= $progStartTs)
+					{
+						$progEndTs = strtotime(date('Y-m-d', strtotime("$date +1 day")) . " $progEnd:00");
+					}
+					$progHours = max(0, ($progEndTs - $progStartTs) / 3600);
 					$hoursWorked = max(0, round($progHours - ($breakMins / 60), 1));
 					$observations = ($status === 'tardanza') ? $observations : 'En turno activo';
 				}
@@ -539,13 +533,26 @@ class AttendanceService extends BaseService
 				$totalWorkedHours += $hoursWorked;
 				$deptStats[$normDept]['hours'] += $hoursWorked;
 			}
-			// Sin fichaje y sin ausencia: ¿está en hora o pendiente?
+			// Sin fichaje y sin ausencia registrada: distinguir entrada pendiente (aún no empieza / dentro de tolerancia) vs inasistencia sin aviso
 			else
 			{
-				$status = 'pendiente';
-				$pendingCount++;
-				$deptStats[$normDept]['pending']++;
-				$observations = 'Aún no registra entrada';
+				$progStartTs = strtotime("$date $progStart:00");
+				$nowTs = time();
+				$graceOver = ($date < date('Y-m-d')) || ($date === date('Y-m-d') && $nowTs > ($progStartTs + 3600));
+				if ($graceOver)
+				{
+					$status = 'ausente';
+					$absentCount++;
+					$deptStats[$normDept]['absent']++;
+					$observations = 'Inasistencia sin aviso (superó tolerancia de inicio sin marcación)';
+				}
+				else
+				{
+					$status = 'pendiente';
+					$pendingCount++;
+					$deptStats[$normDept]['pending']++;
+					$observations = 'Aún no registra entrada (turno pendiente de inicio)';
+				}
 			}
 
 			// Aplicar filtros de estado y búsqueda
@@ -777,7 +784,7 @@ class AttendanceService extends BaseService
 			$checkDemoAdj = $db->query("SELECT id FROM employee_attendance_adjustments WHERE employee_id IN (SELECT id FROM employees WHERE branch_id = $resolvedBranchId) AND status = 'requested'")->fetchColumn();
 			if (!$checkDemoAdj)
 			{
-				$demoEmp = $db->query("SELECT id FROM employees WHERE branch_id = $resolvedBranchId AND payroll_code = 'DEMO-011' LIMIT 1")->fetchColumn();
+				$demoEmp = $db->query("SELECT id FROM employees WHERE branch_id = $resolvedBranchId LIMIT 1")->fetchColumn() ?: $db->query("SELECT id FROM employees LIMIT 1")->fetchColumn();
 				if ($demoEmp)
 				{
 					$db->exec("INSERT INTO employee_attendance_adjustments (employee_id, original_clock_in, new_clock_in, reason, status, requested_by_user_id, row_created_timestamp)
@@ -890,40 +897,63 @@ class AttendanceService extends BaseService
 
 		if ($type === 'clock_in')
 		{
-			// Verificar si ya existe entrada
-			$check = $db->prepare("SELECT id FROM employee_attendance WHERE employee_id = :e AND date(clock_in) = :d");
-			$check->execute([':e' => $empId, ':d' => $date]);
-			$existingId = $check->fetchColumn();
+			// Evitar sobrescrituras silenciosas o fichajes duplicados en la misma ventana horaria
+			$openCheck = $db->prepare("SELECT id, clock_in FROM employee_attendance WHERE employee_id = :e AND clock_out IS NULL ORDER BY id DESC LIMIT 1");
+			$openCheck->execute([':e' => $empId]);
+			$openRow = $openCheck->fetch(\PDO::FETCH_ASSOC);
+			if ($openRow)
+			{
+				throw new \Exception("El colaborador ya tiene una entrada abierta desde {$openRow['clock_in']}; registre la salida o solicite una corrección.");
+			}
 
-			if ($existingId)
+			$dupCheck = $db->prepare("SELECT id, clock_in, clock_out FROM employee_attendance
+				WHERE employee_id = :e AND date(clock_in) = :d
+				  AND (:ci <= IFNULL(clock_out, datetime(clock_in, '+12 hours')) AND datetime(:ci, '+1 minute') >= clock_in)");
+			$dupCheck->execute([':e' => $empId, ':d' => $date, ':ci' => $fullDateTime]);
+			$existingRow = $dupCheck->fetch(\PDO::FETCH_ASSOC);
+			if ($existingRow)
 			{
-				$db->prepare("UPDATE employee_attendance SET clock_in = :ci, notes = :n, recorded_by_user_id = :u WHERE id = :id")
-					->execute([':ci' => $fullDateTime, ':n' => $notes, ':u' => $userId, ':id' => $existingId]);
+				throw new \Exception("Ya existe un fichaje registrado en esa fecha ({$existingRow['clock_in']}); use una solicitud de corrección auditada.");
 			}
-			else
-			{
-				$ins = $db->prepare("INSERT INTO employee_attendance (employee_id, shift_id, clock_in, clock_out, source, notes, recorded_by_user_id)
-					VALUES (:e, :s, :ci, NULL, 'manual', :n, :u)");
-				$ins->execute([':e' => $empId, ':s' => $shiftId, ':ci' => $fullDateTime, ':n' => $notes, ':u' => $userId]);
-			}
+
+			$ins = $db->prepare("INSERT INTO employee_attendance (employee_id, shift_id, clock_in, clock_out, source, notes, recorded_by_user_id)
+				VALUES (:e, :s, :ci, NULL, 'manual', :n, :u)");
+			$ins->execute([':e' => $empId, ':s' => $shiftId, ':ci' => $fullDateTime, ':n' => $notes, ':u' => $userId]);
 
 			return ['success' => true, 'message' => "Entrada registrada correctamente para las $time."];
 		}
 		elseif ($type === 'clock_out')
 		{
-			$check = $db->prepare("SELECT id FROM employee_attendance WHERE employee_id = :e AND date(clock_in) = :d ORDER BY id DESC LIMIT 1");
-			$check->execute([':e' => $empId, ':d' => $date]);
-			$existingId = $check->fetchColumn();
+			// Buscar primero sesión abierta (incluyendo turno nocturno iniciado el día anterior)
+			$openCheck = $db->prepare("SELECT id, clock_in FROM employee_attendance
+				WHERE employee_id = :e AND clock_out IS NULL AND date(clock_in) BETWEEN date(:d, '-1 day') AND :d
+				ORDER BY clock_in DESC LIMIT 1");
+			$openCheck->execute([':e' => $empId, ':d' => $date]);
+			$openRow = $openCheck->fetch(\PDO::FETCH_ASSOC);
 
-			if ($existingId)
+			if ($openRow)
 			{
-				$db->prepare("UPDATE employee_attendance SET clock_out = :co, notes = notes || ' · Salida: ' || :n WHERE id = :id")
-					->execute([':co' => $fullDateTime, ':n' => $notes, ':id' => $existingId]);
+				if ($fullDateTime <= $openRow['clock_in'])
+				{
+					throw new \Exception("La hora de salida ($fullDateTime) debe ser posterior a la entrada ({$openRow['clock_in']}).");
+				}
+				$db->prepare("UPDATE employee_attendance SET clock_out = :co, notes = TRIM(IFNULL(notes, '') || ' · Salida: ' || :n) WHERE id = :id")
+					->execute([':co' => $fullDateTime, ':n' => $notes, ':id' => $openRow['id']]);
 			}
 			else
 			{
-				// Crear con entrada estimada
+				$existingClosed = $db->prepare("SELECT id, clock_in, clock_out FROM employee_attendance WHERE employee_id = :e AND date(clock_in) = :d LIMIT 1");
+				$existingClosed->execute([':e' => $empId, ':d' => $date]);
+				if ($existingClosed->fetch(\PDO::FETCH_ASSOC))
+				{
+					throw new \Exception("El fichaje de esa jornada ya está cerrado; use una corrección auditada para editar horas.");
+				}
 				$estIn = $shift ? "$date {$shift['start_time']}" : "$date 08:00:00";
+				if (strlen($estIn) === 16) $estIn .= ':00';
+				if ($fullDateTime <= $estIn)
+				{
+					throw new \Exception("No se encontró entrada previa y la salida ($fullDateTime) es anterior al inicio estimado ($estIn).");
+				}
 				$ins = $db->prepare("INSERT INTO employee_attendance (employee_id, shift_id, clock_in, clock_out, source, notes, recorded_by_user_id)
 					VALUES (:e, :s, :ci, :co, 'manual', :n, :u)");
 				$ins->execute([':e' => $empId, ':s' => $shiftId, ':ci' => $estIn, ':co' => $fullDateTime, ':n' => $notes, ':u' => $userId]);

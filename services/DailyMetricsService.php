@@ -44,9 +44,135 @@ class DailyMetricsService extends BaseService
 		'non_food' => ['tecnologia', 'electrodomesticos', 'hogar', 'accesorios', 'cuidado_personal']
 	];
 
+	private static ?array $departments = null;
+
 	private function Db(): \PDO
 	{
 		return DatabaseService::GetInstance()->GetDbConnectionRaw();
+	}
+
+	/**
+	 * Departamentos comerciales de la empresa: la definición base (DEPARTMENTS) con la configuración de
+	 * daily_sales_departments (migración 0324: código, nombre, color, orden y valores de products.department).
+	 * [clave => [nombre, color, valores|null, código|null, orden]]; «otros» (valores null) agrupa lo no asignado y va al final.
+	 */
+	public static function Departments(): array
+	{
+		if (self::$departments !== null)
+		{
+			return self::$departments;
+		}
+		$out = [];
+		$i = 0;
+		foreach (self::DEPARTMENTS as $k => $d)
+		{
+			$out[$k] = [$d[0], $d[1], $d[2], null, $i += 10];
+		}
+		try
+		{
+			foreach (DatabaseService::GetInstance()->GetDbConnectionRaw()->query('SELECT * FROM daily_sales_departments')->fetchAll(\PDO::FETCH_ASSOC) as $r)
+			{
+				$vals = $r['key'] === 'otros' ? null : (json_decode((string) $r['source_values'], true) ?: []);
+				$out[$r['key']] = [$r['name'], $r['color'] ?: ($out[$r['key']][1] ?? '#64748B'), $vals, trim((string) $r['code']) !== '' ? trim($r['code']) : null, intval($r['sort_order'])];
+			}
+		}
+		catch (\Throwable $e) {}
+		$out['otros'] = $out['otros'] ?? ['Otros', '#64748B', null, null, PHP_INT_MAX];
+		uksort($out, fn($a, $b) => ($a === 'otros') <=> ($b === 'otros') ?: ($out[$a][4] <=> $out[$b][4]) ?: strcmp($a, $b));
+		return self::$departments = $out;
+	}
+
+	/**
+	 * Guarda la configuración de departamentos. $rows = [['key', 'code', 'name', 'color', 'sort_order', 'source_values' => [..], 'delete']].
+	 * Rechaza códigos o nombres repetidos y valores de producto asignados a dos departamentos (evita categorías duplicadas).
+	 * Los departamentos base no se eliminan (sus productos quedarían sin departamento); los nuevos sí.
+	 */
+	public function SaveDepartments(array $rows): array
+	{
+		$cur = self::Departments();
+		$next = $cur;
+		$deleted = [];
+		foreach ($rows as $r)
+		{
+			$key = strtolower(trim((string) ($r['key'] ?? '')));
+			$name = trim((string) ($r['name'] ?? ''));
+			if ($key === '')
+			{
+				$key = trim(preg_replace('/[^a-z0-9]+/', '_', strtolower(iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $name) ?: '')), '_');
+			}
+			if (!preg_match('/^[a-z0-9_]{2,40}$/', $key))
+			{
+				throw new \Exception('Clave de departamento no válida: «' . $key . '».');
+			}
+			if (!empty($r['delete']))
+			{
+				if (isset(self::DEPARTMENTS[$key]))
+				{
+					throw new \Exception('«' . ($cur[$key][0] ?? $key) . '» es un departamento base y no se puede eliminar; cambie su nombre o código.');
+				}
+				unset($next[$key]);
+				$deleted[] = $key;
+				continue;
+			}
+			if ($name === '')
+			{
+				throw new \Exception('Cada departamento necesita un nombre.');
+			}
+			$color = preg_match('/^#[0-9a-fA-F]{6}$/', (string) ($r['color'] ?? '')) ? strtoupper($r['color']) : ($cur[$key][1] ?? '#64748B');
+			$code = mb_substr(trim((string) ($r['code'] ?? '')), 0, 12);
+			$vals = $key === 'otros' ? null : array_values(array_unique(array_filter(array_map(fn($v) => trim((string) $v), is_array($r['source_values'] ?? null) ? $r['source_values'] : explode(',', (string) ($r['source_values'] ?? ''))), 'strlen')));
+			$next[$key] = [mb_substr($name, 0, 60), $color, $vals, $code !== '' ? $code : null, intval($r['sort_order'] ?? ($cur[$key][4] ?? 999))];
+		}
+		$codes = $names = $owner = [];
+		foreach ($next as $k => $d)
+		{
+			if ($d[3] !== null)
+			{
+				if (isset($codes[$d[3]]))
+				{
+					throw new \Exception('El código «' . $d[3] . '» está repetido en ' . $next[$codes[$d[3]]][0] . ' y ' . $d[0] . '.');
+				}
+				$codes[$d[3]] = $k;
+			}
+			$n = mb_strtolower($d[0]);
+			if (isset($names[$n]))
+			{
+				throw new \Exception('El nombre «' . $d[0] . '» está repetido.');
+			}
+			$names[$n] = $k;
+			foreach ($d[2] ?? [] as $v)
+			{
+				$lv = mb_strtolower($v);
+				if (isset($owner[$lv]) && $owner[$lv] !== $k)
+				{
+					throw new \Exception('El valor de producto «' . $v . '» está asignado a ' . $next[$owner[$lv]][0] . ' y a ' . $d[0] . ': cada valor pertenece a un solo departamento.');
+				}
+				$owner[$lv] = $k;
+			}
+		}
+		$db = $this->Db();
+		$db->beginTransaction();
+		try
+		{
+			$up = $db->prepare("INSERT INTO daily_sales_departments (key, code, name, color, sort_order, source_values, updated_timestamp) VALUES (:k, :c, :n, :col, :o, :v, datetime('now', 'localtime'))
+				ON CONFLICT(key) DO UPDATE SET code = excluded.code, name = excluded.name, color = excluded.color, sort_order = excluded.sort_order, source_values = excluded.source_values, updated_timestamp = excluded.updated_timestamp");
+			foreach ($next as $k => $d)
+			{
+				$up->execute([':k' => $k, ':c' => $d[3], ':n' => $d[0], ':col' => $d[1], ':o' => $k === 'otros' ? 9999 : $d[4], ':v' => $d[2] === null ? null : json_encode($d[2], JSON_UNESCAPED_UNICODE)]);
+			}
+			foreach ($deleted as $k)
+			{
+				$db->prepare('DELETE FROM daily_sales_departments WHERE key = :k')->execute([':k' => $k]);
+			}
+			$db->commit();
+		}
+		catch (\Throwable $e)
+		{
+			$db->rollBack();
+			throw $e;
+		}
+		self::$departments = null;
+		return self::Departments();
 	}
 
 	/** Departamentos de producto incluidos por una clave de departamento y/o categoría. null = sin filtro. */
@@ -62,7 +188,7 @@ class DailyMetricsService extends BaseService
 		{
 			$deptKey = 'alimentos';
 		}
-		if ($deptKey !== '' && $deptKey !== 'todos' && $deptKey !== 'all' && isset(self::DEPARTMENTS[$deptKey]))
+		if ($deptKey !== '' && $deptKey !== 'todos' && $deptKey !== 'all' && isset(self::Departments()[$deptKey]))
 		{
 			$keys = [$deptKey];
 		}
@@ -86,7 +212,7 @@ class DailyMetricsService extends BaseService
 			return '1 = 0';
 		}
 		$named = [];
-		foreach (self::DEPARTMENTS as $k => $d)
+		foreach (self::Departments() as $k => $d)
 		{
 			if ($d[2] !== null)
 			{
@@ -96,13 +222,13 @@ class DailyMetricsService extends BaseService
 		$parts = [];
 		foreach ($keys as $k)
 		{
-			$d = self::DEPARTMENTS[$k] ?? null;
-			if ($d === null)
+			$d = self::Departments()[$k] ?? null;
+			if ($d === null || $d[2] === [])
 			{
 				continue;
 			}
 			$parts[] = $d[2] === null
-				? "IFNULL(p.department, '') NOT IN (" . $this->Quote($named) . ')'
+				? ($named ? "IFNULL(p.department, '') NOT IN (" . $this->Quote($named) . ')' : '1 = 1')
 				: 'p.department IN (' . $this->Quote($d[2]) . ')';
 		}
 		return $parts ? '(' . implode(' OR ', $parts) . ')' : '1 = 0';
@@ -129,6 +255,11 @@ class DailyMetricsService extends BaseService
 		$time = $untilTime ? " AND time(s.created_timestamp) <= '" . preg_replace('/[^0-9:]/', '', $untilTime) . "'" : '';
 		$where = "s.status = 'completed' AND date(s.created_timestamp) BETWEEN :f AND :t" . $this->BranchSql($branchId, 's.branch_id') . $time;
 		$p = [':f' => $from, ':t' => $to];
+		$arch = $this->ArchiveSales($branchId, $from, $to, $deptKeys);
+		if ($arch !== null)
+		{
+			return $arch;
+		}
 		if ($deptKeys === null)
 		{
 			$st = $this->Db()->prepare("SELECT COUNT(*) AS tickets, IFNULL(SUM(s.total_amount), 0) AS gross, IFNULL(SUM(s.tax_amount), 0) AS tax, IFNULL(SUM(s.total_cogs), 0) AS cogs,
@@ -167,11 +298,52 @@ class DailyMetricsService extends BaseService
 		];
 	}
 
+	/**
+	 * Rangos anteriores al corte del archivo histórico (daily_sales_archive, migración 0322) se leen de él, igual que en
+	 * SalesReportsService. El archivo es por día completo (sin hora) y sin impuestos: 'full_day' lo indica.
+	 */
+	private function ArchiveSales(?int $branchId, string $from, string $to, ?array $deptKeys): ?array
+	{
+		try
+		{
+			$max = $this->Db()->query('SELECT MAX(day) FROM daily_sales_archive')->fetchColumn();
+		}
+		catch (\Throwable $e)
+		{
+			return null;
+		}
+		// El archivo guarda claves de departamento, no los nombres de producto que usa el filtro: con filtro no se usa
+		if (!$max || $to > $max || $deptKeys !== null)
+		{
+			return null;
+		}
+		$dept = '';
+		$tk = 'a.branch_tickets';
+		$st = $this->Db()->prepare("SELECT SUM(a.net) AS net, SUM(a.cogs) AS cogs, SUM(a.units) AS units,
+			(SELECT IFNULL(SUM(t), 0) FROM (SELECT MAX($tk) AS t FROM daily_sales_archive a WHERE a.day BETWEEN :f AND :t" . $this->BranchSql($branchId, 'a.branch_id') . "$dept GROUP BY a.day, a.branch_id)) AS tickets
+			FROM daily_sales_archive a WHERE a.day BETWEEN :f AND :t" . $this->BranchSql($branchId, 'a.branch_id') . $dept);
+		$st->execute([':f' => $from, ':t' => $to]);
+		$r = $st->fetch(\PDO::FETCH_ASSOC);
+		if ($r['net'] === null)
+		{
+			return null;
+		}
+		$net = floatval($r['net']);
+		$margin = $net - floatval($r['cogs']);
+		$tickets = intval($r['tickets']);
+		return [
+			'tickets' => $tickets, 'gross_sales' => round($net, 2), 'tax' => 0.0, 'net_sales' => round($net, 2), 'cogs' => round(floatval($r['cogs']), 2),
+			'gross_margin' => round($margin, 2), 'margin_pct' => SalesService::MarginPct($margin, $net), 'discount' => 0.0, 'units' => round(floatval($r['units']), 2),
+			'avg_ticket' => $tickets > 0 ? round($net / $tickets, 2) : null, 'units_per_ticket' => $tickets > 0 ? round(floatval($r['units']) / $tickets, 1) : null,
+			'has_data' => true, 'full_day' => true
+		];
+	}
+
 	/** Ventas netas, costo, unidades y tickets por clave de departamento */
 	public function SalesByDepartment(?int $branchId, string $from, string $to, ?array $deptKeys = null): array
 	{
 		$out = [];
-		foreach (self::DEPARTMENTS as $k => [$name, $color])
+		foreach (self::Departments() as $k => [$name, $color])
 		{
 			if ($deptKeys !== null && !in_array($k, $deptKeys, true))
 			{
@@ -283,11 +455,14 @@ class DailyMetricsService extends BaseService
 		$in = implode(',', $branches ?: [0]);
 		$st = $this->Db()->query("SELECT l.branch_id, s.product_id, SUM(s.amount) AS qty,
 				MAX(CASE WHEN s.best_before_date >= '$today' AND s.best_before_date <= '$limit' THEN 1 ELSE 0 END) AS exp,
-				MAX(CASE WHEN s.best_before_date < '$today' THEN 1 ELSE 0 END) AS expd
+				MAX(CASE WHEN s.best_before_date < '$today' THEN 1 ELSE 0 END) AS expd,
+				SUM(CASE WHEN s.best_before_date >= '$today' AND s.best_before_date <= '$limit' AND s.amount > 0 THEN 1 ELSE 0 END) AS exp_lots
 			FROM stock s JOIN locations l ON l.id = s.location_id WHERE IFNULL(l.is_transit, 0) = 0 AND l.branch_id IN ($in) GROUP BY l.branch_id, s.product_id");
 		$stock = [];
 		$expiring = 0;
 		$expired = 0;
+		$expLots = 0;
+		$expBranches = [];
 		$deptOk = $deptKeys === null ? null : array_flip(array_map('intval', $this->Db()->query('SELECT p.id FROM products p WHERE ' . $this->DeptSql($deptKeys))->fetchAll(\PDO::FETCH_COLUMN)));
 		foreach ($st->fetchAll(\PDO::FETCH_ASSOC) as $r)
 		{
@@ -297,11 +472,17 @@ class DailyMetricsService extends BaseService
 			}
 			$stock[$r['branch_id']][$r['product_id']] = floatval($r['qty']);
 			$expiring += intval($r['exp']);
+			$expLots += intval($r['exp_lots']);
+			if (intval($r['exp']))
+			{
+				$expBranches[$r['branch_id']] = true;
+			}
 			$expired += intval($r['expd']);
 		}
 		$catalog = $this->Db()->query('SELECT p.id, p.min_stock_amount FROM products p WHERE p.active = 1 AND p.min_stock_amount > 0 AND IFNULL(p.is_serialized, 0) = 0 AND ' . $this->DeptSql($deptKeys))->fetchAll(\PDO::FETCH_KEY_PAIR);
 		$below = 0;
 		$out = 0;
+		$missing = 0.0;
 		foreach ($branches as $b)
 		{
 			foreach ($catalog as $pid => $min)
@@ -314,10 +495,12 @@ class DailyMetricsService extends BaseService
 				elseif ($q < floatval($min))
 				{
 					$below++;
+					$missing += floatval($min) - $q;
 				}
 			}
 		}
-		return ['below_min' => $below, 'out_of_stock' => $out, 'expiring' => $expiring, 'expired' => $expired, 'catalog' => count($catalog) * count($branches)];
+		return ['below_min' => $below, 'out_of_stock' => $out, 'expiring' => $expiring, 'expired' => $expired, 'catalog' => count($catalog) * count($branches),
+			'expiring_lots' => $expLots, 'expiring_branches' => count($expBranches), 'below_min_missing_units' => round($missing, 2)];
 	}
 
 	/* ---------------------------------------------------------------- Personal */

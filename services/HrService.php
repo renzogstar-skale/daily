@@ -580,6 +580,7 @@ class HrService extends BaseService
 				e.position AS employee_position,
 				s.start_time AS scheduled_start,
 				s.end_time AS scheduled_end,
+				IFNULL(s.break_minutes, 0) AS break_minutes,
 				CASE 
 					WHEN a.clock_out IS NOT NULL THEN 'Completado'
 					WHEN a.clock_in IS NOT NULL THEN 'En Turno'
@@ -588,21 +589,25 @@ class HrService extends BaseService
 			FROM employee_attendance a
 			JOIN employees e ON a.employee_id = e.id
 			LEFT JOIN employee_shifts s ON a.shift_id = s.id
+			WHERE e.branch_id = :bid
 			ORDER BY a.clock_in DESC
 			LIMIT 50
 		";
 
-		$records = $db->query($sql)->fetchAll(\PDO::FETCH_ASSOC);
+		$stmt = $db->prepare($sql);
+		$stmt->execute([':bid' => $branchId]);
+		$records = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
-		// Calcular horas trabajadas
+		// Calcular horas trabajadas exactas mediante marca de tiempo (incluyendo turnos > 24h o nocturnos)
 		foreach ($records as &$r)
 		{
 			if (!empty($r['clock_in']) && !empty($r['clock_out']))
 			{
-				$cin = new \DateTime($r['clock_in']);
-				$cout = new \DateTime($r['clock_out']);
-				$diff = $cin->diff($cout);
-				$r['worked_hours'] = round($diff->h + ($diff->i / 60), 2);
+				$tsIn = strtotime($r['clock_in']);
+				$tsOut = strtotime($r['clock_out']);
+				$gross = ($tsIn !== false && $tsOut !== false && $tsOut > $tsIn) ? (($tsOut - $tsIn) / 3600) : 0.0;
+				$breakH = intval($r['break_minutes'] ?? 0) / 60;
+				$r['worked_hours'] = round(max(0.0, $gross - $breakH), 2);
 			}
 			else
 			{
@@ -610,15 +615,18 @@ class HrService extends BaseService
 			}
 		}
 
-		$vacations = $db->query("
+		$vacStmt = $db->prepare("
 			SELECT 
 				v.*,
 				e.name AS employee_name,
 				e.department AS employee_department
 			FROM workforce_vacations v
 			LEFT JOIN employees e ON v.payroll_code = e.payroll_code
+			WHERE (e.branch_id = :bid OR e.branch_id IS NULL)
 			ORDER BY v.start_date DESC
-		")->fetchAll(\PDO::FETCH_ASSOC);
+		");
+		$vacStmt->execute([':bid' => $branchId]);
+		$vacations = $vacStmt->fetchAll(\PDO::FETCH_ASSOC);
 
 		return [
 			'date' => $date,
@@ -632,6 +640,45 @@ class HrService extends BaseService
 		$this->EnsureHrTables();
 		$db = $this->Db();
 
+		$ym = preg_match('/^\d{4}-\d{2}$/', $period) ? $period : date('Y-m');
+		$from = $ym . '-01';
+		$to = date('Y-m-t', strtotime($from));
+
+		$autoSvc = WorkforceAutoScheduleService::GetInstance();
+		$schedSvc = WorkforceScheduleService::GetInstance();
+		$policy = $autoSvc->GetBranchJurisdictionPolicy($branchId, $from);
+
+		// Cargar horas trabajadas reales deduplicadas de fichajes del período
+		$workedMap = $schedSvc->WorkedHoursByEmployee($from, $to, $branchId);
+
+		// Cargar festivos conocidos en BD para calcular recargo dominical/festivo real
+		$holidayDates = [];
+		try
+		{
+			$hRows = $db->query("SELECT holiday_date FROM workforce_colombian_holidays")->fetchAll(\PDO::FETCH_COLUMN);
+			$holidayDates = array_flip($hRows);
+		}
+		catch (\Throwable $e) { }
+		$isRestDay = fn($d) => (intval(date('N', strtotime($d))) === 7 || isset($holidayDates[$d]));
+
+		// Turnos reales no cancelados del período por empleado para desglosar recargos nocturnos/festivos
+		$shiftsByEmp = [];
+		$shStmt = $db->prepare("SELECT employee_id, shift_date, start_time, end_time, break_minutes FROM employee_shifts WHERE branch_id = :b AND status != 'cancelled' AND shift_date BETWEEN :f AND :t");
+		$shStmt->execute([':b' => $branchId, ':f' => $from, ':t' => $to]);
+		foreach ($shStmt->fetchAll(\PDO::FETCH_ASSOC) as $sh)
+		{
+			$shiftsByEmp[intval($sh['employee_id'])][] = $sh;
+		}
+
+		// Pagos pendientes o ejecutados de compensatorios vencidos/ocasionales en el período
+		$compPayByCode = [];
+		$cpStmt = $db->prepare("SELECT payroll_code, SUM(IFNULL(payout_amount, 0)) AS pay FROM workforce_compensatory_bank WHERE status IN ('EXPIRED_PAYOUT_DUE', 'PAID_OUT') AND substr(origin_sunday, 1, 7) = :ym GROUP BY payroll_code");
+		$cpStmt->execute([':ym' => $ym]);
+		foreach ($cpStmt->fetchAll(\PDO::FETCH_ASSOC) as $cp)
+		{
+			$compPayByCode[$cp['payroll_code']] = floatval($cp['pay']);
+		}
+
 		$employees = $this->GetCollaborators($branchId, ['active' => 1]);
 
 		$payrollRows = [];
@@ -643,25 +690,58 @@ class HrService extends BaseService
 
 		foreach ($employees as $emp)
 		{
-			$hourly = $emp['hourly_cost'] ?: 16.50;
-			$regHours = $emp['weekly_hours'] * 4.2; // horas mensuales base (~168h)
-			$otHours = rand(0, 10); // Horas extras simuladas coherentes
-			$nightHours = rand(0, 8); // Horas nocturnas
-			$bonus = ($emp['position'] === 'Gerente' || $emp['position'] === 'Líder') ? 150.00 : (rand(0, 3) === 1 ? 50.00 : 0.00);
+			$eid = intval($emp['id']);
+			$pCode = $emp['payroll_code'] ?: ('EMP-' . str_pad($eid, 4, '0', STR_PAD_LEFT));
+			$hourly = floatval($emp['hourly_cost'] ?: 16.50);
+			$weeklyContract = floatval($emp['weekly_hours'] ?: ($policy['max_weekly_hours'] ?? 42.0));
+			$periodContractCap = round($weeklyContract * (date('t', strtotime($from)) / 7), 2);
+
+			// Usar horas trabajadas reales de fichajes; si aún no hay fichajes cerrados en el período, sumar horas planificadas reales
+			$workedReal = floatval($workedMap[$eid] ?? 0.0);
+			$empShifts = $shiftsByEmp[$eid] ?? [];
+			$nightHours = 0.0;
+			$restHours = 0.0;
+			$premiumHoursEq = 0.0;
+			$plannedTotal = 0.0;
+
+			foreach ($empShifts as $sh)
+			{
+				[$ss, $se] = WorkforceScheduleService::Span($sh['shift_date'], $sh['start_time'], $sh['end_time']);
+				$paidH = max(0.0, ($se - $ss) / 3600 - intval($sh['break_minutes'] ?? 0) / 60);
+				$plannedTotal += $paidH;
+				$cls = WorkforceLaborRulesService::ClassifyShiftByJurisdiction($sh['shift_date'], $sh['start_time'], $sh['end_time'], $paidH, $isRestDay, $policy);
+				$nightHours += floatval($cls['night'] + $cls['rest_night']);
+				$restHours += floatval($cls['rest_day'] + $cls['rest_night']);
+				$premiumHoursEq += floatval($cls['premium_hours']);
+			}
+
+			$effectiveHours = $workedReal > 0 ? $workedReal : ($plannedTotal > 0 ? round($plannedTotal, 2) : 0.0);
+			$otCalc = WorkforceLaborRulesService::ComputeOvertimeByJurisdiction($effectiveHours, $periodContractCap, $policy);
+
+			$regHours = $otCalc['regular_hours'];
+			$otHours = $otCalc['overtime_total_hours'];
+			$nightHours = round($nightHours, 2);
 
 			$basePay = round($regHours * $hourly, 2);
-			$otPay = round($otHours * $hourly * 1.25, 2); // Recargo 25% diurna extra
-			$surchargePay = round($nightHours * $hourly * 0.35, 2); // Recargo nocturno 35%
-			$grossPay = $basePay + $otPay + $surchargePay + $bonus;
-			$benefitsCost = round($grossPay * ($emp['labor_burden_pct'] ?: 0.22), 2);
-			$totalCost = $grossPay + $benefitsCost;
+			$otPay = round(
+				($otCalc['overtime_tier1_hours'] * $hourly * (1.0 + $otCalc['overtime_tier1_pct'])) +
+				($otCalc['overtime_tier2_hours'] * $hourly * (1.0 + $otCalc['overtime_tier2_pct'])),
+				2
+			);
+			$compPayout = round(floatval($compPayByCode[$pCode] ?? 0.0), 2);
+			$surchargePay = round(($premiumHoursEq * $hourly) + $compPayout, 2);
+			$bonus = 0.00;
+			$grossPay = round($basePay + $otPay + $surchargePay + $bonus, 2);
+			$benefitsCost = round($grossPay * floatval($emp['labor_burden_pct'] ?: 0.22), 2);
+			$totalCost = round($grossPay + $benefitsCost, 2);
 
 			$payrollRows[] = [
-				'employee_id' => $emp['id'],
-				'payroll_code' => $emp['payroll_code'] ?: ('EMP-' . str_pad($emp['id'], 4, '0', STR_PAD_LEFT)),
+				'employee_id' => $eid,
+				'payroll_code' => $pCode,
 				'name' => $emp['name'],
 				'department' => $emp['department'],
 				'position' => $emp['position'],
+				'jurisdiction_code' => $policy['jurisdiction_code'],
 				'hourly_cost' => $hourly,
 				'regular_hours' => $regHours,
 				'overtime_hours' => $otHours,
@@ -669,11 +749,12 @@ class HrService extends BaseService
 				'base_pay' => $basePay,
 				'overtime_pay' => $otPay,
 				'surcharges' => $surchargePay,
+				'comp_payout' => $compPayout,
 				'bonuses' => $bonus,
 				'gross_pay' => $grossPay,
 				'benefits_cost' => $benefitsCost,
 				'total_cost' => $totalCost,
-				'status' => 'Pre-aprobado',
+				'status' => $workedReal > 0 ? 'Auditado (Reloj)' : ($plannedTotal > 0 ? 'Proyectado (Turnos)' : 'Sin actividad')
 			];
 
 			$totalBase += $basePay;
@@ -686,13 +767,15 @@ class HrService extends BaseService
 		return [
 			'period' => $period,
 			'branch_id' => $branchId,
+			'jurisdiction' => $policy['jurisdiction_code'] ?? 'CO-GEN',
+			'jurisdiction_policy' => $policy,
 			'rows' => $payrollRows,
 			'totals' => [
-				'base' => $totalBase,
-				'overtime' => $totalOvertime,
-				'surcharges' => $totalSurcharges,
-				'bonuses' => $totalBonuses,
-				'grand_total' => $totalGrandCost,
+				'base' => round($totalBase, 2),
+				'overtime' => round($totalOvertime, 2),
+				'surcharges' => round($totalSurcharges, 2),
+				'bonuses' => round($totalBonuses, 2),
+				'grand_total' => round($totalGrandCost, 2),
 				'collaborators_count' => count($payrollRows),
 			]
 		];

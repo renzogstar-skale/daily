@@ -280,6 +280,8 @@ class LossIntelligenceApiController extends BaseApiController
 			$q = $request->getQueryParams();
 			$branchId = !empty($q['branch_id']) ? intval($q['branch_id']) : null;
 			$date = !empty($q['date']) ? $q['date'] : date('Y-m-d');
+			$startDate = !empty($q['start_date']) ? $q['start_date'] : null;
+			$endDate = !empty($q['end_date']) ? $q['end_date'] : null;
 			$dept = !empty($q['department']) ? $q['department'] : null;
 			$causal = !empty($q['causal']) ? $q['causal'] : null;
 			$metric = !empty($q['metric']) ? $q['metric'] : 'pct';
@@ -289,7 +291,9 @@ class LossIntelligenceApiController extends BaseApiController
 				$date,
 				$dept,
 				$causal,
-				$metric
+				$metric,
+				$startDate,
+				$endDate
 			);
 		});
 	}

@@ -742,9 +742,14 @@ class MerchandiseService extends BaseService
 		}
 		else if ($type === 'transfer')
 		{
-			$toBranch = intval($d['to_branch_id'] ?? 2);
-			$toLoc = intval($this->Val("SELECT id FROM locations WHERE branch_id = :b ORDER BY id LIMIT 1", [':b' => $toBranch])) ?: 2;
-			$stockSvc->TransferProduct($pid, $qty, $locId, $toLoc, null, null, null, $transactionId);
+			// Entre tiendas: documento de traslado (sale a tránsito y solo entra al destino cuando éste confirma la recepción)
+			$toBranch = intval($d['to_branch_id'] ?? 0);
+			$toLoc = intval($this->Val("SELECT id FROM locations WHERE branch_id = :b AND IFNULL(is_transit, 0) = 0 AND active = 1 ORDER BY id LIMIT 1", [':b' => $toBranch]));
+			if (!$toLoc)
+			{
+				throw new \Exception('Seleccione una sucursal destino con ubicaciones activas');
+			}
+			$tr = StockTransferService::GetInstance()->CreateTransfer(['from_location_id' => $locId, 'to_location_id' => $toLoc, 'items' => [['product_id' => $pid, 'amount' => $qty]], 'notes' => $doc], $userId);
 			UnifiedInventoryEventService::GetInstance()->Publish(
 				'merchandise.dispatched',
 				'transfer',
@@ -753,12 +758,15 @@ class MerchandiseService extends BaseService
 				$branchId,
 				$userId
 			);
-			return ['success' => true, 'message' => "Traslado de $qty unidades enviado a sucursal destino ($doc)"];
+			return ['success' => true, 'transfer' => $tr, 'message' => "Traslado de $qty unidades en tránsito: la sucursal destino debe confirmar la recepción ($doc)"];
 		}
 		else
 		{
-			$stockSvc->AddProduct($pid, $qty, date('Y-m-d', strtotime('+365 days')), StockService::TRANSACTION_TYPE_INVENTORY_CORRECTION, date('Y-m-d'), $price, $locId, null, $transactionId, 0, true, $doc);
-			return ['success' => true, 'message' => "Ajuste de $qty unidades registrado ($doc)"];
+			// Ajuste: pendiente de aprobación (no cambia existencias hasta que un aprobador lo autorice)
+			$current = floatval($this->Val('SELECT IFNULL(SUM(amount), 0) FROM stock WHERE product_id = :p', [':p' => $pid]));
+			$adj = InventoryOperationsService::GetInstance()->RequestAdjustment($pid, max(0, $current + $qty), $locId, ['note' => $doc, 'source' => 'manual', 'price' => $price > 0 ? $price : null]);
+			return ['success' => true, 'pending_approval' => !empty($adj['adjustment']), 'adjustment' => $adj['adjustment'] ?? null,
+				'message' => !empty($adj['adjustment']) ? "Ajuste de $qty unidades pendiente de aprobación ({$adj['adjustment']['adjustment_number']})" : 'Sin diferencia: no se registró ajuste'];
 		}
 	}
 

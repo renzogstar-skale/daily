@@ -176,6 +176,14 @@ class DeviceService extends BaseService
 		$u = $this->ById($id);
 		$this->NeedBranch(intval($u['branch_id']));
 		$this->Log($id, 'reveal', null, null, null, 'Consulta del identificador completo', $userId);
+		try
+		{
+			$this->Exec("INSERT INTO security_access_audit_log (user_id, branch_id, device_id, access_type, resource_ref, notes, created_at) VALUES (?, ?, ?, 'imei_reveal', ?, 'Consulta auditada de IMEI/Serial completo', ?)",
+				[$userId, intval($u['branch_id']), $id, self::Mask($u['imei1'] ?? ($u['serial_number'] ?? '')), date('Y-m-d H:i:s')]);
+		}
+		catch (\Throwable $e)
+		{
+		}
 		return ['imei1' => $u['imei1'], 'imei2' => $u['imei2'], 'serial_number' => $u['serial_number']];
 	}
 

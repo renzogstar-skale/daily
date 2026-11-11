@@ -10,8 +10,10 @@
 	// Stock lots agrupados por product_id para llenado reactivo
 	$dbRaw = \Grocy\Services\DatabaseService::GetInstance()->GetDbConnectionRaw();
 	$rawLots = $dbRaw->query("
-		SELECT s.id, s.product_id, s.amount, s.best_before_date, s.location_id
+		SELECT s.id, s.stock_id, s.product_id, s.amount, s.best_before_date, s.location_id, IFNULL(l.branch_id, 1) AS branch_id
 		FROM stock s
+		LEFT JOIN locations l ON l.id = s.location_id
+		WHERE s.amount > 0
 		ORDER BY s.best_before_date ASC
 	")->fetchAll(\PDO::FETCH_ASSOC);
 
@@ -19,9 +21,11 @@
 	foreach ($rawLots as $l) {
 		$lotsByProduct[$l['product_id']][] = [
 			'id' => $l['id'],
+			'stock_id' => $l['stock_id'],
 			'amount' => floatval($l['amount']),
 			'date' => $l['best_before_date'],
-			'location_id' => $l['location_id']
+			'location_id' => $l['location_id'],
+			'branch_id' => $l['branch_id']
 		];
 	}
 @endphp
@@ -487,6 +491,31 @@
 							</div>
 						</div>
 						<div class="daily-reg-body">
+							<!-- Escáner UPC / Código de Barras (pistola USB/Bluetooth o cámara) -->
+							<div class="p-3 mb-3 rounded border" style="background:#f8fafc;border-color:#cbd5e1 !important;">
+								<label class="daily-form-label mb-1">
+									<i class="fa-solid fa-barcode text-success"></i> Escáner UPC / EAN / Código de Barras
+									<span class="badge badge-light border ml-1 font-weight-600" style="font-size:0.68rem;">Enter automático o cámara</span>
+								</label>
+								<div class="d-flex flex-wrap" style="gap:8px;">
+									<div class="input-group" style="flex:1;min-width:220px;">
+										<div class="input-group-prepend">
+											<span class="input-group-text bg-white border-right-0" style="border-radius:8px 0 0 8px;border-color:#cbd5e1;">
+												<i class="fa-solid fa-qrcode text-success"></i>
+											</span>
+										</div>
+										<input type="text" id="reg-upc-input" class="daily-form-control border-left-0" style="border-radius:0 8px 8px 0;" placeholder="Escanear código de barras o ingresar UPC (ej: 750100000001)..." autocomplete="off">
+									</div>
+									<button type="button" class="btn btn-outline-success font-weight-700 px-3" id="btn-lookup-upc-waste" onclick="dlxLookupBarcode();">
+										<i class="fa-solid fa-search mr-1"></i>Buscar UPC
+									</button>
+									<button type="button" class="btn btn-success font-weight-700 px-3" id="btn-scan-upc-waste" onclick="dlxOpenUpcCamera();">
+										<i class="fa-solid fa-camera mr-1"></i>Escanear cámara
+									</button>
+								</div>
+								<div id="reg-upc-status" class="small mt-2 text-muted" style="display:none;"></div>
+							</div>
+
 							<!-- Buscar producto o SKU -->
 							<div class="form-group position-relative mb-3">
 								<label class="daily-form-label">
@@ -1104,6 +1133,8 @@
 			lots.forEach(function(l, i) {
 				var opt = document.createElement('option');
 				opt.value = 'L-STOCK-' + l.id;
+				opt.setAttribute('data-stock-id', l.stock_id || '');
+				opt.setAttribute('data-location-id', l.location_id || '');
 				opt.setAttribute('data-date', l.date || '');
 				opt.setAttribute('data-amount', l.amount);
 				opt.textContent = 'Lote #' + l.id + ' — Vence: ' + (l.date || 'S/F') + ' (' + l.amount + ' ' + p.qu_name + ')';
@@ -1445,12 +1476,19 @@
 
 		var lotSel = document.getElementById('reg-lot-select');
 		var lotManual = document.getElementById('reg-lot-manual').value.trim();
+		var selectedLotOpt = lotSel && lotSel.selectedIndex >= 0 ? lotSel.options[lotSel.selectedIndex] : null;
+		var stockEntryId = (!lotManual && selectedLotOpt) ? (selectedLotOpt.getAttribute('data-stock-id') || 'default') : 'default';
+		var lotLocationId = (!lotManual && selectedLotOpt && selectedLotOpt.getAttribute('data-location-id')) ? parseInt(selectedLotOpt.getAttribute('data-location-id')) : null;
+		var lotBestBefore = (!lotManual && selectedLotOpt && selectedLotOpt.getAttribute('data-date')) ? selectedLotOpt.getAttribute('data-date') : null;
 		var batchVal = lotManual || (lotSel.value ? lotSel.value.replace('L-STOCK-', '') : null);
 
 		var payload = {
 			product_id: parseInt(document.getElementById('reg-product-id').value),
 			amount: parseFloat(document.getElementById('reg-amount').value),
 			branch_id: parseInt(document.getElementById('reg-branch-id').value),
+			location_id: lotLocationId,
+			specific_stock_entry_id: stockEntryId,
+			best_before_date: lotBestBefore,
 			waste_reason_id: parseInt(document.getElementById('reg-reason-id').value),
 			batch_number: batchVal,
 			final_destination: document.getElementById('reg-destination').value || null,
@@ -1545,6 +1583,134 @@
 			}
 		}
 	});
+
+	// Escáner UPC (pistola USB/Bluetooth o cámara ZXing local)
+	var upcReader = null;
+	function setUpcStatus(msg, isErr) {
+		var el = document.getElementById('reg-upc-status');
+		if (!el) return;
+		el.style.display = 'block';
+		el.className = 'small mt-2 font-weight-600 ' + (isErr ? 'text-danger' : 'text-success');
+		el.innerHTML = msg;
+	}
+
+	window.dlxLookupBarcode = function(forcedCode) {
+		var inp = document.getElementById('reg-upc-input');
+		var code = (forcedCode !== undefined && forcedCode !== null ? String(forcedCode) : (inp ? inp.value : '')).trim();
+		if (!code) {
+			toastr.warning('Ingresa o escanea un código de barras UPC / EAN.');
+			if (inp) inp.focus();
+			return;
+		}
+		if (inp) inp.value = code;
+		setUpcStatus('<i class="fa-solid fa-spinner fa-spin mr-1"></i>Buscando código ' + code + '...', false);
+
+		fetch(Grocy.BaseUrl + '/api/stock/products/by-barcode/' + encodeURIComponent(code), { headers: { 'Accept': 'application/json' } })
+			.then(function(res) {
+				if (!res.ok) {
+					return res.json().then(function(err) { throw new Error((err && err.error_message) || 'Código de barras no encontrado'); });
+				}
+				return res.json();
+			})
+			.then(function(data) {
+				var prod = data && data.product ? data.product : null;
+				if (!prod || !prod.id) {
+					throw new Error('Código de barras sin producto asociado');
+				}
+				var match = rawProducts.find(function(item) { return Number(item.id) === Number(prod.id); });
+				if (!match) {
+					match = {
+						id: prod.id,
+						name: prod.name,
+						sku: prod.sku || ('SKU-' + prod.id),
+						qu_name: (data.quantity_unit_stock && data.quantity_unit_stock.name) ? data.quantity_unit_stock.name : 'Unidades',
+						last_price: parseFloat(data.last_price || prod.sale_price || 0),
+						current_stock: parseFloat(data.stock_amount || 0),
+						location_id: prod.location_id || null,
+						group_name: ''
+					};
+					rawProducts.push(match);
+				}
+				dlxSelectProduct(match);
+				var resList = document.getElementById('reg-autocomplete-list');
+				if (resList) resList.style.display = 'none';
+				setUpcStatus('<i class="fa-solid fa-circle-check mr-1"></i>Escaneado: <strong>' + match.name + '</strong> (' + code + ')', false);
+				toastr.success('Producto detectado: ' + match.name);
+			})
+			.catch(function(err) {
+				setUpcStatus('<i class="fa-solid fa-triangle-exclamation mr-1"></i>' + (err.message || 'Código no reconocido'), true);
+				toastr.error(err.message || 'No se encontró producto para ese código UPC');
+			});
+	};
+
+	window.dlxCloseUpcCamera = function() {
+		try { if (upcReader) { upcReader.reset(); } } catch (e) {}
+		$('#wasteUpcCameraModal').modal('hide');
+	};
+
+	window.dlxOpenUpcCamera = function() {
+		if (!document.getElementById('wasteUpcCameraModal')) {
+			var modalHtml = ''
+				+ '<div class="modal fade" id="wasteUpcCameraModal" tabindex="-1" role="dialog" aria-hidden="true">'
+				+ '  <div class="modal-dialog modal-dialog-centered" role="document">'
+				+ '    <div class="modal-content" style="border-radius:14px;overflow:hidden;">'
+				+ '      <div class="modal-header bg-dark text-white py-2 px-3">'
+				+ '        <h6 class="modal-title mb-0 font-weight-bold"><i class="fa-solid fa-barcode mr-2 text-success"></i>Escanear UPC / Código de barras</h6>'
+				+ '        <button type="button" class="close text-white" onclick="dlxCloseUpcCamera();">&times;</button>'
+				+ '      </div>'
+				+ '      <div class="modal-body p-3 text-center">'
+				+ '        <video id="wasteUpcCameraVideo" style="width:100%;max-height:280px;background:#0f172a;border-radius:10px;" muted playsinline></video>'
+				+ '        <div id="wasteUpcCameraMsg" class="small text-muted mt-2">Iniciando cámara local...</div>'
+				+ '      </div>'
+				+ '    </div>'
+				+ '  </div>'
+				+ '</div>';
+			document.body.insertAdjacentHTML('beforeend', modalHtml);
+			$('#wasteUpcCameraModal').on('hidden.bs.modal', function() {
+				try { if (upcReader) upcReader.reset(); } catch (e) {}
+			});
+		}
+
+		$('#wasteUpcCameraModal').modal('show');
+		var msgEl = document.getElementById('wasteUpcCameraMsg');
+		var startDecode = function() {
+			try {
+				upcReader = new window.ZXing.BrowserMultiFormatReader();
+				if (msgEl) msgEl.textContent = 'Enfoca el código de barras del producto...';
+				upcReader.decodeFromVideoDevice(null, 'wasteUpcCameraVideo', function(result, err) {
+					if (result && result.text) {
+						dlxCloseUpcCamera();
+						dlxLookupBarcode(result.text);
+					}
+				});
+			} catch (ex) {
+				if (msgEl) msgEl.textContent = 'No se pudo acceder a la cámara: ingresa el UPC manualmente.';
+			}
+		};
+
+		if (window.ZXing) {
+			startDecode();
+		} else {
+			if (msgEl) msgEl.textContent = 'Cargando lector ZXing...';
+			var s = document.createElement('script');
+			s.src = Grocy.BaseUrl + '/packages/@zxing/library/umd/index.min.js';
+			s.onload = startDecode;
+			s.onerror = function() {
+				if (msgEl) msgEl.textContent = 'No se pudo cargar ZXing. Usa el lector USB o campo manual.';
+			};
+			document.head.appendChild(s);
+		}
+	};
+
+	var upcInp = document.getElementById('reg-upc-input');
+	if (upcInp) {
+		upcInp.addEventListener('keydown', function(e) {
+			if (e.key === 'Enter') {
+				e.preventDefault();
+				dlxLookupBarcode();
+			}
+		});
+	}
 
 	// Iniciar de inmediato también por si ya está cargado el DOM
 	initIdempotency();

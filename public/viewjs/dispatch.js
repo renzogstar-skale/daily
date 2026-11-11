@@ -1,6 +1,6 @@
 /**
- * DAILY - Despachos y Validaciones (viewjs)
- * Conciliación en 7 etapas, cliente recoge vs. domicilio y escaneo rápido UPC
+ * DAILY - Despachos y Logística OMS/WMS (viewjs)
+ * Ciclo canónico 7 etapas: Pedido -> Reserva -> Picking -> Packing -> Despacho -> Entrega -> Conciliación
  */
 (function ($) {
 	'use strict';
@@ -8,17 +8,72 @@
 	var currentOrderId = window.CurrentOrderId || 0;
 	var ordersMap = window.DispatchOrdersMap || {};
 
-	// Helper to format currency
-	function formatMoney(val) {
-		return '$' + parseFloat(val || 0).toFixed(2);
+	function escapeHtml(str) {
+		return String(str || '')
+			.replace(/&/g, '&amp;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;')
+			.replace(/"/g, '&quot;');
 	}
 
-	// 1. Selector reactivo de pedido (0ms de latencia)
-	function selectOrder(orderId) {
-		currentOrderId = orderId;
-		window.CurrentOrderId = orderId;
+	function extractErr(xhr, fallback) {
+		if (xhr && xhr.responseJSON) {
+			return xhr.responseJSON.error_message || xhr.responseJSON.message || fallback;
+		}
+		return (xhr && xhr.responseText) || fallback;
+	}
 
-		// Highlight card
+	var statusLabels = {
+		draft: 'Pedido Nuevo',
+		confirmed: 'Reservado',
+		picking: 'En Picking',
+		picked: 'Picking Validado',
+		packed: 'Empacado / Etiquetado',
+		dispatched: 'Despachado',
+		cancelled: 'Cancelado'
+	};
+
+	function renderActionButtons(o) {
+		var oid = o.id;
+		var code = escapeHtml(o.order_code);
+		var isPickup = (o.delivery_type === 'pickup');
+		var st = o.status || 'draft';
+		var delSt = o.delivery_status || 'pending';
+		var html = '';
+
+		if (st === 'draft') {
+			html += '<button type="button" class="dp-btn-green" onclick="reserveOrder(' + oid + ')"><i class="fa-solid fa-lock"></i><span>Reservar stock</span></button>';
+		}
+		if (st === 'confirmed' || st === 'picking' || st === 'picked') {
+			html += '<button type="button" class="dp-btn-outline" data-toggle="modal" data-target="#modalFastScanVerify"><i class="fa-solid fa-barcode"></i><span>Escanear UPC</span></button>';
+			html += '<button type="button" class="dp-btn-green" onclick="openPackOrderModal(' + oid + ', \'' + code + '\')"><i class="fa-solid fa-box-open"></i><span>Empacar y Etiquetar</span></button>';
+		}
+		if (st === 'packed') {
+			html += '<button type="button" class="dp-btn-green" onclick="openConfirmExitModal(' + oid + ', \'' + code + '\')"><i class="fa-solid fa-truck-fast"></i><span>Confirmar Salida</span></button>';
+		}
+		if (st === 'dispatched' && delSt !== 'delivered' && delSt !== 'partial' && delSt !== 'rejected') {
+			if (isPickup) {
+				html += '<button type="button" class="dp-btn-green" id="btnOpenVerifyPickupModal" data-toggle="modal" data-target="#modalVerifyPickup"><i class="fa-solid fa-key"></i><span>Validar retiro PIN</span></button>';
+			} else {
+				html += '<button type="button" class="dp-btn-green" id="btnOpenDeliveryModal" data-toggle="modal" data-target="#modalRecordDelivery"><i class="fa-solid fa-truck-arrow-right"></i><span>Registrar Entrega / POD</span></button>';
+			}
+		}
+
+		html += '<button type="button" class="dp-btn-outline" onclick="openDispatchLabelModal(' + oid + ')"><i class="fa-solid fa-tag"></i><span>Etiqueta</span></button>';
+		html += '<button type="button" class="dp-btn-cyan" onclick="openScheduleTransportModal(' + oid + ', \'' + code + '\')"><i class="fa-solid fa-truck"></i><span>Transporte</span></button>';
+		html += '<button type="button" class="dp-btn-outline text-warning border-warning" onclick="openReportIncidentModal(' + oid + ', \'' + code + '\')"><i class="fa-solid fa-triangle-exclamation"></i><span>Incidencia</span></button>';
+
+		if (st === 'dispatched' && !o.conciliated_at) {
+			html += '<button type="button" class="dp-btn-outline font-weight-bold" onclick="conciliateOrder(' + oid + ')"><i class="fa-solid fa-scale-balanced"></i><span>Conciliar Cierre</span></button>';
+		}
+		$('.dp-detail-actions').html(html);
+	}
+
+	// 1. Selector reactivo de pedido
+	function selectOrder(orderId) {
+		currentOrderId = parseInt(orderId, 10) || 0;
+		window.CurrentOrderId = currentOrderId;
+
 		$('.dp-order-card').removeClass('is-active');
 		$('.dp-order-card[data-id="' + orderId + '"]').addClass('is-active');
 
@@ -27,9 +82,19 @@
 
 		var o = data.order;
 		var isPickup = (o.delivery_type === 'pickup');
-		var summary = data.summary;
+		var summary = data.summary || {};
 		var lines = data.lines || [];
 		var variances = data.variances || [];
+		var incidents = data.incidents || [];
+		var stages = o.stages || [];
+
+		// Sync hidden order ids for modals
+		$('#schedOrderId').val(o.id);
+		$('#exitOrderId').val(o.id);
+		$('#packOrderId').val(o.id);
+		$('#incidentOrderId').val(o.id);
+		$('#pickingOrderId').val(o.id);
+		$('#inputCarrierName').val(o.carrier_name || '');
 
 		// Header info
 		$('#dpDetailCode').text(o.order_code);
@@ -43,45 +108,33 @@
 
 		var stBadge = $('#dpDetailStatusBadge');
 		stBadge.removeClass('st-packed st-dispatched st-prepared');
-		if (o.status === 'dispatched') {
-			stBadge.addClass('st-dispatched').text('Despachado');
-		} else if (o.status === 'picked') {
-			stBadge.addClass('st-prepared').text('Preparado');
+		var badgeText = statusLabels[o.status] || o.status;
+		if (o.conciliated_at) {
+			stBadge.addClass('st-dispatched').text('Conciliado');
+		} else if (o.status === 'dispatched') {
+			stBadge.addClass('st-dispatched').text(o.delivery_status === 'delivered' ? 'Entregado (POD)' : 'Despachado');
+		} else if (o.status === 'picking' || o.status === 'picked') {
+			stBadge.addClass('st-prepared').text(badgeText);
 		} else {
-			stBadge.addClass('st-packed').text('Empacado');
+			stBadge.addClass('st-packed').text(badgeText);
 		}
 
-		$('#dpDetailMeta').html('Cliente: <strong class="text-dark">' + (o.customer_name || 'Cliente General') + '</strong> · Sucursal: <strong class="text-dark">' + (o.branch_name || 'Matriz') + '</strong>');
-
-		// Actions buttons
-		if (isPickup) {
-			$('#btnOpenVerifyPickupModal').removeClass('d-none');
-			$('#btnOpenDeliveryModal').addClass('d-none');
-		} else {
-			$('#btnOpenVerifyPickupModal').addClass('d-none');
-			$('#btnOpenDeliveryModal').removeClass('d-none');
+		var metaHtml = 'Cliente: <strong class="text-dark">' + escapeHtml(o.customer_name || 'Cliente General') + '</strong> · Sucursal: <strong class="text-dark">' + escapeHtml(o.branch_name || 'Matriz') + '</strong>';
+		if (o.label_code) {
+			metaHtml += ' · Etiqueta: <strong class="text-success">' + escapeHtml(o.label_code) + '</strong>';
 		}
+		$('#dpDetailMeta').html(metaHtml);
 
-		// Stepper track
+		renderActionButtons(o);
+
+		// 7-stage stepper track
 		var stepperHtml = '';
-		if (isPickup) {
-			var isDisp = (o.status === 'dispatched');
-			stepperHtml += '<div class="dp-stepper-step is-done"><div class="dp-step-circle"><i class="fa-solid fa-check"></i></div><div class="dp-step-label">1. Pedido<br>Recibido</div></div>';
-			stepperHtml += '<div class="dp-stepper-step is-done"><div class="dp-step-circle"><i class="fa-solid fa-check"></i></div><div class="dp-step-label">2. Preparación<br>Picking</div></div>';
-			stepperHtml += '<div class="dp-stepper-step is-done"><div class="dp-step-circle"><i class="fa-solid fa-check"></i></div><div class="dp-step-label">3. Validación<br>UPC</div></div>';
-			stepperHtml += '<div class="dp-stepper-step ' + (isDisp ? 'is-done' : 'is-current') + '"><div class="dp-step-circle">' + (isDisp ? '<i class="fa-solid fa-check"></i>' : '4') + '</div><div class="dp-step-label">4. Listo para<br>retiro</div></div>';
-			stepperHtml += '<div class="dp-stepper-step ' + (isDisp ? 'is-done' : '') + '"><div class="dp-step-circle">' + (isDisp ? '<i class="fa-solid fa-check"></i>' : '5') + '</div><div class="dp-step-label">5. Verificar<br>PIN o QR</div></div>';
-			stepperHtml += '<div class="dp-stepper-step ' + (isDisp ? 'is-done' : '') + '"><div class="dp-step-circle">' + (isDisp ? '<i class="fa-solid fa-check"></i>' : '6') + '</div><div class="dp-step-label">6. Entregado</div></div>';
-		} else {
-			var isDisp = (o.status === 'dispatched');
-			stepperHtml += '<div class="dp-stepper-step is-done"><div class="dp-step-circle"><i class="fa-solid fa-check"></i></div><div class="dp-step-label">1. Pedido<br>Recibido</div></div>';
-			stepperHtml += '<div class="dp-stepper-step is-done"><div class="dp-step-circle"><i class="fa-solid fa-check"></i></div><div class="dp-step-label">2. Preparación<br>Picking</div></div>';
-			stepperHtml += '<div class="dp-stepper-step is-done"><div class="dp-step-circle"><i class="fa-solid fa-check"></i></div><div class="dp-step-label">3. Control<br>Calidad</div></div>';
-			stepperHtml += '<div class="dp-stepper-step is-done"><div class="dp-step-circle"><i class="fa-solid fa-check"></i></div><div class="dp-step-label">4. Empaque<br>Bultos</div></div>';
-			stepperHtml += '<div class="dp-stepper-step is-done"><div class="dp-step-circle"><i class="fa-solid fa-check"></i></div><div class="dp-step-label">5. Despachado<br>Ruta</div></div>';
-			stepperHtml += '<div class="dp-stepper-step ' + (isDisp ? 'is-done' : 'is-current') + '"><div class="dp-step-circle">' + (isDisp ? '<i class="fa-solid fa-check"></i>' : '6') + '</div><div class="dp-step-label">6. Entregado</div></div>';
-			stepperHtml += '<div class="dp-stepper-step ' + (isDisp ? 'is-done' : '') + '"><div class="dp-step-circle">' + (isDisp ? '<i class="fa-solid fa-check"></i>' : '7') + '</div><div class="dp-step-label">7. Conciliado</div></div>';
-		}
+		stages.forEach(function (stg, idx) {
+			var cls = stg.state === 'done' ? 'is-done' : (stg.state === 'current' ? 'is-current' : '');
+			var circleContent = stg.state === 'done' ? '<i class="fa-solid fa-check"></i>' : String(idx + 1);
+			stepperHtml += '<div class="dp-stepper-step ' + cls + '"><div class="dp-step-circle">' + circleContent + '</div>';
+			stepperHtml += '<div class="dp-step-label">' + (idx + 1) + '. ' + escapeHtml(stg.label) + '<br><small>' + escapeHtml(stg.sub) + '</small></div></div>';
+		});
 		$('#dpStepperTrack').html(stepperHtml);
 
 		// Reconcile Table
@@ -94,9 +147,9 @@
 
 			rowsHtml += '<tr>';
 			rowsHtml += '<td><div class="dp-product-cell">';
-			rowsHtml += '<img src="' + (l.product_image || '/img/control_center/prod_crema_leche.jpg') + '" alt="' + l.product_name + '" class="dp-prod-img">';
-			rowsHtml += '<div><div class="dp-prod-name">' + l.product_name + '</div>';
-			rowsHtml += '<div class="dp-prod-sku">SKU: ' + l.sku + ' · UPC: ' + l.upc + '</div>';
+			rowsHtml += '<img src="' + (l.product_image || '/img/control_center/prod_crema_leche.jpg') + '" alt="' + escapeHtml(l.product_name) + '" class="dp-prod-img">';
+			rowsHtml += '<div><div class="dp-prod-name">' + escapeHtml(l.product_name) + '</div>';
+			rowsHtml += '<div class="dp-prod-sku">SKU: ' + escapeHtml(l.sku) + ' · UPC: ' + escapeHtml(l.upc) + '</div>';
 			if (l.sku_warning) {
 				rowsHtml += '<div class="dp-badge-sku-warn"><i class="fa-solid fa-triangle-exclamation"></i><span>Revisar identificación</span></div>';
 			}
@@ -111,19 +164,30 @@
 			rowsHtml += '</tr>';
 		});
 
-		// Totals row
 		rowsHtml += '<tr class="dp-totals-row">';
-		rowsHtml += '<td><div class="dp-totals-cell-left">TOTALES (Unidades)</div><div class="dp-totals-cell-sub">Cantidades reportadas. Validar unidades.</div></td>';
-		rowsHtml += '<td class="dp-val-req">' + summary.total_requested + '</td>';
-		rowsHtml += '<td class="dp-val-prep">' + summary.total_prepared + '</td>';
-		rowsHtml += '<td class="dp-val-scan">' + summary.total_scanned + '</td>';
-		rowsHtml += '<td class="dp-val-disp">' + summary.total_dispatched + '</td>';
-		rowsHtml += '<td class="dp-val-recv">' + summary.total_received + '</td>';
-		rowsHtml += '<td class="dp-col-7stage ' + (show7 ? '' : 'd-none') + '">' + summary.total_returned + '</td>';
-		rowsHtml += '<td class="dp-col-7stage ' + (show7 ? '' : 'd-none') + '">' + summary.total_final_diff + '</td>';
+		rowsHtml += '<td><div class="dp-totals-cell-left">TOTALES (Unidades)</div><div class="dp-totals-cell-sub">Cantidades reales por etapa.</div></td>';
+		rowsHtml += '<td class="dp-val-req">' + (summary.total_requested || 0) + '</td>';
+		rowsHtml += '<td class="dp-val-prep">' + (summary.total_prepared || 0) + '</td>';
+		rowsHtml += '<td class="dp-val-scan">' + (summary.total_scanned || 0) + '</td>';
+		rowsHtml += '<td class="dp-val-disp">' + (summary.total_dispatched || 0) + '</td>';
+		rowsHtml += '<td class="dp-val-recv">' + (summary.total_received || 0) + '</td>';
+		rowsHtml += '<td class="dp-col-7stage ' + (show7 ? '' : 'd-none') + '">' + (summary.total_returned || 0) + '</td>';
+		rowsHtml += '<td class="dp-col-7stage ' + (show7 ? '' : 'd-none') + '">' + (summary.total_final_diff || 0) + '</td>';
 		rowsHtml += '</tr>';
 
 		$('#dpReconcileTable tbody').html(rowsHtml);
+
+		// Pending variance default for modal
+		var firstPendingVar = variances.find(function (v) { return v.resolution_status === 'pending'; });
+		if (firstPendingVar) {
+			$('#resolveVarianceId').val(firstPendingVar.id);
+			$('#resolveVarianceProductName').text(firstPendingVar.product_name || 'Variación');
+			$('#resolveVarianceDiffQty').text('Diferencia: ' + firstPendingVar.difference_qty);
+		} else {
+			$('#resolveVarianceId').val(0);
+			$('#resolveVarianceProductName').text('Sin variaciones pendientes en este pedido');
+			$('#resolveVarianceDiffQty').text('-');
+		}
 
 		// Amber Alert Box
 		if (summary.has_unreconciled_shortage && summary.unreconciled_items && summary.unreconciled_items.length > 0) {
@@ -131,9 +195,9 @@
 			alertHtml += '<div class="dp-alert-unreconciled-title">Cantidades por conciliar</div>';
 			alertHtml += '<div class="dp-alert-unreconciled-text">';
 			summary.unreconciled_items.forEach(function (ui) {
-				alertHtml += '<strong>' + ui.product_name + ':</strong> ' + ui.requested + ' solicitadas / ' + ui.prepared + ' preparadas.<br>';
+				alertHtml += '<strong>' + escapeHtml(ui.product_name) + ':</strong> ' + ui.requested + ' solicitadas / ' + ui.prepared + ' preparadas.<br>';
 			});
-			alertHtml += '<span class="text-muted">Verifica sustituciones, faltantes o cambios autorizados antes de cerrar.</span></div></div></div>';
+			alertHtml += '<span class="text-muted">Valide diferencias o registre incidencia antes de cerrar conciliación.</span></div></div></div>';
 			alertHtml += '<button type="button" class="dp-btn-amber" data-toggle="modal" data-target="#modalResolveVariance"><i class="fa-solid fa-gavel"></i><span>Revisar diferencias</span></button>';
 
 			if ($('#dpAlertUnreconciled').length === 0) {
@@ -145,39 +209,89 @@
 			$('#dpAlertUnreconciled').addClass('d-none');
 		}
 
-		// Evidence label
-		$('#lblEvidenceReceiver').text('Representante de ' + (o.customer_name || 'Cliente'));
+		// Update dynamic panes
+		$('#pane-detalle .dp-info-notice .text-muted').html(
+			'Pedido <strong class="text-dark">' + escapeHtml(o.order_code) + '</strong> · Canal: ' + escapeHtml(o.channel || 'POS') +
+			' · Etiqueta: <strong>' + escapeHtml(o.label_code || 'Pendiente Packing') + '</strong> · Bultos: <strong>' + (o.packages_count || o.packages || 1) + '</strong>.'
+		);
+
+		var varPaneHtml = '';
+		if (variances.length === 0 && incidents.length === 0) {
+			varPaneHtml = '<div class="p-3 bg-light rounded text-center text-muted small">Sin variaciones ni incidencias logísticas registradas en este pedido.</div>';
+		} else {
+			variances.forEach(function (v) {
+				varPaneHtml += '<div class="p-2 mb-2 rounded border bg-light d-flex justify-content-between align-items-center"><div>';
+				varPaneHtml += '<strong class="text-dark">' + escapeHtml(v.product_name) + '</strong> ';
+				varPaneHtml += '<span class="badge ' + (v.stage === 'preparation' ? 'badge-warning' : 'badge-danger') + ' ml-1">' + escapeHtml(v.variance_type) + '</span> ';
+				varPaneHtml += '<span class="text-muted ml-2">Diferencia: <strong>' + v.difference_qty + '</strong></span>';
+				varPaneHtml += '<div class="small text-muted">' + escapeHtml(v.resolution_notes || 'Pendiente autorización') + '</div></div><div>';
+				if (v.resolution_status === 'pending') {
+					varPaneHtml += '<button class="btn btn-xs btn-danger font-weight-bold" onclick="openResolveVarianceModal(' + v.id + ', \'' + escapeHtml(v.product_name) + '\', \'' + v.difference_qty + '\')">Resolver</button>';
+				} else {
+					varPaneHtml += '<span class="badge badge-success">' + escapeHtml(v.resolution_status) + '</span>';
+				}
+				varPaneHtml += '</div></div>';
+			});
+			incidents.forEach(function (inc) {
+				varPaneHtml += '<div class="p-2 mb-2 rounded border bg-light d-flex justify-content-between align-items-center"><div>';
+				varPaneHtml += '<span class="badge badge-warning mr-1">' + escapeHtml(inc.incident_type) + '</span> ';
+				varPaneHtml += '<strong class="text-dark">' + escapeHtml(inc.description) + '</strong>';
+				varPaneHtml += '<div class="small text-muted">' + escapeHtml(inc.created_at) + (inc.resolution_notes ? (' · Resolución: ' + escapeHtml(inc.resolution_notes)) : '') + '</div></div><div>';
+				if ((inc.resolution_status || 'open') === 'open') {
+					varPaneHtml += '<button class="btn btn-xs btn-warning font-weight-bold" onclick="openResolveIncidentModal(' + inc.id + ', \'' + escapeHtml(inc.description) + '\')">Cerrar Incidencia</button>';
+				} else {
+					varPaneHtml += '<span class="badge badge-success">Resuelta</span>';
+				}
+				varPaneHtml += '</div></div>';
+			});
+		}
+		$('#pane-variaciones').html(varPaneHtml);
+
+		var coldOk = parseInt(o.cold_chain_temp_ok || 0, 10) === 1;
+		$('#pane-evidencia').html(
+			'<div class="card p-3 border-0 bg-light"><div class="d-flex justify-content-between align-items-center mb-2">' +
+			'<strong class="text-dark"><i class="fa-solid fa-file-signature text-success mr-1"></i>Prueba de Entrega (POD) y Cadena de Frío</strong>' +
+			'<span class="badge ' + (coldOk ? 'badge-success' : 'badge-secondary') + '">' + (coldOk ? 'Frío Verificado (≤ 4°C)' : 'Por verificar en entrega') + '</span></div>' +
+			'<p class="small text-muted mb-1">Transporte / Guía: <strong>' + escapeHtml(o.carrier_name || 'Sin asignar') + '</strong> · ' + escapeHtml(o.carrier_tracking_number || 'Sin guía') + '</p>' +
+			'<p class="small text-muted mb-1">Firma / Receptor: <strong>' + escapeHtml(o.delivery_signature_name || 'Sin captura POD aún') + '</strong></p>' +
+			'<p class="small text-muted mb-0">Folio / Evidencia POD: <strong>' + escapeHtml(o.delivery_evidence_url || 'Pendiente de evidencia') + '</strong></p></div>'
+		);
+
+		$('#pane-historial').html(
+			'<ul class="list-unstyled small text-muted mb-0">' +
+			'<li class="mb-1"><i class="fa-solid fa-file-circle-plus mr-1 text-primary"></i>1. Pedido registrado: <strong>' + escapeHtml(o.created_at) + '</strong></li>' +
+			'<li class="mb-1"><i class="fa-solid fa-lock mr-1 text-info"></i>2. Reserva confirmada: <strong>' + escapeHtml(o.confirmed_at || 'Pendiente') + '</strong></li>' +
+			'<li class="mb-1"><i class="fa-solid fa-barcode mr-1 text-success"></i>3. Picking / Escaneo: <strong>' + escapeHtml(o.picked_at || 'Pendiente') + '</strong></li>' +
+			'<li class="mb-1"><i class="fa-solid fa-box-open mr-1 text-success"></i>4. Packing & Etiqueta: <strong>' + escapeHtml(o.packed_at || 'Pendiente') + (o.label_code ? ' (' + escapeHtml(o.label_code) + ')' : '') + '</strong></li>' +
+			'<li class="mb-1"><i class="fa-solid fa-truck mr-1 text-primary"></i>5. Salida muelle: <strong>' + escapeHtml(o.dispatched_at || 'Pendiente') + '</strong></li>' +
+			'<li class="mb-1"><i class="fa-solid fa-signature mr-1 text-success"></i>6. Entrega POD: <strong>' + escapeHtml(o.delivery_time || o.pickup_verified_at || 'Pendiente') + '</strong></li>' +
+			'<li><i class="fa-solid fa-scale-balanced mr-1 text-dark"></i>7. Conciliación final: <strong>' + escapeHtml(o.conciliated_at || 'Pendiente de cierre') + '</strong></li>' +
+			'</ul>'
+		);
 	}
 
-	// Click en tarjeta de pedido
+	window.SelectOrder = selectOrder;
+
 	$(document).on('click', '.dp-order-card', function (e) {
 		e.preventDefault();
-		var oid = $(this).data('id');
-		selectOrder(oid);
+		selectOrder($(this).data('id'));
 	});
 
-	// Toggle 7 etapas
 	$('#toggle7Stages').on('change', function () {
-		var checked = $(this).is(':checked');
-		if (checked) {
+		if ($(this).is(':checked')) {
 			$('.dp-col-7stage').removeClass('d-none');
 		} else {
 			$('.dp-col-7stage').addClass('d-none');
 		}
 	});
 
-	// Filtros por píldoras
 	$('.dp-pill-btn').on('click', function () {
 		$('.dp-pill-btn').removeClass('is-active');
 		$(this).addClass('is-active');
-		var filter = $(this).data('filter');
 		applyFilters();
 	});
 
-	// Búsqueda en vivo
-	$('#dpOrderSearch').on('input', function () {
-		applyFilters();
-	});
+	$('#dpOrderSearch').on('input', applyFilters);
 
 	function applyFilters() {
 		var activeFilter = $('.dp-pill-btn.is-active').data('filter') || 'all';
@@ -194,32 +308,25 @@
 			if (activeFilter === 'delivery' && type !== 'delivery') matchFilter = false;
 			if (activeFilter === 'variances' && !hasDiff) matchFilter = false;
 
-			var matchQuery = true;
-			if (query && text.indexOf(query) === -1) matchQuery = false;
-
-			if (matchFilter && matchQuery) {
-				card.removeClass('d-none');
-			} else {
-				card.addClass('d-none');
-			}
+			var matchQuery = !query || text.indexOf(query) !== -1;
+			card.toggleClass('d-none', !(matchFilter && matchQuery));
 		});
 	}
 
-	// Pestañas inferiores (Detalle, Variaciones, Evidencia, Historial)
 	$('.dp-tab-item').on('click', function () {
 		$('.dp-tab-item').removeClass('is-active');
 		$(this).addClass('is-active');
 		var target = $(this).data('tab');
-
 		$('.dp-tab-pane').addClass('d-none');
 		$('#pane-' + target).removeClass('d-none');
 	});
 
-	// 2. Validar Entrega Cliente Recoge (PIN de 6 dígitos protegido)
+	// 2. Validar Entrega Cliente Recoge (PIN + POD)
 	$('#btnSubmitVerifyPickup').on('click', function () {
 		var pin = $('#inputPickupPinCode').val().trim();
+		var rec = $('#inputPickupReceiverName').val().trim();
 		if (!pin || pin.length < 4) {
-			toastr.error('Por favor ingrese el PIN de retiro de 6 dígitos.');
+			toastr.error('Por favor ingrese el PIN de retiro de 6 dígitos o token QR.');
 			return;
 		}
 
@@ -230,7 +337,8 @@
 			contentType: 'application/json',
 			data: JSON.stringify({
 				order_id: currentOrderId,
-				pin_code: pin
+				pin_code: pin,
+				signature_name: rec || null
 			}),
 			success: function (res) {
 				toastr.success(res.message || 'Retiro verificado exitosamente.');
@@ -238,20 +346,30 @@
 				setTimeout(function () { window.location.reload(); }, 600);
 			},
 			error: function (xhr) {
-				var err = xhr.responseJSON ? xhr.responseJSON.error_message : xhr.responseText;
-				toastr.error(err || 'Error al validar el PIN de retiro.');
+				toastr.error(extractErr(xhr, 'Error al validar el PIN de retiro.'));
 			}
 		});
 	});
 
-	// 3. Registrar Entrega de Ruta a Domicilio
+	// 3. Registrar Entrega de Ruta a Domicilio (POD obligatoria + parcial/rechazo)
 	$('#btnSubmitRecordDelivery').on('click', function () {
+		var delivStatus = $('#selDeliveryStatus').val();
 		var carrier = $('#inputCarrierName').val().trim();
 		var sig = $('#inputDeliverySignature').val().trim();
-		var inc = $('#inputRouteIncidents').val().trim();
-		var tempOk = $('#chkDeliveryTempOk').is(':checked') ? 1 : 0;
+		var evi = $('#inputDeliveryEvidenceUrl').val().trim();
+		var inc = $('#txtRouteIncidents').val().trim();
+		var tempOk = $('#chkColdChainOk').is(':checked') ? 1 : 0;
 
-		toastr.info('Guardando conciliación de entrega de ruta...');
+		if ((delivStatus === 'delivered' || delivStatus === 'partial') && (sig.length < 3 || !evi)) {
+			toastr.error('Debe ingresar receptor/firma (mín. 3 letras) y folio/evidencia POD.');
+			return;
+		}
+		if (delivStatus === 'rejected' && !inc) {
+			toastr.error('Para entregas rechazadas documente el motivo en Incidencias.');
+			return;
+		}
+
+		toastr.info('Guardando conciliación POD de entrega...');
 		$.ajax({
 			url: U('/api/retail/dispatch/record-delivery'),
 			type: 'POST',
@@ -260,25 +378,26 @@
 				order_id: currentOrderId,
 				carrier_name: carrier,
 				delivery_signature_name: sig,
+				delivery_evidence_url: evi,
 				route_incidents: inc,
 				cold_chain_temp_ok: tempOk,
-				delivery_status: 'delivered'
+				delivery_status: delivStatus
 			}),
 			success: function (res) {
-				toastr.success(res.message || 'Despacho a domicilio registrado.');
+				toastr.success(res.message || 'Entrega POD registrada.');
 				$('#modalRecordDelivery').modal('hide');
 				setTimeout(function () { window.location.reload(); }, 600);
 			},
 			error: function (xhr) {
-				var err = xhr.responseJSON ? xhr.responseJSON.error_message : xhr.responseText;
-				toastr.error(err || 'Error al registrar la entrega.');
+				toastr.error(extractErr(xhr, 'Error al registrar la entrega.'));
 			}
 		});
 	});
 
-	// 4. Escaneo Rápido de UPC
+	// 4. Escaneo Rápido de UPC / PDA
 	function performFastScan() {
 		var barcode = $('#inputFastScanBarcode').val().trim();
+		var qty = parseFloat($('#inputFastScanQty').val()) || 1.0;
 		if (!barcode) return;
 
 		var banner = $('#fastScanResultBanner');
@@ -286,7 +405,7 @@
 		var msg = $('#fastScanResultMessage');
 		var details = $('#fastScanResultDetails');
 
-		banner.removeClass('d-none alert-success alert-warning alert-danger');
+		banner.removeClass('d-none alert-success alert-warning alert-danger text-success text-warning text-danger');
 
 		$.ajax({
 			url: U('/api/retail/dispatch/scan-upc'),
@@ -295,7 +414,7 @@
 			data: JSON.stringify({
 				order_id: currentOrderId,
 				barcode: barcode,
-				quantity: 1.0
+				quantity: qty
 			}),
 			success: function (res) {
 				banner.removeClass('d-none');
@@ -303,28 +422,29 @@
 					banner.addClass('alert-success text-success');
 					icon.html('<i class="fa-solid fa-circle-check"></i>');
 					msg.text(res.message);
-					details.text('Coincidencia verificada contra línea de pedido.');
-					toastr.success('Coincidencia validada.');
-				} else if (res.status === 'warning' || res.status === 'overage') {
+					details.text('Validado contra cantidad reservada (' + res.scanned_qty + '/' + res.expected_qty + ').');
+					toastr.success(res.message);
+				} else if (res.blocked || res.status === 'overage' || res.status === 'mismatch') {
+					banner.addClass('alert-danger text-danger');
+					icon.html('<i class="fa-solid fa-ban"></i>');
+					msg.text(res.message);
+					details.text(res.blocked ? 'Operación bloqueada: no se permite exceder la reserva.' : 'El código escaneado no corresponde al pedido.');
+					toastr.error(res.message);
+				} else {
 					banner.addClass('alert-warning text-warning');
 					icon.html('<i class="fa-solid fa-triangle-exclamation"></i>');
 					msg.text(res.message);
-					details.text('Diferencia detectada: ' + res.difference + ' un. (Impacto: $' + res.financial_impact + ')');
+					details.text('Progreso actual: ' + res.scanned_qty + '/' + res.expected_qty + ' u.');
 					toastr.warning(res.message);
-				} else {
-					banner.addClass('alert-danger text-danger');
-					icon.html('<i class="fa-solid fa-circle-xmark"></i>');
-					msg.text(res.message);
-					details.text('El producto no pertenece al pedido.');
-					toastr.error(res.message);
 				}
 				$('#inputFastScanBarcode').val('').focus();
 			},
 			error: function (xhr) {
 				banner.removeClass('d-none').addClass('alert-danger text-danger');
 				icon.html('<i class="fa-solid fa-circle-xmark"></i>');
-				var err = xhr.responseJSON ? xhr.responseJSON.error_message : 'Error en lectura de escáner';
+				var err = extractErr(xhr, 'Error en lectura de escáner');
 				msg.text(err);
+				details.text('');
 				toastr.error(err);
 			}
 		});
@@ -338,18 +458,22 @@
 		}
 	});
 
-	// 5. Resolver Variación Tipificada
+	// 5. Resolver Variación Logística
 	$('#btnSubmitResolveVariance').on('click', function () {
-		var vid = $('#resolveVarianceId').val();
+		var vid = parseInt($('#resolveVarianceId').val(), 10) || 0;
 		var status = $('#selResolutionStatus').val();
 		var notes = $('#txtResolutionNotes').val().trim();
 
+		if (!vid) {
+			toastr.warning('No hay una variación pendiente seleccionada para este pedido.');
+			return;
+		}
 		if (!notes) {
-			toastr.error('Por favor ingrese la justificación de la resolución.');
+			toastr.error('Por favor ingrese la justificación logística.');
 			return;
 		}
 
-		toastr.info('Registrando autorización de variación...');
+		toastr.info('Registrando dictamen logístico...');
 		$.ajax({
 			url: U('/api/retail/dispatch/resolve-variance'),
 			type: 'POST',
@@ -357,18 +481,21 @@
 			data: JSON.stringify({
 				variance_id: vid,
 				resolution_status: status,
-				resolution_notes: notes
+				notes: notes
 			}),
-			success: function (res) {
+			success: function () {
 				toastr.success('Variación resuelta y autorizada.');
 				$('#modalResolveVariance').modal('hide');
 				setTimeout(function () { window.location.reload(); }, 600);
 			},
 			error: function (xhr) {
-				var err = xhr.responseJSON ? xhr.responseJSON.error_message : xhr.responseText;
-				toastr.error(err || 'Error al resolver la variación.');
+				toastr.error(extractErr(xhr, 'Error al resolver la variación.'));
 			}
 		});
 	});
+
+	if (currentOrderId) {
+		selectOrder(currentOrderId);
+	}
 
 })(jQuery);

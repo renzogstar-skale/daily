@@ -29,7 +29,7 @@ class DairyNavigation
 				['id' => 'sales-history', 'label' => '2. Historial de Ventas', 'icon' => 'fa-list-ul', 'route' => '/sales?tab=detalle', 'views' => [], 'desc' => 'Transacciones, devoluciones y detalle por SKU del período'],
 				['id' => 'pos', 'label' => '3. Punto de Venta (POS)', 'icon' => 'fa-cash-register', 'route' => '/pos', 'views' => ['pos'], 'desc' => 'Terminal POS con rotación y salida FEFO'],
 				['id' => 'pos-returns', 'label' => '4. Devoluciones del POS', 'icon' => 'fa-arrow-rotate-left', 'route' => '/pos/returns', 'views' => ['pos_returns'], 'desc' => 'Búsqueda de ticket, validación, inspección física y reembolsos autorizados'],
-				['id' => 'customers', 'label' => '5. Gestión de Clientes', 'icon' => 'fa-users', 'route' => '/customers', 'views' => ['customers'], 'desc' => 'Gestión de clientes, crédito y pedidos corporativos'],
+				['id' => 'customers', 'label' => '5. Gestión de Clientes', 'icon' => 'fa-users', 'route' => '/customers', 'views' => ['customers', 'customer_profile'], 'desc' => 'CRM de clientes: ficha única, historial, segmentos, retención, solicitudes y fidelización'],
 			]],
 
 			// 2. INVENTARIO Y ALMACENES

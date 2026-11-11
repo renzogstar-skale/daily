@@ -18,6 +18,24 @@ class MrpApiController extends BaseApiController
 		}
 	}
 
+	private function AssertInvoiceBranch(Request $request, int $invoiceId): void
+	{
+		$oid = \Grocy\Services\DatabaseService::GetInstance()->GetDbConnectionRaw()->query('SELECT order_id FROM supplier_invoices WHERE id = ' . $invoiceId)->fetchColumn();
+		if ($oid !== false && $oid !== null)
+		{
+			$this->AssertOrderBranch($request, intval($oid));
+		}
+	}
+
+	private function AssertReceiptBranch(Request $request, int $receiptId): void
+	{
+		$b = \Grocy\Services\DatabaseService::GetInstance()->GetDbConnectionRaw()->query('SELECT branch_id FROM procurement_receipts WHERE id = ' . $receiptId)->fetchColumn();
+		if ($b !== false && $b !== null && !\Grocy\Helpers\DairyAccess::CanSeeBranch(intval($b)))
+		{
+			throw new \Grocy\Controllers\Users\PermissionMissingException($request, 'BRANCH #' . intval($b));
+		}
+	}
+
 	public function GetMrpCalculations(Request $request, Response $response, array $args)
 	{
 		$params = $request->getQueryParams();
@@ -178,7 +196,9 @@ class MrpApiController extends BaseApiController
 	public function GetInvoiceItems(Request $request, Response $response, array $args)
 	{
 		User::CheckPermission($request, User::PERMISSION_PROCUREMENT_MANAGE);
-		return $this->ApiResponse($response, \Grocy\Services\SupplierInvoiceService::GetInstance()->GetInvoiceItems(intval($args['invoiceId'])));
+		$invoiceId = intval($args['invoiceId']);
+		$this->AssertInvoiceBranch($request, $invoiceId);
+		return $this->ApiResponse($response, \Grocy\Services\SupplierInvoiceService::GetInstance()->GetInvoiceItems($invoiceId));
 	}
 
 	public function DecideInvoice(Request $request, Response $response, array $args)
@@ -186,8 +206,10 @@ class MrpApiController extends BaseApiController
 		User::CheckPermission($request, User::PERMISSION_PROCUREMENT_MANAGE);
 		try
 		{
+			$invoiceId = intval($args['invoiceId']);
+			$this->AssertInvoiceBranch($request, $invoiceId);
 			$body = $this->GetParsedAndFilteredRequestBody($request);
-			\Grocy\Services\SupplierInvoiceService::GetInstance()->DecideInvoice(intval($args['invoiceId']), !empty($body['approve']), strval($body['reason'] ?? ''), GROCY_USER_ID);
+			\Grocy\Services\SupplierInvoiceService::GetInstance()->DecideInvoice($invoiceId, !empty($body['approve']), strval($body['reason'] ?? ''), GROCY_USER_ID);
 			return $this->ApiResponse($response, ['success' => true]);
 		}
 		catch (\Exception $ex)
@@ -224,19 +246,9 @@ class MrpApiController extends BaseApiController
 		try
 		{
 			$body = $this->GetParsedAndFilteredRequestBody($request);
-			$branchId = !empty($body['branch_id']) ? intval($body['branch_id']) : null;
-			$db = \Grocy\Services\DatabaseService::GetInstance()->GetDbConnectionRaw();
-
-			$sql = "UPDATE procurement_orders SET status = 'approved', approved_by_user_id = :uid, approved_at = datetime('now', 'localtime') WHERE status = 'draft'";
-			$params = [':uid' => GROCY_USER_ID];
-			if ($branchId)
-			{
-				$sql .= " AND branch_id = :bid";
-				$params[':bid'] = $branchId;
-			}
-			$stmt = $db->prepare($sql);
-			$stmt->execute($params);
-			$count = $stmt->rowCount();
+			$branchId = $this->DairyRead($request, [User::PERMISSION_PROCUREMENT_MANAGE], !empty($body['branch_id']) ? intval($body['branch_id']) : null);
+			$allowed = \Grocy\Helpers\DairyAccess::AllowedBranches();
+			$count = MrpService::GetInstance()->BulkApproveOrders($branchId, GROCY_USER_ID, $allowed);
 
 			return $this->ApiResponse($response, [
 				'success' => true,
@@ -250,6 +262,158 @@ class MrpApiController extends BaseApiController
 		}
 	}
 
+	public function UpdateDraftOrder(Request $request, Response $response, array $args)
+	{
+		User::CheckPermission($request, User::PERMISSION_PROCUREMENT_MANAGE);
+
+		try
+		{
+			$orderId = intval($args['orderId']);
+			$this->AssertOrderBranch($request, $orderId);
+			$body = $this->GetParsedAndFilteredRequestBody($request);
+			$res = MrpService::GetInstance()->UpdateDraftOrderItems($orderId, $body, GROCY_USER_ID);
+			return $this->ApiResponse($response, ['success' => true, 'order' => $res, 'message' => 'Borrador actualizado correctamente']);
+		}
+		catch (\Throwable $ex)
+		{
+			return $this->GenericErrorResponse($response, $ex->getMessage());
+		}
+	}
+
+	public function ConfirmOrder(Request $request, Response $response, array $args)
+	{
+		User::CheckPermission($request, User::PERMISSION_PROCUREMENT_MANAGE);
+
+		try
+		{
+			$orderId = intval($args['orderId']);
+			$this->AssertOrderBranch($request, $orderId);
+			$body = $this->GetParsedAndFilteredRequestBody($request);
+			$res = MrpService::GetInstance()->ConfirmProcurementOrder($orderId, $body, GROCY_USER_ID);
+			return $this->ApiResponse($response, ['success' => true, 'confirmation' => $res, 'message' => 'Confirmación de proveedor registrada']);
+		}
+		catch (\Throwable $ex)
+		{
+			return $this->GenericErrorResponse($response, $ex->getMessage());
+		}
+	}
+
+	public function ReceiveOrderAdmin(Request $request, Response $response, array $args)
+	{
+		User::CheckPermission($request, User::PERMISSION_PROCUREMENT_RECEIVE);
+
+		try
+		{
+			$orderId = intval($args['orderId']);
+			$this->AssertOrderBranch($request, $orderId);
+			$body = $this->GetParsedAndFilteredRequestBody($request);
+			$res = MrpService::GetInstance()->RecordAdministrativeReception($orderId, $body, GROCY_USER_ID);
+			return $this->ApiResponse($response, $res);
+		}
+		catch (\Throwable $ex)
+		{
+			return $this->GenericErrorResponse($response, $ex->getMessage());
+		}
+	}
+
+	public function ConfirmPhysicalReceipt(Request $request, Response $response, array $args)
+	{
+		User::CheckPermission($request, User::PERMISSION_PROCUREMENT_RECEIVE);
+
+		try
+		{
+			$receiptId = intval($args['receiptId']);
+			$this->AssertReceiptBranch($request, $receiptId);
+			$body = $this->GetParsedAndFilteredRequestBody($request);
+			$locId = !empty($body['location_id']) ? intval($body['location_id']) : null;
+			$res = MrpService::GetInstance()->ConfirmPhysicalReception($receiptId, GROCY_USER_ID, $locId);
+			return $this->ApiResponse($response, $res);
+		}
+		catch (\Throwable $ex)
+		{
+			return $this->GenericErrorResponse($response, $ex->getMessage());
+		}
+	}
+
+	public function SimulateDemand(Request $request, Response $response, array $args)
+	{
+		$params = $request->getParsedBody() ?: $request->getQueryParams();
+		$branchId = $this->DairyRead($request, [User::PERMISSION_PROCUREMENT_MANAGE, User::PERMISSION_PROCUREMENT_RECEIVE, User::PERMISSION_KPIS_VIEW], !empty($params['branch_id']) ? intval($params['branch_id']) : self::QueryBranch($request)) ?? 1;
+		try
+		{
+			$res = MrpService::GetInstance()->SimulateDemand($branchId, is_array($params) ? $params : []);
+			return $this->ApiResponse($response, $res);
+		}
+		catch (\Throwable $ex)
+		{
+			return $this->GenericErrorResponse($response, $ex->getMessage());
+		}
+	}
+
+	public function GetBranchForecast(Request $request, Response $response, array $args)
+	{
+		$this->DairyRead($request, [User::PERMISSION_PROCUREMENT_MANAGE, User::PERMISSION_PROCUREMENT_RECEIVE, User::PERMISSION_KPIS_VIEW], null, false);
+		$params = $request->getQueryParams();
+		$horizonDays = isset($params['horizon_days']) ? intval($params['horizon_days']) : 14;
+		$rows = MrpService::GetInstance()->GetBranchDemandForecast($horizonDays);
+		$allowed = \Grocy\Helpers\DairyAccess::AllowedBranches();
+		if ($allowed !== null)
+		{
+			$rows = array_values(array_filter($rows, fn($r) => in_array(intval($r['branch_id']), $allowed, true)));
+		}
+		return $this->ApiResponse($response, $rows);
+	}
+
+	public function GetTransferRecommendations(Request $request, Response $response, array $args)
+	{
+		$params = $request->getQueryParams();
+		$branchId = $this->DairyRead($request, [User::PERMISSION_PROCUREMENT_MANAGE, User::PERMISSION_PROCUREMENT_RECEIVE, User::PERMISSION_KPIS_VIEW], self::QueryBranch($request));
+		$horizonDays = isset($params['horizon_days']) ? intval($params['horizon_days']) : 14;
+		return $this->ApiResponse($response, MrpService::GetInstance()->GetTransferRecommendations($branchId, $horizonDays));
+	}
+
+	public function ExecuteTransferRecommendation(Request $request, Response $response, array $args)
+	{
+		User::CheckPermission($request, User::PERMISSION_PROCUREMENT_MANAGE);
+		try
+		{
+			$body = $this->GetParsedAndFilteredRequestBody($request);
+			$fromBranch = intval($body['from_branch_id'] ?? 0);
+			$toBranch = intval($body['to_branch_id'] ?? 0);
+			if (!\Grocy\Helpers\DairyAccess::CanSeeBranch($fromBranch) || !\Grocy\Helpers\DairyAccess::CanSeeBranch($toBranch))
+			{
+				throw new \Grocy\Controllers\Users\PermissionMissingException($request, 'BRANCH TRANSFER');
+			}
+			$res = MrpService::GetInstance()->ExecuteRecommendedTransfer(
+				$fromBranch,
+				$toBranch,
+				intval($body['product_id'] ?? 0),
+				floatval($body['qty'] ?? 0),
+				GROCY_USER_ID
+			);
+			return $this->ApiResponse($response, $res);
+		}
+		catch (\Throwable $ex)
+		{
+			return $this->GenericErrorResponse($response, $ex->getMessage());
+		}
+	}
+
+	public function GetPendingDeliveries(Request $request, Response $response, array $args)
+	{
+		$branchId = $this->DairyRead($request, [User::PERMISSION_PROCUREMENT_MANAGE, User::PERMISSION_PROCUREMENT_RECEIVE, User::PERMISSION_KPIS_VIEW], self::QueryBranch($request));
+		return $this->ApiResponse($response, MrpService::GetInstance()->GetPendingDeliveries($branchId));
+	}
+
+	public function GetSupplyHistory(Request $request, Response $response, array $args)
+	{
+		$params = $request->getQueryParams();
+		$branchId = $this->DairyRead($request, [User::PERMISSION_PROCUREMENT_MANAGE, User::PERMISSION_PROCUREMENT_RECEIVE, User::PERMISSION_KPIS_VIEW], self::QueryBranch($request));
+		$supplierId = !empty($params['supplier_id']) ? intval($params['supplier_id']) : null;
+		$limit = !empty($params['limit']) ? intval($params['limit']) : 60;
+		return $this->ApiResponse($response, MrpService::GetInstance()->GetSupplyHistory($branchId, $supplierId, $limit));
+	}
+
 	public function RequestQuotation(Request $request, Response $response, array $args)
 	{
 		User::CheckPermission($request, User::PERMISSION_PROCUREMENT_MANAGE);
@@ -257,59 +421,8 @@ class MrpApiController extends BaseApiController
 		try
 		{
 			$body = $this->GetParsedAndFilteredRequestBody($request);
-			$supplierId = intval($body['supplier_id'] ?? 0);
-			$branchId = intval($body['branch_id'] ?? 1);
-			$title = trim($body['title'] ?? 'Solicitud de Cotización Formal');
-			$deadline = $body['deadline_date'] ?? date('Y-m-d', strtotime('+3 days'));
-			$notes = trim($body['notes'] ?? '');
-			$items = $body['items'] ?? [];
-
-			if ($supplierId <= 0)
-			{
-				throw new \Exception('Debe seleccionar un proveedor válido.');
-			}
-
-			$db = \Grocy\Services\DatabaseService::GetInstance()->GetDbConnectionRaw();
-			$db->exec("
-				CREATE TABLE IF NOT EXISTS procurement_rfqs (
-					id INTEGER PRIMARY KEY AUTOINCREMENT,
-					rfq_code TEXT NOT NULL UNIQUE,
-					supplier_id INTEGER NOT NULL,
-					branch_id INTEGER NOT NULL,
-					title TEXT NOT NULL,
-					items_json TEXT NOT NULL,
-					status TEXT NOT NULL DEFAULT 'Enviada',
-					notes TEXT,
-					deadline_date DATE,
-					created_by_user_id INTEGER,
-					created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-				)
-			");
-
-			$rfqCode = 'RFQ-' . date('Ymd') . '-' . strtoupper(bin2hex(random_bytes(2)));
-
-			$stmt = $db->prepare("
-				INSERT INTO procurement_rfqs (rfq_code, supplier_id, branch_id, title, items_json, status, notes, deadline_date, created_by_user_id, created_at)
-				VALUES (:code, :sid, :bid, :title, :items, 'Enviada', :notes, :deadline, :uid, datetime('now', 'localtime'))
-			");
-			$stmt->execute([
-				':code' => $rfqCode,
-				':sid' => $supplierId,
-				':bid' => $branchId,
-				':title' => $title,
-				':items' => json_encode($items),
-				':notes' => $notes,
-				':deadline' => $deadline,
-				':uid' => GROCY_USER_ID
-			]);
-			$rfqId = $db->lastInsertId();
-
-			return $this->ApiResponse($response, [
-				'success' => true,
-				'rfq_id' => $rfqId,
-				'rfq_code' => $rfqCode,
-				'message' => "Solicitud de cotización {$rfqCode} generada y registrada para el proveedor."
-			]);
+			$body['branch_id'] = $this->DairyRead($request, [User::PERMISSION_PROCUREMENT_MANAGE], !empty($body['branch_id']) ? intval($body['branch_id']) : null) ?? 1;
+			return $this->ApiResponse($response, MrpService::GetInstance()->RequestQuotation($body, GROCY_USER_ID));
 		}
 		catch (\Throwable $ex)
 		{
@@ -325,28 +438,8 @@ class MrpApiController extends BaseApiController
 		{
 			$incidentId = intval($args['incidentId'] ?? 0);
 			$body = $this->GetParsedAndFilteredRequestBody($request);
-			$notes = trim($body['resolution_notes'] ?? $body['notes'] ?? 'Incidencia resuelta y conciliada con el proveedor');
-			$costImpact = floatval($body['cost_impact'] ?? 0);
-			$status = $body['status'] ?? 'resolved';
-
-			$db = \Grocy\Services\DatabaseService::GetInstance()->GetDbConnectionRaw();
-			$stmt = $db->prepare("
-				UPDATE supplier_incidents 
-				SET status = :status, resolution_notes = :notes, cost_impact = :cost
-				WHERE id = :id
-			");
-			$stmt->execute([
-				':status' => $status,
-				':notes' => $notes,
-				':cost' => $costImpact,
-				':id' => $incidentId
-			]);
-
-			return $this->ApiResponse($response, [
-				'success' => true,
-				'incident_id' => $incidentId,
-				'message' => "Incidencia #{$incidentId} resuelta formalmente con el proveedor."
-			]);
+			$allowed = \Grocy\Helpers\DairyAccess::AllowedBranches();
+			return $this->ApiResponse($response, MrpService::GetInstance()->ResolveIncident($incidentId, $body, GROCY_USER_ID, $allowed));
 		}
 		catch (\Throwable $ex)
 		{

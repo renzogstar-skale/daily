@@ -45,6 +45,19 @@ class SalesService extends BaseService
 
 		// Bloqueo de escritura desde el inicio: ventas simultáneas esperan su turno y validan stock ya actualizado
 		$dbRaw = DatabaseService::GetInstance()->BeginWriteTransaction();
+		// Idempotencia del POS: la referencia del cliente (UUID de la venta) es única; un reintento devuelve la venta ya
+		// registrada sin volver a cobrar ni descontar stock (ver PosService::Checkout)
+		$clientRef = isset($data['client_ref']) && $data['client_ref'] !== '' ? (string) $data['client_ref'] : null;
+		if ($clientRef !== null)
+		{
+			$prior = $this->DB->sales()->where('client_ref', $clientRef)->fetch();
+			if ($prior)
+			{
+				$dbRaw->rollBack();
+				$prior->replayed = true;
+				return $prior;
+			}
+		}
 
 		try
 		{
@@ -271,7 +284,7 @@ class SalesService extends BaseService
 				'branch_id' => $branchId,
 				'customer_id' => $customerId,
 				'user_id' => $userId,
-				'subtotal' => round($totalSubtotal + $totalDiscount, 2),
+				'subtotal' => round($totalSubtotal + $totalDiscount - ($ext ? 0 : $ticketDiscount), 2), // precio de lista: el descuento del ticket ya está en totalDiscount
 				'tax_amount' => round($totalTax, 2),
 				'discount_amount' => round($totalDiscount, 2),
 				'total_amount' => round($totalAmount, 2),
@@ -280,8 +293,8 @@ class SalesService extends BaseService
 				'payment_method' => $paymentMethod,
 				'status' => 'completed',
 				'notes' => $notes,
-				'created_timestamp' => $ext ? strval($ext['timestamp']) : date('Y-m-d H:i:s')
-			]);
+				'created_timestamp' => $ext ? strval($ext['timestamp']) : (!empty($data['sold_at']) ? strval($data['sold_at']) : date('Y-m-d H:i:s'))
+			] + ($clientRef !== null ? ['client_ref' => $clientRef] : []) + (!empty($data['shift_id']) ? ['shift_id' => intval($data['shift_id'])] : []));
 			$saleRow = $saleRow->save();
 
 			// Insert Sale Items
@@ -303,6 +316,11 @@ class SalesService extends BaseService
 			}
 
 			$devices->MarkSold($items, intval($saleRow->id), $saleNumber, $userId);
+			// Pagos, autorizaciones y recibo del POS en la misma transacción que la venta y el stock
+			if (isset($data['_before_commit']) && is_callable($data['_before_commit']))
+			{
+				($data['_before_commit'])($saleRow, $dbRaw);
+			}
 			$dbRaw->commit();
 
 			// DAILY Ciclo 1: Publicar evento canónico de venta confirmada en el Bus de Dominio
@@ -325,7 +343,9 @@ class SalesService extends BaseService
 							'payment_method' => $paymentMethod
 						],
 						$branchId,
-						$userId
+						$userId,
+						// Evento único por venta: un reintento o resincronización no lo duplica
+						$data['event_uuid'] ?? ('sale-' . $saleRow->id)
 					);
 				}
 				catch (\Throwable $t)
@@ -582,25 +602,7 @@ class SalesService extends BaseService
 			)
 		");
 
-		// Inicializar turno abierto por defecto para cada sucursal que aún no tenga historial de turnos
-		$branches = $dbRaw->query("SELECT id FROM branches")->fetchAll(\PDO::FETCH_COLUMN);
-		$stmtCheck = $dbRaw->prepare("SELECT COUNT(*) FROM pos_cash_shifts WHERE branch_id = :bid");
-		$stmtInsert = $dbRaw->prepare("
-			INSERT INTO pos_cash_shifts (branch_id, register_name, shift_name, user_id, status, opening_amount, opened_at, notes)
-			VALUES (:bid, 'Caja 1', 'Mañana', 1, 'open', 200.00, :opened_at, 'Apertura automática de turno')
-		");
-		$defaultOpenTime = date('Y-m-d') . ' 08:00:00';
-		foreach ($branches as $bid)
-		{
-			$stmtCheck->execute([':bid' => intval($bid)]);
-			if (intval($stmtCheck->fetchColumn()) === 0)
-			{
-				$stmtInsert->execute([
-					':bid' => intval($bid),
-					':opened_at' => $defaultOpenTime
-				]);
-			}
-		}
+		// Los turnos los abre un cajero con su fondo contado (PosService::OpenShift); nunca se abren automáticamente
 	}
 
 	public function GetCurrentShift(int $branchId): object
@@ -619,13 +621,10 @@ class SalesService extends BaseService
 		$shift = $stmt->fetch(\PDO::FETCH_OBJ);
 		if (!$shift)
 		{
-			$openedAt = date('Y-m-d') . ' 08:00:00';
-			$stmtIns = $dbRaw->prepare("
-				INSERT INTO pos_cash_shifts (branch_id, register_name, shift_name, user_id, status, opening_amount, opened_at)
-				VALUES (:bid, 'Caja 1', 'Mañana', 1, 'open', 200.00, :opened_at)
-			");
-			$stmtIns->execute([':bid' => $branchId, ':opened_at' => $openedAt]);
-			return $this->GetCurrentShift($branchId);
+			// Sin turnos registrados: caja cerrada (no se inventa un turno abierto)
+			return (object) ['id' => null, 'branch_id' => $branchId, 'status' => 'closed', 'register_name' => 'Caja 1', 'shift_name' => '', 'opening_amount' => 0.0, 'opened_at' => null,
+				'notes' => null, 'live_sales_count' => 0, 'live_total_sales' => 0.0, 'live_total_cash' => 0.0, 'live_total_card' => 0.0, 'live_total_transfer' => 0.0,
+				'live_total_mixed' => 0.0, 'live_expected_cash' => 0.0, 'opened_time_short' => ''];
 		}
 
 		$summary = $this->GetShiftSummary($branchId, $shift);
@@ -662,18 +661,6 @@ class SalesService extends BaseService
 		]);
 		$rows = $stmt->fetchAll(\PDO::FETCH_OBJ);
 
-		// Si no hay ventas desde la hora de apertura de hoy (ej. datos demo con fechas anteriores), incluir las del último día activo de la sucursal como respaldo informativo si el turno es el inicial
-		if (empty($rows) && $shift && strpos((string)($shift->notes ?? ''), 'Apertura automática') !== false)
-		{
-			$stmtFallback = $dbRaw->prepare("
-				SELECT payment_method, total_amount, notes
-				FROM sales
-				WHERE branch_id = :bid AND status = 'completed'
-				  AND date(created_timestamp) = (SELECT MAX(date(created_timestamp)) FROM sales WHERE branch_id = :bid2 AND status = 'completed')
-			");
-			$stmtFallback->execute([':bid' => $branchId, ':bid2' => $branchId]);
-			$rows = $stmtFallback->fetchAll(\PDO::FETCH_OBJ);
-		}
 
 		$salesCount = 0;
 		$totalSales = 0.0;
@@ -722,11 +709,7 @@ class SalesService extends BaseService
 					$totalTransfer += floatval($mTrans[1]);
 					$parsedAny = true;
 				}
-				if (!$parsedAny)
-				{
-					$totalCash += round($amt * 0.5, 2);
-					$totalCard += round($amt - round($amt * 0.5, 2), 2);
-				}
+				// Sin desglose registrado queda solo como «mixto» (no se reparte con una proporción inventada)
 			}
 			else
 			{
@@ -871,7 +854,7 @@ class SalesService extends BaseService
 			$label = 'Ticket en espera - ' . $customerName . ' (' . date('H:i') . ')';
 		}
 		$notes = trim(strval($data['notes'] ?? '')) ?: null;
-		$discountType = in_array($data['discount_type'] ?? 'pct', ['pct', 'amt'], true) ? $data['discount_type'] : 'pct';
+		$discountType = in_array($data['discount_type'] ?? 'pct', ['pct', 'amt'], true) ? ($data['discount_type'] ?? 'pct') : 'pct';
 		$discountValue = max(0.0, floatval($data['discount_value'] ?? 0));
 		$discountReason = trim(strval($data['discount_reason'] ?? '')) ?: null;
 		$taxRate = max(0.0, floatval($data['tax_rate'] ?? 15.0));
@@ -1098,6 +1081,7 @@ class SalesService extends BaseService
 				) oi ON oi.order_id = co.id
 				GROUP BY co.customer_id
 			) o_agg ON o_agg.customer_id = c.id
+			WHERE IFNULL(c.is_anonymous, 0) = 0 AND c.merged_into_id IS NULL
 			ORDER BY c.id ASC
 		";
 

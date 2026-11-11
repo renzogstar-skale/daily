@@ -69,6 +69,8 @@
 		};
 	}
 
+	var STATUS_COUNTS = null, TAB_COUNTS = null;
+
 	function fetchAlerts(status) {
 		return $.ajax({ url: Grocy.BaseUrl + '/api/alerts/list', data: { status: status, per: 200, sort: 'priority' }, dataType: 'json' });
 	}
@@ -189,6 +191,8 @@
 			NOW = new Date();
 			var since = new Date(NOW.getTime() - RESOLVED_WINDOW_DAYS * 86400000);
 			var urlBranch = new URLSearchParams(window.location.search).get('branch');
+			STATUS_COUNTS = act[0].status_counts || null;
+			TAB_COUNTS = act[0].counts || null;
 			INCIDENTS = act[0].rows.map(fromApi).concat(done[0].rows.map(fromApi).filter(function (it) {
 				var r = parseDemoDate(it.resolvedAt);
 				return r && r >= since;
@@ -224,6 +228,8 @@
 			unassigned: active.filter(function (it) { return it.statusCode === 'unassigned'; }).length,
 			resolved: resolvedToday
 		};
+		// Totales del servidor (todas las activas del filtro, no solo la página cargada)
+		if (TAB_COUNTS) { kpi.all = TAB_COUNTS.all; kpi.critical = TAB_COUNTS.P1; kpi.overdue = TAB_COUNTS.overdue; kpi.unassigned = TAB_COUNTS.unassigned; }
 		$('.daily-kpi-stat-card').each(function () {
 			var tab = $(this).data('filter-tab');
 			var $n = $(this).find('.daily-kpi-big-number');
@@ -238,7 +244,8 @@
 		// Estado general: resueltas (7 días) / en proceso / sin actividad / vencidas
 		var inProc = active.filter(function (it) { return ['investigating', 'in_progress', 'validation', 'pending'].indexOf(it.statusCode) !== -1 && computeSla(it).state !== 'overdue'; }).length;
 		var idle = active.filter(function (it) { return it.statusCode === 'unassigned' && computeSla(it).state !== 'overdue'; }).length;
-		var statusData = [resolved.length, inProc, idle, overdue];
+		// La bandeja trae una página (200): el estado de resolución usa los conteos del servidor sobre todas las activas
+		var statusData = STATUS_COUNTS ? [resolved.length, STATUS_COUNTS.in_process, STATUS_COUNTS.idle, STATUS_COUNTS.overdue] : [resolved.length, inProc, idle, overdue];
 		var statusTotal = statusData.reduce(function (a, b) { return a + b; }, 0);
 		var $st = $('#chartStatusResolution').closest('.daily-donut-with-legend');
 		$st.find('.daily-donut-center-pct').text(statusTotal ? Math.round(resolved.length / statusTotal * 100) + '%' : 'Sin información');
@@ -670,7 +677,7 @@
 		Chart.defaults.global.defaultFontFamily = "'Inter', system-ui, -apple-system, sans-serif";
 		Chart.defaults.global.defaultFontColor = '#64748B';
 		Chart.defaults.global.defaultFontSize = 11;
-		var tip = { backgroundColor: '#0F172A', bodyFontColor: '#FFFFFF', cornerRadius: 6, xPadding: 10, yPadding: 8 };
+		var tip = { backgroundColor: 'rgba(15, 23, 42, 0.94)', titleFontColor: '#FFFFFF', titleFontStyle: 'bold', titleFontSize: 12, bodyFontColor: '#FFFFFF', bodyFontSize: 11, footerFontColor: '#E2E8F0', borderColor: 'rgba(255, 255, 255, 0.15)', borderWidth: 1, cornerRadius: 8, xPadding: 12, yPadding: 10, displayColors: true };
 		Object.keys(charts).forEach(function (k) { charts[k].destroy(); });
 		charts = {};
 

@@ -1152,6 +1152,7 @@
 				     data-best-before="{{ !empty($p->best_before_date) ? date('d/m/Y', strtotime($p->best_before_date)) : '' }}"
 				     data-notes="{{ $p->notes ?? '' }}"
 				     data-has-evidence="{{ $hasEvidence ? '1' : '0' }}"
+				     data-requires-evidence="{{ intval($p->requires_evidence ?? 0) }}"
 				     data-evidence-url="{{ $hasEvidence ? $U($p->evidence_photo_path) : '' }}"
 				     data-thumb="{{ $U($thumbImg) }}">
 					
@@ -1560,15 +1561,16 @@ document.addEventListener("DOMContentLoaded", function() {
 		document.getElementById('infoCategory').textContent = cat;
 		document.getElementById('infoCausal').textContent = reasonCode + ' - ' + reasonName;
 
-		// Evidencia
+		// Evidencia (con miniatura real, obligatoriedad por causal y carga rápida inline si falta)
 		var evBody = document.getElementById('detailEvidenceBody');
+		var reqEvidence = card.getAttribute('data-requires-evidence') === '1';
 		if (hasEvidence) {
-			evBody.innerHTML = '<div class="d-flex align-items-center justify-content-between">' +
-				'<div class="d-flex align-items-center gap-2">' +
-					'<i class="fa-solid fa-paperclip text-success fa-lg mr-2"></i>' +
+			evBody.innerHTML = '<div class="d-flex align-items-center justify-content-between" style="gap:10px;">' +
+				'<div class="d-flex align-items-center" style="gap:10px;">' +
+					'<img src="' + evidenceUrl + '" alt="Evidencia" style="width:46px;height:46px;object-fit:cover;border-radius:8px;border:1px solid #cbd5e1;cursor:pointer;" id="evThumbPreview">' +
 					'<div>' +
-						'<div class="font-weight-bold text-dark">Evidencia disponible</div>' +
-						'<div class="small text-muted">Archivo adjunto al reporte</div>' +
+						'<div class="font-weight-bold text-dark"><i class="fa-solid fa-circle-check text-success mr-1"></i>Evidencia disponible</div>' +
+						'<div class="small text-muted">Fotografía real adjunta al incidente</div>' +
 					'</div>' +
 				'</div>' +
 				'<button type="button" class="btn btn-sm btn-outline-info font-weight-600" id="btnOpenEvidence" style="border-radius: 6px;">' +
@@ -1576,29 +1578,72 @@ document.addEventListener("DOMContentLoaded", function() {
 				'</button>' +
 			'</div>';
 
+			var openEvFn = function() {
+				document.getElementById('apprModalTitle').textContent = 'Evidencia: ' + caseNum + ' (' + prod + ')';
+				document.getElementById('apprEvidenceImg').src = evidenceUrl;
+				$('#approvalPhotoModal').modal('show');
+			};
 			var btnEv = document.getElementById('btnOpenEvidence');
-			if (btnEv) {
-				btnEv.addEventListener('click', function() {
-					document.getElementById('apprModalTitle').textContent = 'Evidencia: ' + caseNum + ' (' + prod + ')';
-					document.getElementById('apprEvidenceImg').src = evidenceUrl;
-					$('#approvalPhotoModal').modal('show');
+			var thumbEv = document.getElementById('evThumbPreview');
+			if (btnEv) btnEv.addEventListener('click', openEvFn);
+			if (thumbEv) thumbEv.addEventListener('click', openEvFn);
+		} else {
+			var missingBadge = reqEvidence
+				? '<span class="badge badge-danger ml-1">Obligatoria para aprobar</span>'
+				: '<span class="badge badge-light border ml-1">Opcional</span>';
+			evBody.innerHTML = '<div class="d-flex align-items-center justify-content-between flex-wrap" style="gap:8px;">' +
+				'<div class="d-flex align-items-center">' +
+					'<i class="fa-regular fa-file text-' + (reqEvidence ? 'danger' : 'muted') + ' fa-lg mr-2"></i>' +
+					'<div>' +
+						'<div class="font-weight-bold text-dark">Sin fotografía adjunta ' + missingBadge + '</div>' +
+						'<div class="small text-muted">' + (reqEvidence ? 'Esta causal exige fotografía antes de autorizar.' : 'No se proporcionó evidencia en la solicitud.') + '</div>' +
+					'</div>' +
+				'</div>' +
+				'<label class="btn btn-sm btn-outline-primary mb-0 font-weight-600" style="cursor:pointer;border-radius:6px;">' +
+					'<i class="fa-solid fa-upload mr-1"></i>Adjuntar foto' +
+					'<input type="file" accept="image/*" style="display:none;" id="inlineEvidenceUploadInput">' +
+				'</label>' +
+			'</div>';
+
+			var upInp = document.getElementById('inlineEvidenceUploadInput');
+			if (upInp) {
+				upInp.addEventListener('change', function() {
+					if (!this.files || !this.files[0]) return;
+					var fd = new FormData();
+					fd.append('photo', this.files[0]);
+					Grocy.FrontendHelpers.BeginUiBusy();
+					fetch(Grocy.BaseUrl + '/api/waste/upload-photo', { method: 'POST', body: fd })
+						.then(function(r) { return r.json(); })
+						.then(function(up) {
+							if (!up.success) throw new Error(up.error_message || 'Error al subir fotografía');
+							return fetch(Grocy.BaseUrl + '/api/waste/' + card.getAttribute('data-id') + '/evidence', {
+								method: 'POST',
+								headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+								body: JSON.stringify({ evidence_photo_path: up.relative_url })
+							}).then(function(r2) { return r2.json(); });
+						})
+						.then(function(res2) {
+							Grocy.FrontendHelpers.EndUiBusy();
+							if (!res2.success) throw new Error(res2.error_message || 'No se pudo vincular la fotografía');
+							card.setAttribute('data-has-evidence', '1');
+							card.setAttribute('data-evidence-url', Grocy.BaseUrl + res2.evidence_photo_path);
+							toastr.success(res2.message || 'Evidencia adjuntada');
+							selectRequest(card);
+						})
+						.catch(function(err) {
+							Grocy.FrontendHelpers.EndUiBusy();
+							toastr.error(err.message || 'No se pudo adjuntar la evidencia');
+						});
 				});
 			}
-		} else {
-			evBody.innerHTML = '<div class="d-flex align-items-center gap-2">' +
-				'<i class="fa-regular fa-file text-muted fa-lg mr-2"></i>' +
-				'<div>' +
-					'<div class="font-weight-bold text-dark">Sin archivo adjunto</div>' +
-					'<div class="small text-muted">No se proporcionó evidencia en la solicitud.</div>' +
-				'</div>' +
-			'</div>';
 		}
 
 		// Observaciones
 		document.getElementById('detailNotesBody').textContent = notes;
 
-		// Segregación de funciones (Autoaprobación)
+		// Segregación de funciones (Autoaprobación) + Regla de evidencia obligatoria
 		var isSelfReported = (reporterId === currentUserId);
+		var missingRequiredEvidence = (reqEvidence && !hasEvidence);
 		var warningEl = document.getElementById('selfApprovalWarning');
 		var btnApprove = document.getElementById('btnApproveAction');
 		var btnReject = document.getElementById('btnRejectAction');
@@ -1611,8 +1656,8 @@ document.addEventListener("DOMContentLoaded", function() {
 			btnReject.title = 'Segregación de funciones: no puedes dictaminar tus propias solicitudes';
 		} else {
 			warningEl.style.display = 'none';
-			btnApprove.disabled = false;
-			btnApprove.title = '';
+			btnApprove.disabled = missingRequiredEvidence;
+			btnApprove.title = missingRequiredEvidence ? 'Evidencia fotográfica obligatoria requerida antes de aprobar' : '';
 			btnReject.disabled = false;
 			btnReject.title = '';
 		}

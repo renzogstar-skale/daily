@@ -16,9 +16,10 @@ class WasteApiController extends BaseApiController
 		$category = $params['category'] ?? null;
 		$riskLevel = $params['risk_level'] ?? null;
 		$area = $params['area'] ?? null;
+		$excludeSecurity = ($params['exclude_security'] ?? '0') === '1';
 
 		$wasteService = WasteService::GetInstance();
-		return $this->ApiResponse($response, $wasteService->GetWasteReasons($activeOnly, $category, $riskLevel, $area));
+		return $this->ApiResponse($response, $wasteService->GetWasteReasons($activeOnly, $category, $riskLevel, $area, $excludeSecurity));
 	}
 
 	public function GetWasteReason(Request $request, Response $response, array $args)
@@ -337,6 +338,29 @@ class WasteApiController extends BaseApiController
 			}
 			$wasteRecord = WasteService::GetInstance()->RequestWasteInfo(intval($args['wasteId']), $note, GROCY_USER_ID);
 			return $this->ApiResponse($response, ['success' => true, 'waste_id' => $wasteRecord->id, 'message' => "Información solicitada para {$wasteRecord->case_number}"]);
+		}
+		catch (\Exception $ex)
+		{
+			return $this->GenericErrorResponse($response, $ex->getMessage());
+		}
+	}
+
+	public function AttachWasteEvidence(Request $request, Response $response, array $args)
+	{
+		User::CheckPermission($request, User::PERMISSION_WASTE_REPORT);
+		$this->AssertWasteBranch($request, intval($args['wasteId']));
+
+		try
+		{
+			$body = $this->GetParsedAndFilteredRequestBody($request);
+			$path = trim(strval($body['evidence_photo_path'] ?? ''));
+			$wasteRecord = WasteService::GetInstance()->AttachEvidence(intval($args['wasteId']), $path, GROCY_USER_ID);
+			return $this->ApiResponse($response, [
+				'success' => true,
+				'waste_id' => $wasteRecord->id,
+				'evidence_photo_path' => $wasteRecord->evidence_photo_path,
+				'message' => "Evidencia adjuntada a {$wasteRecord->case_number}"
+			]);
 		}
 		catch (\Exception $ex)
 		{

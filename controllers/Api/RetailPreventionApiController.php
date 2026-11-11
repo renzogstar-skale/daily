@@ -96,10 +96,12 @@ class RetailPreventionApiController extends BaseApiController
 		$body = (array)($request->getParsedBody() ?? []);
 		$orderId = intval($body['order_id'] ?? 0);
 		$pin = strval($body['pin_code'] ?? '');
+		$sig = isset($body['signature_name']) ? strval($body['signature_name']) : null;
+		$evi = isset($body['evidence_url']) ? strval($body['evidence_url']) : null;
 
 		try
 		{
-			$res = $this->Svc()->VerifyPickupOrder($orderId, $pin, GROCY_USER_ID);
+			$res = $this->Svc()->VerifyPickupOrder($orderId, $pin, GROCY_USER_ID, $sig, $evi);
 			return $this->ApiResponse($response, $res);
 		}
 		catch (\Throwable $e)
@@ -153,7 +155,7 @@ class RetailPreventionApiController extends BaseApiController
 		$body = (array)($request->getParsedBody() ?? []);
 		$varianceId = intval($body['variance_id'] ?? 0);
 		$status = strval($body['resolution_status'] ?? 'authorized_exception');
-		$notes = strval($body['notes'] ?? 'Resolución autorizada por gerencia');
+		$notes = trim(strval($body['notes'] ?? ($body['resolution_notes'] ?? '')));
 
 		try
 		{
@@ -172,6 +174,68 @@ class RetailPreventionApiController extends BaseApiController
 		$branchId = isset($q['branch_id']) && $q['branch_id'] !== '' ? intval($q['branch_id']) : null;
 		$res = $this->Svc()->GetDispatchComparativeAnalytics($branchId);
 		return $this->ApiResponse($response, $res);
+	}
+
+	public function CreateDispatchOrder(Request $request, Response $response, array $args): Response
+	{
+		$b = (array)($request->getParsedBody() ?? []);
+		try
+		{
+			$cos = new \Grocy\Services\CustomerOrderService();
+			$res = $cos->Create($b, GROCY_USER_ID);
+			$ord = $res['order'] ?? $res;
+			return $this->ApiResponse($response, ['success' => true, 'order' => $ord, 'message' => "Pedido " . ($ord['order_code'] ?? '') . " registrado."]);
+		}
+		catch (\Throwable $e)
+		{
+			return $this->GenericErrorResponse($response, $e->getMessage(), 400);
+		}
+	}
+
+	public function ReserveOrder(Request $request, Response $response, array $args): Response
+	{
+		$b = (array)($request->getParsedBody() ?? []);
+		$orderId = intval($b['order_id'] ?? 0);
+		try
+		{
+			$res = $this->Svc()->ReserveDispatchOrder($orderId, GROCY_USER_ID);
+			return $this->ApiResponse($response, $res);
+		}
+		catch (\Throwable $e)
+		{
+			return $this->GenericErrorResponse($response, $e->getMessage(), 400);
+		}
+	}
+
+	public function PackOrder(Request $request, Response $response, array $args): Response
+	{
+		$b = (array)($request->getParsedBody() ?? []);
+		$orderId = intval($b['order_id'] ?? 0);
+		$pkgs = intval($b['packages_count'] ?? 1);
+		$notes = isset($b['notes']) ? strval($b['notes']) : null;
+		try
+		{
+			$res = $this->Svc()->PackDispatchOrder($orderId, $pkgs, $notes, GROCY_USER_ID);
+			return $this->ApiResponse($response, $res);
+		}
+		catch (\Throwable $e)
+		{
+			return $this->GenericErrorResponse($response, $e->getMessage(), 400);
+		}
+	}
+
+	public function GetDispatchLabel(Request $request, Response $response, array $args): Response
+	{
+		$orderId = intval($args['id'] ?? 0);
+		try
+		{
+			$res = $this->Svc()->GetDispatchLabel($orderId);
+			return $this->ApiResponse($response, $res);
+		}
+		catch (\Throwable $e)
+		{
+			return $this->GenericErrorResponse($response, $e->getMessage(), 404);
+		}
 	}
 
 	public function AssignPicking(Request $request, Response $response, array $args): Response
@@ -220,6 +284,53 @@ class RetailPreventionApiController extends BaseApiController
 		}
 	}
 
+	public function ReportIncident(Request $request, Response $response, array $args): Response
+	{
+		$b = (array)($request->getParsedBody() ?? []);
+		$orderId = intval($b['order_id'] ?? 0);
+		try
+		{
+			$res = $this->Svc()->ReportLogisticsIncident($orderId, $b, GROCY_USER_ID);
+			return $this->ApiResponse($response, $res);
+		}
+		catch (\Throwable $e)
+		{
+			return $this->GenericErrorResponse($response, $e->getMessage(), 400);
+		}
+	}
+
+	public function ResolveIncident(Request $request, Response $response, array $args): Response
+	{
+		$b = (array)($request->getParsedBody() ?? []);
+		$incidentId = intval($b['incident_id'] ?? 0);
+		$notes = strval($b['resolution_notes'] ?? ($b['notes'] ?? ''));
+		try
+		{
+			$res = $this->Svc()->ResolveLogisticsIncident($incidentId, $notes, GROCY_USER_ID);
+			return $this->ApiResponse($response, $res);
+		}
+		catch (\Throwable $e)
+		{
+			return $this->GenericErrorResponse($response, $e->getMessage(), 400);
+		}
+	}
+
+	public function ConciliateOrder(Request $request, Response $response, array $args): Response
+	{
+		$b = (array)($request->getParsedBody() ?? []);
+		$orderId = intval($b['order_id'] ?? 0);
+		$notes = isset($b['notes']) ? strval($b['notes']) : null;
+		try
+		{
+			$res = $this->Svc()->ConciliateOrder($orderId, $notes, GROCY_USER_ID);
+			return $this->ApiResponse($response, $res);
+		}
+		catch (\Throwable $e)
+		{
+			return $this->GenericErrorResponse($response, $e->getMessage(), 400);
+		}
+	}
+
 	public function CancelOrder(Request $request, Response $response, array $args): Response
 	{
 		$b = (array)($request->getParsedBody() ?? []);
@@ -237,7 +348,7 @@ class RetailPreventionApiController extends BaseApiController
 	}
 
 	/* -------------------------------------------------------------------------
-	 * CUSTOMER RETURNS & EXCHANGES
+	 * LOGISTICS RETURNS & REVERSE LOGISTICS (6-STAGE LIFECYCLE)
 	 * ------------------------------------------------------------------------- */
 
 	public function GetReturns(Request $request, Response $response, array $args): Response
@@ -246,9 +357,39 @@ class RetailPreventionApiController extends BaseApiController
 		$branchId = isset($q['branch_id']) && $q['branch_id'] !== '' ? intval($q['branch_id']) : null;
 		$status = $q['status'] ?? null;
 		$type = $q['return_type'] ?? null;
+		$channel = $q['channel'] ?? null;
 
-		$res = $this->Svc()->GetReturns($branchId, $status, $type);
+		$res = $this->Svc()->GetReturns($branchId, $status, $type, $channel);
 		return $this->ApiResponse($response, $res);
+	}
+
+	public function ScanReturnUpc(Request $request, Response $response, array $args): Response
+	{
+		$q = $request->getQueryParams();
+		$code = strval($q['code'] ?? '');
+		try
+		{
+			$res = $this->Svc()->LookupReturnByUpc($code);
+			return $this->ApiResponse($response, $res);
+		}
+		catch (\Throwable $e)
+		{
+			return $this->GenericErrorResponse($response, $e->getMessage(), 404);
+		}
+	}
+
+	public function GetReturnDetail(Request $request, Response $response, array $args): Response
+	{
+		$id = intval($args['id']);
+		try
+		{
+			$res = $this->Svc()->GetReturnDetail($id);
+			return $this->ApiResponse($response, ['return' => $res]);
+		}
+		catch (\Throwable $e)
+		{
+			return $this->GenericErrorResponse($response, $e->getMessage(), 404);
+		}
 	}
 
 	public function CreateReturn(Request $request, Response $response, array $args): Response
@@ -265,11 +406,101 @@ class RetailPreventionApiController extends BaseApiController
 		}
 	}
 
+	public function ReceiveReturn(Request $request, Response $response, array $args): Response
+	{
+		$id = intval($args['id']);
+		$body = (array)($request->getParsedBody() ?? []);
+		try
+		{
+			$res = $this->Svc()->ReceiveReturn($id, $body, GROCY_USER_ID);
+			return $this->ApiResponse($response, $res);
+		}
+		catch (\Throwable $e)
+		{
+			return $this->GenericErrorResponse($response, $e->getMessage(), 400);
+		}
+	}
+
+	public function InspectReturn(Request $request, Response $response, array $args): Response
+	{
+		$id = intval($args['id']);
+		$body = (array)($request->getParsedBody() ?? []);
+		try
+		{
+			$res = $this->Svc()->InspectReturn($id, $body, GROCY_USER_ID);
+			return $this->ApiResponse($response, $res);
+		}
+		catch (\Throwable $e)
+		{
+			return $this->GenericErrorResponse($response, $e->getMessage(), 400);
+		}
+	}
+
+	public function ClassifyReturn(Request $request, Response $response, array $args): Response
+	{
+		$id = intval($args['id']);
+		$body = (array)($request->getParsedBody() ?? []);
+		try
+		{
+			$res = $this->Svc()->ClassifyReturn($id, $body, GROCY_USER_ID);
+			return $this->ApiResponse($response, $res);
+		}
+		catch (\Throwable $e)
+		{
+			return $this->GenericErrorResponse($response, $e->getMessage(), 400);
+		}
+	}
+
+	public function AuthorizeReturnDisposition(Request $request, Response $response, array $args): Response
+	{
+		$id = intval($args['id']);
+		$body = (array)($request->getParsedBody() ?? []);
+		try
+		{
+			$res = $this->Svc()->AuthorizeAndExecuteDisposition($id, $body, GROCY_USER_ID);
+			return $this->ApiResponse($response, $res);
+		}
+		catch (\Throwable $e)
+		{
+			return $this->GenericErrorResponse($response, $e->getMessage(), 400);
+		}
+	}
+
+	public function ConciliateReturn(Request $request, Response $response, array $args): Response
+	{
+		$id = intval($args['id']);
+		$body = (array)($request->getParsedBody() ?? []);
+		try
+		{
+			$res = $this->Svc()->ConciliateReturn($id, $body, GROCY_USER_ID);
+			return $this->ApiResponse($response, $res);
+		}
+		catch (\Throwable $e)
+		{
+			return $this->GenericErrorResponse($response, $e->getMessage(), 400);
+		}
+	}
+
+	public function AddReturnEvidence(Request $request, Response $response, array $args): Response
+	{
+		$id = intval($args['id']);
+		$body = (array)($request->getParsedBody() ?? []);
+		try
+		{
+			$res = $this->Svc()->AddReturnEvidence($id, $body, GROCY_USER_ID);
+			return $this->ApiResponse($response, $res);
+		}
+		catch (\Throwable $e)
+		{
+			return $this->GenericErrorResponse($response, $e->getMessage(), 400);
+		}
+	}
+
 	public function AdvanceReturn(Request $request, Response $response, array $args): Response
 	{
 		$id = intval($args['id']);
 		$body = (array)($request->getParsedBody() ?? []);
-		$newStatus = strval($body['status'] ?? 'cerrada');
+		$newStatus = strval($body['status'] ?? 'conciliacion');
 
 		try
 		{

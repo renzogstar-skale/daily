@@ -302,7 +302,7 @@ class MobileWorkApiController extends BaseApiController
 	{
 		return $this->Run($response, function () {
 			$this->Need([User::PERMISSION_WASTE_REPORT]);
-			return ['reasons' => \Grocy\Services\DatabaseService::GetInstance()->GetDbConnectionRaw()->query('SELECT id, name FROM waste_reasons WHERE IFNULL(active, 1) = 1 ORDER BY name')->fetchAll(\PDO::FETCH_ASSOC)];
+			return ['reasons' => \Grocy\Services\DatabaseService::GetInstance()->GetDbConnectionRaw()->query("SELECT id, name, requires_evidence FROM waste_reasons WHERE IFNULL(active, 1) = 1 AND IFNULL(censo_category, '') NOT IN ('robo_interno', 'robo_externo') AND UPPER(IFNULL(code, '')) NOT IN ('M03', 'M04', 'FPO01', 'FEL01') ORDER BY name")->fetchAll(\PDO::FETCH_ASSOC)];
 		});
 	}
 
@@ -312,8 +312,14 @@ class MobileWorkApiController extends BaseApiController
 		return $this->Run($response, function () use ($request) {
 			$this->Need([User::PERMISSION_WASTE_REPORT]);
 			$b = $this->Body($request);
-			$w = (array) \Grocy\Services\WasteService::GetInstance()->ReportWaste(intval($b['product_id'] ?? 0), floatval($b['quantity'] ?? 0), intval($b['reason_id'] ?? 0), $this->OpBranch($b), null,
-				trim(strval($b['stock_id'] ?? '')) ?: 'default', trim(strval($b['notes'] ?? '')) ?: 'Registrada desde el teléfono', null, null, null, null, null, null, strval($b['operation_id'] ?? '') ?: null, GROCY_USER_ID);
+			$reasonId = intval($b['reason_id'] ?? 0);
+			if ($reasonId <= 0)
+			{
+				throw new \Exception('Debe seleccionar una causal de merma');
+			}
+			$evidencePath = trim(strval($b['evidence_photo_path'] ?? '')) ?: null;
+			$w = (array) \Grocy\Services\WasteService::GetInstance()->ReportWaste(intval($b['product_id'] ?? 0), floatval($b['quantity'] ?? 0), $reasonId, $this->OpBranch($b), null,
+				trim(strval($b['stock_id'] ?? '')) ?: 'default', trim(strval($b['notes'] ?? '')) ?: 'Registrada desde el teléfono', $evidencePath, null, null, null, null, null, strval($b['operation_id'] ?? '') ?: null, GROCY_USER_ID);
 			$id = intval($w['waste_record_id'] ?? $w['id'] ?? 0);
 			$status = $id ? \Grocy\Services\DatabaseService::GetInstance()->GetDbConnectionRaw()->query("SELECT status FROM waste_records WHERE id = $id")->fetchColumn() : null;
 			return ['success' => true, 'id' => $id, 'status' => $status, 'message' => $status === 'pending_approval' ? 'Merma enviada a aprobación: el stock se descuenta al aprobarla' : 'Merma registrada y descontada del inventario'];

@@ -39,7 +39,7 @@ ok('Paso 3.4: trend (Tendencia de diferencias) disponible', isset($data['trend']
 $viewContent = file_get_contents(__DIR__ . '/../../views/loss_prevention.blade.php');
 ok('Paso 4.1: views/loss_prevention.blade.php contiene Hero Banner', strpos($viewContent, 'Centro de Control') !== false);
 ok('Paso 4.2: views/loss_prevention.blade.php contiene los 8 KPIs de la foto', strpos($viewContent, 'lp-kpis-grid-8') !== false);
-ok('Paso 4.3: views/loss_prevention.blade.php contiene la tabla de 8 incidencias', strpos($viewContent, 'DEMO-001') !== false && strpos($viewContent, 'INV-2026-0001') !== false);
+ok('Paso 4.3: views/loss_prevention.blade.php contiene tabla de expedientes real (BD)', strpos($viewContent, 'lp-cases-table') !== false && count(array_filter($data['cases'] ?? [], fn($c) => ($c['case_code'] ?? '') === 'DEMO-001')) > 0);
 ok('Paso 4.4: views/loss_prevention.blade.php contiene los 4 gráficos de analítica', strpos($viewContent, 'lp-trend-chart') !== false && strpos($viewContent, 'lp-products-chart') !== false && strpos($viewContent, 'lp-department-chart') !== false);
 ok('Paso 4.5: views/loss_prevention.blade.php contiene el drawer RESOLVER 360°', strpos($viewContent, 'drawerResolveOverlay') !== false && strpos($viewContent, 'Detectar') !== false);
 ok('Paso 4.6: views/loss_prevention.blade.php contiene Acciones Rápidas inferiores', strpos($viewContent, 'lp-quick-actions-section') !== false);
@@ -48,4 +48,5 @@ $cssContent = file_get_contents(__DIR__ . '/../../public/css/daily_loss_control.
 ok('Paso 4.7: public/css/daily_loss_control.css existe y tiene estilos', strlen($cssContent) > 2000);
 ok('Paso 4.8: public/css/daily_loss_control.css define la paleta blanca y verde', strpos($cssContent, '--lp-green') !== false && strpos($cssContent, '#f8fafc') !== false);
 
-echo "\nResultados: Total OK. Todas las verificaciones superadas.\n";
+echo "\nResultados: $count verificaciones · $fails FALLAS\n";
+exit($fails ? 1 : 0);

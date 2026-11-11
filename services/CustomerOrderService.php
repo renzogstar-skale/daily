@@ -193,16 +193,61 @@ class CustomerOrderService extends BaseService
 		{
 			throw new \Exception('El pedido debe tener al menos un producto');
 		}
+		$idempotencyKey = trim((string)($data['idempotency_key'] ?? ($data['client_request_id'] ?? '')));
+		if ($idempotencyKey !== '')
+		{
+			$dup = $this->Row('SELECT order_code FROM customer_orders WHERE idempotency_key = :k LIMIT 1', [':k' => $idempotencyKey]);
+			if ($dup)
+			{
+				throw new \Exception("Pedido duplicado: la solicitud ya fue registrada ({$dup['order_code']})");
+			}
+		}
+		ksort($lines);
+		$sig = implode('|', array_map(fn($l) => $l['product_id'] . ':' . round(floatval($l['amount']), 4), $lines));
+		$rawDeliveryType = $data['delivery_type'] ?? 'pickup';
+		$deliveryType = in_array($rawDeliveryType, ['pickup', 'delivery'], true) ? $rawDeliveryType : 'pickup';
+		if (empty($data['allow_duplicate']))
+		{
+			$recentOpen = $this->Rows("SELECT id, order_code FROM customer_orders
+				WHERE branch_id = :b AND customer_id = :c AND IFNULL(delivery_type, 'pickup') = :dt
+				  AND IFNULL(requested_date, '') = :d AND status IN ('draft', 'confirmed', 'picking', 'picked', 'packed')
+				  AND created_at >= datetime('now', 'localtime', '-90 seconds')
+				ORDER BY id DESC LIMIT 5", [':b' => $branchId, ':c' => $customerId, ':dt' => $deliveryType, ':d' => $date]);
+			foreach ($recentOpen as $ro)
+			{
+				$rItems = $this->Rows('SELECT product_id, amount FROM customer_order_items WHERE order_id = :o ORDER BY product_id', [':o' => $ro['id']]);
+				$rSig = implode('|', array_map(fn($r) => intval($r['product_id']) . ':' . round(floatval($r['amount']), 4), $rItems));
+				if ($rSig === $sig)
+				{
+					throw new \Exception("Pedido duplicado: ya existe el pedido abierto {$ro['order_code']} con los mismos productos y cantidades");
+				}
+			}
+		}
+
 		$db = $this->Db();
 		$db->beginTransaction();
 		try
 		{
 			$year = date('Y');
-			$seq = intval($db->query("SELECT COUNT(*) + 1 FROM customer_orders WHERE order_code LIKE 'PED-$year-%'")->fetchColumn());
-			$rawDeliveryType = $data['delivery_type'] ?? 'pickup';
-			$deliveryType = in_array($rawDeliveryType, ['pickup', 'delivery'], true) ? $rawDeliveryType : 'pickup';
-			$db->prepare('INSERT INTO customer_orders (order_code, branch_id, customer_id, requested_date, notes, delivery_type, created_by_user_id, created_at) VALUES (:c, :b, :cu, :d, :n, :dt, :u, :t)')
-				->execute([':c' => sprintf('PED-%s-%05d', $year, $seq), ':b' => $branchId, ':cu' => $customerId, ':d' => $date ?: null, ':n' => trim((string) ($data['notes'] ?? '')) ?: null, ':dt' => $deliveryType, ':u' => $userId, ':t' => date('Y-m-d H:i:s')]);
+			$nextSeq = intval($db->query("SELECT MAX(CAST(SUBSTR(order_code, 10) AS INTEGER)) FROM customer_orders WHERE order_code LIKE 'PED-$year-%'")->fetchColumn()) + 1;
+			$seq = max($nextSeq, intval($db->query("SELECT COUNT(*) + 1 FROM customer_orders WHERE order_code LIKE 'PED-$year-%'")->fetchColumn()));
+			$pickupPin = $deliveryType === 'pickup' ? sprintf('%06d', random_int(100000, 999999)) : null;
+			$routeName = trim((string)($data['route_name'] ?? '')) ?: null;
+			$db->prepare('INSERT INTO customer_orders (order_code, branch_id, customer_id, requested_date, notes, delivery_type, delivery_status, pickup_pin, route_name, idempotency_key, created_by_user_id, created_at) VALUES (:c, :b, :cu, :d, :n, :dt, :ds, :pin, :rn, :ik, :u, :t)')
+				->execute([
+					':c' => sprintf('PED-%s-%05d', $year, $seq),
+					':b' => $branchId,
+					':cu' => $customerId,
+					':d' => $date ?: null,
+					':n' => trim((string)($data['notes'] ?? '')) ?: null,
+					':dt' => $deliveryType,
+					':ds' => 'pending',
+					':pin' => $pickupPin,
+					':rn' => $routeName,
+					':ik' => $idempotencyKey !== '' ? $idempotencyKey : null,
+					':u' => $userId,
+					':t' => date('Y-m-d H:i:s')
+				]);
 			$id = intval($db->lastInsertId());
 			$ins = $db->prepare('INSERT INTO customer_order_items (order_id, product_id, amount, unit_price) VALUES (:o, :p, :a, :pr)');
 			foreach ($lines as $l)
@@ -305,6 +350,10 @@ class CustomerOrderService extends BaseService
 				$pid = intval($l['product_id']);
 				$item = $items[$pid] ?? throw new \Exception('Producto fuera del pedido');
 				$need = floatval($l['amount']);
+				if ($need + floatval($item['picked_amount']) > floatval($item['amount']) + 0.0001)
+				{
+					throw new \Exception('No se puede preparar o despachar más cantidad de la reservada (' . round(floatval($item['amount']), 2) . ')');
+				}
 				$byLot = !empty($l['lot_number']) || !empty($l['serial_number']);
 				$entries = $this->PickableEntries($pid, intval($o['branch_id']), $session['location_id'] ? intval($session['location_id']) : null, $l['lot_number'] ?: null, $l['serial_number'] ?: null);
 				$first = null;
@@ -367,8 +416,14 @@ class CustomerOrderService extends BaseService
 		{
 			throw new \Exception('Indique la cantidad de bultos (1 a 999)');
 		}
-		$this->Db()->prepare("UPDATE customer_orders SET status = 'packed', packages = :n, packed_by_user_id = :u, packed_at = :t WHERE id = :id AND status = 'picked'")
-			->execute([':n' => $packages, ':u' => $userId, ':t' => date('Y-m-d H:i:s'), ':id' => $id]);
+		$pickedSum = floatval($this->Row('SELECT IFNULL(SUM(picked_amount), 0) AS s FROM customer_order_items WHERE order_id = :id', [':id' => $id])['s'] ?? 0);
+		if ($pickedSum <= 0.0001)
+		{
+			throw new \Exception('No se puede empacar un pedido sin unidades preparadas en picking');
+		}
+		$labelCode = !empty($o['label_code']) ? $o['label_code'] : ('ETQ-' . $o['order_code']);
+		$this->Db()->prepare("UPDATE customer_orders SET status = 'packed', packages = :n, label_code = :lbl, packed_by_user_id = :u, packed_at = :t WHERE id = :id AND status = 'picked'")
+			->execute([':n' => $packages, ':lbl' => $labelCode, ':u' => $userId, ':t' => date('Y-m-d H:i:s'), ':id' => $id]);
 		return $this->Get($id);
 	}
 
@@ -383,6 +438,11 @@ class CustomerOrderService extends BaseService
 		if ($o['status'] !== 'packed')
 		{
 			throw new \Exception('Solo se despacha un pedido empacado');
+		}
+		$overReserved = $this->Row('SELECT COUNT(*) AS c FROM customer_order_items WHERE order_id = :o AND picked_amount > amount + 0.0001', [':o' => $id]);
+		if (intval($overReserved['c'] ?? 0) > 0)
+		{
+			throw new \Exception('Bloqueado: existen líneas con cantidad preparada/despachada superior a la reservada');
 		}
 		$claim = $this->Db()->prepare("UPDATE customer_orders SET status = 'dispatching' WHERE id = :id AND status = 'packed'");
 		$claim->execute([':id' => $id]);
@@ -411,8 +471,9 @@ class CustomerOrderService extends BaseService
 			throw $e;
 		}
 		$saleId = is_object($sale) ? intval($sale->id) : intval($sale['id'] ?? 0);
-		$this->Db()->prepare("UPDATE customer_orders SET status = 'dispatched', sale_id = :s, dispatched_by_user_id = :u, dispatched_at = :t WHERE id = :id")
-			->execute([':s' => $saleId ?: null, ':u' => $userId, ':t' => date('Y-m-d H:i:s'), ':id' => $id]);
+		$delStatus = ($o['delivery_type'] ?? 'pickup') === 'pickup' ? 'ready_for_pickup' : 'in_transit';
+		$this->Db()->prepare("UPDATE customer_orders SET status = 'dispatched', delivery_status = :ds, sale_id = :s, label_code = COALESCE(label_code, :lbl), dispatched_by_user_id = :u, dispatched_at = :t WHERE id = :id")
+			->execute([':ds' => $delStatus, ':s' => $saleId ?: null, ':lbl' => 'ETQ-' . $o['order_code'], ':u' => $userId, ':t' => date('Y-m-d H:i:s'), ':id' => $id]);
 		return $this->Get($id);
 	}
 

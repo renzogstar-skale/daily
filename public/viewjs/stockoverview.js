@@ -513,68 +513,6 @@
 		coverage: { name: 'Cobertura', axis: 'Cobertura (días)', type: 'line', fmt: function (v) { return Number(v).toFixed(1) + ' días'; }, branchKey: 'coverage_days' }
 	};
 
-	var PERIOD_DEFAULTS = {
-		day: {
-			labels: ['25 Oct', '26 Oct', '27 Oct', '28 Oct', '29 Oct', '30 Oct', '31 Oct (actual)'],
-			prev_labels: ['18 Oct', '19 Oct', '20 Oct', '21 Oct', '22 Oct', '23 Oct', '24 Oct'],
-			value: [19450, 19200, 18950, 18600, 18450, 18720, 18817],
-			prev_value: [20500, 20300, 20100, 19900, 19750, 19600, 19450],
-			units: [132500, 131200, 129800, 127600, 126900, 127800, 128432],
-			prev_units: [135000, 134200, 133500, 132000, 131500, 131000, 130200],
-			rotation: [1.38, 1.40, 1.42, 1.45, 1.46, 1.48, 1.49],
-			prev_rotation: [1.20, 1.22, 1.23, 1.25, 1.26, 1.28, 1.30],
-			coverage: [7.2, 7.1, 6.9, 6.7, 6.5, 6.6, 6.6],
-			prev_coverage: [8.0, 7.9, 7.7, 7.6, 7.5, 7.3, 7.2]
-		},
-		week: {
-			labels: ['Sem 39', 'Sem 40', 'Sem 41', 'Sem 42', 'Sem 43', 'Sem 44 (actual)'],
-			prev_labels: ['Sem 33', 'Sem 34', 'Sem 35', 'Sem 36', 'Sem 37', 'Sem 38'],
-			value: [19850, 20400, 21200, 20100, 19350, 18817],
-			prev_value: [17900, 18200, 18600, 18900, 19200, 19400],
-			units: [134000, 138000, 142000, 136000, 131000, 128432],
-			prev_units: [122000, 124000, 126500, 129000, 131000, 132500],
-			rotation: [1.32, 1.36, 1.41, 1.44, 1.47, 1.49],
-			prev_rotation: [1.15, 1.18, 1.20, 1.24, 1.27, 1.30],
-			coverage: [7.5, 7.2, 7.0, 6.8, 6.7, 6.6],
-			prev_coverage: [8.4, 8.2, 8.0, 7.8, 7.6, 7.4]
-		},
-		month: {
-			labels: ['Jun 26', 'Jul 26', 'Ago 26', 'Sep 26', 'Oct 26', 'Nov 26 (actual)'],
-			prev_labels: ['Dic 25', 'Ene 26', 'Feb 26', 'Mar 26', 'Abr 26', 'May 26'],
-			value: [8200, 10800, 13200, 25400, 21800, 18817],
-			prev_value: [8200, 10800, 13200, 16000, 13500, 16100],
-			units: [65000, 78000, 95000, 142000, 135000, 128432],
-			prev_units: [65000, 78000, 95000, 115000, 108000, 119500],
-			rotation: [14.2, 16.5, 18.0, 22.4, 20.8, 21.4],
-			prev_rotation: [14.2, 16.5, 18.0, 20.1, 18.8, 19.8],
-			coverage: [38.5, 41.0, 44.2, 32.0, 34.5, 36.2],
-			prev_coverage: [38.5, 41.0, 44.2, 46.0, 43.5, 42.0]
-		},
-		quarter: {
-			labels: ['T4 25', 'T1 26', 'T2 26', 'T3 26 (actual)'],
-			prev_labels: ['T4 24', 'T1 25', 'T2 25', 'T3 25'],
-			value: [15200, 17400, 22600, 18817],
-			prev_value: [13800, 15100, 17800, 16500],
-			units: [98000, 112000, 138000, 128432],
-			prev_units: [85000, 96000, 114000, 118000],
-			rotation: [16.8, 18.4, 22.0, 21.4],
-			prev_rotation: [14.5, 16.0, 18.2, 19.5],
-			coverage: [42.0, 39.5, 33.0, 36.2],
-			prev_coverage: [45.0, 43.0, 40.0, 38.5]
-		},
-		year: {
-			labels: ['2024', '2025', '2026 (actual)'],
-			prev_labels: ['2021', '2022', '2023'],
-			value: [14500, 17200, 18817],
-			prev_value: [12100, 13800, 15900],
-			units: [92000, 110000, 128432],
-			prev_units: [78000, 89000, 105000],
-			rotation: [15.2, 18.6, 21.4],
-			prev_rotation: [13.1, 15.4, 17.8],
-			coverage: [44.0, 38.0, 36.2],
-			prev_coverage: [48.0, 44.5, 40.2]
-		}
-	};
 
 	function evoData() {
 		var periodKey = currentPeriod || 'month';
@@ -582,43 +520,22 @@
 			 || (dsmState.evolution && dsmState.evolution.series)
 			 || {};
 		var def = EVO[currentEvoMetric];
-		var pDef = PERIOD_DEFAULTS[periodKey] || PERIOD_DEFAULTS.month;
 
 		if (currentEvoCompare === 'branches') {
 			var rows = dsmState.branches_table || [];
 			return { labels: rows.map(function (b) { return b.name; }), cur: rows.map(function (b) { return b[def.branchKey]; }), prev: [], prevLabels: [] };
 		}
 
-		var rawCur = s[currentEvoMetric];
-		var cur = (rawCur && rawCur.length && rawCur.some(function(v) { return v !== null && v !== undefined && v !== ''; }))
-			? rawCur.slice()
-			: (pDef[currentEvoMetric] ? pDef[currentEvoMetric].slice() : []);
-
-		// Rellenar cualquier valor nulo interior para que la gráfica nunca quede vacía
-		for (var i = 0; i < cur.length; i++) {
-			if (cur[i] === null || cur[i] === undefined || cur[i] === '') {
-				var fallbackArr = pDef[currentEvoMetric] || [];
-				cur[i] = fallbackArr[i % fallbackArr.length] || 0;
-			}
-		}
-
-		var rawPrev = currentEvoCompare === 'prev' ? s['prev_' + currentEvoMetric] : [];
-		var prev = (rawPrev && rawPrev.length && rawPrev.some(function(v) { return v !== null && v !== undefined && v !== ''; }))
-			? rawPrev.slice()
-			: (currentEvoCompare === 'prev' && pDef['prev_' + currentEvoMetric] ? pDef['prev_' + currentEvoMetric].slice() : []);
-
-		for (var j = 0; j < prev.length; j++) {
-			if (prev[j] === null || prev[j] === undefined || prev[j] === '') {
-				var prevFallbackArr = pDef['prev_' + currentEvoMetric] || [];
-				prev[j] = prevFallbackArr[j % prevFallbackArr.length] || 0;
-			}
-		}
+		// Solo datos reales: un punto sin dato queda vacío (null), nunca se rellena con cifras de ejemplo
+		var clean = function (v) { return (v === null || v === undefined || v === '') ? null : v; };
+		var cur = (s[currentEvoMetric] || []).map(clean);
+		var prev = currentEvoCompare === 'prev' ? (s['prev_' + currentEvoMetric] || []).map(clean) : [];
 
 		while (prev.length > cur.length) prev.shift();
-		while (prev.length < cur.length) prev.unshift(prev[0] || 0);
+		while (prev.length && prev.length < cur.length) prev.unshift(null);
 
-		var labels = (s.labels && s.labels.length) ? s.labels : pDef.labels;
-		var prevLabels = (s.prev_labels && s.prev_labels.length) ? s.prev_labels : pDef.prev_labels;
+		var labels = s.labels || [];
+		var prevLabels = s.prev_labels || [];
 
 		return { labels: labels, cur: cur, prev: prev, prevLabels: prevLabels };
 	}
@@ -2365,7 +2282,13 @@
 			? (dsmState.movements.bars_detailed || [])
 			: (dsmState.movements.bars_photo || []);
 
-		var maxBarUnits = 12000;
+		// Escala: múltiplo redondo sobre la barra más alta (misma regla que la vista)
+		var barMax = Math.max.apply(null, [1].concat(bars.map(function (b) { return Number(b.units) || 0; })));
+		var mag = Math.pow(10, Math.floor(Math.log10(barMax)));
+		var maxBarUnits = Math.max(6, Math.ceil(barMax / mag) * mag);
+		var yHtml = '';
+		for (var yi = 6; yi >= 0; yi--) { yHtml += '<span>' + fmtNum(maxBarUnits * yi / 6) + '</span>'; }
+		$('#dsm-moves-yaxis').html(yHtml);
 		var iconsMap = {
 			'entradas': 'fa-box',
 			'salidas': 'fa-box',
@@ -2403,6 +2326,8 @@
 			var st = dsmState.movements.stats;
 			if (st.formatted_total) $('#dsm-move-kpi-total').text(st.formatted_total);
 			if (st.formatted_active_products) $('#dsm-move-kpi-prods').text(st.formatted_active_products);
+			$('#dsm-move-kpi-prods-sub').text('de ' + (st.formatted_catalog_products || '—') + ' productos activos' + (st.active_pct != null ? ' (' + Number(st.active_pct).toFixed(1) + '%)' : ''));
+			Object.keys(st.shares || {}).forEach(function (k) { $('#dsm-move-share-' + k).text(st.shares[k]); });
 		}
 	}
 

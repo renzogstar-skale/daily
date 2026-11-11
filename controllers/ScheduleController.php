@@ -20,9 +20,10 @@ class ScheduleController extends BaseController
 		$eqSvc = WorkforceScheduleEquivalenceService::GetInstance();
 		$q = $request->getQueryParams();
 		$db = DatabaseService::GetInstance()->GetDbConnectionRaw();
-		$canManage = DairyAccess::HasAny([User::PERMISSION_WORKFORCE_SCHEDULE_MANAGE]);
-		$canAttendance = DairyAccess::HasAny([User::PERMISSION_WORKFORCE_ATTENDANCE_MANAGE, User::PERMISSION_WORKFORCE_SCHEDULE_MANAGE]);
-		$canForecast = DairyAccess::HasAny([User::PERMISSION_WORKFORCE_SCHEDULE_MANAGE, User::PERMISSION_KPIS_VIEW]);
+		$isEmployeeSim = DairyAccess::GetSimulatedRole() === 'empleado';
+		$canManage = !$isEmployeeSim && DairyAccess::HasAny([User::PERMISSION_WORKFORCE_SCHEDULE_MANAGE]);
+		$canAttendance = !$isEmployeeSim && DairyAccess::HasAny([User::PERMISSION_WORKFORCE_ATTENDANCE_MANAGE, User::PERMISSION_WORKFORCE_SCHEDULE_MANAGE]);
+		$canForecast = !$isEmployeeSim && DairyAccess::HasAny([User::PERMISSION_WORKFORCE_SCHEDULE_MANAGE, User::PERMISSION_KPIS_VIEW]);
 		$my = $svc->GetMySchedule(GROCY_USER_ID);
 
 		$demoSvc = \Grocy\Services\DemoSchedulingScenarioService::GetInstance();
@@ -204,6 +205,46 @@ class ScheduleController extends BaseController
 			'bodega_surge' => 'Pico de preparación en Bodega (E-Commerce/Despachos)'
 		];
 
+		// Seguridad RBAC: el rol empleado no debe recibir costos laborales, salarios por hora, ventas ni presupuestos
+		$myEmployeeId = !empty($my['employee']->id) ? intval($my['employee']->id) : 0;
+		$myPayrollCode = !empty($my['employee']->payroll_code) ? strval($my['employee']->payroll_code) : null;
+		if (!$canManage)
+		{
+			unset($weekData['labor_cost']);
+			foreach ($weekData['employees'] as $wEmp)
+			{
+				if (isset($wEmp->hourly_cost))
+				{
+					$wEmp->hourly_cost = null;
+				}
+			}
+			foreach (['labor_cost', 'budget_used', 'sales_projected', 'splh_revenue'] as $hiddenKey)
+			{
+				if (isset($kpis[$hiddenKey]))
+				{
+					unset($kpis[$hiddenKey]);
+				}
+			}
+			$dynamicPlan['budget'] = [];
+			$dynamicPlan['sales'] = [];
+			$selectedShift['cost'] = null;
+			$skillsMatrix = array_values(array_filter($skillsMatrix, fn($r) => ($r['payroll_code'] ?? null) === $myPayrollCode));
+			$vacationsList = array_values(array_filter($vacationsList, fn($v) => ($v->payroll_code ?? ($v['payroll_code'] ?? null)) === $myPayrollCode));
+			$bottomCards['requests'] = [];
+		}
+
+		$jurisdictionProfiles = \Grocy\Services\WorkforceLaborRulesService::GetJurisdictionProfiles();
+		$jurisdictionPolicy = $autoSchedSvc->GetBranchJurisdictionPolicy($branchId, $monday);
+		$coverageByDeptHour = $svc->CoverageByDepartmentAndHour($branchId, $monday);
+		$coverageAlerts = $canManage ? $svc->EvaluateAndSyncCoverageAlerts($branchId, $monday) : [];
+		$compensatoryLedger = $canManage
+			? $svc->GetCompensatoryLedger($branchId)
+			: $svc->GetCompensatoryLedger($branchId, $myEmployeeId > 0 ? $myEmployeeId : -1);
+		$allVacBalances = $svc->GetVacationBalances($branchId, $selectedYear);
+		$vacationBalances = $canManage
+			? $allVacBalances
+			: array_values(array_filter($allVacBalances, fn($vb) => intval($vb['employee_id']) === $myEmployeeId));
+
 		return $this->RenderPage($response, 'schedule', [
 			'viewJsExists' => false,
 			'branchId' => $branchId,
@@ -219,7 +260,7 @@ class ScheduleController extends BaseController
 			'currentMatrixDept' => $matrixDept,
 			'currentDemandScenario' => $demandScenario,
 			'branches' => DairyAccess::FilterBranches($db->query('SELECT id, name FROM branches ORDER BY id')->fetchAll(\PDO::FETCH_OBJ)),
-			'equityData' => $equityData,
+			'equityData' => $canManage ? $equityData : ['summary' => [], 'collaborators' => [], 'alerts' => []],
 			'peakDashboardData' => $peakDashboardData,
 			'monthlyScheduleData' => $monthlyScheduleData,
 			'branchViewData' => $branchViewData,
@@ -239,8 +280,8 @@ class ScheduleController extends BaseController
 			'sidebar' => $sidebar,
 			'dynamicPlan' => $dynamicPlan,
 			'departments' => $dynamicPlan['departments'],
-			'budget' => $dynamicPlan['budget'],
-			'sales' => $dynamicPlan['sales'],
+			'budget' => $canManage ? $dynamicPlan['budget'] : [],
+			'sales' => $canManage ? $dynamicPlan['sales'] : [],
 			'deptConfigs' => $deptConfigs,
 			'bottomCards' => $bottomCards,
 			'selectedShift' => $selectedShift,
@@ -250,7 +291,7 @@ class ScheduleController extends BaseController
 			'canManage' => $canManage,
 			'canAttendance' => $canAttendance,
 			'canForecast' => $canForecast,
-			'canOvertime' => DairyAccess::HasAny([User::PERMISSION_WORKFORCE_OVERTIME_APPROVE]),
+			'canOvertime' => !$isEmployeeSim && DairyAccess::HasAny([User::PERMISSION_WORKFORCE_OVERTIME_APPROVE]),
 			'forecastBands' => \Grocy\Services\LaborForecastService::Bands(),
 			'allEmployees' => $canManage ? $svc->GetEmployees($branchId, true) : [],
 			'users' => $canManage ? $db->query("SELECT id, username, TRIM(IFNULL(first_name, '') || ' ' || IFNULL(last_name, '')) AS display FROM users ORDER BY username")->fetchAll(\PDO::FETCH_OBJ) : [],
@@ -260,8 +301,13 @@ class ScheduleController extends BaseController
 			'coverageReqs' => $svc->GetCoverageRequirements($branchId),
 			'certifications' => $canManage ? $svc->GetCertifications($branchId) : [],
 			'roleRequirements' => $canManage ? $svc->GetRoleRequirements() : [],
-			'wasteBands' => $canManage ? $svc->GetWasteByTimeBand($branchId, $from28, date('Y-m-d')) : [],
-			'absenceTypes' => WorkforceScheduleService::ABSENCE_TYPES
+			'absenceTypes' => WorkforceScheduleService::ABSENCE_TYPES,
+			'jurisdictionProfiles' => $jurisdictionProfiles,
+			'jurisdictionPolicy' => $jurisdictionPolicy,
+			'coverageByDeptHour' => $coverageByDeptHour,
+			'coverageAlerts' => $coverageAlerts,
+			'compensatoryLedger' => $compensatoryLedger,
+			'vacationBalances' => $vacationBalances
 		]);
 	}
 }

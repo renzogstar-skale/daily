@@ -47,22 +47,18 @@ class RetailPreventionController extends BaseController
 		$orders = $db->query("
 			SELECT o.*, c.name AS customer_name, b.name AS branch_name,
 			       (SELECT COUNT(*) FROM customer_order_items WHERE order_id = o.id) AS lines_count,
+			       (SELECT IFNULL(SUM(amount), 0) FROM customer_order_items WHERE order_id = o.id) AS total_units,
+			       (SELECT IFNULL(SUM(picked_amount), 0) FROM customer_order_items WHERE order_id = o.id) AS total_picked_units,
 			       (SELECT IFNULL(SUM(amount * unit_price), 0) FROM customer_order_items WHERE order_id = o.id) AS total_amount,
 			       (SELECT COUNT(*) FROM dispatch_variances WHERE order_id = o.id) AS variances_count,
 			       (SELECT COUNT(*) FROM dispatch_variances WHERE order_id = o.id AND resolution_status = 'pending') AS pending_variances_count,
-			       (SELECT COUNT(*) FROM customer_order_items WHERE order_id = o.id AND amount != picked_amount) AS unreconciled_items_count
+			       (SELECT COUNT(*) FROM dispatch_logistics_incidents WHERE order_id = o.id AND resolution_status = 'open') AS open_incidents_count,
+			       (SELECT COUNT(*) FROM customer_order_items WHERE order_id = o.id AND amount != IFNULL(picked_amount, 0)) AS unreconciled_items_count
 			FROM customer_orders o
 			JOIN customers c ON o.customer_id = c.id
 			LEFT JOIN branches b ON o.branch_id = b.id
 			WHERE $wSql
-			ORDER BY CASE 
-				WHEN o.order_code = 'PED-2026-00002' THEN 1 
-				WHEN o.order_code = 'PED-2026-00001' THEN 2 
-				WHEN o.order_code = 'PED-2026-00003' THEN 3 
-				WHEN o.order_code = 'PED-2026-00004' THEN 4 
-				WHEN o.order_code = 'PED-2026-00005' THEN 5 
-				ELSE 6 
-			END, o.id ASC
+			ORDER BY o.id DESC
 		")->fetchAll(\PDO::FETCH_ASSOC);
 
 		// Thumbnails map for orders
@@ -74,7 +70,7 @@ class RetailPreventionController extends BaseController
 			'PED-2026-00005' => '/img/control_center/depto_carniceria.jpg',
 		];
 
-		// Transport vehicles fleet
+		// Transport vehicles catalog (selectable in Schedule Transport modal)
 		$vehicles = [
 			['code' => 'VH-01', 'name' => 'Camión C-08 ThermoKing', 'plate' => 'WXY-882', 'capacity_kg' => 3500, 'volume_m3' => 18.5, 'temp' => 'Refrigerado (-2°C a 4°C)', 'status' => 'active'],
 			['code' => 'VH-02', 'name' => 'Furgón F-12 Frío Directo', 'plate' => 'TKL-409', 'capacity_kg' => 2000, 'volume_m3' => 12.0, 'temp' => 'Refrigerado (0°C a 5°C)', 'status' => 'active'],
@@ -85,35 +81,61 @@ class RetailPreventionController extends BaseController
 		// Users for picking & transport assignment
 		$users = $db->query("SELECT id, username, first_name, last_name FROM users ORDER BY username ASC")->fetchAll(\PDO::FETCH_ASSOC);
 
-		// Calculate the 8 Specific KPIs
 		$todayStr = date('Y-m-d');
-		$pendingCount = 0;
-		$dispatchedCount = 0;
+		$nowTs = time();
+		$pendingCount = 0;      // draft + confirmed (pendientes / reservados)
+		$preparingCount = 0;    // picking + picked (en preparación)
+		$readyCount = 0;        // packed (listos para despacho)
+		$dispatchedCount = 0;   // dispatched / delivered
 		$overdueCount = 0;
 		$incidentsCount = 0;
+		$otifEvaluatedCount = 0;
 		$otifCompliantCount = 0;
 		$prepAccuracySum = 0.0;
 		$prepAccuracyTotal = 0;
+		$prepMinsList = [];
+		$dispatchedTodayHours = [];
 
-		$channelNames = ['POS Punto de Venta', 'Web / E-Commerce', 'Almacén B2B', 'App Móvil Retail'];
+		$routesMap = [];
 
 		foreach ($orders as &$ord)
 		{
 			$ord['thumbnail'] = $orderThumbMap[$ord['order_code']] ?? '/img/control_center/daily_card_dairy.jpg';
+			$ord['channel'] = !empty($ord['channel']) ? $ord['channel'] : ($ord['delivery_type'] === 'pickup' ? 'Click & Collect' : 'Despacho Domicilio');
+			$ord['route_name'] = trim((string)($ord['route_name'] ?? '')) ?: (($ord['delivery_type'] ?? 'pickup') === 'pickup' ? 'Mostrador Retiro' : 'Sin ruta asignada');
+			$ord['stages'] = \Grocy\Services\RetailPreventionService::BuildOrderStages($ord);
 
-			// Channel origin
-			$ord['channel'] = $ord['channel'] ?? $channelNames[$ord['id'] % count($channelNames)];
-
-			// Priority
-			$reqDate = !empty($ord['requested_date']) ? $ord['requested_date'] : $todayStr;
-			if ($reqDate < $todayStr && !in_array($ord['status'], ['dispatched', 'delivered', 'cancelled']))
+			$st = $ord['status'] ?? 'draft';
+			$delSt = $ord['delivery_status'] ?? 'pending';
+			$reqDate = !empty($ord['requested_date']) ? substr((string)$ord['requested_date'], 0, 10) : substr((string)($ord['created_at'] ?? $todayStr), 0, 10);
+			$isTerminalDelivered = in_array($delSt, ['delivered', 'partial', 'rejected'], true) || !empty($ord['conciliated_at']);
+			$isOverdue = false;
+			if ($st !== 'cancelled' && !$isTerminalDelivered)
 			{
-				$ord['priority'] = 'Urgente';
+				if ($reqDate < $todayStr)
+				{
+					$isOverdue = true;
+				}
+				elseif (!empty($ord['scheduled_time_slot_end']) && strtotime((string)$ord['scheduled_time_slot_end']) < $nowTs)
+				{
+					$isOverdue = true;
+				}
+			}
+			$ord['is_overdue'] = $isOverdue;
+
+			if ($st === 'cancelled')
+			{
+				$ord['priority'] = 'Anulado';
+				$ord['priority_class'] = 'badge-secondary';
+			}
+			elseif ($isOverdue)
+			{
+				$ord['priority'] = 'Urgente (Atrasado)';
 				$ord['priority_class'] = 'badge-danger';
 			}
 			elseif ($reqDate === $todayStr)
 			{
-				$ord['priority'] = 'Alta';
+				$ord['priority'] = 'Hoy';
 				$ord['priority_class'] = 'badge-warning';
 			}
 			else
@@ -122,96 +144,177 @@ class RetailPreventionController extends BaseController
 				$ord['priority_class'] = 'badge-secondary';
 			}
 
-			// Delivery route
-			$ord['route_name'] = $ord['route_name'] ?? ('Ruta ' . chr(65 + ($ord['id'] % 5)) . ' - Zona ' . (($ord['id'] % 4) + 1));
-
-			// Vehicle assigned
-			if (empty($ord['carrier_vehicle']) && $ord['delivery_type'] === 'delivery')
+			// Canonical 7-stage status label
+			$hasInc = !empty($ord['route_incidents']) || intval($ord['pending_variances_count']) > 0 || intval($ord['open_incidents_count']) > 0;
+			if ($st === 'cancelled')
 			{
-				$v = $vehicles[$ord['id'] % count($vehicles)];
-				$ord['carrier_vehicle'] = $v['name'] . ' (' . $v['plate'] . ')';
+				$ord['tracking_status'] = 'Cancelado';
+				$ord['tracking_class'] = 'badge-secondary';
 			}
-
-			// Tracking status text
-			$st = $ord['status'] ?? 'draft';
-			$delSt = $ord['delivery_status'] ?? 'pending';
-			if (!empty($ord['route_incidents']) || intval($ord['pending_variances_count']) > 0)
+			elseif (!empty($ord['conciliated_at']))
 			{
-				$ord['tracking_status'] = 'Incidencia';
+				$ord['tracking_status'] = 'Conciliado';
+				$ord['tracking_class'] = 'badge-success';
+			}
+			elseif ($delSt === 'partial')
+			{
+				$ord['tracking_status'] = 'Entrega Parcial';
+				$ord['tracking_class'] = 'badge-warning';
+			}
+			elseif ($delSt === 'rejected')
+			{
+				$ord['tracking_status'] = 'Rechazado';
 				$ord['tracking_class'] = 'badge-danger';
 			}
 			elseif ($delSt === 'delivered')
 			{
-				$ord['tracking_status'] = 'Entregado';
+				$ord['tracking_status'] = 'Entregado (POD)';
 				$ord['tracking_class'] = 'badge-success';
 			}
-			elseif ($delSt === 'in_transit' || ($st === 'dispatched' && $ord['delivery_type'] === 'delivery'))
+			elseif ($hasInc && $st === 'dispatched')
 			{
-				$ord['tracking_status'] = 'En tránsito';
-				$ord['tracking_class'] = 'badge-info';
+				$ord['tracking_status'] = 'Incidencia en ruta';
+				$ord['tracking_class'] = 'badge-danger';
 			}
 			elseif ($st === 'dispatched')
 			{
-				$ord['tracking_status'] = 'Despachado';
+				$ord['tracking_status'] = ($ord['delivery_type'] ?? 'pickup') === 'pickup' ? 'Listo p/ Retiro PIN' : 'En tránsito';
+				$ord['tracking_class'] = 'badge-info';
+			}
+			elseif ($st === 'packed')
+			{
+				$ord['tracking_status'] = 'Packing / Listo Despacho';
 				$ord['tracking_class'] = 'badge-primary';
 			}
-			elseif ($st === 'packed' || $st === 'picked')
+			elseif ($st === 'picked')
 			{
-				$ord['tracking_status'] = 'Listo para salida';
+				$ord['tracking_status'] = 'Picking Validado';
 				$ord['tracking_class'] = 'badge-primary';
 			}
 			elseif ($st === 'picking')
 			{
-				$ord['tracking_status'] = 'En preparación';
+				$ord['tracking_status'] = 'En Picking';
 				$ord['tracking_class'] = 'badge-warning';
 			}
 			elseif ($st === 'confirmed')
 			{
-				$ord['tracking_status'] = 'Confirmado';
+				$ord['tracking_status'] = 'Reservado';
 				$ord['tracking_class'] = 'badge-secondary';
 			}
 			else
 			{
-				$ord['tracking_status'] = 'Pendiente';
+				$ord['tracking_status'] = 'Pedido Nuevo';
 				$ord['tracking_class'] = 'badge-secondary';
 			}
 
-			// Counts for KPIs
-			if (in_array($st, ['draft', 'confirmed', 'picking', 'picked', 'packed']) && $delSt !== 'delivered')
+			// Real counts (excluding cancelled)
+			if ($st !== 'cancelled')
 			{
-				$pendingCount++;
-				if ($reqDate < $todayStr)
+				if (in_array($st, ['draft', 'confirmed'], true))
+				{
+					$pendingCount++;
+				}
+				elseif (in_array($st, ['picking', 'picked'], true))
+				{
+					$preparingCount++;
+				}
+				elseif ($st === 'packed')
+				{
+					$readyCount++;
+				}
+				elseif ($st === 'dispatched' || $isTerminalDelivered)
+				{
+					$dispatchedCount++;
+					$hKey = !empty($ord['dispatched_at']) ? date('Y-m-d H', strtotime((string)$ord['dispatched_at'])) : null;
+					if ($hKey)
+					{
+						$dispatchedTodayHours[$hKey] = true;
+					}
+				}
+				if ($isOverdue)
 				{
 					$overdueCount++;
 				}
-			}
-			if ($st === 'dispatched' || $delSt === 'delivered')
-			{
-				$dispatchedCount++;
-			}
-			if (!empty($ord['route_incidents']) || intval($ord['variances_count']) > 0)
-			{
-				$incidentsCount++;
-			}
-
-			if ($st === 'dispatched' || $delSt === 'delivered')
-			{
-				if (empty($ord['route_incidents']) && intval($ord['pending_variances_count']) === 0)
+				if ($hasInc || intval($ord['variances_count']) > 0)
 				{
-					$otifCompliantCount++;
+					$incidentsCount++;
+				}
+
+				// Real OTIF: strictly evaluated on completed delivery/partial/rejected orders (On-Time AND In-Full)
+				if (in_array($delSt, ['delivered', 'partial', 'rejected'], true))
+				{
+					$otifEvaluatedCount++;
+					$isInFull = ($delSt === 'delivered') && floatval($ord['delivery_accuracy_pct'] ?? 100.0) >= 99.9 && floatval($ord['preparation_accuracy_pct'] ?? 100.0) >= 99.9 && intval($ord['pending_variances_count']) === 0;
+					$deadline = !empty($ord['scheduled_time_slot_end']) ? (string)$ord['scheduled_time_slot_end'] : ($reqDate . ' 23:59:59');
+					$delivTs = !empty($ord['delivery_time']) ? strtotime((string)$ord['delivery_time']) : false;
+					$deadTs = strtotime($deadline);
+					$isOnTime = ($delivTs && $deadTs) ? ($delivTs <= $deadTs) : true;
+					if ($isInFull && $isOnTime)
+					{
+						$otifCompliantCount++;
+					}
+				}
+
+				if (!in_array($st, ['draft', 'confirmed'], true) && $ord['preparation_accuracy_pct'] !== null)
+				{
+					$prepAccuracySum += floatval($ord['preparation_accuracy_pct']);
+					$prepAccuracyTotal++;
+				}
+
+				$startRaw = $ord['confirmed_at'] ?? $ord['created_at'] ?? null;
+				$endRaw = $ord['packed_at'] ?? $ord['picked_at'] ?? $ord['dispatched_at'] ?? null;
+				if (!empty($startRaw) && !empty($endRaw))
+				{
+					$sTs = strtotime((string)$startRaw);
+					$eTs = strtotime((string)$endRaw);
+					if ($sTs && $eTs && $eTs >= $sTs && ($eTs - $sTs) <= 86400)
+					{
+						$prepMinsList[] = ($eTs - $sTs) / 60.0;
+					}
+				}
+
+				// Aggregate real route metrics
+				if (($ord['delivery_type'] ?? 'pickup') === 'delivery')
+				{
+					$rKey = $ord['route_name'];
+					if (!isset($routesMap[$rKey]))
+					{
+						$routesMap[$rKey] = [
+							'route_name' => $rKey,
+							'orders_count' => 0,
+							'delivered_count' => 0,
+							'in_transit_count' => 0,
+							'carrier_name' => $ord['carrier_name'] ?: 'Sin asignar',
+							'carrier_vehicle' => $ord['carrier_vehicle'] ?: 'Sin unidad',
+							'packages' => 0
+						];
+					}
+					$routesMap[$rKey]['orders_count']++;
+					$routesMap[$rKey]['packages'] += max(1, intval($ord['packages'] ?? 1));
+					if ($ord['carrier_name'] && $routesMap[$rKey]['carrier_name'] === 'Sin asignar')
+					{
+						$routesMap[$rKey]['carrier_name'] = $ord['carrier_name'];
+					}
+					if ($ord['carrier_vehicle'] && $routesMap[$rKey]['carrier_vehicle'] === 'Sin unidad')
+					{
+						$routesMap[$rKey]['carrier_vehicle'] = $ord['carrier_vehicle'];
+					}
+					if ($delSt === 'delivered')
+					{
+						$routesMap[$rKey]['delivered_count']++;
+					}
+					elseif ($st === 'dispatched')
+					{
+						$routesMap[$rKey]['in_transit_count']++;
+					}
 				}
 			}
 
-			if (!empty($ord['preparation_accuracy_pct']))
-			{
-				$prepAccuracySum += floatval($ord['preparation_accuracy_pct']);
-				$prepAccuracyTotal++;
-			}
-
-			if (intval($ord['pending_variances_count']) > 0)
+			if (intval($ord['pending_variances_count']) > 0 || intval($ord['open_incidents_count']) > 0)
 			{
 				$ord['notice_type'] = 'pending_variance';
-				$ord['notice_text'] = $ord['pending_variances_count'] . ' variación pendiente';
+				$cntAlert = intval($ord['pending_variances_count']) + intval($ord['open_incidents_count']);
+				$ord['notice_text'] = $cntAlert . ' alerta pendiente';
 				$ord['notice_class'] = 'badge-danger';
 				$ord['notice_icon'] = 'fa-triangle-exclamation';
 			}
@@ -222,57 +325,52 @@ class RetailPreventionController extends BaseController
 				$ord['notice_class'] = 'badge-success';
 				$ord['notice_icon'] = 'fa-circle-check';
 			}
-			elseif (intval($ord['unreconciled_items_count']) > 0)
+			elseif (!in_array($st, ['draft', 'confirmed', 'cancelled'], true) && intval($ord['unreconciled_items_count']) > 0)
 			{
 				$ord['notice_type'] = 'review_reconciliation';
-				$ord['notice_text'] = 'Revisar conciliación';
+				$ord['notice_text'] = 'Diferencia preparación';
 				$ord['notice_class'] = 'badge-warning';
 				$ord['notice_icon'] = 'fa-triangle-exclamation';
 			}
 			else
 			{
 				$ord['notice_type'] = 'no_diff';
-				$ord['notice_text'] = 'Sin diferencias';
+				$ord['notice_text'] = !empty($ord['conciliated_at']) ? 'Conciliado OK' : 'En orden';
 				$ord['notice_class'] = 'badge-success';
 				$ord['notice_icon'] = 'fa-circle-check';
 			}
 		}
 		unset($ord);
 
-		$totalEvaluated = max(1, $dispatchedCount);
-		$otifRate = round(($otifCompliantCount / $totalEvaluated) * 100.0, 1);
-		if ($otifRate < 90.0) $otifRate = 96.8;
-
-		$pickingAccuracy = $prepAccuracyTotal > 0 ? round($prepAccuracySum / $prepAccuracyTotal, 1) : 99.2;
-		$avgPrepTime = '18.5 min';
-		$productivityPerHour = '4.8 ped/h';
+		$otifRate = $otifEvaluatedCount > 0 ? round(($otifCompliantCount / $otifEvaluatedCount) * 100.0, 1) : null;
+		$pickingAccuracy = $prepAccuracyTotal > 0 ? round($prepAccuracySum / $prepAccuracyTotal, 1) : null;
+		$avgPrepTime = count($prepMinsList) > 0 ? (round(array_sum($prepMinsList) / count($prepMinsList), 1) . ' min') : 'Sin información';
+		$activeHours = count($dispatchedTodayHours);
+		$productivityPerHour = ($dispatchedCount > 0 && $activeHours > 0) ? (round($dispatchedCount / $activeHours, 1) . ' ped/h') : 'Sin información';
 
 		$kpis = [
 			'pending_orders' => $pendingCount,
+			'preparing_orders' => $preparingCount,
+			'ready_orders' => $readyCount,
 			'dispatched_orders' => $dispatchedCount,
 			'overdue_orders' => $overdueCount,
 			'otif_pct' => $otifRate,
+			'otif_evaluated' => $otifEvaluatedCount,
 			'picking_accuracy_pct' => $pickingAccuracy,
 			'prep_time_minutes' => $avgPrepTime,
 			'incidents_count' => $incidentsCount,
 			'productivity' => $productivityPerHour
 		];
 
-		// Default selected order: prefer PED-2026-00002
+		// Default selected order: prefer active operational order (or first in list)
 		if ($selectedOrderId === null && !empty($orders))
 		{
-			$matchPed2 = array_filter($orders, fn($o) => $o['order_code'] === 'PED-2026-00002');
-			if (!empty($matchPed2))
-			{
-				$selectedOrderId = intval(reset($matchPed2)['id']);
-			}
-			else
-			{
-				$selectedOrderId = intval($orders[0]['id']);
-			}
+			$activeFirst = array_filter($orders, fn($o) => !in_array($o['status'], ['cancelled'], true));
+			$firstOrd = !empty($activeFirst) ? reset($activeFirst) : $orders[0];
+			$selectedOrderId = intval($firstOrd['id']);
 		}
 
-		// Preload all order details into map for instant front-end switching
+		// Preload order details into map for instant switching
 		$ordersDetailMap = [];
 		foreach ($orders as $ord)
 		{
@@ -287,8 +385,36 @@ class RetailPreventionController extends BaseController
 
 		$selectedDetail = $ordersDetailMap[$selectedOrderId] ?? null;
 
-		// Comparative Analytics (Pickup vs Delivery)
+		// Real comparative analytics (Pickup vs Delivery)
 		$analytics = $this->Svc()->GetDispatchComparativeAnalytics($branchId);
+
+		// Real logistics incidents log
+		$incWhere = $branchId ? ("WHERE i.branch_id = " . intval($branchId)) : "";
+		$openIncidents = $db->query("
+			SELECT i.*, o.order_code, c.name AS customer_name, b.name AS branch_name
+			FROM dispatch_logistics_incidents i
+			JOIN customer_orders o ON o.id = i.order_id
+			LEFT JOIN customers c ON c.id = o.customer_id
+			LEFT JOIN branches b ON b.id = i.branch_id
+			$incWhere
+			ORDER BY CASE WHEN i.resolution_status = 'open' THEN 0 ELSE 1 END, i.id DESC
+			LIMIT 100
+		")->fetchAll(\PDO::FETCH_ASSOC);
+
+		// Customers & Sellable Products for "+ Nuevo Pedido" modal
+		$customers = $db->query("SELECT id, name FROM customers WHERE IFNULL(active, 1) = 1 ORDER BY name ASC")->fetchAll(\PDO::FETCH_ASSOC);
+		$sellableProducts = $db->query("
+			SELECT p.id, p.name, p.sku,
+			       COALESCE(
+			           (SELECT price FROM cache__products_last_purchased WHERE product_id = p.id),
+			           0
+			       ) AS ref_price,
+			       IFNULL((SELECT SUM(amount) FROM stock WHERE product_id = p.id AND amount > 0), 0) AS stock_avail
+			FROM products p
+			WHERE IFNULL(p.active, 1) = 1
+			ORDER BY p.name ASC
+			LIMIT 200
+		")->fetchAll(\PDO::FETCH_ASSOC);
 
 		return $this->RenderPage($response, 'dispatch', [
 			'orders' => $orders,
@@ -297,6 +423,10 @@ class RetailPreventionController extends BaseController
 			'ordersDetailMap' => $ordersDetailMap,
 			'ordersDetailMapJson' => json_encode($ordersDetailMap, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
 			'analytics' => $analytics,
+			'routesSummary' => array_values($routesMap),
+			'openIncidents' => $openIncidents,
+			'customers' => $customers,
+			'sellableProducts' => $sellableProducts,
 			'branches' => $branches,
 			'selectedBranchId' => $branchId,
 			'deliveryTypeFilter' => $deliveryTypeFilter,
@@ -317,10 +447,9 @@ class RetailPreventionController extends BaseController
 		$branchService = BranchService::GetInstance();
 		$branches = $branchService->GetBranches();
 
-		$data = $this->Svc()->GetReturns($branchId, $statusFilter, $typeFilter);
+		$data = $this->Svc()->GetReturns($branchId, $statusFilter, $typeFilter, null);
 		$returns = $data['returns'];
 
-		// Food & product photography thumbnail mappings
 		$thumbMap = [
 			'Galletas' => '/img/control_center/thumb_cookies.jpg',
 			'Chocolate' => '/img/control_center/thumb_chocolate.jpg',
@@ -329,103 +458,129 @@ class RetailPreventionController extends BaseController
 			'Huevos' => '/img/control_center/huevos_grandes.jpg',
 		];
 
-		// 8 real lifecycle stages
+		// 6 canonical reverse-logistics lifecycle stages
 		$stageMeta = [
-			'solicitud' => ['num' => 1, 'name' => 'Solicitud', 'action' => 'Identificar mercancía', 'badge' => 'ret-stage-amber'],
-			'identificacion' => ['num' => 2, 'name' => 'Identificación', 'action' => 'Iniciar inspección', 'badge' => 'ret-stage-amber'],
-			'inspeccion' => ['num' => 3, 'name' => 'Inspección', 'action' => 'Revisar inspección', 'badge' => 'ret-stage-amber'],
-			'clasificacion' => ['num' => 4, 'name' => 'Clasificación', 'action' => 'Definir destino', 'badge' => 'ret-stage-amber'],
-			'aprobada' => ['num' => 5, 'name' => 'Aprobada', 'action' => 'Confirmar disposición', 'badge' => 'ret-stage-green'],
-			'disposicion' => ['num' => 6, 'name' => 'Disposición', 'action' => 'Ejecutar movimiento', 'badge' => 'ret-stage-teal'],
-			'conciliada' => ['num' => 7, 'name' => 'Conciliada', 'action' => 'Cerrar caso', 'badge' => 'ret-stage-green'],
-			'cerrada' => ['num' => 8, 'name' => 'Cerrada', 'action' => 'Ver expediente', 'badge' => 'ret-stage-green'],
+			'solicitud' => ['num' => 1, 'name' => 'Solicitud', 'action' => 'Registrar recepción física', 'badge' => 'ret-stage-amber'],
+			'recepcion' => ['num' => 2, 'name' => 'Recepción', 'action' => 'Inspeccionar estado físico', 'badge' => 'ret-stage-amber'],
+			'inspeccion' => ['num' => 3, 'name' => 'Inspección', 'action' => 'Clasificar unidades', 'badge' => 'ret-stage-amber'],
+			'clasificacion' => ['num' => 4, 'name' => 'Clasificación', 'action' => 'Autorizar disposición', 'badge' => 'ret-stage-teal'],
+			'disposicion' => ['num' => 5, 'name' => 'Disposición', 'action' => 'Conciliar unidades', 'badge' => 'ret-stage-green'],
+			'conciliacion' => ['num' => 6, 'name' => 'Conciliación', 'action' => 'Ver historial y auditoría', 'badge' => 'ret-stage-green'],
+			'rechazada' => ['num' => 1, 'name' => 'Rechazada', 'action' => 'Ver motivo de rechazo', 'badge' => 'ret-stage-amber'],
 		];
 
-		// 7 registered destinations
 		$destMeta = [
 			'cuarentena' => [
 				'title' => 'Cuarentena técnica',
-				'subtitle' => 'Clasificación por revisar',
+				'subtitle' => 'Pendiente de destino final',
 				'badge_class' => 'ret-badge-amber',
-				'detail_notice' => 'Revisar clasificación y condiciones del producto.',
+				'detail_notice' => 'Aislado preventivamente hasta completar inspección y asignar destino definitivo.',
 				'image' => '/img/control_center/dest_cuarentena.jpg',
-				'short_desc' => 'Inspección adicional'
+				'short_desc' => 'En espera'
+			],
+			'pendiente_inspeccion' => [
+				'title' => 'Pendiente inspección física',
+				'subtitle' => 'Recepción desde mostrador POS',
+				'badge_class' => 'ret-badge-amber',
+				'detail_notice' => 'Mercancía física pendiente de verificación de estado y clasificación en bodega.',
+				'image' => '/img/control_center/dest_cuarentena.jpg',
+				'short_desc' => 'Sin inspeccionar'
 			],
 			'reincorporacion' => [
-				'title' => 'Reincorporación',
-				'subtitle' => 'Apto para venta',
+				'title' => 'Apto para reventa',
+				'subtitle' => 'Reingreso a stock vendible',
 				'badge_class' => 'ret-badge-green',
-				'detail_notice' => 'Producto apto verificado para reincorporación al inventario activo de sala.',
+				'detail_notice' => 'Producto íntegro verificado; requiere autorización de supervisor para reingresar al inventario.',
 				'image' => '/img/control_center/dest_reincorporacion.jpg',
-				'short_desc' => 'Apto para venta'
+				'short_desc' => 'Reventa'
 			],
 			'devolucion_proveedor' => [
-				'title' => 'Devolución proveedor (RTV)',
-				'subtitle' => 'Por validar con proveedor',
+				'title' => 'Devolución a proveedor (RTV)',
+				'subtitle' => 'Retorno logístico / crédito',
 				'badge_class' => 'ret-badge-cyan',
-				'detail_notice' => 'Devolución al proveedor acordada. Nota de crédito o reposición comercial requerida.',
+				'detail_notice' => 'Devolución física al proveedor por defecto de origen o rechazo en recepción.',
 				'image' => '/img/control_center/dest_rtv.jpg',
 				'short_desc' => 'RTV'
 			],
-			'merma_definitiva' => [
-				'title' => 'Merma definitiva',
-				'subtitle' => 'Registro completado',
-				'badge_class' => 'ret-badge-red',
-				'detail_notice' => 'Pérdida por daño o merma asumida con descargo contable directo en Kardex.',
-				'image' => '/img/control_center/dest_merma.jpg',
-				'short_desc' => 'Destrucción'
-			],
-			'donacion' => [
-				'title' => 'Donación autorizada',
-				'subtitle' => 'Destino registrado',
-				'badge_class' => 'ret-badge-dark',
-				'detail_notice' => 'Asignado a Banco de Alimentos bajo convenio institucional y acta de entrega.',
-				'image' => '/img/control_center/dest_donacion.jpg',
-				'short_desc' => 'A instituciones'
-			],
-			'destruccion' => [
-				'title' => 'Destrucción controlada',
-				'subtitle' => 'Registro completado',
-				'badge_class' => 'ret-badge-dark',
-				'detail_notice' => 'Acta de desnaturalización y destrucción con constancia ambiental certificada.',
-				'image' => '/img/control_center/dest_destruccion.jpg',
-				'short_desc' => 'Proceso autorizado'
+			'reparacion' => [
+				'title' => 'Reparación / Reacond.',
+				'subtitle' => 'Taller o reempaque técnico',
+				'badge_class' => 'ret-badge-purple',
+				'detail_notice' => 'Envío a taller o estación de reacondicionamiento controlado antes de nueva revisión.',
+				'image' => '/img/control_center/dest_reincorporacion.jpg',
+				'short_desc' => 'Reparación'
 			],
 			'recuperacion' => [
 				'title' => 'Recuperación / Reproceso',
 				'subtitle' => 'Transformación autorizada',
 				'badge_class' => 'ret-badge-purple',
-				'detail_notice' => 'Transformación y aprovechamiento secundario en cocina interna o panadería.',
+				'detail_notice' => 'Transformación y aprovechamiento secundario autorizado en área interna.',
 				'image' => '/img/control_center/dest_reincorporacion.jpg',
 				'short_desc' => 'Reproceso'
-			]
+			],
+			'merma_definitiva' => [
+				'title' => 'Producto dañado / Merma',
+				'subtitle' => 'No apto para reventa',
+				'badge_class' => 'ret-badge-red',
+				'detail_notice' => 'Mercancía dañada o averiada bloqueada para reventa con baja física autorizada.',
+				'image' => '/img/control_center/dest_merma.jpg',
+				'short_desc' => 'Dañado'
+			],
+			'donacion' => [
+				'title' => 'Donación autorizada',
+				'subtitle' => 'Destino institucional',
+				'badge_class' => 'ret-badge-dark',
+				'detail_notice' => 'Asignado a Banco de Alimentos bajo acta física de entrega.',
+				'image' => '/img/control_center/dest_donacion.jpg',
+				'short_desc' => 'Donación'
+			],
+			'destruccion' => [
+				'title' => 'Destrucción controlada',
+				'subtitle' => 'Disposición certificada',
+				'badge_class' => 'ret-badge-dark',
+				'detail_notice' => 'Acta de desnaturalización física y disposición ambiental autorizada.',
+				'image' => '/img/control_center/dest_destruccion.jpg',
+				'short_desc' => 'Destrucción'
+			],
 		];
 
 		$enProcesoCount = 0;
-		$cerradosCount = 0;
+		$conciliadosCount = 0;
+		$posHandoffCount = 0;
+		$logisticsCount = 0;
 
 		foreach ($returns as &$r)
 		{
 			$pName = $r['product_name'] ?? '';
 			$r['thumbnail'] = $thumbMap[$pName] ?? '/img/control_center/daily_scan_crate.jpg';
-			
+
 			$st = $r['status'] ?? 'solicitud';
-			$r['stage_meta'] = $stageMeta[$st] ?? ['num' => 1, 'name' => $st, 'action' => 'Ver detalle', 'badge' => 'ret-stage-amber'];
-			
-			$cl = $r['classification'] ?? 'cuarentena';
+			$r['stage_meta'] = $stageMeta[$st] ?? ['num' => 1, 'name' => ucfirst($st), 'action' => 'Ver detalle', 'badge' => 'ret-stage-amber'];
+
+			$cl = $r['classification'] ?: 'cuarentena';
 			$r['dest_meta'] = $destMeta[$cl] ?? [
 				'title' => $cl,
-				'subtitle' => 'Destino registrado',
+				'subtitle' => 'Destino asignado',
 				'badge_class' => 'ret-badge-dark',
 				'detail_notice' => 'Destino operativo asignado.',
 				'image' => '/img/control_center/dest_cuarentena.jpg',
 				'short_desc' => $cl
 			];
 
-			if (in_array($st, ['cerrada', 'conciliada']))
+			$isPosHandoff = intval($r['is_pos_return'] ?? 0) === 1;
+			if ($isPosHandoff)
 			{
-				$cerradosCount++;
-				$r['group_status'] = 'cerrados';
+				$posHandoffCount++;
+			}
+			else
+			{
+				$logisticsCount++;
+			}
+
+			if (in_array($st, ['conciliacion', 'rechazada'], true))
+			{
+				$conciliadosCount++;
+				$r['group_status'] = 'conciliados';
 			}
 			else
 			{
@@ -433,28 +588,38 @@ class RetailPreventionController extends BaseController
 				$r['group_status'] = 'en_proceso';
 			}
 		}
+		unset($r);
 
-		// Preload products & orders for modals
 		$db = DatabaseService::GetInstance()->GetDbConnectionRaw();
-		$products = $db->query("SELECT id, name, sku, (SELECT price FROM cache__products_last_purchased WHERE product_id = products.id) AS last_cost FROM products WHERE active = 1 ORDER BY name")->fetchAll(\PDO::FETCH_ASSOC);
-		$customers = $db->query("SELECT id, name FROM customers WHERE active = 1 ORDER BY name")->fetchAll(\PDO::FETCH_ASSOC);
+		$products = $db->query("
+			SELECT p.id, p.name, p.sku, p.location_id,
+			       (SELECT barcode FROM product_barcodes pb WHERE pb.product_id = p.id ORDER BY pb.id LIMIT 1) AS barcode,
+			       (SELECT price FROM cache__products_last_purchased WHERE product_id = p.id) AS last_cost
+			FROM products p WHERE p.active = 1 ORDER BY p.name
+		")->fetchAll(\PDO::FETCH_ASSOC);
 		$orders = $db->query("SELECT id, order_code, customer_id FROM customer_orders ORDER BY id DESC LIMIT 50")->fetchAll(\PDO::FETCH_ASSOC);
+		$suppliers = $db->query("SELECT id, name FROM shopping_locations WHERE active = 1 ORDER BY name")->fetchAll(\PDO::FETCH_ASSOC);
+		$locations = $db->query("SELECT id, name, branch_id, is_freezer FROM locations WHERE active = 1 ORDER BY name")->fetchAll(\PDO::FETCH_ASSOC);
 
 		return $this->RenderPage($response, 'returns', [
 			'returns' => $returns,
 			'returnsJson' => json_encode($returns, JSON_UNESCAPED_UNICODE),
 			'destMeta' => $destMeta,
+			'logisticsSummary' => $data['logistics_summary'],
 			'financialSummary' => $data['financial_summary'],
 			'totalCount' => $data['total_count'],
+			'logisticsCount' => $logisticsCount,
+			'posHandoffCount' => $posHandoffCount,
 			'enProcesoCount' => $enProcesoCount,
-			'cerradosCount' => $cerradosCount,
+			'cerradosCount' => $conciliadosCount,
 			'branches' => $branches,
 			'selectedBranchId' => $branchId,
 			'statusFilter' => $statusFilter,
 			'typeFilter' => $typeFilter,
 			'products' => $products,
-			'customers' => $customers,
-			'orders' => $orders
+			'orders' => $orders,
+			'suppliers' => $suppliers,
+			'locations' => $locations,
 		]);
 	}
 }

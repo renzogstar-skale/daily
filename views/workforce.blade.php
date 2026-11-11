@@ -3,25 +3,54 @@
 @section('title', 'Piso de Tienda')
 
 @section('content')
-@php $roleLabels = ['clerk' => 'Auxiliar de piso', 'supervisor' => 'Supervisor', 'manager' => 'Gerente', 'warehouse' => 'Bodeguero', 'stocker' => 'Reponedor']; @endphp
+@php
+$roleLabels = ['clerk' => 'Auxiliar de piso', 'supervisor' => 'Supervisor', 'manager' => 'Gerente', 'warehouse' => 'Bodeguero', 'stocker' => 'Reponedor'];
+$canManage = $canManage ?? false;
+$wfTotal = max(1, intval($taskMetrics['total'] ?? count($tasks ?? [])));
+$wfCompliancePct = round((intval($taskMetrics['completed'] ?? 0) / $wfTotal) * 100, 1);
+@endphp
 <div class="row align-items-center mb-3 dairy-page-header">
-	<div class="col-md-8 d-flex align-items-center">
+	<div class="col-md-7 d-flex align-items-center">
 		<div class="dairy-page-icon is-success"><i class="fa-solid fa-mobile-screen-button"></i></div>
 		<div>
-			<h4 class="dairy-page-title">Piso de Tienda</h4>
-			<p class="dairy-page-subtitle">Gestión operativa móvil: checklists de apertura, barrido preventivo FEFO y captura express de averías con evidencia.</p>
+			<h4 class="dairy-page-title">Piso de Tienda y Ejecución Operativa</h4>
+			<p class="dairy-page-subtitle">Ejecución del personal en tienda: checklists por turno, cumplimiento de tareas asignadas, capacitaciones e incidentes operativos.</p>
 		</div>
 	</div>
-	<div class="col-md-4 text-md-right mt-2 mt-md-0 dairy-page-actions">
-		<a href="{{ $U('/equipment') }}" class="btn btn-outline-secondary btn-sm shadow-sm mr-1">
-			<i class="fa-solid fa-temperature-low mr-1"></i>Equipos de Frío
+	<div class="col-md-5 text-md-right mt-2 mt-md-0 dairy-page-actions">
+		<a href="{{ $U('/operations/scheduling') }}" class="btn btn-outline-primary btn-sm shadow-sm mr-1">
+			<i class="fa-solid fa-calendar-days mr-1"></i>Horarios y Turnos
 		</a>
-		<a href="{{ $U('/waste') }}" class="btn btn-outline-danger btn-sm shadow-sm mr-1">
-			<i class="fa-solid fa-trash-can mr-1"></i>Control de Mermas
+		<a href="{{ $U('/operations/attendance') }}" class="btn btn-outline-success btn-sm shadow-sm mr-1">
+			<i class="fa-solid fa-fingerprint mr-1"></i>Asistencia
 		</a>
-		<a href="{{ $U('/pos') }}" class="btn btn-success btn-sm shadow-sm">
-			<i class="fa-solid fa-cash-register mr-1"></i>Punto de Venta
+		@if($canManage)
+		<a href="{{ $U('/hr') }}" class="btn btn-success btn-sm shadow-sm">
+			<i class="fa-solid fa-users-gear mr-1"></i>Portal RR.HH.
 		</a>
+		@endif
+	</div>
+</div>
+
+<!-- Ciclo Operativo Laboral de 7 Etapas -->
+<div class="card shadow-sm border-0 mb-3 bg-white" id="wf-cycle-banner">
+	<div class="card-body py-2 px-3 d-flex flex-wrap align-items-center justify-content-between" style="gap: 8px;">
+		<span class="small font-weight-bold text-uppercase text-muted"><i class="fa-solid fa-arrows-spin mr-1 text-primary"></i>Ciclo de Operaciones y Personal</span>
+		<div class="d-flex flex-wrap align-items-center small" style="gap: 6px;">
+			<span class="badge badge-light border text-muted">1. Planificar</span>
+			<i class="fa-solid fa-chevron-right text-muted" style="font-size: .65rem;"></i>
+			<span class="badge badge-light border text-muted">2. Programar</span>
+			<i class="fa-solid fa-chevron-right text-muted" style="font-size: .65rem;"></i>
+			<span class="badge badge-light border text-muted">3. Asignar</span>
+			<i class="fa-solid fa-chevron-right text-muted" style="font-size: .65rem;"></i>
+			<span class="badge badge-light border text-muted">4. Registrar asistencia</span>
+			<i class="fa-solid fa-chevron-right text-muted" style="font-size: .65rem;"></i>
+			<span class="badge badge-primary px-2 py-1"><i class="fa-solid fa-play mr-1"></i>5. Ejecutar</span>
+			<i class="fa-solid fa-chevron-right text-muted" style="font-size: .65rem;"></i>
+			<span class="badge badge-light border text-muted">6. Evaluar ({{ $wfCompliancePct }}%)</span>
+			<i class="fa-solid fa-chevron-right text-muted" style="font-size: .65rem;"></i>
+			<span class="badge badge-light border text-muted">7. Ajustar</span>
+		</div>
 	</div>
 </div>
 
@@ -47,19 +76,19 @@
 @if(isset($taskMetrics))
 @include('components.dairy_kpi_row', ['kpis' => [
 	['label' => 'Tareas Vencidas', 'value' => $taskMetrics['overdue'], 'sub' => 'requieren atención urgente', 'icon' => 'fa-clock-rotate-left', 'tone' => $taskMetrics['overdue'] > 0 ? 'danger' : 'success', 'alert' => $taskMetrics['overdue'] > 0],
-	['label' => 'Tareas Bloqueadas', 'value' => $taskMetrics['blocked'], 'sub' => 'en espera de insumo / técnico', 'icon' => 'fa-lock', 'tone' => $taskMetrics['blocked'] > 0 ? 'warning' : 'secondary', 'alert' => $taskMetrics['blocked'] > 0],
+	['label' => 'Tareas Bloqueadas', 'value' => $taskMetrics['blocked'], 'sub' => 'en espera de autorización / insumo', 'icon' => 'fa-lock', 'tone' => $taskMetrics['blocked'] > 0 ? 'warning' : 'secondary', 'alert' => $taskMetrics['blocked'] > 0],
 	['label' => 'En Progreso', 'value' => $taskMetrics['in_progress'], 'sub' => 'en ejecución en piso', 'icon' => 'fa-spinner', 'tone' => 'primary'],
 	['label' => 'Pendientes', 'value' => $taskMetrics['pending'], 'sub' => 'por iniciar en el turno', 'icon' => 'fa-list-check', 'tone' => 'secondary'],
-	['label' => 'Completadas', 'value' => $taskMetrics['completed'], 'sub' => 'de ' . $taskMetrics['total'] . ' tareas totales', 'icon' => 'fa-circle-check', 'tone' => 'success']
+	['label' => 'Cumplimiento', 'value' => $wfCompliancePct . '%', 'sub' => $taskMetrics['completed'] . ' de ' . $taskMetrics['total'] . ' tareas completadas', 'icon' => 'fa-circle-check', 'tone' => $wfCompliancePct >= 80 ? 'success' : 'warning']
 ]])
 @endif
 
-<!-- NAVEGACIÓN EN PESTAÑAS: OPERACIONES, PERSONAL, CERTIFICACIONES, MANTENIMIENTO E INCIDENTES -->
+<!-- NAVEGACIÓN EN PESTAÑAS: TAREAS, CERTIFICACIONES E INCIDENTES DE PERSONAL -->
 <div class="mb-3">
 	<ul class="nav nav-pills bg-white shadow-sm p-1 rounded border" id="workforceTabs" role="tablist">
 		<li class="nav-item">
 			<a class="nav-link active font-weight-bold" id="wf-tab-floor-link" data-toggle="pill" href="#wf-tab-floor" role="tab">
-				<i class="fa-solid fa-list-check mr-1 text-primary"></i>1. Piso de Tienda & Tareas de Turno
+				<i class="fa-solid fa-list-check mr-1 text-primary"></i>1. Ejecución & Tareas de Turno
 			</a>
 		</li>
 		<li class="nav-item">
@@ -68,107 +97,38 @@
 			</a>
 		</li>
 		<li class="nav-item">
-			<a class="nav-link font-weight-bold" id="wf-tab-maintenance-link" data-toggle="pill" href="#wf-tab-maintenance" role="tab">
-				<i class="fa-solid fa-screwdriver-wrench mr-1 text-warning"></i>3. Control de Mantenimiento
-			</a>
-		</li>
-		<li class="nav-item">
 			<a class="nav-link font-weight-bold text-danger" id="wf-tab-incidents-link" data-toggle="pill" href="#wf-tab-incidents" role="tab">
-				<i class="fa-solid fa-triangle-exclamation mr-1"></i>4. Incidentes Operativos
+				<i class="fa-solid fa-triangle-exclamation mr-1"></i>3. Incidentes Operativos
 			</a>
 		</li>
 	</ul>
 </div>
 
 <div class="tab-content" id="workforceTabContent">
-	<!-- PESTAÑA 1: PISO DE TIENDA Y TAREAS -->
+	<!-- PESTAÑA 1: EJECUCIÓN DE TAREAS DE PERSONAL -->
 	<div class="tab-pane fade show active" id="wf-tab-floor" role="tabpanel">
 
 
 <div class="row">
-	<!-- Columna Izquierda: Reporte Express de Avería / Merma (Mobile First) -->
-	<div class="col-lg-5 mb-4">
-		<div class="card shadow-sm border-0 h-100">
-			<div class="card-header bg-danger text-white py-3">
-				<h5 class="mb-0 font-weight-bold">
-					<i class="fa-solid fa-camera mr-2"></i>Reporte Express de Avería en Piso
-				</h5>
-				<small class="text-white-50">Capture de inmediato productos rotos, golpeados o vencidos</small>
-			</div>
-			<div class="card-body p-3">
-				<form id="quick-waste-form">
-					<div class="form-group mb-2">
-						<label class="small font-weight-bold text-muted mb-1">Producto</label>
-						<select id="quick-waste-product" class="custom-select custom-select-sm" required>
-							<option value="">Seleccione el producto...</option>
-							@foreach($products as $p)
-							<option value="{{ $p->id }}">{{ $p->name }} (${{ number_format($p->default_sale_price, 2) }})</option>
-							@endforeach
-						</select>
-					</div>
-
-					<div class="form-row mb-2">
-						<div class="col-6">
-							<label class="small font-weight-bold text-muted mb-1">Cantidad Afectada</label>
-							<div class="input-group input-group-sm">
-								<input type="number" id="quick-waste-amount" class="form-control" value="1" min="0.1" step="any" required>
-								<div class="input-group-append">
-									<span class="input-group-text">u.</span>
-								</div>
-							</div>
-						</div>
-						<div class="col-6">
-							<label class="small font-weight-bold text-muted mb-1">Causal Auditada</label>
-							<select id="quick-waste-reason" class="custom-select custom-select-sm">
-								@foreach($reasons as $r)
-								<option value="{{ $r->code }}">{{ $r->code }} - {{ $r->name }}</option>
-								@endforeach
-							</select>
-						</div>
-					</div>
-
-					<div class="form-group mb-2">
-						<label class="small font-weight-bold text-muted mb-1">Evidencia / Foto (obligatoria según la causal)</label>
-						<div class="custom-file custom-file-sm">
-							<input type="file" class="custom-file-input" id="quick-waste-photo" accept="image/*">
-							<label class="custom-file-label" for="quick-waste-photo" id="quick-waste-photo-label">Tomar o elegir foto...</label>
-						</div>
-						<div id="quick-waste-photo-preview" class="mt-2 d-none align-items-center">
-							<img class="dairy-radius-sm" src="" id="quick-waste-photo-img" style="max-height: 60px; border: 1px solid var(--dairy-border-strong);" alt="Evidencia">
-							<span class="small text-muted ml-2" id="quick-waste-photo-name"></span>
-						</div>
-					</div>
-
-					<div class="form-group mb-3">
-						<label class="small font-weight-bold text-muted mb-1">Observaciones de Piso</label>
-						<input type="text" id="quick-waste-notes" class="form-control form-control-sm" placeholder="Ej.: Empaque roto durante descarga en vitrina">
-					</div>
-
-					<button type="submit" class="btn btn-danger btn-block font-weight-bold btn-lg shadow-sm" id="btn-submit-waste">
-						<i class="fa-solid fa-triangle-exclamation mr-1"></i>Registrar merma
-					</button>
-				</form>
-			</div>
-		</div>
-	</div>
-
-	<!-- Columna Derecha: Checklists y Tareas Operativas del Turno -->
-	<div class="col-lg-7 mb-4">
+	<!-- Columna Completa: Checklists y Tareas Operativas del Turno -->
+	<div class="col-12 mb-4">
 		<div class="card shadow-sm border-0 h-100">
 			<div class="card-header bg-primary text-white py-3 d-flex flex-wrap justify-content-between align-items-center">
 				<div>
 					<h5 class="mb-0 font-weight-bold">
-						<i class="fa-solid fa-list-check mr-2"></i>Checklists y Tareas Operativas
+						<i class="fa-solid fa-list-check mr-2"></i>Checklists y Tareas Asignadas por Turno
 					</h5>
-					<small class="text-white-50">Rutinas preventivas, mermas, frío y acuerdos de reunión</small>
+					<small class="text-white-50">Rutinas operativas de apertura, cierre, piso de tienda y acuerdos de coordinación</small>
 				</div>
 				<div class="d-flex align-items-center mt-2 mt-sm-0">
+					@if($canManage)
 					<button type="button" class="btn btn-sm btn-light font-weight-bold mr-2 text-primary shadow-sm" data-toggle="modal" data-target="#modal-agreements" title="Convertir acuerdos de comités operativos en tareas asignadas">
 						<i class="fa-solid fa-handshake mr-1"></i>Acuerdos
 						@if(isset($meetingAgreements))
 						<span class="badge badge-primary ml-1">{{ count($meetingAgreements) }}</span>
 						@endif
 					</button>
+					@endif
 					<span class="badge badge-light text-primary" id="tasks-pending-badge">{{ count($tasks) }} tareas</span>
 				</div>
 			</div>
@@ -206,20 +166,12 @@
 						$prioBadge = $priority === 'Alta' ? 'badge-danger' : ($priority === 'Media' ? 'badge-warning text-dark' : 'badge-light border text-muted');
 						$processName = 'Operaciones de Piso';
 						$processLink = null;
-						if (($task->source_type ?? null) === 'waste') {
-							$processName = 'Mermas';
-							$processLink = $U('/document/waste/' . $task->source_id);
-						} elseif ($task->task_type === 'cold_chain_check' || ($task->source_type ?? null) === 'equipment') {
-							$processName = 'Equipos de Frío';
-							$processLink = $U('/equipment');
-						} elseif ($task->task_type === 'fefo_sweep') {
-							$processName = 'Rotación FEFO';
-							$processLink = $U('/traceability');
-						} elseif (($task->source_type ?? null) === 'agreement') {
-							$processName = 'Acuerdo de Reunión #' . $task->source_id;
-						} elseif ($task->task_type === 'stock_count') {
-							$processName = 'Inventario & Conteos';
-							$processLink = $U('/reconciliation');
+						if (($task->source_type ?? null) === 'agreement') {
+							$processName = 'Acuerdo Operativo #' . $task->source_id;
+						} elseif (($task->task_type ?? '') === 'corrective_action') {
+							$processName = 'Acción Correctiva de Turno';
+						} elseif (($task->task_type ?? '') === 'shift_checklist') {
+							$processName = 'Checklist de Turno';
 						}
 					@endphp
 					<div class="list-group-item p-3 border rounded mb-2 task-card {{ $st === 'completed' ? 'bg-light' : '' }}" 
@@ -316,6 +268,7 @@
 	</div>
 </div>
 
+@if($canManage)
 <!-- MODAL: Acuerdos de Reunión para Convertir en Tareas -->
 <div class="modal fade" id="modal-agreements" tabindex="-1" role="dialog" aria-labelledby="modal-agreements-title" aria-hidden="true">
 	<div class="modal-dialog modal-lg" role="document">
@@ -382,41 +335,53 @@
 			</div>
 		</div>
 	</div>
+</div>
+@endif
 
 	</div>{{-- Cierre wf-tab-floor --}}
 
 	<!-- PESTAÑA 2: CAPACITACIONES & CERTIFICACIONES OPERATIVAS -->
 	<div class="tab-pane fade" id="wf-tab-certifications" role="tabpanel">
+		@php
+			$certValidCount = count(array_filter($certifications ?? [], fn($c) => ($c['status'] ?? '') === 'valid'));
+			$certExpiredCount = count(array_filter($certifications ?? [], fn($c) => ($c['status'] ?? '') !== 'valid'));
+			$certTotalCount = max(1, count($certifications ?? []));
+			$certCompliancePct = count($certifications ?? []) > 0 ? round(($certValidCount / $certTotalCount) * 100, 1) : 100.0;
+		@endphp
+		@if($canManage)
 		<div class="row mb-3">
 			<div class="col-md-3">
 				<div class="card border-0 shadow-sm p-3 bg-white">
 					<div class="text-muted small font-weight-bold">CERTIFICACIONES VIGENTES</div>
-					<div class="h4 font-weight-bold text-success mb-0">2 <span class="small font-weight-normal text-muted">colaboradores</span></div>
-					<div class="small text-muted mt-1"><i class="fa-solid fa-circle-check text-success mr-1"></i> BPM y Montacargas al día</div>
+					<div class="h4 font-weight-bold text-success mb-0">{{ $certValidCount }} <span class="small font-weight-normal text-muted">colaboradores</span></div>
+					<div class="small text-muted mt-1"><i class="fa-solid fa-circle-check text-success mr-1"></i> Habilitaciones al día</div>
 				</div>
 			</div>
 			<div class="col-md-3">
 				<div class="card border-0 shadow-sm p-3 bg-white">
 					<div class="text-muted small font-weight-bold">VENCIDAS / RESTRINGIDAS</div>
-					<div class="h4 font-weight-bold text-danger mb-0">1 <span class="small font-weight-normal text-muted">bloqueo</span></div>
-					<div class="small text-muted mt-1"><i class="fa-solid fa-lock text-danger mr-1"></i> Andrés Soto (HACCP vencido)</div>
+					<div class="h4 font-weight-bold text-danger mb-0">{{ $certExpiredCount }} <span class="small font-weight-normal text-muted">alertas</span></div>
+					<div class="small text-muted mt-1"><i class="fa-solid fa-lock text-danger mr-1"></i> Requieren recertificación</div>
 				</div>
 			</div>
 			<div class="col-md-3">
 				<div class="card border-0 shadow-sm p-3 bg-white">
 					<div class="text-muted small font-weight-bold">CUMPLIMIENTO NORMATIVO</div>
-					<div class="h4 font-weight-bold text-warning mb-0">66.7%</div>
-					<div class="small text-muted mt-1">Exige recertificación antes de 15 días</div>
+					<div class="h4 font-weight-bold text-warning mb-0">{{ $certCompliancePct }}%</div>
+					<div class="small text-muted mt-1">Sobre el personal asignado</div>
 				</div>
 			</div>
 			<div class="col-md-3">
 				<div class="card border-0 shadow-sm p-3 bg-white">
 					<div class="text-muted small font-weight-bold">CURSOS OBLIGATORIOS</div>
 					<div class="h4 font-weight-bold text-info mb-0">3 materias</div>
-					<div class="small text-muted mt-1">BPM, Seguridad y Cadena de Frío</div>
+					<div class="small text-muted mt-1">Operación de Tienda, SST y Atención</div>
 				</div>
 			</div>
 		</div>
+		@else
+		<div class="alert alert-light border small mb-3"><i class="fa-solid fa-shield-halved text-primary mr-1"></i> Vista de colaborador: solo se muestran sus propias habilitaciones operativas.</div>
+		@endif
 
 		<div class="card shadow-sm border-0 mb-4">
 			<div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
@@ -424,9 +389,11 @@
 					<h5 class="mb-0 font-weight-bold text-dark"><i class="fa-solid fa-graduation-cap text-success mr-2"></i>Matriz de Capacitación, Habilidades y Certificaciones Obligatorias</h5>
 					<div class="small text-muted">Vigencias, entidades emisoras y restricciones automáticas de operación en piso y maquinaria.</div>
 				</div>
+				@if($canManage)
 				<button class="btn btn-sm btn-success font-weight-bold" onclick="alert('Abriendo formulario de registro de nueva certificación laboral.');">
 					<i class="fa-solid fa-plus mr-1"></i> Registrar Certificación
 				</button>
+				@endif
 			</div>
 			<div class="table-responsive">
 				<table class="table table-hover table-sm mb-0">
@@ -475,113 +442,22 @@
 		</div>
 	</div>
 
-	<!-- PESTAÑA 3: CONTROL DE MANTENIMIENTO DE EQUIPOS -->
-	<div class="tab-pane fade" id="wf-tab-maintenance" role="tabpanel">
-		<div class="row mb-3">
-			<div class="col-md-3">
-				<div class="card border-0 shadow-sm p-3 bg-white">
-					<div class="text-muted small font-weight-bold">EQUIPOS MONITOREADOS</div>
-					<div class="h4 font-weight-bold text-dark mb-0">{{ count($maintenanceLogs ?? []) }} <span class="small font-weight-normal text-muted">activos</span></div>
-					<div class="small text-muted mt-1"><i class="fa-solid fa-temperature-low text-primary mr-1"></i> Cámaras, montacargas y balanzas</div>
-				</div>
-			</div>
-			<div class="col-md-3">
-				<div class="card border-0 shadow-sm p-3 bg-white">
-					<div class="text-muted small font-weight-bold">EN MANTENIMIENTO</div>
-					<div class="h4 font-weight-bold text-warning mb-0">1 equipo</div>
-					<div class="small text-muted mt-1"><i class="fa-solid fa-wrench text-warning mr-1"></i> Transpaleta Eléctrica Crown #03</div>
-				</div>
-			</div>
-			<div class="col-md-3">
-				<div class="card border-0 shadow-sm p-3 bg-white">
-					<div class="text-muted small font-weight-bold">PRÓXIMO PREVENTIVO</div>
-					<div class="h4 font-weight-bold text-info mb-0">En 4 días</div>
-					<div class="small text-muted mt-1">Cámara de Congelados -18°C</div>
-				</div>
-			</div>
-			<div class="col-md-3">
-				<div class="card border-0 shadow-sm p-3 bg-white">
-					<div class="text-muted small font-weight-bold">GASTO MANTENIMIENTO</div>
-					<div class="h4 font-weight-bold text-dark mb-0">${{ number_format(array_sum(array_column($maintenanceLogs ?? [], 'cost')), 2) }}</div>
-					<div class="small text-muted mt-1">Presupuestado dentro de margen</div>
-				</div>
-			</div>
-		</div>
-
-		<div class="card shadow-sm border-0 mb-4">
-			<div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
-				<div>
-					<h5 class="mb-0 font-weight-bold text-dark"><i class="fa-solid fa-screwdriver-wrench text-warning mr-2"></i>Programa de Mantenimiento Preventivo y Correctivo</h5>
-					<div class="small text-muted">Historial técnico, costos de reparación, proveedores especializados y estado de maquinaria crítica.</div>
-				</div>
-				<button class="btn btn-sm btn-primary font-weight-bold" onclick="alert('Abriendo orden de servicio técnico para equipo.');">
-					<i class="fa-solid fa-plus mr-1"></i> Programar Mantenimiento
-				</button>
-			</div>
-			<div class="table-responsive">
-				<table class="table table-hover table-sm mb-0">
-					<thead class="thead-light">
-						<tr>
-							<th>Equipo / Activo</th>
-							<th>Sucursal</th>
-							<th>Tipo</th>
-							<th>Fecha Programada</th>
-							<th>Técnico / Proveedor</th>
-							<th class="text-right">Costo ($)</th>
-							<th>Detalle de Falla / Diagnóstico</th>
-							<th>Resolución / Notas</th>
-							<th class="text-center">Estado</th>
-						</tr>
-					</thead>
-					<tbody>
-						@foreach(($maintenanceLogs ?? []) as $maint)
-						<tr class="@if($maint['status'] === 'in_progress') table-warning @endif">
-							<td class="font-weight-bold text-dark"><i class="fa-solid fa-gear mr-1 text-muted"></i> {{ $maint['equipment_name'] }}</td>
-							<td><span class="badge badge-light border">{{ $maint['branch_name'] }}</span></td>
-							<td>
-								@if($maint['maintenance_type'] === 'preventive')
-									<span class="badge badge-info">Preventivo</span>
-								@else
-									<span class="badge badge-warning text-dark">Correctivo</span>
-								@endif
-							</td>
-							<td class="small text-muted">{{ date('d/m/Y', strtotime($maint['scheduled_date'])) }}</td>
-							<td>{{ $maint['technician'] }}</td>
-							<td class="text-right font-weight-bold">${{ number_format($maint['cost'], 2) }}</td>
-							<td class="small">{{ $maint['failure_details'] }}</td>
-							<td class="small text-muted">{{ $maint['resolution_notes'] }}</td>
-							<td class="text-center">
-								@if($maint['status'] === 'completed')
-									<span class="badge badge-success"><i class="fa-solid fa-check"></i> Concluido</span>
-								@elseif($maint['status'] === 'in_progress')
-									<span class="badge badge-warning text-dark"><i class="fa-solid fa-spinner fa-spin"></i> En Taller</span>
-								@else
-									<span class="badge badge-secondary"><i class="fa-solid fa-clock"></i> Agendado</span>
-								@endif
-							</td>
-						</tr>
-						@endforeach
-					</tbody>
-				</table>
-			</div>
-		</div>
-	</div>
-
-	<!-- PESTAÑA 4: GESTIÓN DE INCIDENTES OPERATIVOS -->
+	<!-- PESTAÑA 3: GESTIÓN DE INCIDENTES OPERATIVOS -->
 	<div class="tab-pane fade" id="wf-tab-incidents" role="tabpanel">
+		@if($canManage)
 		<div class="row mb-3">
 			<div class="col-md-3">
 				<div class="card border-0 shadow-sm p-3 bg-white">
 					<div class="text-muted small font-weight-bold">INCIDENTES EN TURNO</div>
 					<div class="h4 font-weight-bold text-dark mb-0">{{ count($operationalIncidents ?? []) }} <span class="small font-weight-normal text-muted">reportes</span></div>
-					<div class="small text-muted mt-1"><i class="fa-solid fa-shield-halved text-success mr-1"></i> Protocolos de seguridad activados</div>
+					<div class="small text-muted mt-1"><i class="fa-solid fa-shield-halved text-success mr-1"></i> Protocolos de piso activados</div>
 				</div>
 			</div>
 			<div class="col-md-3">
 				<div class="card border-0 shadow-sm p-3 bg-white">
 					<div class="text-muted small font-weight-bold">GRAVEDAD MEDIA / ALTA</div>
-					<div class="h4 font-weight-bold text-warning mb-0">1 caso</div>
-					<div class="small text-muted mt-1">Fuga de agua en condensador de frío</div>
+					<div class="h4 font-weight-bold text-warning mb-0">{{ count(array_filter($operationalIncidents ?? [], fn($i) => in_array(strtolower($i['severity'] ?? ''), ['high', 'medium', 'alta', 'media']))) }} casos</div>
+					<div class="small text-muted mt-1">Seguimiento de novedades en turno</div>
 				</div>
 			</div>
 			<div class="col-md-3">
@@ -599,18 +475,21 @@
 				</div>
 			</div>
 		</div>
+		@endif
 
 		<div class="card shadow-sm border-0 mb-4">
 			<div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
 				<div>
-					<h5 class="mb-0 font-weight-bold text-dark"><i class="fa-solid fa-triangle-exclamation text-danger mr-2"></i>Bitácora de Incidentes Operativos en Piso y Almacén</h5>
-					<div class="small text-muted">Registro de novedades, gravedad, responsables, evidencias y acciones correctivas aplicadas.</div>
+					<h5 class="mb-0 font-weight-bold text-dark"><i class="fa-solid fa-triangle-exclamation text-danger mr-2"></i>Bitácora de Incidentes Operativos del Personal</h5>
+					<div class="small text-muted">Registro de novedades en turno, responsables y acciones correctivas aplicadas.</div>
 				</div>
+				@if($canManage)
 				<div>
 					<button class="btn btn-sm btn-danger font-weight-bold" onclick="alert('Abriendo reporte de nuevo incidente operativo en tienda.');">
 						<i class="fa-solid fa-plus mr-1"></i> Reportar Nuevo Incidente
 					</button>
 				</div>
+				@endif
 			</div>
 			<div class="table-responsive">
 				<table class="table table-hover table-sm mb-0">
@@ -846,82 +725,6 @@ document.addEventListener("DOMContentLoaded", function() {
 			toastr.info('La tarea #' + taskId + ' se encuentra en otra vista o estado.');
 		}
 	};
-
-	// Merma rápida: mismo flujo que Registrar merma
-	var BTN_WASTE = '<i class="fa-solid fa-triangle-exclamation mr-1"></i>Registrar merma';
-	var wasteForm = document.getElementById('quick-waste-form');
-	wasteForm.addEventListener('submit', function(e) {
-		e.preventDefault();
-		var prodSel = document.getElementById('quick-waste-product');
-		var prodId = prodSel.value;
-		var amount = parseFloat(document.getElementById('quick-waste-amount').value);
-		var reason = document.getElementById('quick-waste-reason').value;
-		var notes = document.getElementById('quick-waste-notes').value;
-		var branchId = document.getElementById('wf-branch-select').value;
-		var photo = photoInput && photoInput.files && photoInput.files[0] ? photoInput.files[0] : null;
-
-		if (!prodId || isNaN(amount) || amount <= 0) {
-			toastr.warning('Ingrese producto y una cantidad mayor a 0');
-			return;
-		}
-		if (!reason) {
-			toastr.warning('Seleccione la causal');
-			return;
-		}
-
-		var btnSubmit = document.getElementById('btn-submit-waste');
-		btnSubmit.disabled = true;
-		btnSubmit.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i>Registrando...';
-		var prodName = prodSel.options[prodSel.selectedIndex] ? prodSel.options[prodSel.selectedIndex].text : ('#' + prodId);
-
-		DairyOffline.send('/workforce/quick-waste', {
-			product_id: parseInt(prodId),
-			branch_id: parseInt(branchId),
-			amount: amount,
-			reason_code: reason,
-			notes: notes
-		}, { label: 'Merma: ' + amount + ' × ' + prodName.trim(), photo: photo })
-		.then(function(r) {
-			btnSubmit.disabled = false;
-			btnSubmit.innerHTML = BTN_WASTE;
-			if (!r.queued) { toastr.success(r.data.message || 'Merma registrada'); }
-			wasteForm.reset();
-			if (photoPreview) {
-				photoPreview.classList.add('d-none');
-				photoPreview.classList.remove('d-flex');
-				photoLabel.textContent = 'Tomar o elegir foto...';
-			}
-		})
-		.catch(function(err) {
-			btnSubmit.disabled = false;
-			btnSubmit.innerHTML = BTN_WASTE;
-			toastr.error(err.message || 'No se pudo registrar la merma');
-		});
-	});
-
-	// Photo file preview
-	var photoInput = document.getElementById('quick-waste-photo');
-	var photoPreview = document.getElementById('quick-waste-photo-preview');
-	var photoImg = document.getElementById('quick-waste-photo-img');
-	var photoName = document.getElementById('quick-waste-photo-name');
-	var photoLabel = document.getElementById('quick-waste-photo-label');
-
-	if (photoInput) {
-		photoInput.addEventListener('change', function() {
-			if (this.files && this.files[0]) {
-				var file = this.files[0];
-				photoLabel.textContent = file.name;
-				photoName.textContent = file.name + ' (' + Math.round(file.size / 1024) + ' KB)';
-				var reader = new FileReader();
-				reader.onload = function(e) {
-					photoImg.src = e.target.result;
-					photoPreview.classList.remove('d-none');
-					photoPreview.classList.add('d-flex');
-				};
-				reader.readAsDataURL(file);
-			}
-		});
-	}
 });
 </script>
 @stop

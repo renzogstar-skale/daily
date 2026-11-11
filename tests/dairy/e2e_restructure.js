@@ -124,7 +124,7 @@ const ok = (name, cond, info) => { results.push({ name, ok: !!cond, info: info =
 	ok('Sin cifra fija $128,450', !(await page.locator('[data-testid="exec-real-kpis"]').innerText()).includes('128,450'));
 	ok('Sin marca de terceros en el selector', !(await page.locator('#exec-select-branch').innerText()).includes('Alkosto'));
 	await go('/sales?tab=rentabilidad');
-	ok('Margen diario/mensual/acumulado', await page.locator('[data-testid="block-margins"] .dkpi').count() === 3);
+	ok('Margen diario/mensual/acumulado (Rentabilidad)', await page.locator('[data-testid="srep-pf-compare"] tbody tr').count() === 6);
 
 	console.log('\n9. Móvil');
 	const mob = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true });

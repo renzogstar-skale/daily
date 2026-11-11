@@ -16,6 +16,9 @@ use Grocy\Helpers\DairyAccess;
  */
 class StockExecutiveOverviewService extends BaseService
 {
+	/** Subir al cambiar el cálculo: invalida la caché de data/cache aunque no haya movimientos nuevos */
+	const CACHE_REV = 2;
+
 	private static ?StockExecutiveOverviewService $instance = null;
 
 	// Pestañas del panel «Movimientos recientes» y filas por pestaña
@@ -139,14 +142,15 @@ class StockExecutiveOverviewService extends BaseService
 		try
 		{
 			$version = implode('|', $db->query("SELECT (SELECT IFNULL(MAX(id), 0) FROM stock_log), (SELECT IFNULL(MAX(id), 0) FROM sales),
-				(SELECT IFNULL(MAX(id), 0) FROM waste_records), (SELECT IFNULL(MAX(id), 0) FROM stock), (SELECT COUNT(*) FROM stock)")->fetch(\PDO::FETCH_NUM));
+				(SELECT IFNULL(MAX(id), 0) FROM waste_records), (SELECT IFNULL(MAX(id), 0) FROM stock), (SELECT COUNT(*) FROM stock),
+				(SELECT COUNT(*) FROM inventory_adjustments WHERE status = 'pending_approval')")->fetch(\PDO::FETCH_NUM));
 		}
 		catch (\Throwable)
 		{
 			return $this->BuildExecutiveDataRaw($filters);
 		}
 		ksort($filters);
-		$key = md5(json_encode([$filters, DairyAccess::AllowedBranches(), date('Y-m-d')]));
+		$key = md5(json_encode([self::CACHE_REV, $filters, DairyAccess::AllowedBranches(), date('Y-m-d')]));
 		$dir = GROCY_DATAPATH . '/cache';
 		$file = "$dir/stockexec_$key.ser";
 		if (is_file($file) && filemtime($file) > time() - 3600)
@@ -595,7 +599,7 @@ class StockExecutiveOverviewService extends BaseService
 		$topProducts = $this->BuildTopProducts($department, 1.0, 1.0, $skuQuery, $invStatus, ['by_product' => $byProduct, 'sold_day' => $soldDay, 'cogs' => $cogsOf]);
 		$expiringProducts = $this->BuildExpiringProducts($department, $branchId, $fefoDays, $skuQuery, $lots, $deptOf, $branchName);
 		$movements = $this->BuildRealtimeMovements($branchId, $movementType, 1.0, $from, $date, $deptKeys);
-		$priorityDecisions = $this->BuildPriorityDecisions($counts['expiring'], $totalRisk, $counts['below_min'], $counts['out_of_stock'], $branchId, $fefoDays);
+		$priorityDecisions = $this->BuildPriorityDecisions($counts['expiring'], $totalRisk, $counts['below_min'], $counts['out_of_stock'], $branchId, $fefoDays, $counts);
 
 		$top10Sum = array_sum(array_column($topProducts, 'value'));
 		$top10Stats = [
@@ -1332,7 +1336,7 @@ class StockExecutiveOverviewService extends BaseService
 	{
 		$from = $from ?: date('Y-m-d', strtotime('-29 days'));
 		$to = $to ?: date('Y-m-d');
-		$st = $this->Db()->prepare("SELECT sl.transaction_type AS t, sl.spoiled, sl.correlation_id, SUM(ABS(sl.amount)) AS units,
+		$st = $this->Db()->prepare("SELECT sl.transaction_type AS t, sl.spoiled, sl.correlation_id, sl.product_id, SUM(ABS(sl.amount)) AS units,
 				EXISTS (SELECT 1 FROM sale_items si JOIN sales s ON s.id = si.sale_id JOIN customer_orders co ON co.sale_id = s.id WHERE si.transaction_id = sl.transaction_id) AS is_dispatch,
 				EXISTS (SELECT 1 FROM waste_records w WHERE w.transaction_id = sl.transaction_id) AS is_waste
 			FROM stock_log sl JOIN locations l ON l.id = sl.location_id
@@ -1340,8 +1344,15 @@ class StockExecutiveOverviewService extends BaseService
 			GROUP BY sl.id');
 		$st->execute([':f' => $from, ':t' => $to]);
 		$c = ['entradas' => 0, 'salidas' => 0, 'traslados' => 0, 'devoluciones' => 0, 'despachos' => 0, 'ajustes' => 0, 'mermas' => 0];
+		$txCount = 0;
+		$movedProducts = [];
 		foreach ($st->fetchAll(\PDO::FETCH_ASSOC) as $r)
 		{
+			if (!in_array($r['t'], ['product-opened', 'self-production'], true))
+			{
+				$txCount++;
+				$movedProducts[$r['product_id']] = true;
+			}
 			$u = floatval($r['units']);
 			$t = $r['t'];
 			if ($t === 'purchase')
@@ -1393,23 +1404,26 @@ class StockExecutiveOverviewService extends BaseService
 		$bars7[] = ['key' => 'despachos', 'label' => 'Despachos', 'full_label' => 'Despachos de pedidos de clientes', 'units' => $c['despachos'], 'color' => '#3B82F6'];
 		$bars7[] = ['key' => 'ajustes', 'label' => 'Ajustes', 'full_label' => 'Ajustes y correcciones de inventario', 'units' => $c['ajustes'], 'color' => '#F97316'];
 		$bars7[] = ['key' => 'mermas', 'label' => 'Mermas', 'full_label' => 'Mermas aprobadas (vencimiento, rotura, daño)', 'units' => $c['mermas'], 'color' => '#DC2626'];
-		$totalTx = 21600;
+		// Cifras del período: filas de kardex (sin aperturas ni producción propia), productos distintos con movimiento y su
+		// participación en unidades. Catálogo = productos activos. Sin movimientos, la participación queda vacía (no 0 % inventado).
+		$catalog = intval($this->Db()->query('SELECT COUNT(*) FROM products WHERE active = 1')->fetchColumn());
+		$active = count($movedProducts);
+		$sumBars = array_sum(array_column($bars5, 'units'));
+		$shares = [];
+		foreach ($bars5 as $b)
+		{
+			$shares[$b['key']] = $sumBars > 0 ? number_format($b['units'] / $sumBars * 100, 1) . '%' : '—';
+		}
 		$stats = [
-			'total_transactions' => $totalTx,
-			'formatted_total' => number_format($totalTx, 0),
-			'delta_total' => '+6.4% vs. período anterior',
-			'active_products' => 4982,
-			'formatted_active_products' => '4,982',
-			'catalog_products' => 8245,
-			'formatted_catalog_products' => '8,245',
-			'active_pct' => 60.4,
-			'shares' => [
-				'entradas' => '48.9%',
-				'salidas' => '47.9%',
-				'traslados' => '0.2%',
-				'devoluciones' => '0.2%',
-				'otros' => '2.8%'
-			],
+			'total_transactions' => $txCount,
+			'formatted_total' => number_format($txCount, 0),
+			'delta_total' => '',
+			'active_products' => $active,
+			'formatted_active_products' => number_format($active, 0),
+			'catalog_products' => $catalog,
+			'formatted_catalog_products' => number_format($catalog, 0),
+			'active_pct' => $catalog > 0 ? round($active / $catalog * 100, 1) : null,
+			'shares' => $shares,
 			'otros_breakdown' => "Despachos ({$c['despachos']}) + Ajustes ({$c['ajustes']}) + Mermas ({$c['mermas']})"
 		];
 		return ['bars_photo' => $bars5, 'bars_detailed' => $bars7, 'total_movements_units' => array_sum($c), 'period' => ['from' => $from, 'to' => $to],
@@ -1513,32 +1527,34 @@ class StockExecutiveOverviewService extends BaseService
 	}
 
 	/** Decisiones con los conteos reales del panel; cada una enlaza al módulo donde se resuelve */
-	private function BuildPriorityDecisions(int $expiringCount, float $riskVal, int $belowMinCount, int $outOfStockCount, ?int $branchId = null, int $fefoDays = 30): array
+	private function BuildPriorityDecisions(int $expiringCount, float $riskVal, int $belowMinCount, int $outOfStockCount, ?int $branchId = null, int $fefoDays = 30, array $counts = []): array
 	{
+		$expBranches = intval($counts['expiring_branches'] ?? 0);
+		$expLots = intval($counts['expiring_lots'] ?? 0);
+		$missingUnits = number_format(floatval($counts['below_min_missing_units'] ?? 0), 0) . ' unidades';
 		$qs = $branchId ? '?branch_id=' . $branchId : '';
 		$now = date('d/m/Y H:i');
 		$all = [];
 		if ($expiringCount > 0)
 		{
 			$all[] = ['id' => 'DEC-FEFO', 'severity' => 'red', 'category_label' => 'Crítico', 'icon' => 'fa-triangle-exclamation', 'title' => "$expiringCount productos próximos a vencer",
-				'line1' => 'Valor en riesgo: $' . number_format($riskVal, 0) . " | \u{2264} $fefoDays días", 'line2' => 'Sucursales: 5 | Lotes: 184',
-				'risk_val_fmt' => '$' . number_format($riskVal, 0), 'days_threshold' => "\u{2264} $fefoDays días", 'branches_count' => 5, 'lots_count' => 184,
+				'line1' => 'Valor en riesgo: $' . number_format($riskVal, 0) . " | \u{2264} $fefoDays días", 'line2' => 'Sucursales: ' . $expBranches . ' | Lotes: ' . $expLots,
+				'risk_val_fmt' => '$' . number_format($riskVal, 0), 'days_threshold' => "\u{2264} $fefoDays días", 'branches_count' => $expBranches, 'lots_count' => $expLots,
 				'owner' => 'Calidad y FEFO', 'date' => $now,
 				'priority' => 'Crítica', 'status' => 'Pendiente', 'action_type' => 'open_fefo_modal', 'action_label' => 'Ejecutar FEFO', 'href' => '/quality' . $qs];
 		}
 		if ($outOfStockCount > 0)
 		{
 			$all[] = ['id' => 'DEC-OOS', 'severity' => 'red', 'category_label' => 'Crítico', 'icon' => 'fa-box-open', 'title' => "$outOfStockCount productos agotados",
-				'line1' => 'Pares producto-sucursal con existencia 0 y stock mínimo.', 'line2' => 'Impacto estimado en ventas: $12,460/mes',
-				'sales_impact' => '$12,460/mes',
+				'line1' => 'Pares producto-sucursal con existencia 0 y stock mínimo.', 'line2' => 'Reponer desde bodega, traslado o compra.',
 				'owner' => 'Compras', 'date' => $now,
 				'priority' => 'Alta', 'status' => 'Pendiente', 'action_type' => 'navigate', 'action_label' => 'Abrir MRP', 'href' => '/mrp' . $qs];
 		}
 		if ($belowMinCount > 0)
 		{
 			$all[] = ['id' => 'DEC-MIN', 'severity' => 'yellow', 'category_label' => 'Atención', 'icon' => 'fa-arrow-down-short-wide', 'title' => "$belowMinCount productos bajo mínimo",
-				'line1' => 'Existencia mayor a 0 y menor al mínimo de la sucursal.', 'line2' => 'Faltante estimado: 1,284 unidades',
-				'missing_units' => '1,284 unidades',
+				'line1' => 'Existencia mayor a 0 y menor al mínimo de la sucursal.', 'line2' => 'Faltante hasta el mínimo: ' . $missingUnits,
+				'missing_units' => $missingUnits,
 				'owner' => 'Compras', 'date' => $now,
 				'priority' => 'Media', 'status' => 'Pendiente', 'action_type' => 'navigate', 'action_label' => 'Ver reposición', 'href' => '/mrp' . $qs];
 		}

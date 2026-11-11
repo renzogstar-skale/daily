@@ -3,6 +3,8 @@
 namespace Grocy\Controllers;
 
 use Grocy\Services\BranchService;
+use Grocy\Services\MrpService;
+use Grocy\Services\SupplierInvoiceService;
 use Grocy\Services\SupplierProcurementService;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -13,29 +15,47 @@ class SupplierProcurementController extends BaseController
 	{
 		$procService = SupplierProcurementService::GetInstance();
 		$branchService = BranchService::GetInstance();
+		$mrpService = MrpService::GetInstance();
+		$invoiceService = SupplierInvoiceService::GetInstance();
 
-		$suppliers = $procService->GetSuppliers();
-		$priceHistory = $procService->GetPriceHistory();
-		$deliveries = $procService->GetDeliveries();
-		$incidents = $procService->GetIncidents();
-		$recommendations = $procService->GetSmartProcurementRecommendations();
 		$branches = $branchService->GetBranches();
-
-		// Productos para comparador y formularios
-		$products = $this->DB->products()->where('active = 1')->orderBy('name')->fetchAll();
-
-		// Presupuesto y compromisos calculados desde metas, recepciones y órdenes abiertas (sin cifras fijas)
 		$scope = \Grocy\Helpers\DairyAccess::AllowedBranches();
 		$qBranch = intval($request->getQueryParams()['branch_id'] ?? 0);
 		if ($qBranch > 0 && ($scope === null || in_array($qBranch, $scope, true)))
 		{
 			$scope = [$qBranch];
 		}
-		$budgetData = $procService->BudgetOverview(null, $scope);
+		$selectedBranchId = $qBranch > 0
+			? $qBranch
+			: ($scope !== null && count($scope) > 0 ? intval($scope[0]) : (!empty($branches) ? intval($branches[0]->id) : 1));
 
-				$rawDb = \Grocy\Services\DatabaseService::GetInstance()->GetDbConnectionRaw();
-		$supplierContracts = $rawDb->query("SELECT * FROM daily_supplier_contracts ORDER BY id DESC")->fetchAll(\PDO::FETCH_ASSOC);
-return $this->RenderPage($response, 'suppliers_procurement', [
+		$suppliers = $procService->GetSuppliers();
+		$priceHistory = $procService->GetPriceHistory();
+		$deliveries = $procService->GetDeliveries();
+		$incidents = $procService->GetIncidents();
+		$recommendations = $procService->GetSmartProcurementRecommendations($selectedBranchId);
+		$products = $this->DB->products()->where('active = 1')->orderBy('name')->fetchAll();
+		$budgetData = $procService->BudgetOverview(null, $scope);
+		$supplierContracts = $procService->GetContracts();
+		$invoices = $invoiceService->GetInvoices($selectedBranchId);
+		$ordersForConfirmation = $mrpService->GetProcurementOrders($qBranch > 0 ? $qBranch : ($scope !== null && count($scope) === 1 ? intval($scope[0]) : null));
+
+		$rawDb = \Grocy\Services\DatabaseService::GetInstance()->GetDbConnectionRaw();
+		$rfqs = [];
+		try
+		{
+			$bFilter = $scope !== null ? ' WHERE r.branch_id IN (' . implode(',', array_map('intval', $scope ?: [0])) . ')' : '';
+			$rfqs = $rawDb->query("SELECT r.*, sl.name AS supplier_name, b.name AS branch_name
+				FROM procurement_rfqs r
+				JOIN shopping_locations sl ON r.supplier_id = sl.id
+				JOIN branches b ON r.branch_id = b.id
+				$bFilter ORDER BY r.id DESC LIMIT 25")->fetchAll(\PDO::FETCH_ASSOC);
+		}
+		catch (\Throwable $e)
+		{
+		}
+
+		return $this->RenderPage($response, 'suppliers_procurement', [
 			'suppliers' => $suppliers,
 			'priceHistory' => $priceHistory,
 			'deliveries' => $deliveries,
@@ -44,7 +64,11 @@ return $this->RenderPage($response, 'suppliers_procurement', [
 			'branches' => $branches,
 			'products' => $products,
 			'budgetData' => $budgetData,
-			'supplierContracts' => $supplierContracts
+			'supplierContracts' => $supplierContracts,
+			'invoices' => $invoices,
+			'ordersForConfirmation' => $ordersForConfirmation,
+			'rfqs' => $rfqs,
+			'selectedBranchId' => $selectedBranchId
 		]);
 	}
 }

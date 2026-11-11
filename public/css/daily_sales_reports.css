@@ -98,3 +98,137 @@ html.daily-dark .srep-tm-cell { border-color: rgba(15, 23, 42, 0.85); }
 	.srep .ded-dept-donut-layout { flex-wrap: wrap; justify-content: center; }
 	.srep .ded-dept-list { min-width: 0; flex: 1 1 100%; }
 }
+
+/* Ventas por departamento: filas sin venta y editor de configuración */
+.srep-sortable tr.srep-muted td { color: var(--ded-text-light); }
+.srep-config > summary { list-style: none; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; }
+.srep-config > summary::-webkit-details-marker { display: none; }
+.srep-config[open] > summary { margin-bottom: 8px; }
+.srep-config input.form-control { font-size: 12px; height: 30px; padding: 3px 8px; min-width: 70px; }
+.srep-config input[type="color"] { width: 42px; padding: 2px; }
+.srep-config .srep-cfg-values { min-width: 260px; }
+#srep-departments [data-testid="srep-dept-table"] td, .srep-branch-table td { white-space: nowrap; }
+
+/* Rentabilidad: calidad de datos y puente precio / volumen / costo */
+.srep-quality-list { margin: 0; padding-left: 18px; font-size: 12px; color: var(--ded-text-muted); line-height: 1.5; }
+.srep-quality-list li + li { margin-top: 4px; }
+.srep-pvc { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; margin-bottom: 12px; }
+.srep-pvc-step { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; border: 1px solid var(--ded-border, #e2e8f0); border-radius: 10px; min-width: 0; }
+.srep-pvc-step span { font-size: 10.5px; color: var(--ded-text-muted); }
+.srep-pvc-step strong { font-size: 14px; overflow-wrap: anywhere; }
+.srep-pvc-step.is-total { border-color: var(--ded-primary); background: rgba(16, 185, 129, 0.08); }
+#srep-profitability td { white-space: nowrap; }
+#srep-profitability td .ded-prod-name { white-space: normal; min-width: 160px; }
+
+/* ==========================================================================
+   VENTAS POR DEPARTAMENTO — KPIs 5, hover verde, drilldown, subcategorías y modo oscuro
+   (estrictamente acotado a #srep-departments y #deptExecutiveDashboard)
+   ========================================================================== */
+#srep-departments .srep-dept-kpis-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }
+#srep-departments .srep-dept-kpis-5 > .ded-kpi-card { min-width: 0; transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+#srep-departments .srep-dept-kpis-5 > .ded-kpi-card:hover { border-color: #10b981; box-shadow: 0 8px 20px rgba(16, 185, 129, 0.15); transform: translateY(-2px); }
+#srep-departments .srep-dept-kpis-5 .ded-kpi-val { font-size: 1.25rem; line-height: 1.2; overflow-wrap: anywhere; }
+#srep-departments .srep-dept-kpis-5 .ded-kpi-card.is-highlight .ded-kpi-badge-green,
+#srep-departments .srep-dept-kpis-5 .ded-kpi-card.is-highlight .ded-pill-red { background: rgba(255, 255, 255, 0.22); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.35); }
+#srep-departments .srep-dept-kpis-5 .ded-kpi-card.is-highlight .ded-kpi-sub { color: rgba(255, 255, 255, 0.94); }
+#srep-departments .srep-dept-kpis-5 .ded-kpi-label,
+#srep-departments .srep-dept-kpis-5 .ded-kpi-sub { white-space: normal; }
+
+.srep-origin-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 600; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+.srep-origin-real { background: rgba(16, 185, 129, 0.12); color: #047857; border: 1px solid rgba(16, 185, 129, 0.3); }
+.srep-origin-mixed { background: rgba(245, 158, 11, 0.14); color: #b45309; border: 1px solid rgba(245, 158, 11, 0.35); }
+.srep-origin-demo { background: rgba(100, 116, 139, 0.14); color: #475569; border: 1px solid rgba(100, 116, 139, 0.3); }
+
+.srep-empty-chart { display: flex; align-items: center; gap: 12px; padding: 28px 16px; border: 1px dashed var(--ded-border, #cbd5e1); border-radius: 10px; color: var(--ded-text-muted); }
+.srep-empty-chart svg { width: 24px; height: 24px; color: var(--ded-text-light); flex-shrink: 0; }
+
+/* Detalle y drilldown inline */
+.srep-detail-block { display: flex; flex-direction: column; gap: 14px; grid-column: 1 / -1; }
+.srep-breadcrumb { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 8px; background: rgba(16, 185, 129, 0.06); border: 1px solid rgba(16, 185, 129, 0.22); font-size: 12px; }
+.srep-crumb-btn { background: none; border: 0; padding: 2px 6px; border-radius: 6px; color: #059669; font-weight: 600; cursor: pointer; }
+.srep-crumb-btn:hover { background: rgba(16, 185, 129, 0.14); text-decoration: underline; }
+.srep-crumb-cur { font-weight: 700; color: var(--ded-text-main); }
+.srep-crumb-sep { color: var(--ded-text-light); font-size: 11px; }
+
+.srep-drill-metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.srep-drill-stat { padding: 9px 11px; border: 1px solid var(--ded-border, #e2e8f0); border-radius: 9px; background: var(--ded-card-bg, #fff); min-width: 0; }
+.srep-drill-stat-label { display: block; font-size: 10.5px; color: var(--ded-text-muted); margin-bottom: 3px; }
+.srep-drill-stat-val { font-size: 13.5px; font-weight: 700; color: var(--ded-text-main); overflow-wrap: anywhere; }
+.srep-drill-stat-sub { display: block; font-size: 10px; color: var(--ded-text-light); margin-top: 2px; }
+
+.srep-drill-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.srep-drill-box { border: 1px solid var(--ded-border, #e2e8f0); border-radius: 10px; padding: 12px; min-width: 0; background: var(--ded-card-bg, #fff); }
+.srep-drill-box-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.srep-drill-box-title { font-size: 12.5px; font-weight: 700; margin: 0; color: var(--ded-text-main); }
+.srep-clickable-row { cursor: pointer; transition: background-color .12s ease; }
+.srep-clickable-row:hover td { background: rgba(16, 185, 129, 0.09); }
+.srep-bar-track { width: 100%; height: 6px; background: rgba(148, 163, 184, 0.2); border-radius: 999px; overflow: hidden; margin-top: 3px; }
+.srep-bar-fill { height: 100%; background: #10b981; border-radius: 999px; }
+
+/* Búsqueda, multi-selección y expansión de subcategorías en tabla analítica */
+.srep-table-head { align-items: center; gap: 10px; }
+.srep-table-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.srep-search-wrap { position: relative; display: flex; align-items: center; }
+.srep-search-wrap svg { position: absolute; left: 9px; width: 14px; height: 14px; color: var(--ded-text-light); pointer-events: none; }
+.srep-search-input { height: 32px; padding: 4px 10px 4px 29px; font-size: 12px; border-radius: 8px; border: 1px solid var(--ded-border, #cbd5e1); background: var(--ded-card-bg, #fff); color: var(--ded-text-main); min-width: 210px; outline: none; transition: border-color .15s ease; }
+.srep-search-input:focus { border-color: #10b981; box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.15); }
+
+.srep-multi-bar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; padding: 8px 12px; margin-bottom: 10px; border-radius: 8px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.28); font-size: 12px; }
+.srep-dept-cell { display: inline-flex; align-items: center; gap: 6px; }
+.srep-dept-chk { width: 14px; height: 14px; accent-color: #10b981; cursor: pointer; flex-shrink: 0; }
+.srep-expand-btn { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; padding: 0; border-radius: 5px; border: 1px solid var(--ded-border, #cbd5e1); background: transparent; color: var(--ded-text-muted); cursor: pointer; transition: transform .15s ease, border-color .15s ease; flex-shrink: 0; }
+.srep-expand-btn:hover { border-color: #10b981; color: #10b981; }
+.srep-expand-btn.is-open svg { transform: rotate(90deg); }
+.srep-expand-btn svg { width: 12px; height: 12px; transition: transform .15s ease; }
+.srep-expand-spacer { display: inline-block; width: 20px; flex-shrink: 0; }
+.srep-subcat-row td { background: rgba(148, 163, 184, 0.06); font-size: 11.5px; }
+.srep-subcat-name { padding-left: 34px !important; color: var(--ded-text-muted); }
+.srep-val-pos { color: #059669; font-weight: 600; }
+.srep-val-neg { color: #dc2626; font-weight: 600; }
+.srep-tfoot-row td { border-top: 2px solid var(--ded-border, #cbd5e1); background: rgba(148, 163, 184, 0.06); font-size: 12px; }
+#srep-departments .srep-heat td,
+#srep-departments .srep-sortable td { color: var(--ded-text-main, #0f172a); }
+#srep-departments .srep-sortable td.srep-val-pos { color: #059669; }
+#srep-departments .srep-sortable td.srep-val-neg { color: #dc2626; }
+
+/* Modo oscuro con contraste suave (Phase 7) */
+html.daily-dark #srep-departments {
+	--ded-text-main: #e2e8f0;
+	--ded-text-muted: #94a3b8;
+	--ded-text-light: #94a3b8;
+	--ded-border: rgba(148, 163, 184, 0.2);
+	--ded-card-bg: rgba(15, 23, 42, 0.72);
+}
+html.daily-dark #srep-departments .srep-heat td,
+html.daily-dark #srep-departments .srep-sortable td { color: #e2e8f0; }
+html.daily-dark #srep-departments .srep-heat th,
+html.daily-dark #srep-departments .srep-sortable th { color: #94a3b8; border-bottom-color: rgba(148, 163, 184, 0.16); }
+html.daily-dark #srep-departments .ded-kpi-card { background: rgba(30, 41, 59, 0.86); border-color: rgba(148, 163, 184, 0.18); }
+html.daily-dark #srep-departments .ded-kpi-card:hover { border-color: #10b981; box-shadow: 0 8px 22px rgba(16, 185, 129, 0.2); }
+html.daily-dark #srep-departments .srep-drill-stat,
+html.daily-dark #srep-departments .srep-drill-box,
+html.daily-dark #srep-departments .srep-search-input,
+html.daily-dark #srep-departments .ded-select-btn { background: rgba(15, 23, 42, 0.62); border-color: rgba(148, 163, 184, 0.28); color: #e2e8f0; }
+html.daily-dark #srep-departments .ded-select-btn:hover { border-color: #10b981; color: #ffffff; }
+html.daily-dark #srep-departments .ded-select-btn.is-active { background: rgba(16, 185, 129, 0.22); border-color: #10b981; color: #6ee7b7; }
+html.daily-dark #srep-departments .srep-origin-real { background: rgba(16, 185, 129, 0.18); color: #6ee7b7; }
+html.daily-dark #srep-departments .srep-origin-mixed { background: rgba(245, 158, 11, 0.18); color: #fcd34d; }
+html.daily-dark #srep-departments .srep-origin-demo { background: rgba(148, 163, 184, 0.2); color: #cbd5e1; }
+html.daily-dark #srep-departments .srep-val-pos { color: #34d399; }
+html.daily-dark #srep-departments .srep-val-neg { color: #f87171; }
+html.daily-dark #srep-departments .srep-subcat-row td,
+html.daily-dark #srep-departments .srep-tfoot-row td { background: rgba(148, 163, 184, 0.08); }
+
+@media (max-width: 1180px) {
+	#srep-departments .srep-dept-kpis-5 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+	.srep-drill-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 768px) {
+	#srep-departments .srep-dept-kpis-5 { grid-template-columns: 1fr 1fr; }
+	.srep-search-input { width: 100%; min-width: 0; }
+	#srep-departments [data-col-sticky] { position: sticky; left: 0; z-index: 2; background: var(--ded-card-bg, #fff); box-shadow: 2px 0 6px rgba(15, 23, 42, 0.06); }
+	html.daily-dark #srep-departments [data-col-sticky] { background: #1e293b; box-shadow: 2px 0 8px rgba(0, 0, 0, 0.35); }
+}
+@media (max-width: 480px) {
+	#srep-departments .srep-dept-kpis-5 { grid-template-columns: 1fr; }
+}

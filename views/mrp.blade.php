@@ -1,3 +1,4 @@
+@php require_frontend_packages(['chartjs']); @endphp
 @extends('layout.default')
 
 @section('title', 'Ciclo 2: Planeación y Compras')
@@ -17,6 +18,7 @@
 		'draft' => ['Borrador', 'secondary'],
 		'approved' => ['Aprobada', 'primary'],
 		'sent' => ['Enviada', 'info'],
+		'confirmed' => ['Confirmada Prov.', 'primary'],
 		'partially_received' => ['Recepción parcial', 'warning'],
 		'received' => ['Recibida', 'success'],
 		'closed' => ['Cerrada con faltante', 'dark'],
@@ -78,203 +80,190 @@
 	</div>
 </div>
 
-<!-- LOS 8 KPIS ESTRATÉGICOS DEL CICLO 2 -->
-<div class="row mb-3">
+<!-- LOS 8 KPIS ESTRATÉGICOS DE PLANEACIÓN Y COMPRAS (Con hover verde DAILY unificado) -->
+<div class="row dairy-kpi-row mb-3">
 	<!-- KPI 1: Precisión de Pronóstico -->
 	<div class="col-xl-3 col-md-6 mb-2">
-		<div class="card shadow-sm border-0 h-100 p-3">
-			<div class="d-flex justify-content-between align-items-center">
-				<span class="text-muted small text-uppercase font-weight-bold">1. Precisión Pronóstico</span>
-				<span class="badge @if($procurementKpis['forecast_accuracy'] >= 80) badge-success @elseif($procurementKpis['forecast_accuracy'] >= 65) badge-warning @else badge-danger @endif">
-					WAPE: {{ $procurementKpis['forecast_wape'] }}%
+		@php $fa = $procurementKpis['forecast_accuracy']; @endphp
+		<div class="dairy-kpi-card dairy-kpi-uniform h-100" style="--kpi-color: {{ $fa === null ? 'var(--dairy-text-secondary)' : ($fa >= 80 ? 'var(--dairy-success)' : ($fa >= 65 ? 'var(--dairy-warning)' : 'var(--dairy-danger)')) }};">
+			<div class="d-flex justify-content-between align-items-center mb-1">
+				<span class="dairy-kpi-title mb-0">1. Precisión Pronóstico</span>
+				<span class="badge @if($fa === null) badge-light border text-muted @elseif($fa >= 80) badge-success @elseif($fa >= 65) badge-warning @else badge-danger @endif">
+					{{ $procurementKpis['forecast_wape'] !== null ? 'WAPE: ' . $procurementKpis['forecast_wape'] . '%' : 'Sin histórico' }}
 				</span>
 			</div>
-			<div class="h3 font-weight-bold text-dark mt-2 mb-0">{{ $procurementKpis['forecast_accuracy'] }}%</div>
-			<div class="small text-muted mt-1">Sesgo comercial: {{ ($procurementKpis['forecast_bias'] >= 0 ? '+' : '') . $procurementKpis['forecast_bias'] }}%</div>
+			<div class="dairy-kpi-value">{{ $fa !== null ? $fa . '%' : 'Sin datos' }}</div>
+			<div class="dairy-kpi-footer"><span>Sesgo: {{ ($procurementKpis['forecast_bias'] >= 0 ? '+' : '') . $procurementKpis['forecast_bias'] }}% · @if($procurementKpis['unverified_suppliers'] > 0)<span class="text-warning">{{ $procurementKpis['unverified_suppliers'] }} prov. cond. incomp.</span>@else Red validada @endif</span></div>
 		</div>
 	</div>
 
 	<!-- KPI 2: Cumplimiento Proveedor (OTIF) -->
 	<div class="col-xl-3 col-md-6 mb-2">
-		<div class="card shadow-sm border-0 h-100 p-3">
-			<div class="d-flex justify-content-between align-items-center">
-				<span class="text-muted small text-uppercase font-weight-bold">2. Cumplimiento OTIF</span>
-				<span class="badge badge-success"><i class="fa-solid fa-truck-ramp-box mr-1"></i>En fecha y forma</span>
+		@php $otifVal = $procurementKpis['otif']; @endphp
+		<div class="dairy-kpi-card dairy-kpi-uniform h-100" style="--kpi-color: var(--dairy-success);">
+			<div class="d-flex justify-content-between align-items-center mb-1">
+				<span class="dairy-kpi-title mb-0">2. Cumplimiento OTIF</span>
+				<span class="badge badge-success"><i class="fa-solid fa-truck-ramp-box mr-1"></i>Proveedores</span>
 			</div>
-			<div class="h3 font-weight-bold text-success mt-2 mb-0">{{ $procurementKpis['otif'] }}%</div>
-			<div class="small text-muted mt-1">Sobre entregas auditadas de la red</div>
+			<div class="dairy-kpi-value text-success">{{ $otifVal !== null ? number_format($otifVal, 1) . '%' : 'Sin entregas' }}</div>
+			<div class="dairy-kpi-footer"><span>Sobre entregas auditadas de la red</span></div>
 		</div>
 	</div>
 
 	<!-- KPI 3: Lead Time Promedio -->
 	<div class="col-xl-3 col-md-6 mb-2">
-		<div class="card shadow-sm border-0 h-100 p-3">
-			<div class="d-flex justify-content-between align-items-center">
-				<span class="text-muted small text-uppercase font-weight-bold">3. Lead Time Promedio</span>
-				<span class="badge badge-primary"><i class="fa-solid fa-clock-rotate-left mr-1"></i>Tiempo reposición</span>
+		<div class="dairy-kpi-card dairy-kpi-uniform h-100" style="--kpi-color: var(--dairy-primary);">
+			<div class="d-flex justify-content-between align-items-center mb-1">
+				<span class="dairy-kpi-title mb-0">3. Lead Time Promedio</span>
+				<span class="badge badge-primary"><i class="fa-solid fa-clock-rotate-left mr-1"></i>Reposición</span>
 			</div>
-			<div class="h3 font-weight-bold text-primary mt-2 mb-0">{{ $procurementKpis['avg_lead_time'] }} <span class="h6 text-muted font-weight-normal">días</span></div>
-			<div class="small text-muted mt-1">Plazo medio de entrega de proveedores</div>
+			<div class="dairy-kpi-value text-primary">{{ $procurementKpis['avg_lead_time'] !== null ? $procurementKpis['avg_lead_time'] . ' d' : '—' }}</div>
+			<div class="dairy-kpi-footer"><span>Plazo medio contractual de proveedores</span></div>
 		</div>
 	</div>
 
 	<!-- KPI 4: Costo de Compra Real -->
 	<div class="col-xl-3 col-md-6 mb-2">
-		<div class="card shadow-sm border-0 h-100 p-3">
-			<div class="d-flex justify-content-between align-items-center">
-				<span class="text-muted small text-uppercase font-weight-bold">4. Costo de Compra</span>
+		<div class="dairy-kpi-card dairy-kpi-uniform h-100" style="--kpi-color: var(--dairy-info);">
+			<div class="d-flex justify-content-between align-items-center mb-1">
+				<span class="dairy-kpi-title mb-0">4. Costo de Adquisición</span>
 				<span class="badge badge-light border text-muted">Ingresado al stock</span>
 			</div>
-			<div class="h3 font-weight-bold text-dark mt-2 mb-0">{{ $fmt($procurementKpis['purchases_cost']) }}</div>
-			<div class="small text-muted mt-1">Total de recepciones aceptadas</div>
+			<div class="dairy-kpi-value">{{ $fmt($procurementKpis['purchases_cost']) }}</div>
+			<div class="dairy-kpi-footer"><span>@if($procurementKpis['pending_physical_receipts'] > 0)<span class="text-warning">{{ $procurementKpis['pending_physical_receipts'] }} recep. admin. por ingresar</span>@else Total de recepciones aceptadas @endif</span></div>
 		</div>
 	</div>
 
 	<!-- KPI 5: Órdenes Pendientes -->
 	<div class="col-xl-3 col-md-6 mb-2">
-		<div class="card shadow-sm border-0 h-100 p-3">
-			<div class="d-flex justify-content-between align-items-center">
-				<span class="text-muted small text-uppercase font-weight-bold">5. Órdenes Pendientes</span>
+		<div class="dairy-kpi-card dairy-kpi-uniform h-100" style="--kpi-color: var(--dairy-warning);">
+			<div class="d-flex justify-content-between align-items-center mb-1">
+				<span class="dairy-kpi-title mb-0">5. Órdenes Pendientes</span>
 				<span class="badge badge-warning text-dark">{{ $procurementKpis['pending_orders_count'] }} activas</span>
 			</div>
-			<div class="h3 font-weight-bold text-dark mt-2 mb-0">{{ $fmt($procurementKpis['pending_orders_cost']) }}</div>
-			<div class="small text-muted mt-1">En borrador, aprobadas y en tránsito</div>
+			<div class="dairy-kpi-value">{{ $fmt($procurementKpis['pending_orders_cost']) }}</div>
+			<div class="dairy-kpi-footer"><span>Borradores, aprobadas, confirmadas y tránsito</span></div>
 		</div>
 	</div>
 
 	<!-- KPI 6: Pedidos Atrasados -->
 	<div class="col-xl-3 col-md-6 mb-2">
-		<div class="card shadow-sm border-0 h-100 p-3">
-			<div class="d-flex justify-content-between align-items-center">
-				<span class="text-muted small text-uppercase font-weight-bold">6. Pedidos Atrasados</span>
+		<div class="dairy-kpi-card dairy-kpi-uniform h-100" style="--kpi-color: {{ $procurementKpis['overdue_orders_count'] > 0 ? 'var(--dairy-danger)' : 'var(--dairy-success)' }};">
+			<div class="d-flex justify-content-between align-items-center mb-1">
+				<span class="dairy-kpi-title mb-0">6. Pedidos Atrasados</span>
 				<span class="badge @if($procurementKpis['overdue_orders_count'] > 0) badge-danger @else badge-success @endif">
 					{{ $procurementKpis['overdue_orders_count'] > 0 ? 'Demora activa' : 'Al día' }}
 				</span>
 			</div>
-			<div class="h3 font-weight-bold @if($procurementKpis['overdue_orders_count'] > 0) text-danger @else text-success @endif mt-2 mb-0">
-				{{ $procurementKpis['overdue_orders_count'] }} <span class="h6 text-muted font-weight-normal">pedidos</span>
+			<div class="dairy-kpi-value @if($procurementKpis['overdue_orders_count'] > 0) text-danger @else text-success @endif">
+				{{ $procurementKpis['overdue_orders_count'] }} <small class="font-weight-normal">pedidos</small>
 			</div>
-			<div class="small text-muted mt-1">{{ $fmt($procurementKpis['overdue_orders_cost']) }} con fecha vencida</div>
+			<div class="dairy-kpi-footer"><span>{{ $fmt($procurementKpis['overdue_orders_cost']) }} con fecha vencida</span></div>
 		</div>
 	</div>
 
 	<!-- KPI 7: Cobertura Proyectada -->
 	<div class="col-xl-3 col-md-6 mb-2">
-		<div class="card shadow-sm border-0 h-100 p-3">
-			<div class="d-flex justify-content-between align-items-center">
-				<span class="text-muted small text-uppercase font-weight-bold">7. Cobertura Proyectada</span>
+		<div class="dairy-kpi-card dairy-kpi-uniform h-100" style="--kpi-color: var(--dairy-info);">
+			<div class="d-flex justify-content-between align-items-center mb-1">
+				<span class="dairy-kpi-title mb-0">7. Cobertura Proyectada</span>
 				<span class="badge badge-info"><i class="fa-solid fa-boxes-stacked mr-1"></i>Inventario neto</span>
 			</div>
-			<div class="h3 font-weight-bold text-info mt-2 mb-0">{{ $procurementKpis['avg_coverage'] }} <span class="h6 text-muted font-weight-normal">días</span></div>
-			<div class="small text-muted mt-1">Autonomía promedio en la red</div>
+			<div class="dairy-kpi-value text-info">{{ $procurementKpis['avg_coverage'] !== null ? $procurementKpis['avg_coverage'] . ' d' : 'Sin rotación' }}</div>
+			<div class="dairy-kpi-footer"><span>Autonomía promedio (excluye ítems sin venta)</span></div>
 		</div>
 	</div>
 
 	<!-- KPI 8: Tasa de Abastecimiento (Fill Rate) -->
 	<div class="col-xl-3 col-md-6 mb-2">
-		<div class="card shadow-sm border-0 h-100 p-3">
-			<div class="d-flex justify-content-between align-items-center">
-				<span class="text-muted small text-uppercase font-weight-bold">8. Fill Rate (Tasa Abasto)</span>
+		<div class="dairy-kpi-card dairy-kpi-uniform h-100" style="--kpi-color: var(--dairy-success);">
+			<div class="d-flex justify-content-between align-items-center mb-1">
+				<span class="dairy-kpi-title mb-0">8. Fill Rate (Tasa Abasto)</span>
 				<span class="badge badge-success"><i class="fa-solid fa-circle-check mr-1"></i>Servicio</span>
 			</div>
-			<div class="h3 font-weight-bold text-success mt-2 mb-0">{{ $procurementKpis['fill_rate'] }}%</div>
-			<div class="small text-muted mt-1">Unidades recibidas vs solicitadas</div>
+			<div class="dairy-kpi-value text-success">{{ $procurementKpis['fill_rate'] !== null ? $procurementKpis['fill_rate'] . '%' : 'Sin recep.' }}</div>
+			<div class="dairy-kpi-footer"><span>Unidades recibidas vs entregadas</span></div>
 		</div>
 	</div>
 </div>
 
-<!-- CICLO OPERATIVO: LOS 12 PASOS DE ABASTECIMIENTO -->
+<!-- CICLO OPERATIVO DE 8 ETAPAS: PLANEACIÓN Y COMPRAS -->
 <div class="card shadow-sm border-0 mb-3">
 	<div class="card-header bg-white border-0 font-weight-bold d-flex justify-content-between align-items-center py-2">
-		<span><i class="fa-solid fa-diagram-project text-primary mr-2"></i>Ciclo Operativo de Abastecimiento Retail (12 Fases)</span>
-		<span class="badge badge-light border text-muted">Cadena de Suministro Cerrada</span>
+		<span><i class="fa-solid fa-diagram-project text-primary mr-2"></i>Ciclo de Planeación y Compras (8 Etapas)</span>
+		<span class="badge badge-light border text-muted">Demanda → Planificación → Sugerencia → Aprobación → Compra → Recepción → Conciliación → Evaluación</span>
 	</div>
 	<div class="card-body p-2 bg-light">
 		<div class="d-flex flex-wrap justify-content-between text-center" style="gap: 4px; font-size: 0.78rem;">
 			<div class="bg-white p-2 rounded shadow-sm flex-fill border">
-				<strong class="text-primary d-block">1. Pronóstico</strong>
-				<span class="text-muted">Demanda + WAPE</span>
+				<strong class="text-primary d-block">1. Demanda</strong>
+				<span class="text-muted">SKU / Sucursal + Simulador</span>
 			</div>
 			<div class="d-flex align-items-center text-muted"><i class="fa-solid fa-angle-right"></i></div>
 			<div class="bg-white p-2 rounded shadow-sm flex-fill border">
-				<strong class="text-primary d-block">2. Stock FEFO</strong>
-				<span class="text-muted">Neto disponible</span>
+				<strong class="text-primary d-block">2. Planificación</strong>
+				<span class="text-muted">ROP, SS & Traslados</span>
 			</div>
 			<div class="d-flex align-items-center text-muted"><i class="fa-solid fa-angle-right"></i></div>
 			<div class="bg-white p-2 rounded shadow-sm flex-fill border">
-				<strong class="text-primary d-block">3. Necesidades</strong>
-				<span class="text-muted">ROP & Seguridad</span>
+				<strong class="text-primary d-block">3. Sugerencia</strong>
+				<span class="text-muted">MOQ & Múltiplos</span>
 			</div>
 			<div class="d-flex align-items-center text-muted"><i class="fa-solid fa-angle-right"></i></div>
 			<div class="bg-white p-2 rounded shadow-sm flex-fill border">
-				<strong class="text-primary d-block">4. Evaluación</strong>
-				<span class="text-muted">Scorecard OTIF</span>
+				<strong class="text-primary d-block">4. Aprobación</strong>
+				<span class="text-muted">Presupuesto & Lote</span>
 			</div>
 			<div class="d-flex align-items-center text-muted"><i class="fa-solid fa-angle-right"></i></div>
 			<div class="bg-white p-2 rounded shadow-sm flex-fill border">
-				<strong class="text-primary d-block">5. Cotización</strong>
-				<span class="text-muted">RFQ & Costo</span>
+				<strong class="text-primary d-block">5. Compra</strong>
+				<span class="text-muted">Emisión & Confirmación</span>
 			</div>
 			<div class="d-flex align-items-center text-muted"><i class="fa-solid fa-angle-right"></i></div>
 			<div class="bg-white p-2 rounded shadow-sm flex-fill border">
-				<strong class="text-primary d-block">6. Solicitud</strong>
-				<span class="text-muted">Borrador OC</span>
+				<strong class="text-primary d-block">6. Recepción</strong>
+				<span class="text-muted">Admin. vs Física</span>
 			</div>
 			<div class="d-flex align-items-center text-muted"><i class="fa-solid fa-angle-right"></i></div>
 			<div class="bg-white p-2 rounded shadow-sm flex-fill border">
-				<strong class="text-primary d-block">7. Aprobación</strong>
-				<span class="text-muted">Gerencial / Lote</span>
+				<strong class="text-primary d-block">7. Conciliación</strong>
+				<span class="text-muted">3 Vías & Faltantes</span>
 			</div>
 			<div class="d-flex align-items-center text-muted"><i class="fa-solid fa-angle-right"></i></div>
 			<div class="bg-white p-2 rounded shadow-sm flex-fill border">
-				<strong class="text-primary d-block">8. Emisión</strong>
-				<span class="text-muted">Enviada a Prov.</span>
-			</div>
-			<div class="d-flex align-items-center text-muted"><i class="fa-solid fa-angle-right"></i></div>
-			<div class="bg-white p-2 rounded shadow-sm flex-fill border">
-				<strong class="text-primary d-block">9. Seguimiento</strong>
-				<span class="text-muted">En tránsito</span>
-			</div>
-			<div class="d-flex align-items-center text-muted"><i class="fa-solid fa-angle-right"></i></div>
-			<div class="bg-white p-2 rounded shadow-sm flex-fill border">
-				<strong class="text-primary d-block">10. Recepción</strong>
-				<span class="text-muted">Calidad e Inocuidad</span>
-			</div>
-			<div class="d-flex align-items-center text-muted"><i class="fa-solid fa-angle-right"></i></div>
-			<div class="bg-white p-2 rounded shadow-sm flex-fill border">
-				<strong class="text-primary d-block">11. Desempeño</strong>
-				<span class="text-muted">3 vías & Faltantes</span>
-			</div>
-			<div class="d-flex align-items-center text-muted"><i class="fa-solid fa-angle-right"></i></div>
-			<div class="bg-white p-2 rounded shadow-sm flex-fill border">
-				<strong class="text-primary d-block">12. Replanif.</strong>
-				<span class="text-muted">Recálculo continuo</span>
+				<strong class="text-primary d-block">8. Evaluación</strong>
+				<span class="text-muted">OTIF & Historial</span>
 			</div>
 		</div>
 	</div>
 </div>
 
-<!-- NAVEGACIÓN PRINCIPAL: LAS 4 HERRAMIENTAS DE ABASTECIMIENTO -->
+<!-- NAVEGACIÓN PRINCIPAL: HERRAMIENTAS DE PLANEACIÓN Y COMPRAS -->
 <div class="nav daily-level-tabs flex-wrap mb-3" role="tablist" style="gap: 4px;">
 	<button type="button" class="nav-link daily-level-tab @if($activeTab === 'mrp' || !$activeTab) active @endif" data-toggle="pill" data-target="#tab-mrp" role="tab" id="pill-mrp">
 		<i class="fa-solid fa-calculator mr-1"></i>
-		<span>1. Planificación MRP</span>
+		<span>1. Demanda, Planificación MRP & Simulador</span>
 		<span class="daily-level-badge badge-danger">{{ $sum['reorder_needed_count'] }}</span>
 	</button>
 	<button type="button" class="nav-link daily-level-tab @if($activeTab === 'proveedores') active @endif" data-toggle="pill" data-target="#tab-proveedores" role="tab" id="pill-proveedores">
 		<i class="fa-solid fa-truck-field mr-1"></i>
-		<span>2. Proveedores & Desempeño</span>
+		<span>2. Proveedores & Condiciones</span>
 		<span class="daily-level-badge">{{ count($suppliers) }}</span>
 	</button>
 	<button type="button" class="nav-link daily-level-tab @if($activeTab === 'ordenes') active @endif" data-toggle="pill" data-target="#tab-ordenes" role="tab" id="pill-ordenes">
 		<i class="fa-solid fa-file-invoice mr-1"></i>
-		<span>3. Órdenes de Compra & Recepción</span>
+		<span>3. Órdenes, Recepción & 3 Vías</span>
 		<span class="daily-level-badge">{{ count($orders) }}</span>
 	</button>
 	<button type="button" class="nav-link daily-level-tab @if($activeTab === 'abastecimiento') active @endif" data-toggle="pill" data-target="#tab-abastecimiento" role="tab" id="pill-abastecimiento">
 		<i class="fa-solid fa-truck-ramp-box mr-1"></i>
-		<span>4. Abastecimiento & Tránsito</span>
-		<span class="daily-level-badge badge-warning">{{ count($inTransitOrders) > 0 ? count($inTransitOrders) : count($priorities['emergency']) }}</span>
+		<span>4. Entregas Pendientes & Tránsito</span>
+		<span class="daily-level-badge badge-warning">{{ count($pendingDeliveries) > 0 ? count($pendingDeliveries) : count($priorities['emergency']) }}</span>
+	</button>
+	<button type="button" class="nav-link daily-level-tab @if($activeTab === 'historial') active @endif" data-toggle="pill" data-target="#tab-historial" role="tab" id="pill-historial">
+		<i class="fa-solid fa-clock-rotate-left mr-1"></i>
+		<span>5. Historial de Abastecimiento</span>
+		<span class="daily-level-badge">{{ count($supplyHistory) }}</span>
 	</button>
 </div>
 
@@ -335,6 +324,142 @@
 			</div>
 		</div>
 
+		<!-- PRONÓSTICO POR SUCURSAL, GRÁFICO DE COBERTURA Y SIMULADOR WHAT-IF -->
+		<div class="row mb-3">
+			<div class="col-lg-6 mb-3 mb-lg-0">
+				<div class="card shadow-sm border-0 h-100">
+					<div class="card-header bg-white border-0 py-2 d-flex justify-content-between align-items-center">
+						<span class="font-weight-bold text-dark"><i class="fa-solid fa-store text-primary mr-2"></i>Pronóstico de Demanda por Sucursal ({{ $horizonDays }}d)</span>
+						<span class="badge badge-light border text-muted">{{ count($branchForecast) }} sucursales</span>
+					</div>
+					<div class="table-responsive">
+						<table class="table table-sm table-hover mb-0">
+							<thead class="thead-light">
+								<tr>
+									<th>Sucursal</th>
+									<th class="text-right">Demanda {{ $horizonDays }}d</th>
+									<th class="text-right">Bajo ROP</th>
+									<th class="text-right">Inversión Sugerida</th>
+									<th class="text-right">Baja Confianza</th>
+								</tr>
+							</thead>
+							<tbody>
+								@forelse($branchForecast as $bf)
+								<tr>
+									<td class="font-weight-600">{{ $bf['branch_name'] }}</td>
+									<td class="text-right font-weight-bold">{{ number_format($bf['projected_demand_units'], 1) }} u.</td>
+									<td class="text-right @if($bf['reorder_skus'] > 0) text-danger font-weight-bold @endif">{{ $bf['reorder_skus'] }}</td>
+									<td class="text-right font-weight-bold text-primary">{{ $fmt($bf['suggested_investment']) }}</td>
+									<td class="text-right small text-muted">{{ $bf['low_confidence_skus'] }}</td>
+								</tr>
+								@empty
+								<tr><td colspan="5" class="text-center text-muted py-2">Sin sucursales activas.</td></tr>
+								@endforelse
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+			<div class="col-lg-6">
+				<div class="card shadow-sm border-0 h-100">
+					<div class="card-header bg-white border-0 py-2 d-flex justify-content-between align-items-center">
+						<span class="font-weight-bold text-dark"><i class="fa-solid fa-sliders text-success mr-2"></i>Simulador de Demanda (What-If)</span>
+						<span class="badge badge-success">Tiempo Real</span>
+					</div>
+					<div class="card-body py-2">
+						<div class="form-row align-items-end">
+							<div class="col-sm-3 mb-2">
+								<label class="small text-muted mb-0">Multiplicador VMD</label>
+								<input type="number" id="sim-vmd-mult" class="form-control form-control-sm" step="0.05" min="0.2" max="4" value="1.20">
+							</div>
+							<div class="col-sm-3 mb-2">
+								<label class="small text-muted mb-0">Delta Lead Time (d)</label>
+								<input type="number" id="sim-lt-delta" class="form-control form-control-sm" step="1" min="-5" max="15" value="0">
+							</div>
+							<div class="col-sm-3 mb-2">
+								<label class="small text-muted mb-0">Nivel Servicio</label>
+								<select id="sim-service-z" class="custom-select custom-select-sm">
+									<option value="0.90">90% (Z=1.28)</option>
+									<option value="0.95" selected>95% (Z=1.65)</option>
+									<option value="0.98">98% (Z=2.05)</option>
+									<option value="0.99">99% (Z=2.33)</option>
+								</select>
+							</div>
+							<div class="col-sm-3 mb-2">
+								<button type="button" id="btn-run-simulator" class="btn btn-sm btn-primary btn-block">
+									<i class="fa-solid fa-play mr-1"></i>Simular
+								</button>
+							</div>
+						</div>
+						<div id="mrp-simulator-result" class="small text-muted border-top pt-2 mt-1">
+							Ajuste parámetros y presione <strong>Simular</strong> para medir impacto en SKUs bajo ROP e inversión requerida.
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- GRÁFICO DE COBERTURA Y TRANSFERENCIAS RECOMENDADAS -->
+		<div class="row mb-3">
+			<div class="col-lg-5 mb-3 mb-lg-0">
+				<div class="card shadow-sm border-0 h-100">
+					<div class="card-header bg-white border-0 py-2 font-weight-bold text-dark">
+						<i class="fa-solid fa-chart-column text-info mr-2"></i>Inversión Requerida por Departamento
+					</div>
+					<div class="card-body py-2" style="height: 220px;">
+						<canvas id="mrpCategoryChart"></canvas>
+					</div>
+				</div>
+			</div>
+			<div class="col-lg-7">
+				<div class="card shadow-sm border-0 h-100" id="mrp-transfers-panel">
+					<div class="card-header bg-white border-0 py-2 d-flex justify-content-between align-items-center">
+						<span class="font-weight-bold text-dark"><i class="fa-solid fa-right-left text-primary mr-2"></i>Recomendaciones de Transferencia entre Sucursales</span>
+						<span class="badge badge-info">{{ count($transferRecommendations) }} oportunidades</span>
+					</div>
+					<div class="table-responsive" style="max-height: 220px;">
+						<table class="table table-sm table-hover mb-0">
+							<thead class="thead-light">
+								<tr>
+									<th>Producto</th>
+									<th>Origen (Excedente)</th>
+									<th>Destino (Déficit)</th>
+									<th class="text-right">Cant.</th>
+									<th class="text-right">Ahorro Est.</th>
+									<th class="text-center">Acción</th>
+								</tr>
+							</thead>
+							<tbody>
+								@forelse($transferRecommendations as $tr)
+								<tr>
+									<td class="small font-weight-600">{{ $tr['product_name'] }}</td>
+									<td class="small">{{ $tr['from_branch_name'] }}</td>
+									<td class="small text-danger font-weight-600">{{ $tr['to_branch_name'] }}</td>
+									<td class="text-right font-weight-bold">{{ $tr['recommended_qty'] }} {{ $tr['qu_name'] }}</td>
+									<td class="text-right text-success font-weight-bold">{{ $fmt($tr['estimated_saving']) }}</td>
+									<td class="text-center">
+										@if($canManage)
+										<button type="button" class="btn btn-xs btn-outline-primary btn-exec-transfer"
+											data-from="{{ $tr['from_branch_id'] }}"
+											data-to="{{ $tr['to_branch_id'] }}"
+											data-product="{{ $tr['product_id'] }}"
+											data-qty="{{ $tr['recommended_qty'] }}"
+											data-name="{{ $tr['product_name'] }}">
+											<i class="fa-solid fa-truck-arrow-right mr-1"></i>Transferir
+										</button>
+										@endif
+									</td>
+								</tr>
+								@empty
+								<tr><td colspan="6" class="text-center text-muted py-3">Sin traslados inter-sucursal recomendados actualmente.</td></tr>
+								@endforelse
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+
 		<!-- LISTA DE NECESIDADES MRP -->
 		<div class="card shadow-sm border-0 mb-3">
 			<div class="card-header bg-white border-0 p-3">
@@ -365,17 +490,17 @@
 					<thead class="thead-light">
 						<tr>
 							<th>Producto / Depto</th>
-							<th class="text-right" title="Stock físico actual en almacén">Stock Actual</th>
-							<th class="text-right" title="Stock en cuarentena o por vencer">No Disp.</th>
-							<th class="text-right" title="Stock usable - merma proyectada + órdenes abiertas">Disp. Neto</th>
-							<th class="text-right" title="Velocidad media de venta diaria">VMD</th>
+							<th class="text-right" title="Stock físico disponible en la sucursal (sin ubicaciones en tránsito)">Stock Actual</th>
+							<th class="text-right" title="Stock en cuarentena, caducado, reservado a despacho o merma proyectada">No Disp. / Res.</th>
+							<th class="text-right" title="Stock usable + tránsito + OC abiertas aprobadas - merma proyectada">Disp. Neto</th>
+							<th class="text-right" title="Velocidad media de venta diaria y nivel de confianza histórica">VMD / Conf.</th>
 							<th class="text-right" title="Días de inventario disponible">Cobertura</th>
 							<th class="text-right" title="Stock de seguridad">SS</th>
 							<th class="text-right" title="Punto de reorden">ROP</th>
 							<th class="text-center">Estado</th>
-							<th class="text-right" title="Cantidad calculada por el motor MRP">Sugerido</th>
+							<th class="text-right" title="Cantidad calculada aplicando MOQ y múltiplo de compra">Sugerido</th>
 							<th class="text-right">Costo Est.</th>
-							<th>Proveedor</th>
+							<th>Proveedor / Alertas</th>
 							<th class="text-center">Acciones</th>
 						</tr>
 					</thead>
@@ -384,6 +509,9 @@
 						@php
 							$sm = $statusMeta[$i['status']] ?? [$i['status'], 'secondary'];
 							$isReorder = ($i['status'] === 'reorder_needed');
+							$covDisp = $i['days_coverage_display'] ?? null;
+							$conf = $i['forecast_confidence'] ?? 'none';
+							$nonAvail = ($i['quarantine_stock'] ?? 0) + ($i['expired_stock'] ?? 0) + ($i['reserved_stock'] ?? 0) + ($i['projected_spoilage'] ?? 0);
 						@endphp
 						<tr class="mrp-row @if($isReorder) table-danger-light @endif"
 							data-name="{{ strtolower($i['product_name'] . ' ' . $i['category_name']) }}"
@@ -393,17 +521,32 @@
 								<div class="small text-muted">{{ $i['category_name'] }}</div>
 							</td>
 							<td class="text-right">{{ $i['current_stock'] }} <span class="text-muted small">{{ $i['qu_name'] }}</span></td>
-							<td class="text-right @if($i['quarantine_stock'] > 0 || $i['projected_spoilage'] > 0) text-danger font-weight-bold @else text-muted @endif">
-								{{ ($i['quarantine_stock'] + $i['projected_spoilage']) > 0 ? ($i['quarantine_stock'] + $i['projected_spoilage']) : '—' }}
+							<td class="text-right @if($nonAvail > 0) text-danger font-weight-bold @else text-muted @endif">
+								{{ $nonAvail > 0 ? round($nonAvail, 2) : '—' }}
 							</td>
 							<td class="text-right font-weight-bold @if($i['net_available'] <= $i['rop']) text-danger @else text-success @endif">
 								{{ $i['net_available'] }}
 							</td>
-							<td class="text-right font-weight-600">{{ number_format($i['vmd'], 1) }}</td>
 							<td class="text-right">
-								<span class="badge @if($i['days_coverage'] < 3) badge-danger @elseif($i['days_coverage'] < 7) badge-warning @else badge-light border @endif">
-									{{ $i['days_coverage'] < 90 ? number_format($i['days_coverage'], 1) . ' d' : '>90 d' }}
+								<span class="font-weight-600">{{ number_format($i['vmd'], 1) }}</span>
+								<div>
+									@if($conf === 'high')
+									<span class="badge badge-success" style="font-size:0.65rem;">Alta ({{ $i['active_sales_days'] ?? 0 }}d)</span>
+									@elseif($conf === 'low')
+									<span class="badge badge-warning text-dark" style="font-size:0.65rem;">Limitada ({{ $i['active_sales_days'] ?? 0 }}d)</span>
+									@else
+									<span class="badge badge-secondary" style="font-size:0.65rem;">Sin datos</span>
+									@endif
+								</div>
+							</td>
+							<td class="text-right">
+								@if($covDisp === null)
+								<span class="badge badge-light border text-muted">Sin rotación</span>
+								@else
+								<span class="badge @if($covDisp < 3) badge-danger @elseif($covDisp < 7) badge-warning @else badge-light border @endif">
+									{{ $covDisp < 90 ? number_format($covDisp, 1) . ' d' : '>90 d' }}
 								</span>
+								@endif
 							</td>
 							<td class="text-right text-muted small">{{ number_format($i['safety_stock'], 0) }}</td>
 							<td class="text-right text-muted small">{{ number_format($i['rop'], 0) }}</td>
@@ -412,6 +555,9 @@
 							</td>
 							<td class="text-right font-weight-bold @if($i['suggested_order'] > 0) text-primary @endif">
 								{{ $i['suggested_order'] > 0 ? $i['suggested_order'] . ' ' . $i['qu_name'] : '—' }}
+								@if(($i['min_order_qty'] ?? 1) > 1 || ($i['order_multiple'] ?? 1) > 1)
+								<div class="small text-muted font-weight-normal">MOQ {{ $i['min_order_qty'] ?? 1 }} · ×{{ $i['order_multiple'] ?? 1 }}</div>
+								@endif
 							</td>
 							<td class="text-right font-weight-bold">{{ $i['estimated_cost'] > 0 ? $fmt($i['estimated_cost']) : '—' }}</td>
 							<td class="small">
@@ -421,6 +567,9 @@
 								@else
 								<span class="badge badge-warning text-dark"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Sin proveedor</span>
 								@endif
+								@foreach($i['warnings'] ?? [] as $w)
+								<div class="text-danger" style="font-size:0.72rem;"><i class="fa-solid fa-circle-exclamation mr-1"></i>{{ $w }}</div>
+								@endforeach
 							</td>
 							<td class="text-center">
 								<div class="btn-group btn-group-sm">
@@ -484,14 +633,20 @@
 					<tbody>
 						@forelse($suppliers as $s)
 						@php
-							$otifVal = floatval($s['otif_percentage'] ?? 100);
+							$otifVal = $s['otif_percentage'] !== null ? floatval($s['otif_percentage']) : null;
 							$cleanPhone = preg_replace('/[^0-9]/', '', $s['phone'] ?? '');
 							$waText = urlencode("Hola {$s['contact_name']}, le contacto desde DAILY Supermercados para coordinar abastecimiento.");
+							$termsOk = !empty($s['commercial_terms_verified']);
 						@endphp
 						<tr>
 							<td>
 								<div class="font-weight-bold text-dark">{{ $s['name'] }}</div>
-								<div class="small text-muted">{{ $s['address'] ?? 'Parque Industrial' }}</div>
+								<div class="small text-muted">{{ $s['address'] ?? 'Sin dirección' }}</div>
+								@if($termsOk)
+								<span class="badge badge-light border text-success" style="font-size:0.68rem;"><i class="fa-solid fa-circle-check mr-1"></i>Condiciones verificadas ({{ $s['currency_code'] ?? 'USD' }})</span>
+								@else
+								<span class="badge badge-warning text-dark" style="font-size:0.68rem;"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Sin condiciones comerciales</span>
+								@endif
 							</td>
 							<td>
 								<div class="font-weight-600 text-dark">{{ $s['contact_name'] ?? 'Ejecutivo de Cuenta' }}</div>
@@ -521,9 +676,13 @@
 							</td>
 							<td class="text-center font-weight-bold">{{ number_format($s['deliveries_count'] ?? 0) }}</td>
 							<td class="text-center">
+								@if($otifVal === null)
+								<span class="badge badge-light border text-muted">Sin entregas</span>
+								@else
 								<span class="badge @if($otifVal >= 90) badge-success @elseif($otifVal >= 75) badge-warning @else badge-danger @endif">
 									{{ number_format($otifVal, 1) }}%
 								</span>
+								@endif
 							</td>
 							<td class="text-center">
 								@if(($s['pending_incidents_count'] ?? 0) > 0)
@@ -681,41 +840,68 @@
 							<th>Orden</th>
 							<th>Proveedor</th>
 							<th>Sucursal</th>
-							<th class="text-right">Líneas</th>
-							<th class="text-right">Costo Estimado</th>
+							<th class="text-right">Líneas / Progreso</th>
+							<th class="text-right">Costo Adq.</th>
 							<th>Estado</th>
-							<th>Creada</th>
-							<th>Aprobó</th>
-							<th title="Fecha de entrega comprometida (base del OTIF)">Entrega Comprometida</th>
+							<th>Creada / Aprobó</th>
+							<th title="Fecha comprometida / confirmación del proveedor">Entrega / Confirmación</th>
 							<th class="text-center">Acciones</th>
 						</tr>
 					</thead>
 					<tbody>
 						@forelse($orders as $o)
-						@php $om = $orderStatusMeta[$o->status] ?? [$o->status, 'secondary']; @endphp
+						@php
+							$om = $orderStatusMeta[$o->status] ?? [$o->status, 'secondary'];
+							$ordU = floatval($o->ordered_units ?? 0);
+							$recU = floatval($o->received_units ?? 0);
+							$acqExtra = floatval($o->freight_cost ?? 0) + floatval($o->tax_cost ?? 0) + floatval($o->other_acquisition_cost ?? 0) - floatval($o->discount_amount ?? 0);
+							$effDate = $o->confirmed_delivery_date ?: $o->expected_delivery_date;
+						@endphp
 						<tr>
 							<td class="font-mono font-weight-bold text-dark">{{ $o->order_code }}</td>
 							<td class="font-weight-600">{{ $o->supplier_name }}</td>
 							<td>{{ $o->branch_name }}</td>
-							<td class="text-right">{{ $o->item_count }}</td>
-							<td class="text-right font-weight-bold">{{ $fmt($o->total_estimated_cost) }}</td>
-							<td><span class="badge badge-{{ $om[1] }}">{{ $om[0] }}</span></td>
-							<td class="small text-muted">{{ $o->created_at }}</td>
-							<td class="small">{{ $o->approved_by_name ?? '—' }}</td>
-							<td class="small font-weight-600 @if($o->status === 'sent' && $o->expected_delivery_date < date('Y-m-d')) text-danger @endif">
-								{{ $o->expected_delivery_date ?? '—' }}
+							<td class="text-right">
+								<span class="font-weight-bold">{{ $o->item_count }} lín.</span>
+								<div class="small text-muted">{{ number_format($recU, 0) }}/{{ number_format($ordU, 0) }} u.</div>
+							</td>
+							<td class="text-right">
+								<span class="font-weight-bold">{{ $fmt(floatval($o->total_estimated_cost) + $acqExtra) }}</span>
+								@if(abs($acqExtra) > 0.005)
+								<div class="small text-muted">Base {{ $fmt($o->total_estimated_cost) }}</div>
+								@endif
+							</td>
+							<td>
+								<span class="badge badge-{{ $om[1] }}">{{ $om[0] }}</span>
+								@if(intval($o->pending_physical_receipts ?? 0) > 0)
+								<div class="small text-warning font-weight-600">{{ $o->pending_physical_receipts }} recep. admin.</div>
+								@endif
+							</td>
+							<td class="small">
+								<span class="text-muted">{{ $o->created_at }}</span>
+								<div class="text-dark">{{ $o->approved_by_name ?? 'Sin aprobar' }}</div>
+							</td>
+							<td class="small font-weight-600 @if(in_array($o->status, ['sent', 'confirmed']) && $effDate && $effDate < date('Y-m-d')) text-danger @endif">
+								{{ $effDate ?? '—' }}
+								@if(!empty($o->supplier_confirmation_ref))
+								<div class="text-primary small">Ref: {{ $o->supplier_confirmation_ref }}</div>
+								@endif
 							</td>
 							<td class="text-center text-nowrap">
 								@if($o->status === 'draft' && $canManage)
+								<button class="btn btn-xs btn-outline-secondary mrp-edit-draft" data-order-id="{{ $o->id }}" title="Editar cantidades y costos de adquisición"><i class="fa-solid fa-pen"></i></button>
 								<button class="btn btn-xs btn-outline-success mrp-approve-order" data-order-id="{{ $o->id }}">Aprobar</button>
 								@endif
 								@if($o->status === 'approved' && $canManage)
 								<button class="btn btn-xs btn-outline-primary mrp-send-order" data-order-id="{{ $o->id }}">Enviar</button>
 								@endif
-								@if(in_array($o->status, ['approved', 'sent', 'partially_received']) && $canReceive)
+								@if($o->status === 'sent' && $canManage)
+								<button class="btn btn-xs btn-outline-info mrp-confirm-order" data-order-id="{{ $o->id }}" title="Registrar confirmación del proveedor"><i class="fa-solid fa-handshake mr-1"></i>Confirmar</button>
+								@endif
+								@if(in_array($o->status, ['approved', 'sent', 'confirmed', 'partially_received']) && $canReceive)
 								<button class="btn btn-xs btn-success mrp-receive-order" data-order-id="{{ $o->id }}"><i class="fa-solid fa-truck-ramp-box mr-1"></i>Recibir</button>
 								@endif
-								@if(in_array($o->status, ['draft', 'approved', 'sent', 'partially_received']) && $canManage)
+								@if(in_array($o->status, ['draft', 'approved', 'sent', 'confirmed', 'partially_received']) && $canManage)
 								@php $isCancel = in_array($o->status, ['draft', 'approved']); @endphp
 								<button class="btn btn-xs btn-outline-danger mrp-close-order" data-order-id="{{ $o->id }}" data-cancel="{{ $isCancel ? 1 : 0 }}">{{ $isCancel ? 'Cancelar' : 'Cerrar' }}</button>
 								@endif
@@ -726,7 +912,7 @@
 							</td>
 						</tr>
 						@empty
-						<tr><td colspan="10" class="text-center text-muted py-3">Sin órdenes de compra registradas.</td></tr>
+						<tr><td colspan="9" class="text-center text-muted py-3">Sin órdenes de compra registradas.</td></tr>
 						@endforelse
 					</tbody>
 				</table>
@@ -749,30 +935,49 @@
 							<th>Recepción</th>
 							<th>Orden</th>
 							<th>Proveedor</th>
+							<th>Etapa Física / Admin.</th>
 							<th>Doc. Proveedor</th>
 							<th class="text-right">Temperatura</th>
-							<th class="text-right">Ingresado (Aceptado)</th>
+							<th class="text-right">Ingresado (Landed)</th>
 							<th class="text-right">Rechazado</th>
 							<th>Recibió</th>
 							<th>Fecha</th>
-							<th class="text-center">Comprobante</th>
+							<th class="text-center">Comprobante / Stock</th>
 						</tr>
 					</thead>
 					<tbody>
 						@forelse($receipts as $r)
+						@php $stage = $r['reception_stage'] ?? 'completed'; @endphp
 						<tr>
 							<td class="font-mono font-weight-bold text-dark">{{ $r['receipt_code'] }}</td>
 							<td class="font-mono">{{ $r['order_code'] }}</td>
 							<td>{{ $r['supplier_name'] }}</td>
+							<td>
+								@if($stage === 'admin_recorded')
+								<span class="badge badge-warning text-dark">Registro Admin. (Pendiente físico)</span>
+								@else
+								<span class="badge badge-success">Ingreso físico al stock</span>
+								@endif
+							</td>
 							<td class="small">{{ $r['supplier_document'] ?? '—' }}</td>
 							<td class="text-right">{{ $r['temperature_on_arrival'] !== null ? $r['temperature_on_arrival'] . ' °C' : '—' }}</td>
-							<td class="text-right font-weight-bold text-success">{{ $fmt($r['total_accepted_cost']) }}</td>
+							<td class="text-right font-weight-bold text-success">
+								{{ $fmt($r['total_accepted_cost']) }}
+								@if(floatval($r['freight_allocated'] ?? 0) > 0)
+								<div class="small text-muted">Landed: {{ $fmt($r['landed_total_cost'] ?? $r['total_accepted_cost']) }}</div>
+								@endif
+							</td>
 							<td class="text-right @if($r['total_rejected_cost'] > 0) text-danger font-weight-bold @else text-muted @endif">
 								{{ $r['total_rejected_cost'] > 0 ? $fmt($r['total_rejected_cost']) : '—' }}
 							</td>
 							<td class="small">{{ $r['received_by_name'] }}</td>
 							<td class="small text-muted">{{ $r['received_at'] }}</td>
 							<td class="text-center text-nowrap">
+								@if($stage === 'admin_recorded' && $canReceive)
+								<button type="button" class="btn btn-xs btn-success mrp-confirm-physical" data-receipt-id="{{ $r['id'] }}" title="Postear ingreso físico al inventario">
+									<i class="fa-solid fa-boxes-packing mr-1"></i>Confirmar Físico
+								</button>
+								@endif
 								<a class="btn btn-xs btn-outline-secondary" href="{{ $U('/document/receipt/' . $r['id']) }}" title="Imprimir Comprobante"><i class="fa-solid fa-print"></i></a>
 								@if($r['stock_transaction_id'])
 								<a class="btn btn-xs btn-outline-secondary" href="{{ $U('/stockjournal') }}" title="Ver en Diario de Stock"><i class="fa-solid fa-book"></i></a>
@@ -780,7 +985,7 @@
 							</td>
 						</tr>
 						@empty
-						<tr><td colspan="10" class="text-center text-muted py-3">Sin recepciones registradas en el período.</td></tr>
+						<tr><td colspan="11" class="text-center text-muted py-3">Sin recepciones registradas en el período.</td></tr>
 						@endforelse
 					</tbody>
 				</table>
@@ -831,7 +1036,7 @@
 								<button class="btn btn-xs btn-outline-primary mrp-invoice-detail"
 									data-invoice-id="{{ $inv['id'] }}"
 									data-code="{{ $inv['invoice_code'] }}"
-									data-pending="{{ $inv['status'] === 'pending_decision' ? 1 : 0 }}">
+									data-pending="{{ $inv['status'] === 'discrepancy' ? 1 : 0 }}">
 									<i class="fa-solid fa-eye mr-1"></i>Conciliar
 								</button>
 							</td>
@@ -1053,9 +1258,12 @@
 							<td class="font-weight-bold text-dark">{{ $cc['name'] }}</td>
 							<td class="text-center">{{ $cc['product_count'] }}</td>
 							<td class="text-center @if($cc['stockouts'] > 0) text-danger font-weight-bold @else text-muted @endif">{{ $cc['stockouts'] }}</td>
-							<td class="text-right font-weight-bold">{{ $cc['avg_coverage'] }} días</td>
+							<td class="text-right font-weight-bold">{{ $cc['avg_coverage'] !== null ? $cc['avg_coverage'] . ' días' : 'Sin rotación' }}</td>
 							<td class="text-right font-weight-bold text-primary">{{ $fmt($cc['reorder_cost']) }}</td>
 							<td>
+								@if($cc['avg_coverage'] === null)
+								<span class="small text-muted">Sin demanda registrada</span>
+								@else
 								<div class="progress" style="height: 18px;">
 									<div class="progress-bar @if($cc['avg_coverage'] < 5) bg-danger @elseif($cc['avg_coverage'] < 14) bg-warning @else bg-success @endif"
 										role="progressbar"
@@ -1063,6 +1271,7 @@
 										{{ $cc['avg_coverage'] }}d
 									</div>
 								</div>
+								@endif
 							</td>
 						</tr>
 						@empty
@@ -1073,6 +1282,84 @@
 			</div>
 		</div>
 
+		<!-- SECCIÓN 4: ENTREGAS PENDIENTES DETALLADAS (POR SKU Y RECEPCIÓN PARCIAL) -->
+		<div class="card shadow-sm border-0 mb-3">
+			<div class="card-header bg-white border-0 font-weight-bold d-flex justify-content-between align-items-center">
+				<span><i class="fa-solid fa-hourglass-half text-warning mr-2"></i>Entregas Pendientes y Diferencias Pedido vs Recibido</span>
+				<span class="badge badge-warning text-dark">{{ count($pendingDeliveries) }} órdenes abiertas</span>
+			</div>
+			<div class="table-responsive">
+				<table class="table table-sm table-hover mb-0">
+					<thead class="thead-light">
+						<tr>
+							<th>Orden</th>
+							<th>Proveedor / Sucursal</th>
+							<th>Estado</th>
+							<th class="text-right">Ordenado (u.)</th>
+							<th class="text-right">Recibido (u.)</th>
+							<th class="text-right">Pendiente (u.)</th>
+							<th>Fecha Promesa</th>
+						</tr>
+					</thead>
+					<tbody>
+						@forelse($pendingDeliveries as $pd)
+						<tr>
+							<td class="font-mono font-weight-bold">{{ $pd['order_code'] }}</td>
+							<td><span class="font-weight-600">{{ $pd['supplier_name'] }}</span> · <small class="text-muted">{{ $pd['branch_name'] }}</small></td>
+							<td><span class="badge badge-info">{{ $orderStatusMeta[$pd['status']][0] ?? $pd['status'] }}</span></td>
+							<td class="text-right">{{ number_format($pd['ordered_units'], 1) }}</td>
+							<td class="text-right text-success font-weight-600">{{ number_format($pd['received_units'], 1) }}</td>
+							<td class="text-right text-primary font-weight-bold">{{ number_format($pd['pending_units'], 1) }}</td>
+							<td class="small">{{ $pd['effective_eta'] ?? '—' }}</td>
+						</tr>
+						@empty
+						<tr><td colspan="7" class="text-center text-muted py-3">Sin entregas pendientes por recibir.</td></tr>
+						@endforelse
+					</tbody>
+				</table>
+			</div>
+		</div>
+
+	</div>
+
+	<!-- ============================================================== -->
+	<!-- PESTAÑA 5: HISTORIAL DE ABASTECIMIENTO                         -->
+	<!-- ============================================================== -->
+	<div class="tab-pane fade @if($activeTab === 'historial') show active @endif" id="tab-historial" role="tabpanel">
+		<div class="card shadow-sm border-0 mb-3">
+			<div class="card-header bg-white border-0 font-weight-bold d-flex justify-content-between align-items-center">
+				<span><i class="fa-solid fa-clock-rotate-left text-primary mr-2"></i>Historial Auditado de Abastecimiento (Eventos de Demanda, OC, Confirmación y Recepción)</span>
+				<span class="badge badge-light border text-muted">{{ count($supplyHistory) }} eventos recientes</span>
+			</div>
+			<div class="table-responsive">
+				<table class="table table-sm table-hover mb-0">
+					<thead class="thead-light">
+						<tr>
+							<th>Fecha / Hora</th>
+							<th>Tipo de Evento</th>
+							<th>Referencia</th>
+							<th>Sucursal / Proveedor</th>
+							<th>Responsable</th>
+							<th>Detalle</th>
+						</tr>
+					</thead>
+					<tbody>
+						@forelse($supplyHistory as $ev)
+						<tr>
+							<td class="small text-muted text-nowrap">{{ $ev['created_at'] }}</td>
+							<td><span class="badge badge-light border font-weight-600">{{ $ev['event_type'] }}</span></td>
+							<td class="font-mono font-weight-bold">{{ $ev['reference_code'] ?? '—' }}</td>
+							<td class="small">{{ $ev['branch_name'] ?? 'Red' }} · {{ $ev['supplier_name'] ?? '—' }}</td>
+							<td class="small">{{ $ev['actor_name'] ?? 'Sistema' }}</td>
+							<td class="small">{{ $ev['summary'] }}</td>
+						</tr>
+						@empty
+						<tr><td colspan="6" class="text-center text-muted py-3">Sin eventos de abastecimiento registrados aún.</td></tr>
+						@endforelse
+					</tbody>
+				</table>
+			</div>
+		</div>
 	</div>
 
 </div>
@@ -1099,16 +1386,7 @@
 				<div class="table-responsive">
 					<table class="table table-sm mb-0">
 						<thead><tr><th>Producto</th><th class="text-right">Pedido</th><th class="text-right">Recibido</th><th class="text-right">Precio OC</th><th style="width:130px">Cant. facturada</th><th style="width:140px">Precio unit. fact.</th></tr></thead>
-						<tbody id="mrp-invoice-lines">
-							<tr>
-								<td><strong>Aceite Vegetal Premium 1L</strong><br><small class="text-muted">SKU-1002</small></td>
-								<td class="text-right">100 unids</td>
-								<td class="text-right font-weight-bold text-success">100 unids</td>
-								<td class="text-right">$12.50</td>
-								<td><input type="number" class="form-control form-control-sm text-right" value="100"></td>
-								<td><input type="number" step="0.01" class="form-control form-control-sm text-right font-weight-bold" value="12.50"></td>
-							</tr>
-						</tbody>
+						<tbody id="mrp-invoice-lines"></tbody>
 					</table>
 				</div>
 			</div>
@@ -1131,54 +1409,56 @@
 				</div>
 				<div class="modal-body p-3">
 					<div class="form-row mb-3">
-						<div class="col-md-4">
+						<div class="col-md-3">
 							<label class="small text-muted font-weight-600 mb-0">Proveedor / Destino</label>
 							<input type="text" id="mrp-receive-supplier" class="form-control form-control-sm bg-light" readonly>
 						</div>
 						<div class="col-md-3">
-							<label class="small text-muted font-weight-600 mb-0">Documento del proveedor (remisión/factura)</label>
+							<label class="small text-muted font-weight-600 mb-0">Modalidad de Recepción</label>
+							<select id="mrp-receive-mode" class="custom-select custom-select-sm">
+								<option value="direct" selected>Directa (Admin. + Stock físico inmediato)</option>
+								<option value="administrative">1. Solo Recepción Administrativa (sin mover stock)</option>
+							</select>
+						</div>
+						<div class="col-md-2">
+							<label class="small text-muted font-weight-600 mb-0">Doc. proveedor</label>
 							<input type="text" id="mrp-receive-doc" class="form-control form-control-sm" placeholder="Ej: REM-1234">
 						</div>
 						<div class="col-md-2">
-							<label class="small text-muted font-weight-600 mb-0">Temperatura de llegada (°C)</label>
+							<label class="small text-muted font-weight-600 mb-0">Temperatura (°C)</label>
 							<input type="number" step="0.1" id="mrp-receive-temp" class="form-control form-control-sm" placeholder="Opcional">
 						</div>
-						<div class="col-md-3">
+						<div class="col-md-2">
+							<label class="small text-muted font-weight-600 mb-0">Flete en recepción ($)</label>
+							<input type="number" step="0.01" min="0" id="mrp-receive-freight" class="form-control form-control-sm" value="0">
+						</div>
+					</div>
+					<div class="form-row mb-2">
+						<div class="col-12">
 							<label class="small text-muted font-weight-600 mb-0">Notas de inspección</label>
 							<input type="text" id="mrp-receive-notes" class="form-control form-control-sm" placeholder="Sello de transporte, estado del empaque…">
 						</div>
 					</div>
 					<div class="alert alert-light border small text-muted mb-2">
-						<i class="fa-solid fa-circle-info text-info mr-1"></i>Solo la cantidad <strong>Aceptada</strong> ingresará al stock y generará Kardex. Lo <strong>Rechazado</strong> abrirá automáticamente un registro de incidencia con el proveedor.
+						<i class="fa-solid fa-circle-info text-info mr-1"></i>El ingreso no puede superar la cantidad autorizada. En modo <strong>Administrativa</strong> solo se registra el acta documental hasta confirmar el <strong>Movimiento Físico</strong>.
 					</div>
 					<div class="table-responsive">
 						<table class="table table-sm mb-0">
 							<thead>
 								<tr>
 									<th>Producto</th>
+									<th class="text-right">Pedido / Recib.</th>
 									<th class="text-right">Pendiente</th>
-									<th style="width:110px">Entregado</th>
-									<th style="width:110px">Rechazado</th>
+									<th style="width:105px">Entregado</th>
+									<th style="width:100px">Rechazado</th>
 									<th>Motivo rechazo</th>
-									<th style="width:135px">Vencimiento</th>
-									<th style="width:130px">Lote proveedor</th>
-									<th style="width:150px">Ubicación física</th>
-									<th style="width:100px">Precio unit.</th>
+									<th style="width:130px">Vencimiento</th>
+									<th style="width:120px">Lote prov.</th>
+									<th style="width:140px">Ubicación</th>
+									<th style="width:95px">Precio u.</th>
 								</tr>
 							</thead>
-							<tbody id="mrp-receive-lines">
-								<tr>
-									<td><strong>Leche Entera Alquería 1L</strong><br><small class="text-muted">SKU-1004</small></td>
-									<td class="text-right font-weight-bold">50 unids</td>
-									<td><input type="number" class="form-control form-control-sm text-right font-weight-bold" value="50"></td>
-									<td><input type="number" class="form-control form-control-sm text-right" value="0"></td>
-									<td><input type="text" class="form-control form-control-sm" placeholder="Sin novedad"></td>
-									<td><input type="date" class="form-control form-control-sm" value="{{ date('Y-m-d', strtotime('+30 days')) }}"></td>
-									<td><input type="text" class="form-control form-control-sm" value="LOT-ALQ-099"></td>
-									<td><input type="text" class="form-control form-control-sm" value="Cámara Fría 01"></td>
-									<td class="text-right font-weight-bold">$1.85</td>
-								</tr>
-							</tbody>
+							<tbody id="mrp-receive-lines"></tbody>
 						</table>
 					</div>
 				</div>
@@ -1204,30 +1484,76 @@
 				<div class="table-responsive">
 					<table class="table table-sm mb-0">
 						<thead><tr><th>Producto</th><th class="text-right">Vida útil base</th><th style="width:110px">Mín. remanente</th><th style="width:90px">T. mín (°C)</th><th style="width:90px">T. máx (°C)</th><th></th></tr></thead>
-						<tbody id="mrp-rules-lines">
-							<tr>
-								<td><strong>Lácteos y Derivados (Yogurt, Leche, Quesos)</strong></td>
-								<td class="text-right">30 días</td>
-								<td><span class="badge badge-warning text-dark font-weight-bold">&ge; 75% vida útil</span></td>
-								<td class="text-center font-weight-bold text-info">2.0 °C</td>
-								<td class="text-center font-weight-bold text-info">6.0 °C</td>
-								<td class="text-right"><span class="badge badge-success"><i class="fa-solid fa-check mr-1"></i>Regla Activa</span></td>
-							</tr>
-							<tr>
-								<td><strong>Carnes y Aves Refrigeradas</strong></td>
-								<td class="text-right">15 días</td>
-								<td><span class="badge badge-warning text-dark font-weight-bold">&ge; 80% vida útil</span></td>
-								<td class="text-center font-weight-bold text-info">0.0 °C</td>
-								<td class="text-center font-weight-bold text-info">4.0 °C</td>
-								<td class="text-right"><span class="badge badge-success"><i class="fa-solid fa-check mr-1"></i>Regla Activa</span></td>
-							</tr>
-						</tbody>
+						<tbody id="mrp-rules-lines"></tbody>
 					</table>
 				</div>
 			</div>
 			<div class="modal-footer py-2">
 				<button type="button" class="btn btn-sm btn-light border" data-dismiss="modal">Cerrar</button>
 			</div>
+		</div>
+	</div>
+</div>
+
+<!-- MODAL: EDITAR BORRADOR Y COSTOS DE ADQUISICIÓN -->
+<div class="modal fade" id="mrp-edit-draft-modal" tabindex="-1">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			<form id="mrp-edit-draft-form">
+				<div class="modal-header py-2">
+					<h5 class="modal-title font-weight-700"><i class="fa-solid fa-pen-to-square text-primary mr-2"></i>Editar Borrador y Costos de Adquisición · <span id="mrp-draft-code"></span></h5>
+					<button type="button" class="close" data-dismiss="modal">&times;</button>
+				</div>
+				<div class="modal-body p-3">
+					<div class="form-row mb-3">
+						<div class="col-md-3"><label class="small text-muted font-weight-600 mb-0">Flete ($)</label><input type="number" step="0.01" min="0" id="draft-freight" class="form-control form-control-sm" value="0"></div>
+						<div class="col-md-3"><label class="small text-muted font-weight-600 mb-0">Impuestos ($)</label><input type="number" step="0.01" min="0" id="draft-tax" class="form-control form-control-sm" value="0"></div>
+						<div class="col-md-3"><label class="small text-muted font-weight-600 mb-0">Otros Costos ($)</label><input type="number" step="0.01" min="0" id="draft-other" class="form-control form-control-sm" value="0"></div>
+						<div class="col-md-3"><label class="small text-muted font-weight-600 mb-0">Descuento ($)</label><input type="number" step="0.01" min="0" id="draft-discount" class="form-control form-control-sm" value="0"></div>
+					</div>
+					<div class="table-responsive">
+						<table class="table table-sm mb-0">
+							<thead><tr><th>Producto</th><th style="width:120px">Cantidad</th><th style="width:120px">Precio unit.</th><th class="text-right">Landed u.</th></tr></thead>
+							<tbody id="mrp-draft-lines"></tbody>
+						</table>
+					</div>
+				</div>
+				<div class="modal-footer py-2">
+					<button type="button" class="btn btn-sm btn-light border" data-dismiss="modal">Cancelar</button>
+					<button type="submit" class="btn btn-sm btn-primary"><i class="fa-solid fa-save mr-1"></i>Guardar cambios</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+
+<!-- MODAL: CONFIRMACIÓN DE PROVEEDOR -->
+<div class="modal fade" id="mrp-confirm-modal" tabindex="-1">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			<form id="mrp-confirm-form">
+				<div class="modal-header py-2 bg-info text-white">
+					<h5 class="modal-title font-weight-700"><i class="fa-solid fa-handshake mr-2"></i>Confirmación de Proveedor · <span id="mrp-confirm-code"></span></h5>
+					<button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+				</div>
+				<div class="modal-body p-3">
+					<div class="form-row mb-3">
+						<div class="col-md-4"><label class="small text-muted font-weight-600 mb-0">Contacto del Proveedor</label><input type="text" id="confirm-contact" class="form-control form-control-sm" required placeholder="Nombre ejecutivo"></div>
+						<div class="col-md-4"><label class="small text-muted font-weight-600 mb-0">Referencia Confirmación</label><input type="text" id="confirm-ref" class="form-control form-control-sm" required placeholder="Ej: CONF-9921"></div>
+						<div class="col-md-4"><label class="small text-muted font-weight-600 mb-0">ETA Confirmada</label><input type="date" id="confirm-eta" class="form-control form-control-sm" required></div>
+					</div>
+					<div class="table-responsive">
+						<table class="table table-sm mb-0">
+							<thead><tr><th>Producto</th><th class="text-right">Solicitado</th><th style="width:140px">Cant. Confirmada</th></tr></thead>
+							<tbody id="mrp-confirm-lines"></tbody>
+						</table>
+					</div>
+				</div>
+				<div class="modal-footer py-2">
+					<button type="button" class="btn btn-sm btn-light border" data-dismiss="modal">Cancelar</button>
+					<button type="submit" class="btn btn-sm btn-info"><i class="fa-solid fa-check mr-1"></i>Registrar Confirmación</button>
+				</div>
+			</form>
 		</div>
 	</div>
 </div>
@@ -1623,9 +1949,11 @@
 				if (i.min_remaining_days) rule.push('mín. ' + i.min_remaining_days + ' d de vida útil');
 				if (i.min_temperature !== null || i.max_temperature !== null) rule.push((i.min_temperature ?? '—') + ' a ' + (i.max_temperature ?? '—') + ' °C');
 				var bbd = i.default_best_before_days > 0 ? moment().add(i.default_best_before_days, 'days').format('YYYY-MM-DD') : '';
+				var ordered = i.approved_amount !== null ? i.approved_amount : i.suggested_amount;
 				return '<tr data-item-id="' + i.id + '">' +
 					'<td><span class="font-weight-600">' + mrpEsc(i.product_name) + '</span>' + (rule.length ? '<div class="small text-muted">' + mrpEsc(rule.join(' · ')) + '</div>' : '') + '</td>' +
-					'<td class="text-right text-nowrap">' + i.pending_amount + ' ' + mrpEsc(i.qu_name) + '</td>' +
+					'<td class="text-right small text-nowrap">' + ordered + ' / ' + (i.received_amount || 0) + ' ' + mrpEsc(i.qu_name) + '</td>' +
+					'<td class="text-right font-weight-bold text-nowrap">' + i.pending_amount + ' ' + mrpEsc(i.qu_name) + '</td>' +
 					'<td><input type="number" step="any" min="0" max="' + i.pending_amount + '" class="form-control form-control-sm rc-delivered" value="' + i.pending_amount + '"></td>' +
 					'<td><input type="number" step="any" min="0" class="form-control form-control-sm rc-rejected" value="0"></td>' +
 					'<td><input type="text" class="form-control form-control-sm rc-reason" placeholder="Dañado, faltante…"></td>' +
@@ -1635,13 +1963,15 @@
 					'<td><input type="number" step="any" min="0" class="form-control form-control-sm rc-price" value="' + i.unit_price + '"></td>' +
 					'</tr>';
 			});
-			$('#mrp-receive-lines').html(rows.join('') || '<tr><td colspan="8" class="text-center text-muted">Nada pendiente de recibir.</td></tr>');
+			$('#mrp-receive-lines').html(rows.join('') || '<tr><td colspan="10" class="text-center text-muted">Nada pendiente de recibir.</td></tr>');
 			$('#mrp-receive-modal').modal('show');
 		}).fail(mrpFail);
 	});
 
 	$('#mrp-receive-form').on('submit', function(e) {
 		e.preventDefault();
+		var mode = $('#mrp-receive-mode').val() || 'direct';
+		var endpoint = mode === 'administrative' ? '/mrp/order/' + mrpReceiveOrderId + '/receive-admin' : '/mrp/order/' + mrpReceiveOrderId + '/receive';
 		var items = $('#mrp-receive-lines tr[data-item-id]').map(function() {
 			var r = $(this);
 			return {
@@ -1655,13 +1985,177 @@
 				unit_price: r.find('.rc-price').val()
 			};
 		}).get();
-		mrpPost('/mrp/order/' + mrpReceiveOrderId + '/receive', {
+		mrpPost(endpoint, {
+			reception_mode: mode,
 			items: items,
 			supplier_document: $('#mrp-receive-doc').val(),
 			temperature_on_arrival: $('#mrp-receive-temp').val(),
+			freight_allocated: $('#mrp-receive-freight').val() || 0,
 			notes: $('#mrp-receive-notes').val()
-		}, 'Recepción registrada y stock actualizado');
+		}, mode === 'administrative' ? 'Recepción administrativa registrada (pendiente de ingreso físico)' : 'Recepción registrada y stock actualizado');
 	});
+
+	$(document).on('click', '.mrp-confirm-physical', function() {
+		var rid = $(this).data('receipt-id');
+		bootbox.confirm('¿Confirmar ingreso físico al inventario para la recepción #' + rid + '?', function(ok) {
+			if (ok) mrpPost('/mrp/receipts/' + rid + '/confirm-physical', {}, 'Ingreso físico confirmado en inventario y Kardex');
+		});
+	});
+
+	// Editar Borrador + Costos de Adquisición
+	var mrpEditDraftId = null;
+	$(document).on('click', '.mrp-edit-draft', function() {
+		mrpEditDraftId = $(this).data('order-id');
+		$.getJSON(Grocy.BaseUrl + '/api/mrp/order/' + mrpEditDraftId).done(function(d) {
+			$('#mrp-draft-code').text(d.order.order_code);
+			$('#draft-freight').val(d.order.freight_cost || 0);
+			$('#draft-tax').val(d.order.tax_cost || 0);
+			$('#draft-other').val(d.order.other_acquisition_cost || 0);
+			$('#draft-discount').val(d.order.discount_amount || 0);
+			$('#mrp-draft-lines').html(d.items.map(function(i) {
+				var q = i.approved_amount !== null ? i.approved_amount : i.suggested_amount;
+				return '<tr data-item-id="' + i.id + '"><td>' + mrpEsc(i.product_name) + '</td>' +
+					'<td><input type="number" step="any" min="0.01" class="form-control form-control-sm dr-qty" value="' + q + '"></td>' +
+					'<td><input type="number" step="any" min="0.01" class="form-control form-control-sm dr-price" value="' + (i.unit_price || 0) + '"></td>' +
+					'<td class="text-right small text-muted">$' + Number(i.landed_unit_cost || i.unit_price || 0).toFixed(2) + '</td></tr>';
+			}).join(''));
+			$('#mrp-edit-draft-modal').modal('show');
+		}).fail(mrpFail);
+	});
+
+	$('#mrp-edit-draft-form').on('submit', function(e) {
+		e.preventDefault();
+		var items = $('#mrp-draft-lines tr[data-item-id]').map(function() {
+			return {
+				order_item_id: $(this).data('item-id'),
+				amount: $(this).find('.dr-qty').val(),
+				unit_price: $(this).find('.dr-price').val()
+			};
+		}).get();
+		mrpPost('/mrp/order/' + mrpEditDraftId + '/draft-items', {
+			freight_cost: $('#draft-freight').val() || 0,
+			tax_cost: $('#draft-tax').val() || 0,
+			other_acquisition_cost: $('#draft-other').val() || 0,
+			discount_amount: $('#draft-discount').val() || 0,
+			items: items
+		}, 'Borrador y costos de adquisición actualizados');
+	});
+
+	// Confirmación del Proveedor
+	var mrpConfirmOrderId = null;
+	$(document).on('click', '.mrp-confirm-order', function() {
+		mrpConfirmOrderId = $(this).data('order-id');
+		$.getJSON(Grocy.BaseUrl + '/api/mrp/order/' + mrpConfirmOrderId).done(function(d) {
+			$('#mrp-confirm-code').text(d.order.order_code + ' · ' + d.order.supplier_name);
+			$('#confirm-contact').val(d.order.confirmed_by_supplier_contact || '');
+			$('#confirm-ref').val(d.order.supplier_confirmation_ref || ('CONF-' + d.order.order_code));
+			$('#confirm-eta').val(d.order.confirmed_delivery_date || d.order.expected_delivery_date || moment().add(2, 'days').format('YYYY-MM-DD'));
+			$('#mrp-confirm-lines').html(d.items.map(function(i) {
+				var req = i.approved_amount !== null ? i.approved_amount : i.suggested_amount;
+				return '<tr data-item-id="' + i.id + '"><td>' + mrpEsc(i.product_name) + '</td><td class="text-right">' + req + ' ' + mrpEsc(i.qu_name) + '</td>' +
+					'<td><input type="number" step="any" min="0" max="' + req + '" class="form-control form-control-sm cf-qty" value="' + (i.confirmed_amount !== null ? i.confirmed_amount : req) + '"></td></tr>';
+			}).join(''));
+			$('#mrp-confirm-modal').modal('show');
+		}).fail(mrpFail);
+	});
+
+	$('#mrp-confirm-form').on('submit', function(e) {
+		e.preventDefault();
+		var items = $('#mrp-confirm-lines tr[data-item-id]').map(function() {
+			return { order_item_id: $(this).data('item-id'), confirmed_amount: $(this).find('.cf-qty').val() };
+		}).get();
+		mrpPost('/mrp/order/' + mrpConfirmOrderId + '/confirm', {
+			confirmed_by_supplier_contact: $('#confirm-contact').val(),
+			supplier_confirmation_ref: $('#confirm-ref').val(),
+			confirmed_delivery_date: $('#confirm-eta').val(),
+			items: items
+		}, 'Confirmación de proveedor registrada');
+	});
+
+	// Simulador de Demanda What-If
+	$('#btn-run-simulator').on('click', function() {
+		var box = $('#mrp-simulator-result');
+		box.html('<i class="fa-solid fa-spinner fa-spin mr-1"></i>Calculando escenario...');
+		$.ajax({
+			url: Grocy.BaseUrl + '/api/mrp/simulate',
+			method: 'POST',
+			contentType: 'application/json',
+			data: JSON.stringify({
+				branch_id: @json($selectedBranchId ?? 1),
+				horizon_days: @json($horizonDays),
+				demand_multiplier: Number($('#sim-vmd-mult').val() || 1),
+				lead_time_delta: Number($('#sim-lt-delta').val() || 0),
+				service_level: Number($('#sim-service-z').val() || 0.95)
+			})
+		}).done(function(res) {
+			var s = res.summary || {};
+			box.html(
+				'<div class="d-flex flex-wrap justify-content-between">' +
+				'<span>SKUs bajo ROP: <strong>' + (s.base_reorder_skus ?? 0) + '</strong> &rarr; <strong class="text-danger">' + (s.sim_reorder_skus ?? 0) + '</strong></span>' +
+				'<span>Inversión Est.: <strong class="text-primary">$' + Number(s.sim_investment || 0).toFixed(2) + '</strong> (<span class="' + (Number(s.delta_investment) > 0 ? 'text-danger' : 'text-success') + '">' + (Number(s.delta_investment) >= 0 ? '+' : '') + Number(s.delta_investment || 0).toFixed(2) + '</span>)</span>' +
+				'</div>'
+			);
+		}).fail(mrpFail);
+	});
+
+	// Ejecutar Transferencia Inter-Sucursal Recomendada
+	$(document).on('click', '.btn-exec-transfer', function() {
+		var btn = $(this);
+		bootbox.confirm('¿Crear traslado de ' + btn.data('qty') + ' u. de "' + mrpEsc(btn.data('name')) + '" para equilibrar inventario?', function(ok) {
+			if (!ok) return;
+			mrpPost('/mrp/transfers/execute', {
+				from_branch_id: btn.data('from'),
+				to_branch_id: btn.data('to'),
+				product_id: btn.data('product'),
+				qty: btn.data('qty')
+			}, 'Traslado entre sucursales creado');
+		});
+	});
+
+	// Gráfico de Cobertura e Inversión por Categoría
+	(function() {
+		var canvas = document.getElementById('mrpCategoryChart');
+		if (!canvas || typeof Chart === 'undefined') return;
+		var cats = @json($categoryCoverage);
+		if (!cats || !cats.length) return;
+		new Chart(canvas.getContext('2d'), {
+			type: 'bar',
+			data: {
+				labels: cats.slice(0, 8).map(function(c) { return c.name; }),
+				datasets: [
+					{
+						label: 'Inversión Sugerida ($)',
+						data: cats.slice(0, 8).map(function(c) { return Number(c.reorder_cost || 0); }),
+						backgroundColor: 'rgba(0, 200, 59, 0.72)',
+						borderColor: '#00C83B',
+						borderWidth: 1,
+						yAxisID: 'y-cost'
+					},
+					{
+						label: 'Cobertura Prom. (días)',
+						data: cats.slice(0, 8).map(function(c) { return c.avg_coverage !== null ? Number(c.avg_coverage) : 0; }),
+						type: 'line',
+						fill: false,
+						borderColor: '#2563EB',
+						backgroundColor: 'rgba(37, 99, 235, 0.15)',
+						lineTension: 0.3,
+						yAxisID: 'y-cov'
+					}
+				]
+			},
+			options: {
+				responsive: true,
+				maintainAspectRatio: false,
+				legend: { labels: { boxWidth: 12, fontSize: 11 } },
+				scales: {
+					yAxes: [
+						{ id: 'y-cost', position: 'left', ticks: { beginAtZero: true, callback: function(v) { return '$' + v; } } },
+						{ id: 'y-cov', position: 'right', gridLines: { drawOnChartArea: false }, ticks: { beginAtZero: true, callback: function(v) { return v + 'd'; } } }
+					]
+				}
+			}
+		});
+	})();
 
 	// 7. Reglas de Recepción
 	$('#mrp-receiving-rules').on('click', function() {

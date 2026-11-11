@@ -8,7 +8,6 @@
 <link href="{{ $U('/css/daily_sales.css?v=', true) }}{{ daily_asset_version('/css/daily_sales.css') }}" rel="stylesheet">
 <link href="{{ $U('/css/daily_sales_dashboard.css?v=', true) }}{{ daily_asset_version('/css/daily_sales_dashboard.css') }}" rel="stylesheet">
 <link href="{{ $U('/css/daily_sales_reports.css?v=', true) }}{{ daily_asset_version('/css/daily_sales_reports.css') }}" rel="stylesheet">
-<link href="{{ $U('/css/daily_ty_ly.css?v=', true) }}{{ daily_asset_version('/css/daily_ty_ly.css') }}" rel="stylesheet">
 <style>
 /* Popover de información de KPI */
 .popover { max-width: 320px; font-size: 0.82rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
@@ -393,218 +392,7 @@
 <!-- ============================================================== -->
 <div class="tab-pane fade @if($activeTab === 'rentabilidad' || $activeTab === 'analisis') show active @endif" id="tab-rentabilidad" role="tabpanel">
 
-	{{-- Margen diario, mensual y acumulado con los filtros compartidos --}}
-	<div class="sdash-block mb-3" data-testid="block-margins">
-		<header><h2>Margen bruto</h2><span class="sdash-note">{{ $filterNames['branch'] }} · {{ $filterNames['department'] }} · margen = ventas netas − costo de ventas (costo FEFO del lote vendido)</span></header>
-		<div class="sdash-kpis">
-			@foreach(['day' => 'Margen diario', 'month' => 'Margen mensual', 'ytd' => 'Margen acumulado del año'] as $mk => $mName)
-				@php $mg = $salesMargins[$mk]; @endphp
-				@include('components.daily_kpi', ['dkpi' => ['id' => 'margin-' . $mk, 'name' => $mName, 'value' => $mg['margin_pct'], 'unit' => '%', 'period' => $mg['label'], 'scope' => $filterNames['branch'] . ' · ' . $filterNames['department'],
-					'definition' => '(Ventas netas − costo de ventas) ÷ ventas netas × 100', 'source' => 'sales.total_cogs / sale_items.total_cost',
-					'comparison' => !$mg['has_data'] ? 'Sin ventas en el período' : ($mg['reliable'] ? 'Margen $' . number_format($mg['margin'], 0) . ' sobre ventas netas $' . number_format($mg['net'], 0) : 'Dato no confiable: el costo de ventas registrado ($' . number_format($mg['cogs'], 0) . ') supera 3 veces la venta ($' . number_format($mg['net'], 0) . '). Revise los costos antes de usar este margen.')]])
-			@endforeach
-		</div>
-	</div>
-
-	<!-- TARJETAS DE RENTABILIDAD DE ALTO IMPACTO -->
-	<div class="row mb-3">
-		<div class="col-md-3 mb-2">
-			<div class="card shadow-sm border-0 h-100 p-3">
-				<div class="text-muted small text-uppercase font-weight-bold">Costo Mercancía Vendida (CMV)</div>
-				<div class="h3 font-weight-bold text-dark mt-2 mb-1">{{ $m($profitabilityOverview['cogs'] ?? 0) }}</div>
-				<div class="small text-muted">Costo real de salida por inventario FEFO</div>
-			</div>
-		</div>
-		<div class="col-md-3 mb-2">
-			<div class="card shadow-sm border-0 h-100 p-3">
-				<div class="text-muted small text-uppercase font-weight-bold">Utilidad Bruta Comercial</div>
-				<div class="h3 font-weight-bold text-success mt-2 mb-1">{{ $m($profitabilityOverview['gross_profit'] ?? 0) }}</div>
-				<div class="small text-muted">Ventas Netas - Costo de Ventas</div>
-			</div>
-		</div>
-		<div class="col-md-3 mb-2">
-			<div class="card shadow-sm border-0 h-100 p-3">
-				<div class="text-muted small text-uppercase font-weight-bold">Margen Bruto General</div>
-				<div class="h3 font-weight-bold @if(($profitabilityOverview['margin_pct'] ?? 0) >= 25) text-success @elseif(($profitabilityOverview['margin_pct'] ?? 0) >= 15) text-warning @else text-danger @endif mt-2 mb-1">
-					{{ number_format($profitabilityOverview['margin_pct'] ?? 0, 1) }}%
-				</div>
-				<div class="small text-muted">Markup promedio: {{ number_format($profitabilityOverview['markup_pct'] ?? 0, 1) }}%</div>
-			</div>
-		</div>
-		<div class="col-md-3 mb-2">
-			<div class="card shadow-sm border-0 h-100 p-3">
-				<div class="text-muted small text-uppercase font-weight-bold">Impacto de Descuentos</div>
-				<div class="h3 font-weight-bold @if(($profitabilityOverview['discount_amount'] ?? 0) > 0) text-danger @else text-muted @endif mt-2 mb-1">
-					{{ $m($profitabilityOverview['discount_amount'] ?? 0) }}
-				</div>
-				<div class="small text-muted">{{ number_format($profitabilityOverview['discount_impact_pct'] ?? 0, 1) }}% de la venta bruta cedida</div>
-			</div>
-		</div>
-	</div>
-
-	<!-- RENTABILIDAD POR CATEGORÍA -->
-	<div class="card shadow-sm border-0 mb-3">
-		<div class="card-header bg-white border-0 font-weight-bold d-flex justify-content-between align-items-center">
-			<div>
-				<i class="fa-solid fa-layer-group text-primary mr-2"></i>
-				<span>Rentabilidad por Categoría / Departamento</span>
-			</div>
-			<button type="button" class="btn btn-xs btn-outline-danger" data-toggle="modal" data-target="#modalAuditoriaDescuentos">
-				<i class="fa-solid fa-shield-halved mr-1"></i>Auditar Descuentos
-			</button>
-		</div>
-		<div class="table-responsive">
-			<table class="table table-hover mb-0">
-				<thead class="thead-light">
-					<tr>
-						<th>Categoría</th>
-						<th class="text-right">Unidades</th>
-						<th class="text-right">Venta Bruta</th>
-						<th class="text-right">Venta Neta</th>
-						<th class="text-right">CMV (Costo)</th>
-						<th class="text-right">Utilidad Bruta</th>
-						<th class="text-center">Margen %</th>
-						<th class="text-right">Part. Venta %</th>
-					</tr>
-				</thead>
-				<tbody>
-					@forelse($profitabilityOverview['category_breakdown'] ?? [] as $cat)
-					<tr>
-						<td class="font-weight-bold text-dark">{{ $cat['name'] }}</td>
-						<td class="text-right">{{ number_format($cat['units']) }}</td>
-						<td class="text-right text-muted">{{ $m($cat['gross_sales']) }}</td>
-						<td class="text-right font-weight-bold">{{ $m($cat['net_sales']) }}</td>
-						<td class="text-right text-muted">{{ $m($cat['cogs']) }}</td>
-						<td class="text-right font-weight-bold text-success">{{ $m($cat['gross_profit']) }}</td>
-						<td class="text-center">
-							<span class="badge @if($cat['margin_pct'] >= 25) badge-success @elseif($cat['margin_pct'] >= 15) badge-warning @else badge-danger @endif">
-								{{ number_format($cat['margin_pct'], 1) }}%
-							</span>
-						</td>
-						<td class="text-right font-weight-bold text-muted">{{ number_format($cat['sales_share_pct'], 1) }}%</td>
-					</tr>
-					@empty
-					<tr><td colspan="8" class="text-center text-muted py-3">Sin desglose de categorías en el período seleccionado.</td></tr>
-					@endforelse
-				</tbody>
-			</table>
-		</div>
-	</div>
-
-	<!-- COMPARACIONES COMERCIALES MULTITEMPORALES -->
-	<div class="card shadow-sm border-0 mb-3" id="section-comparisons">
-		<div class="card-header bg-white border-0 font-weight-bold d-flex justify-content-between align-items-center">
-			<div>
-				<i class="fa-solid fa-code-compare text-primary mr-1"></i>
-				<span>Comparaciones Comerciales Multitemporales</span>
-			</div>
-			<span class="text-muted small">Cálculos sobre períodos homogéneos equivalentes</span>
-		</div>
-		<div class="card-body p-0">
-			<div class="table-responsive">
-				<table class="table table-hover mb-0">
-					<thead class="thead-light">
-						<tr>
-							<th>Dimensión de Comparación</th>
-							<th class="text-right">Ventas Netas</th>
-							<th class="text-right">Variación vs Actual</th>
-							<th class="text-right">Tickets</th>
-							<th>Estado / Advertencia Metodológica</th>
-						</tr>
-					</thead>
-					<tbody>
-						<!-- 1. Real vs Meta -->
-						<tr>
-							<td class="font-weight-bold text-dark">
-								<i class="fa-solid fa-bullseye text-warning mr-2"></i>Meta Comercial del Período
-							</td>
-							<td class="text-right font-weight-bold">{{ $mInt($comparisons['target']['sales']) }}</td>
-							<td class="text-right font-weight-bold @if($comparisons['target']['gap'] >= 0) text-success @else text-danger @endif">
-								{{ ($comparisons['target']['gap'] >= 0 ? '+' : '') . $m($comparisons['target']['gap']) }}
-							</td>
-							<td class="text-right text-muted">Sin información</td>
-							<td>
-								<span class="badge @if($comparisons['target']['pct'] >= 100) badge-success @elseif($comparisons['target']['pct'] >= 80) badge-warning @else badge-danger @endif">
-									{{ number_format($comparisons['target']['pct'], 1) }}% cumplido
-								</span>
-							</td>
-						</tr>
-
-						<!-- 2. Período Anterior Equivalente -->
-						<tr>
-							<td class="font-weight-bold text-dark">
-								<i class="fa-solid fa-clock-rotate-left text-info mr-2"></i>Período Anterior Equivalente
-								<small class="text-muted d-block font-weight-normal">({{ date('d/m/Y', strtotime($comparisons['previous_period']['start'])) }} al {{ date('d/m/Y', strtotime($comparisons['previous_period']['end'])) }})</small>
-							</td>
-							<td class="text-right font-weight-bold">{{ $m($comparisons['previous_period']['sales']) }}</td>
-							<td class="text-right font-weight-bold @if(($comparisons['previous_period']['delta_pct'] ?? 0) >= 0) text-success @else text-danger @endif">
-								{{ $delta($comparisons['previous_period']['delta_pct']) }}
-							</td>
-							<td class="text-right">{{ number_format($comparisons['previous_period']['tickets']) }}</td>
-							<td>
-								@if($isPartial)
-								<span class="badge badge-warning text-dark" title="Se comparan exactamente los mismos {{ $comparisons['previous_period']['days'] }} días del ciclo anterior">
-									<i class="fa-solid fa-triangle-exclamation mr-1"></i>Período Parcial Homogéneo
-								</span>
-								@else
-								<span class="badge badge-success">Mes Completo Equivalente</span>
-								@endif
-							</td>
-						</tr>
-
-						<!-- 3. Año Anterior Comparable -->
-						<tr>
-							<td class="font-weight-bold text-dark">
-								<i class="fa-solid fa-calendar-check text-secondary mr-2"></i>Año Anterior Comparable
-								<small class="text-muted d-block font-weight-normal">({{ date('d/m/Y', strtotime($comparisons['year_ago']['start'])) }} al {{ date('d/m/Y', strtotime($comparisons['year_ago']['end'])) }})</small>
-							</td>
-							<td class="text-right font-weight-bold">
-								{{ $comparisons['year_ago']['has_data'] ? $m($comparisons['year_ago']['sales']) : 'Sin información' }}
-							</td>
-							<td class="text-right font-weight-bold @if(($comparisons['year_ago']['delta_pct'] ?? 0) >= 0) text-success @else text-danger @endif">
-								{{ $comparisons['year_ago']['delta_pct'] !== null ? (($comparisons['year_ago']['delta_pct'] >= 0 ? '+' : '') . number_format($comparisons['year_ago']['delta_pct'], 1) . '%') : 'Sin información' }}
-							</td>
-							<td class="text-right">
-								{{ $comparisons['year_ago']['has_data'] ? number_format($comparisons['year_ago']['tickets']) : 'Sin información' }}
-							</td>
-							<td>
-								@if($comparisons['year_ago']['has_data'])
-								<span class="badge badge-info">Comparación Interanual Homogénea</span>
-								@else
-								<span class="badge badge-light border text-muted">Sin información histórica (&lt; 12 meses)</span>
-								@endif
-							</td>
-						</tr>
-					</tbody>
-				</table>
-			</div>
-		</div>
-	</div>
-
-	<!-- VENTA VS MERMA POR DEPARTAMENTO -->
-	<div class="card shadow-sm border-0 mb-3">
-		<div class="card-header bg-white border-0 font-weight-bold d-flex justify-content-between align-items-center">
-			<span>Venta vs. Merma por Departamento</span>
-			<a href="{{ $U('/waste') }}" class="btn btn-xs btn-outline-secondary">Ir a Mermas</a>
-		</div>
-		<div class="table-responsive">
-			<table class="table table-sm table-hover mb-0">
-				<thead class="thead-light"><tr><th>Departamento</th><th class="text-right">Venta</th><th class="text-right">Merma</th><th class="text-right">% Merma</th></tr></thead>
-				<tbody>
-					@forelse($analysis['relation'] ?? [] as $r)
-					<tr>
-						<td class="font-weight-600">{{ $r['name'] }}</td>
-						<td class="text-right">{{ $m($r['sales']) }}</td>
-						<td class="text-right @if($r['waste'] > 0) text-danger @else text-muted @endif">{{ $m($r['waste']) }}</td>
-						<td class="text-right font-weight-bold @if(($r['waste_pct'] ?? 0) > 3) text-danger @endif">{{ $r['waste_pct'] === null ? 'Sin información' : number_format($r['waste_pct'], 1) . '%' }}</td>
-					</tr>
-					@empty
-					<tr><td colspan="4" class="text-center text-muted py-3">Sin movimientos registrados.</td></tr>
-					@endforelse
-				</tbody>
-			</table>
-		</div>
-	</div>
+	{{-- Rentabilidad comercial (ventas, costo, utilidad y margen bruto) en components/sales/sales_reports; datos de SalesReportsService::Profitability --}}
 	@include('components.sales.sales_reports', ['section' => 'profitability'])
 </div>
 
@@ -1194,8 +982,8 @@
 			</div>
 			<div class="modal-footer bg-light py-2 px-4">
 				<button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Cerrar</button>
-				<button type="button" class="btn btn-warning btn-sm text-dark font-weight-bold" onclick="$('#modalBrechaMeta').modal('hide'); $('#pill-analisis').tab('show'); document.getElementById('section-comparisons').scrollIntoView({behavior:'smooth'});">
-					<i class="fa-solid fa-chart-line mr-1"></i>Ver Metas en Analítica
+				<button type="button" class="btn btn-warning btn-sm text-dark font-weight-bold" onclick="$('#modalBrechaMeta').modal('hide'); $('#pill-resumen').tab('show'); document.getElementById('srep-dashboard').scrollIntoView({behavior:'smooth'});">
+					<i class="fa-solid fa-chart-line mr-1"></i>Ver metas en el Tablero
 				</button>
 			</div>
 		</div>
@@ -2651,11 +2439,19 @@ document.addEventListener("DOMContentLoaded", function() {
 					tooltips: {
 						mode: 'index',
 						intersect: false,
-						backgroundColor: 'rgba(15, 23, 42, 0.9)',
-						titleFontFamily: 'system-ui, sans-serif',
+						backgroundColor: 'rgba(15, 23, 42, 0.94)',
+						titleFontColor: '#ffffff',
+						titleFontStyle: 'bold',
 						titleFontSize: 12,
+						bodyFontColor: '#ffffff',
 						bodyFontSize: 11,
+						footerFontColor: '#e2e8f0',
+						borderColor: 'rgba(255, 255, 255, 0.15)',
+						borderWidth: 1,
 						cornerRadius: 8,
+						xPadding: 12,
+						yPadding: 10,
+						displayColors: true,
 						callbacks: {
 							label: function (i, data) {
 								var dsLabel = data.datasets[i.datasetIndex].label || '';
@@ -3305,6 +3101,4 @@ document.addEventListener("DOMContentLoaded", function() {
 <script src="{{ $U('/js/daily_executive_sales.js?v=', true) }}{{ daily_asset_version('/js/daily_executive_sales.js') }}"></script>
 <script src="{{ $U('/js/daily_sales_reports.js?v=', true) }}{{ daily_asset_version('/js/daily_sales_reports.js') }}"></script>
 <script src="{{ $U('/js/daily_sales_dash.js?v=', true) }}{{ daily_asset_version('/js/daily_sales_dash.js') }}"></script>
-<script src="{{ $U('/js/daily_dept_performance.js?v=', true) }}{{ daily_asset_version('/js/daily_dept_performance.js') }}"></script>
-<script src="{{ $U('/js/daily_ty_ly.js?v=', true) }}{{ daily_asset_version('/js/daily_ty_ly.js') }}"></script>
 @endpush

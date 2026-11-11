@@ -132,83 +132,13 @@ class LossCaseApiController extends BaseApiController
 	public function CreateIncident(Request $request, Response $response, array $args)
 	{
 		$b = $this->GetParsedBody($request);
-		return $this->Run($response, function () use ($b) {
-			$productId = intval($b['product_id'] ?? ($b['product'] ?? 0));
-			$branchId = intval($b['branch_id'] ?? ($b['branch'] ?? 1));
-			$qty = floatval($b['difference_qty'] ?? ($b['qty'] ?? 1));
-			$priority = $b['priority'] ?? 'medium';
-			$notes = trim($b['notes'] ?? ($b['note'] ?? 'Incidencia manual registrada en Centro de Control'));
-			$zone = trim($b['zone'] ?? 'Bodega Principal');
-
-			$db = \Grocy\Services\DatabaseService::GetInstance()->GetDbConnectionRaw();
-			$prod = $db->query("SELECT * FROM products WHERE id = " . intval($productId))->fetch(\PDO::FETCH_ASSOC);
-			if (!$prod)
-			{
-				throw new \Exception('Producto no encontrado');
-			}
-
-			$unitCost = floatval($prod['sale_price'] ?? 100.0) * 0.7;
-			$diff = -abs($qty);
-			$impact = round(abs($diff) * $unitCost, 2);
-			$now = date('Y-m-d H:i:s');
-			$nextNum = intval($db->query('SELECT IFNULL(MAX(id), 0) + 1 FROM sensitive_investigation_cases')->fetchColumn());
-			$caseCode = 'INV-' . date('Y') . '-' . sprintf('%05d', $nextNum);
-
-			$stmt = $db->prepare("
-				INSERT INTO sensitive_investigation_cases (
-					case_code, branch_id, product_id, department, location_name,
-					expected_stock, physical_count, difference_qty, unit_cost, financial_impact,
-					stage, workflow_status, priority, zone, shift, suspected_cause_category,
-					evidence_notes, created_by_user_id, created_at, updated_at
-				) VALUES (
-					:code, :bid, :pid, :dept, :loc,
-					:exp, :phys, :diff, :cost, :impact,
-					'preliminar', 'en_investigacion', :prio, :zone, 'Turno General', 'indeterminada',
-					:notes, :uid, :now, :now
-				)
-			");
-			$stmt->execute([
-				':code' => $caseCode,
-				':bid' => $branchId,
-				':pid' => $productId,
-				':dept' => $prod['department'] ?: 'General',
-				':loc' => $zone,
-				':exp' => 10.0,
-				':phys' => 10.0 - abs($diff),
-				':diff' => $diff,
-				':cost' => $unitCost,
-				':impact' => $impact,
-				':prio' => $priority,
-				':zone' => $zone,
-				':notes' => $notes,
-				':uid' => GROCY_USER_ID,
-				':now' => $now
-			]);
-			$newId = intval($db->lastInsertId());
-
-			$db->prepare("
-				INSERT INTO sensitive_case_events (case_id, action, from_status, to_status, note, user_id, created_at)
-				VALUES (:cid, 'case_created', 'detectado', 'en_investigacion', :note, :uid, :now)
-			")->execute([
-				':cid' => $newId,
-				':note' => "Expediente creado manualmente: $notes",
-				':uid' => GROCY_USER_ID,
-				':now' => $now
-			]);
-
-			return [
-				'id' => $newId,
-				'case_code' => $caseCode,
-				'financial_impact' => $impact,
-				'difference_qty' => $diff
-			];
-		});
+		return $this->Run($response, fn() => $this->Svc()->CreateManualIncident($b, GROCY_USER_ID));
 	}
 
 	public function ConfirmCause(Request $request, Response $response, array $args)
 	{
 		$b = $this->GetParsedBody($request);
-		return $this->Run($response, fn() => $this->Svc()->ConfirmCause(intval($args['id']), $b['cause'] ?? '', GROCY_USER_ID));
+		return $this->Run($response, fn() => $this->Svc()->ConfirmCause(intval($args['id']), trim((string)($b['cause'] ?? ($b['code'] ?? ''))), trim((string)($b['note'] ?? '')), GROCY_USER_ID));
 	}
 
 	public function Reopen(Request $request, Response $response, array $args)
@@ -225,7 +155,14 @@ class LossCaseApiController extends BaseApiController
 
 	public function ServeEvidence(Request $request, Response $response, array $args)
 	{
-		return $this->Run($response, fn() => $this->Svc()->GetEvidence(intval($args['id'])));
+		return $this->Run($response, function () use ($args) {
+			$ev = $this->Svc()->EvidenceFile(intval($args['id']));
+			if (!$ev)
+			{
+				throw new \Exception('Evidencia no encontrada', 404);
+			}
+			return $ev;
+		});
 	}
 
 	public function Hypothesis(Request $request, Response $response, array $args)
@@ -420,5 +357,21 @@ class LossCaseApiController extends BaseApiController
 	public function SaveFinancialRecovery(Request $request, Response $response, array $args)
 	{
 		return $this->Run($response, fn() => $this->Svc()->SaveFinancialRecovery(intval($args['id']), $this->GetParsedBody($request), GROCY_USER_ID));
+	}
+
+	public function RecordCctvAccess(Request $request, Response $response, array $args)
+	{
+		return $this->Run($response, fn() => $this->Svc()->RecordCctvAccess($this->GetParsedBody($request), GROCY_USER_ID));
+	}
+
+	public function CctvAccessLogs(Request $request, Response $response, array $args)
+	{
+		return $this->Run($response, fn() => $this->Svc()->CctvAccessLogs($this->Branch($request)));
+	}
+
+	public function PosAnomalies(Request $request, Response $response, array $args)
+	{
+		$q = $request->getQueryParams();
+		return $this->Run($response, fn() => $this->Svc()->PosAnomaliesAndPatterns($this->Branch($request), $q['from'] ?? null, $q['to'] ?? null));
 	}
 }

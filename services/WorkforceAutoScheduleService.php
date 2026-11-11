@@ -244,25 +244,69 @@ class WorkforceAutoScheduleService extends BaseService
 
 		if (!$p)
 		{
-			return [
+			$prof = WorkforceLaborRulesService::ResolveJurisdictionProfile('CO', 'CO-GEN', $d);
+			return array_merge($prof, [
 				'id' => 1,
 				'company_id' => $companyId,
 				'version' => 1,
 				'effective_date' => '2026-01-01',
-				'policy_name' => 'Política Oficial Estándar (Ley 3x1)',
-				'sunday_rule_type' => '3x1',
+				'policy_name' => 'Política Oficial Colombia Ley 2101 / Ley 51 (3x1)',
+				'sunday_rule_type' => $prof['sunday_rule_type'],
 				'sunday_cycle_length' => 4,
 				'sunday_free_phase' => 0,
 				'rotation_rule_type' => 'weekly_apertura_cierre',
 				'rotation_cycle_weeks' => 2,
 				'max_nights_per_day' => 1,
 				'compensatory_enabled' => 1,
-				'compensatory_days_rule' => 'MON_FRI_NO_HOLIDAYS',
-				'max_weekly_hours' => 42.0,
-				'min_rest_hours' => 12.0
-			];
+				'compensatory_days_rule' => 'MON_FRI_NO_HOLIDAYS'
+			]);
+		}
+		if (empty($p['country_code']))
+		{
+			$p['country_code'] = 'CO';
+		}
+		if (empty($p['jurisdiction_code']))
+		{
+			$p['jurisdiction_code'] = 'CO-GEN';
 		}
 		return $p;
+	}
+
+	public function GetBranchJurisdictionPolicy(int $branchId, ?string $date = null): array
+	{
+		$db = $this->Db();
+		$d = $date ? substr($date, 0, 10) : date('Y-m-d');
+		$br = $db->prepare('SELECT id, company_id, country_code, jurisdiction_code FROM branches WHERE id = :id');
+		$br->execute([':id' => $branchId]);
+		$bRow = $br->fetch(\PDO::FETCH_ASSOC) ?: ['company_id' => 1, 'country_code' => 'CO', 'jurisdiction_code' => 'CO-GEN'];
+
+		$companyId = intval($bRow['company_id'] ?? 1) ?: 1;
+		$policy = $this->GetCompanyPolicy($companyId, $d);
+
+		$countryCode = strtoupper(trim($bRow['country_code'] ?: ($policy['country_code'] ?? 'CO')));
+		$jurisdictionCode = strtoupper(trim($bRow['jurisdiction_code'] ?: ($policy['jurisdiction_code'] ?? 'CO-GEN')));
+		$resolved = WorkforceLaborRulesService::ResolveJurisdictionProfile($countryCode, $jurisdictionCode, $d);
+
+		// Aplicar límites explícitos guardados en política activa si coinciden en país/jurisdicción
+		if (($policy['country_code'] ?? 'CO') === $countryCode && ($policy['jurisdiction_code'] ?? 'CO-GEN') === $jurisdictionCode)
+		{
+			foreach (['max_weekly_hours', 'min_rest_hours', 'night_start_hour', 'night_end_hour', 'night_premium_pct', 'overtime_day_pct', 'overtime_night_pct', 'max_daily_hours', 'max_daily_overtime', 'max_weekly_overtime', 'sunday_rule_type'] as $k)
+			{
+				if (isset($policy[$k]) && $policy[$k] !== null && $policy[$k] !== '')
+				{
+					$resolved[$k] = is_float($resolved[$k] ?? null) ? floatval($policy[$k]) : (is_int($resolved[$k] ?? null) ? intval($policy[$k]) : $policy[$k]);
+				}
+			}
+			if (isset($policy['holiday_premium_pct']) && $policy['holiday_premium_pct'] !== null)
+			{
+				$resolved['sunday_holiday_premium_pct'] = floatval($policy['holiday_premium_pct']);
+			}
+		}
+
+		$resolved['branch_id'] = $branchId;
+		$resolved['company_id'] = $companyId;
+		$resolved['policy_name'] = $policy['policy_name'] ?? $resolved['jurisdiction_name'];
+		return $resolved;
 	}
 
 	public function GetAllCompanyPolicies(int $companyId = 1): array
@@ -281,31 +325,72 @@ class WorkforceAutoScheduleService extends BaseService
 		$nextVersion = intval($vStmt->fetchColumn() ?: 1);
 
 		$effectiveDate = !empty($data['effective_date']) ? $data['effective_date'] : date('Y-m-d');
-		$policyName = !empty($data['policy_name']) ? trim(strval($data['policy_name'])) : "Política Laboral v$nextVersion";
-		$sundayType = !empty($data['sunday_rule_type']) ? strval($data['sunday_rule_type']) : '3x1';
+		$countryCode = strtoupper(trim(strval($data['country_code'] ?? 'CO')));
+		$jurisdictionCode = strtoupper(trim(strval($data['jurisdiction_code'] ?? ($countryCode . '-GEN'))));
+		$baseProfile = WorkforceLaborRulesService::ResolveJurisdictionProfile($countryCode, $jurisdictionCode, $effectiveDate);
+
+		$policyName = !empty($data['policy_name']) ? trim(strval($data['policy_name'])) : ("Política {$baseProfile['country_name']} ({$baseProfile['jurisdiction_code']}) v$nextVersion");
+		$sundayType = !empty($data['sunday_rule_type']) ? strval($data['sunday_rule_type']) : $baseProfile['sunday_rule_type'];
 		$cycleLen = ($sundayType === '2x1') ? 3 : (($sundayType === '1x1') ? 2 : 4);
 		$maxNights = isset($data['max_nights_per_day']) ? max(1, intval($data['max_nights_per_day'])) : 1;
-		$maxHours = isset($data['max_weekly_hours']) ? floatval($data['max_weekly_hours']) : 42.0;
+		$maxHours = isset($data['max_weekly_hours']) && is_numeric($data['max_weekly_hours']) ? floatval($data['max_weekly_hours']) : floatval($baseProfile['max_weekly_hours']);
+		$minRest = isset($data['min_rest_hours']) && is_numeric($data['min_rest_hours']) ? floatval($data['min_rest_hours']) : floatval($baseProfile['min_rest_hours']);
+		$nightStart = isset($data['night_start_hour']) && is_numeric($data['night_start_hour']) ? intval($data['night_start_hour']) : intval($baseProfile['night_start_hour']);
+		$nightEnd = isset($data['night_end_hour']) && is_numeric($data['night_end_hour']) ? intval($data['night_end_hour']) : intval($baseProfile['night_end_hour']);
+		$nightPrem = isset($data['night_premium_pct']) && is_numeric($data['night_premium_pct']) ? floatval($data['night_premium_pct']) : floatval($baseProfile['night_premium_pct']);
+		$holidayPrem = isset($data['holiday_premium_pct']) && is_numeric($data['holiday_premium_pct']) ? floatval($data['holiday_premium_pct']) : floatval($baseProfile['sunday_holiday_premium_pct']);
+		$otDay = isset($data['overtime_day_pct']) && is_numeric($data['overtime_day_pct']) ? floatval($data['overtime_day_pct']) : floatval($baseProfile['overtime_day_pct']);
+		$otNight = isset($data['overtime_night_pct']) && is_numeric($data['overtime_night_pct']) ? floatval($data['overtime_night_pct']) : floatval($baseProfile['overtime_night_pct']);
+		$maxDaily = isset($data['max_daily_hours']) && is_numeric($data['max_daily_hours']) ? floatval($data['max_daily_hours']) : floatval($baseProfile['max_daily_hours']);
+		$maxDailyOt = isset($data['max_daily_overtime']) && is_numeric($data['max_daily_overtime']) ? floatval($data['max_daily_overtime']) : floatval($baseProfile['max_daily_overtime']);
+		$maxWeeklyOt = isset($data['max_weekly_overtime']) && is_numeric($data['max_weekly_overtime']) ? floatval($data['max_weekly_overtime']) : floatval($baseProfile['max_weekly_overtime']);
 
 		$ins = $db->prepare("
 			INSERT INTO workforce_company_policies
-			(company_id, version, effective_date, policy_name, sunday_rule_type, sunday_cycle_length, sunday_free_phase,
-			 rotation_rule_type, rotation_cycle_weeks, max_nights_per_day, compensatory_enabled, compensatory_days_rule,
-			 max_weekly_hours, min_rest_hours, active, created_by_user_id)
+			(company_id, version, effective_date, policy_name, country_code, jurisdiction_code,
+			 sunday_rule_type, sunday_cycle_length, sunday_free_phase, rotation_rule_type, rotation_cycle_weeks,
+			 max_nights_per_day, compensatory_enabled, compensatory_days_rule, max_weekly_hours, min_rest_hours,
+			 night_start_hour, night_end_hour, night_premium_pct, holiday_premium_pct, overtime_day_pct, overtime_night_pct,
+			 max_daily_hours, max_daily_overtime, max_weekly_overtime, active, created_by_user_id)
 			VALUES
-			(:cid, :v, :eff, :name, :stype, :clen, 0, 'weekly_apertura_cierre', 2, :nights, 1, 'MON_FRI_NO_HOLIDAYS', :hours, 12.0, 1, :u)
+			(:cid, :v, :eff, :name, :cc, :jc, :stype, :clen, 0, 'weekly_apertura_cierre', 2,
+			 :nights, 1, 'MON_FRI_NO_HOLIDAYS', :hours, :rest, :ns, :ne, :np, :hp, :otd, :otn, :mdh, :mdo, :mwo, 1, :u)
 		");
 		$ins->execute([
 			':cid' => $companyId,
 			':v' => $nextVersion,
 			':eff' => $effectiveDate,
 			':name' => $policyName,
+			':cc' => $baseProfile['country_code'],
+			':jc' => $baseProfile['jurisdiction_code'],
 			':stype' => $sundayType,
 			':clen' => $cycleLen,
 			':nights' => $maxNights,
 			':hours' => $maxHours,
+			':rest' => $minRest,
+			':ns' => $nightStart,
+			':ne' => $nightEnd,
+			':np' => $nightPrem,
+			':hp' => $holidayPrem,
+			':otd' => $otDay,
+			':otn' => $otNight,
+			':mdh' => $maxDaily,
+			':mdo' => $maxDailyOt,
+			':mwo' => $maxWeeklyOt,
 			':u' => $userId
 		]);
+
+		// Sincronizar también en la(s) sucursal(es) si se indicó branch_id explícito o matriz
+		if (!empty($data['branch_id']))
+		{
+			$db->prepare('UPDATE branches SET country_code = :cc, jurisdiction_code = :jc WHERE id = :b')
+				->execute([':cc' => $baseProfile['country_code'], ':jc' => $baseProfile['jurisdiction_code'], ':b' => intval($data['branch_id'])]);
+		}
+		elseif ($companyId > 0)
+		{
+			$db->prepare('UPDATE branches SET country_code = :cc, jurisdiction_code = :jc WHERE company_id = :cid OR company_id IS NULL')
+				->execute([':cc' => $baseProfile['country_code'], ':jc' => $baseProfile['jurisdiction_code'], ':cid' => $companyId]);
+		}
 
 		return $this->GetCompanyPolicy($companyId, $effectiveDate);
 	}

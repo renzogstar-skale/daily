@@ -146,6 +146,17 @@ class SensitiveCaseService extends BaseService
 		{
 			throw new \Exception('El expediente en estado «' . (self::STATUSES[$from] ?? $from) . '» no puede pasar a «' . (self::STATUSES[$to] ?? $to) . '»');
 		}
+		if ($to === 'en_investigacion' && empty($c['assigned_user_id']) && empty($extra['assigned_user_id']))
+		{
+			if ($userId && $userId > 0)
+			{
+				$extra['assigned_user_id'] = $userId;
+			}
+			else
+			{
+				throw new \Exception('Debe asignar un responsable antes de iniciar investigación');
+			}
+		}
 		$now = date('Y-m-d H:i:s');
 		$final = !in_array($to, self::OPEN, true);
 		$set = $extra + ['workflow_status' => $to, 'stage' => self::STAGE[$to], 'updated_at' => $now];
@@ -373,6 +384,10 @@ class SensitiveCaseService extends BaseService
 		$tx = count(array_filter($this->Engine()->Movements(intval($p['id']), $branchId), fn($m) => $m['effective_at'] >= $start));
 		$code = $opt['case_code'] ?? ('INV-' . date('Y') . '-' . sprintf('%05d', intval($db->query('SELECT IFNULL(MAX(id), 0) + 1 FROM sensitive_investigation_cases')->fetchColumn())));
 		$owner = AlertCenterService::GetInstance()->Managers($branchId, User::PERMISSION_LOSS_PREVENTION)[0] ?? null;
+		if (!$owner || intval($owner) <= 0)
+		{
+			$owner = $userId > 0 ? $userId : (intval($this->Val('SELECT id FROM users ORDER BY id LIMIT 1')) ?: 1);
+		}
 		$impactVal = floatval($f['financial_impact'] ?? 0);
 		$prio = ($impactVal >= 500 || intval($p['is_sensitive']) === 1) ? 'urgent' : ($impactVal >= 200 ? 'high' : 'medium');
 		$tools = json_encode(['Escáner de código de barras / IMEI', 'Llaves de vitrina de seguridad', 'Báscula de precisión', 'Precintos de custodia'], JSON_UNESCAPED_UNICODE);
@@ -620,7 +635,7 @@ class SensitiveCaseService extends BaseService
 		}
 	}
 
-	/** Cierre con justificación. Resuelto (causa aclarada) o No resuelto (sin causa demostrable). */
+	/** Cierre con justificación y verificación de responsable/evidencia. Resuelto (causa aclarada) o No resuelto (sin causa demostrable). */
 	public function CloseCase(int $caseId, string $outcome, string $justification, int $userId): array
 	{
 		$this->RequireManager();
@@ -639,7 +654,20 @@ class SensitiveCaseService extends BaseService
 		{
 			throw new \Exception('Resultado no válido');
 		}
-		$this->InTx(fn() => $this->Transition($c, $outcome, $justification, $userId, ['resolution_type' => 'cierre_manual']));
+		$extra = ['resolution_type' => 'cierre_manual'];
+		if (empty($c['assigned_user_id']))
+		{
+			$extra['assigned_user_id'] = $userId;
+		}
+		if ($outcome === 'resuelto' && abs(floatval($c['difference_qty'])) > 0.0001 && ($c['adjustment_status'] ?? '') !== 'approved')
+		{
+			$evCount = intval($this->Val('SELECT COUNT(*) FROM sensitive_investigation_evidence WHERE case_id = :c', [':c' => $caseId]));
+			if ($evCount === 0)
+			{
+				throw new \Exception('No se puede cerrar un expediente con diferencia como «Resuelto» sin evidencia documentada');
+			}
+		}
+		$this->InTx(fn() => $this->Transition($c, $outcome, $justification, $userId, $extra));
 
 		// Notificar al Bus de Eventos Unificado 360°
 		try
@@ -760,7 +788,7 @@ class SensitiveCaseService extends BaseService
 	{
 		$this->Need(self::CountPerms(), 'adjuntar evidencia');
 		$c = $this->Case($caseId);
-		$type = in_array($d['type'] ?? '', ['note', 'photo', 'document', 'camera'], true) ? $d['type'] : 'note';
+		$type = in_array($d['type'] ?? '', ['note', 'photo', 'document', 'camera', 'access_log', 'pos_audit'], true) ? $d['type'] : 'note';
 		$title = trim((string) ($d['title'] ?? ''));
 		if ($title === '')
 		{
@@ -772,18 +800,37 @@ class SensitiveCaseService extends BaseService
 		}
 		return $this->InTx(function () use ($caseId, $c, $type, $title, $d, $userId) {
 			$id = $this->AddEvidenceRow($caseId, $type, $title, $d['description'] ?? null, $d['file_name'] ?? null, $d['mime'] ?? null, $d['camera_ref'] ?? null, $d['authorized_by'] ?? null, $userId);
-			$this->Log($caseId, 'evidence', $c['workflow_status'], $c['workflow_status'], "$type: $title", null, $userId);
+			$this->Log($caseId, 'evidence', $c['workflow_status'], $c['workflow_status'], "$type: $title", ['evidence_id' => $id], $userId);
+			if ($type === 'camera')
+			{
+				try
+				{
+					$this->Db()->prepare("INSERT INTO security_access_audit_log (user_id, branch_id, case_id, access_type, resource_ref, authorized_by, notes, created_at) VALUES (?, ?, ?, 'cctv_attach', ?, ?, ?, ?)")
+						->execute([$userId, intval($c['branch_id']), $caseId, trim((string)($d['camera_ref'] ?? '')), trim((string)($d['authorized_by'] ?? '')), $title, date('Y-m-d H:i:s')]);
+				}
+				catch (\Throwable $e)
+				{
+				}
+			}
 			return $id;
 		});
 	}
 
 	public function EvidenceFile(int $id): ?array
 	{
-		$e = $this->Row('SELECT * FROM sensitive_investigation_evidence WHERE id = :id AND file_name IS NOT NULL', [':id' => $id]);
+		$e = $this->Row('SELECT * FROM sensitive_investigation_evidence WHERE id = :id', [':id' => $id]);
 		if ($e)
 		{
-			$this->Need(self::CountPerms(), 'ver evidencia');
-			$this->Case(intval($e['case_id']));
+			$this->Need(self::SupervisorPerms(), 'ver evidencia sensible');
+			$c = $this->Case(intval($e['case_id']));
+			try
+			{
+				$this->Db()->prepare("INSERT INTO security_access_audit_log (user_id, branch_id, case_id, access_type, resource_ref, notes, created_at) VALUES (?, ?, ?, 'evidence_view', ?, ?, ?)")
+					->execute([GROCY_USER_ID, intval($c['branch_id']), intval($e['case_id']), $e['file_name'] ?? ('evidencia#' . $id), $e['title'] ?? '', date('Y-m-d H:i:s')]);
+			}
+			catch (\Throwable $ex)
+			{
+			}
 		}
 		return $e;
 	}
@@ -1085,6 +1132,8 @@ class SensitiveCaseService extends BaseService
 		return ($alert['severity'] ?? $c['alert_severity'] ?? 'warning') === 'danger' ? 'danger' : 'warning';
 	}
 
+	private const CLOSED_STATUSES = "('resuelto', 'no_resuelto', 'closed', 'resolved')";
+
 	public function Cases(array $f = [], int $limit = 200): array
 	{
 		$bId = !empty($f['branch_id']) ? intval($f['branch_id']) : null;
@@ -1097,7 +1146,7 @@ class SensitiveCaseService extends BaseService
 		}
 		if (!empty($f['open']))
 		{
-			$w .= " AND c.workflow_status NOT IN ('resuelto', 'no_resuelto')";
+			$w .= ' AND c.workflow_status NOT IN ' . self::CLOSED_STATUSES;
 		}
 		if (!empty($f['priority']))
 		{
@@ -1124,6 +1173,20 @@ class SensitiveCaseService extends BaseService
 			$w .= ' AND c.assigned_user_id = :uid';
 			$p[':uid'] = intval($f['assigned_user_id']);
 		}
+		if (!empty($f['period']) && empty($f['date_from']))
+		{
+			$daysBack = match ($f['period']) {
+				'today' => 0,
+				'7days' => 6,
+				'30days' => 29,
+				'90days' => 89,
+				default => null,
+			};
+			if ($daysBack !== null)
+			{
+				$f['date_from'] = date('Y-m-d', strtotime("-$daysBack days"));
+			}
+		}
 		if (!empty($f['date_from']))
 		{
 			$w .= ' AND date(c.created_at) >= :dfrom';
@@ -1140,7 +1203,7 @@ class SensitiveCaseService extends BaseService
 		}
 		if (!empty($f['overdue']))
 		{
-			$w .= " AND c.workflow_status NOT IN ('resuelto', 'no_resuelto') AND c.due_at < datetime('now', 'localtime')";
+			$w .= ' AND c.workflow_status NOT IN ' . self::CLOSED_STATUSES . " AND c.due_at < datetime('now', 'localtime')";
 		}
 		if (!empty($f['critical']))
 		{
@@ -1151,12 +1214,14 @@ class SensitiveCaseService extends BaseService
 			$w .= ' AND (c.case_code LIKE :q OR p.name LIKE :q OR p.sku LIKE :q OR c.department LIKE :q)';
 			$p[':q'] = '%' . $f['search'] . '%';
 		}
-		$rows = $this->Rows("SELECT c.id, c.case_code, c.branch_id, c.product_id, c.department, c.location_name, c.zone, c.priority, c.shift,
+		$rows = $this->Rows("SELECT c.id, c.case_code, c.branch_id, c.product_id, c.device_id, c.department, c.location_name, c.zone, c.priority, c.shift,
 				c.expected_stock, c.physical_count, c.difference_qty, c.financial_impact, c.workflow_status, c.provisional, c.is_demo, c.occurrences,
+				c.assigned_user_id, c.confirmed_cause, c.suspected_cause_category, c.financial_recovery_json,
 				c.escalation_level, c.escalated_at, c.first_response_at, c.arrival_at, c.due_at, c.created_at, c.closed_at, c.resolution_type,
 				p.name AS product_name, p.sku, b.name AS branch_name, a.severity AS alert_severity, a.id AS alert_id, u.username AS assigned_name,
 				(SELECT COUNT(*) FROM sensitive_case_tasks sct WHERE sct.case_id = c.id AND sct.status <> 'completed') AS pending_tasks_count,
-				(SELECT COUNT(*) FROM sensitive_case_calls scc WHERE scc.case_id = c.id) AS calls_count
+				(SELECT COUNT(*) FROM sensitive_case_calls scc WHERE scc.case_id = c.id) AS calls_count,
+				(SELECT COUNT(*) FROM sensitive_investigation_evidence sie WHERE sie.case_id = c.id) AS evidence_count
 			FROM sensitive_investigation_cases c
 			JOIN products p ON p.id = c.product_id
 			LEFT JOIN locations l ON l.id = c.location_id
@@ -1164,23 +1229,24 @@ class SensitiveCaseService extends BaseService
 			LEFT JOIN dairy_alerts a ON a.id = c.alert_id
 			LEFT JOIN users u ON u.id = c.assigned_user_id
 			WHERE $w
-			ORDER BY CASE WHEN c.workflow_status IN ('resuelto', 'no_resuelto') THEN 1 ELSE 0 END,
+			ORDER BY CASE WHEN c.workflow_status IN " . self::CLOSED_STATUSES . " THEN 1 ELSE 0 END,
 				CASE c.priority WHEN 'urgent' THEN 0 WHEN 'high' THEN 1 WHEN 'medium' THEN 2 ELSE 3 END,
 				c.financial_impact DESC, c.id DESC LIMIT " . intval($limit), $p);
 		foreach ($rows as &$r)
 		{
 			$r['level'] = self::Level($r);
-			$r['status_label'] = self::STATUSES[$r['workflow_status']] ?? $r['workflow_status'];
+			$norm = in_array($r['workflow_status'], ['closed', 'resolved'], true) ? 'resuelto' : ($r['workflow_status'] === 'in_progress' ? 'en_investigacion' : ($r['workflow_status'] === 'pending_approval' ? 'pendiente_aprobacion' : $r['workflow_status']));
+			$r['status_label'] = self::STATUSES[$norm] ?? $r['workflow_status'];
 		}
 		return $rows;
 	}
 
-	/** Totales que comparten Panel, Mermas, Inventario y Prevención: las cifras no pueden diferir entre módulos */
+	/** Totales de Prevención de Pérdidas (sin mezclar mermas comerciales ordinarias) */
 	public function Summary(?int $branchId = null): array
 	{
 		$b = $this->BranchWhere($branchId);
 		$open = $this->Row("SELECT COUNT(*) AS cases, IFNULL(SUM(financial_impact), 0) AS value, IFNULL(SUM(ABS(difference_qty)), 0) AS units, IFNULL(SUM(provisional), 0) AS provisional
-			FROM sensitive_investigation_cases c WHERE c.workflow_status NOT IN ('resuelto', 'no_resuelto')$b");
+			FROM sensitive_investigation_cases c WHERE c.workflow_status NOT IN " . self::CLOSED_STATUSES . $b);
 		$tasks = intval($this->Val("SELECT COUNT(*) FROM sensitive_count_tasks c WHERE c.status IN ('pending', 'recount')$b"));
 		return ['open_cases' => intval($open['cases']), 'open_value' => round(floatval($open['value']), 2), 'open_units' => round(floatval($open['units']), 2), 'provisional' => intval($open['provisional']), 'pending_counts' => $tasks];
 	}
@@ -1197,56 +1263,149 @@ class SensitiveCaseService extends BaseService
 		$today = date('Y-m-d');
 		$s = $this->Summary($branchId);
 		$bm = str_replace('c.branch_id', 'm.branch_id', $b);
+		$bd = str_replace('c.branch_id', 'branch_id', $b);
 		$periods = ['day' => ["date(m.created_at)", 30], 'week' => ["strftime('%Y-S%W', m.created_at)", 84], 'month' => ["strftime('%Y-%m', m.created_at)", 365]];
 		[$expr, $days] = $periods[$unit] ?? $periods['day'];
 
-		// Mermas confirmadas
-		$wasteVal = floatval($this->Val("SELECT IFNULL(SUM(total_cost), 0) FROM waste_records WHERE 1 = 1" . str_replace('c.branch_id', 'branch_id', $b)));
-		// Tareas operativas de incidencias pendientes
+		// Separación estricta: no mezclar merma comercial ordinaria de /waste
+		$wasteVal = 0.0;
 		$tasksPending = intval($this->Val("SELECT COUNT(*) FROM sensitive_case_tasks t JOIN sensitive_investigation_cases c ON c.id = t.case_id WHERE t.status NOT IN ('completed', 'cancelled')$b"));
-		// Personal en turno activo hoy
 		$availableStaffCount = count(array_filter($this->StaffDirectory($branchId), fn($st) => $st['can_assign']));
-		// Casos vencidos y escalados
-		$overdueCount = intval($this->Val("SELECT COUNT(*) FROM sensitive_investigation_cases c WHERE c.workflow_status NOT IN ('resuelto', 'no_resuelto') AND c.due_at < datetime('now', 'localtime')$b"));
-		$escalatedCount = intval($this->Val("SELECT COUNT(*) FROM sensitive_investigation_cases c WHERE c.workflow_status NOT IN ('resuelto', 'no_resuelto') AND c.escalation_level > 0$b"));
-		$criticalCount = intval($this->Val("SELECT COUNT(*) FROM sensitive_investigation_cases c LEFT JOIN dairy_alerts a ON a.id = c.alert_id WHERE c.workflow_status NOT IN ('resuelto', 'no_resuelto') AND (c.priority = 'urgent' OR a.severity = 'danger' OR c.financial_impact >= 500)$b"));
+		$overdueCount = intval($this->Val("SELECT COUNT(*) FROM sensitive_investigation_cases c WHERE c.workflow_status NOT IN " . self::CLOSED_STATUSES . " AND c.due_at IS NOT NULL AND c.due_at < datetime('now', 'localtime')$b"));
+		$escalatedCount = intval($this->Val("SELECT COUNT(*) FROM sensitive_investigation_cases c WHERE c.workflow_status NOT IN " . self::CLOSED_STATUSES . " AND c.escalation_level > 0$b"));
+		$criticalCount = intval($this->Val("SELECT COUNT(*) FROM sensitive_investigation_cases c LEFT JOIN dairy_alerts a ON a.id = c.alert_id WHERE c.workflow_status NOT IN " . self::CLOSED_STATUSES . " AND (c.priority = 'urgent' OR a.severity = 'danger' OR c.financial_impact >= 500)$b"));
 		$confirmedLossVal = floatval($this->Val("SELECT IFNULL(SUM(c.financial_impact), 0) FROM sensitive_investigation_cases c WHERE c.workflow_status = 'no_resuelto'$b"));
+		$unassignedCount = intval($this->Val("SELECT COUNT(*) FROM sensitive_investigation_cases c WHERE c.workflow_status NOT IN " . self::CLOSED_STATUSES . " AND (c.assigned_user_id IS NULL OR c.assigned_user_id = 0)$b"));
+
+		// Seguridad de dispositivos e IMEI
+		$deviceCounts = $this->Row("SELECT COUNT(*) AS total,
+			SUM(CASE WHEN state NOT IN ('sold','written_off','returned') THEN 1 ELSE 0 END) AS active_custody,
+			SUM(CASE WHEN state = 'blocked' THEN 1 ELSE 0 END) AS blocked,
+			SUM(CASE WHEN state = 'in_transit' THEN 1 ELSE 0 END) AS transit,
+			SUM(CASE WHEN state = 'vault' THEN 1 ELSE 0 END) AS vault
+			FROM device_units WHERE 1 = 1$bd") ?: [];
+		$deviceHolds = intval($this->Val("SELECT COUNT(*) FROM device_sale_holds WHERE status = 'pending'$bd"));
+
+		// Recuperación financiera real sin duplicados sobre expedientes
+		$recRows = $this->Rows("SELECT id, case_code, branch_id, financial_impact, financial_recovery_json, updated_at, workflow_status FROM sensitive_investigation_cases c WHERE financial_recovery_json IS NOT NULL AND financial_recovery_json <> ''$b");
+		$recoveredTotal = 0.0;
+		$recoverableExposure = 0.0;
+		$seenDocRefs = [];
+		$recoveryEntries = [];
+		foreach ($recRows as $rr)
+		{
+			$rec = json_decode((string)$rr['financial_recovery_json'], true);
+			if (!is_array($rec))
+			{
+				continue;
+			}
+			$merch = floatval($rec['recovered_merchandise'] ?? 0);
+			$supp = floatval($rec['supplier_claim'] ?? 0);
+			$ins = floatval($rec['insurance_claim'] ?? 0);
+			$sumRec = round($merch + $supp + $ins, 2);
+			$recoveredTotal += $sumRec;
+			$recoverableExposure += abs(floatval($rr['financial_impact']));
+			$refs = array_values(array_filter(array_map('trim', (array)($rec['document_refs'] ?? []))));
+			$hasDup = false;
+			foreach ($refs as $rf)
+			{
+				if (isset($seenDocRefs[strtoupper($rf)]))
+				{
+					$hasDup = true;
+				}
+				$seenDocRefs[strtoupper($rf)] = true;
+			}
+			$recoveryEntries[] = [
+				'case_id' => intval($rr['id']),
+				'case_code' => $rr['case_code'],
+				'impact' => round(abs(floatval($rr['financial_impact'])), 2),
+				'recovered_merchandise' => round($merch, 2),
+				'supplier_claim' => round($supp, 2),
+				'insurance_claim' => round($ins, 2),
+				'total_recovered' => $sumRec,
+				'document_refs' => $refs,
+				'notes' => $rec['notes'] ?? '',
+				'updated_at' => $rec['updated_at'] ?? $rr['updated_at'],
+				'duplicate_flag' => $hasDup
+			];
+		}
+
+		// Evidencia obligatoria y tasa de cumplimiento
+		$totalCasesAll = intval($this->Val("SELECT COUNT(*) FROM sensitive_investigation_cases c WHERE 1 = 1$b"));
+		$casesWithEvidence = intval($this->Val("SELECT COUNT(*) FROM sensitive_investigation_cases c WHERE EXISTS (SELECT 1 FROM sensitive_investigation_evidence e WHERE e.case_id = c.id)$b"));
+		$evidenceCompliancePct = $totalCasesAll > 0 ? round($casesWithEvidence / $totalCasesAll * 100, 1) : 100.0;
+
+		// Alertas reales de seguridad y anomalías
+		$securityAlerts = $this->Rows("SELECT a.*, b.name AS branch_name FROM dairy_alerts a LEFT JOIN branches b ON b.id = a.branch_id
+			WHERE a.status IN ('open','investigating','pending_approval','in_progress','reopened')
+			  AND a.rule_code IN ('phantom_stock','pos_unexplained','sensitive_repeat','sensitive_no_follow_up','sensitive_count_overdue','sensitive_manual_adjust','device_not_located','sensitive_difference','audit_low_score')" . ($branchId ? " AND a.branch_id = " . intval($branchId) : '') . "
+			ORDER BY CASE a.severity WHEN 'danger' THEN 0 ELSE 1 END, a.value DESC, a.id DESC LIMIT 80");
+
+		// Accesos CCTV & Auditoría reciente
+		$cctvLogs = $this->CctvAccessLogs($branchId, 50);
+		$auditEvents = $this->Rows("SELECT e.*, c.case_code, u.username FROM sensitive_case_events e JOIN sensitive_investigation_cases c ON c.id = e.case_id LEFT JOIN users u ON u.id = e.user_id WHERE 1 = 1$b ORDER BY e.id DESC LIMIT 80");
+
+		// Tareas y planes preventivos reales
+		$caseTasks = $this->Rows("SELECT t.*, c.case_code, b.name AS branch_name, u.username AS assigned_username FROM sensitive_case_tasks t JOIN sensitive_investigation_cases c ON c.id = t.case_id LEFT JOIN branches b ON b.id = c.branch_id LEFT JOIN users u ON u.id = t.assigned_user_id WHERE 1 = 1$b ORDER BY t.id DESC LIMIT 60");
+		$preventivePlans = $this->GetPreventivePlans($branchId);
+		$caseActions = $this->Rows("SELECT act.*, c.case_code, u.username AS proposed_by_name, ru.username AS responsible_name FROM sensitive_case_actions act JOIN sensitive_investigation_cases c ON c.id = act.case_id LEFT JOIN users u ON u.id = act.created_by_user_id LEFT JOIN users ru ON ru.id = act.responsible_user_id WHERE 1 = 1$b ORDER BY act.id DESC LIMIT 60");
+		$posAnomalies = $this->PosAnomaliesAndPatterns($branchId, $filters['date_from'] ?? null, $filters['date_to'] ?? null);
+
+		$resolvedCount = intval($this->Val("SELECT COUNT(*) FROM sensitive_investigation_cases c WHERE c.workflow_status IN ('resuelto','closed','resolved')$b"));
+		$unresolvedCount = intval($this->Val("SELECT COUNT(*) FROM sensitive_investigation_cases c WHERE c.workflow_status = 'no_resuelto'$b"));
+		$casesList = $this->Cases($filters, 100);
 
 		return [
 			'summary' => $s,
 			'kpis' => [
 				'monitored' => intval($this->Val('SELECT COUNT(*) FROM products WHERE active = 1 AND is_sensitive = 1')),
 				'diffs_today' => intval($this->Val("SELECT COUNT(*) FROM sensitive_inventory_movements m WHERE m.event_type = 'cycle_count' AND m.difference_amount <> 0 AND date(m.created_at) = '$today'$bm")),
-				'resolved' => intval($this->Val("SELECT COUNT(*) FROM sensitive_investigation_cases c WHERE c.workflow_status = 'resuelto'$b")),
-				'unresolved' => intval($this->Val("SELECT COUNT(*) FROM sensitive_investigation_cases c WHERE c.workflow_status = 'no_resuelto'$b")),
+				'resolved' => $resolvedCount,
+				'unresolved' => $unresolvedCount,
+				'closed_total' => $resolvedCount + $unresolvedCount,
 				'recurrent' => count($this->Rows("SELECT c.product_id FROM sensitive_investigation_cases c WHERE c.created_at >= date('now', '-90 days')$b GROUP BY c.product_id, c.branch_id HAVING COUNT(*) > 1")),
 				'avg_resolution_hours' => round(floatval($this->Val("SELECT AVG((julianday(c.closed_at) - julianday(c.created_at)) * 24) FROM sensitive_investigation_cases c WHERE c.closed_at IS NOT NULL$b")), 1),
-				// 12 Indicadores del Centro de Comando Gerencial:
 				'active_incidents' => intval($s['open_cases']),
 				'critical_alerts' => $criticalCount,
+				'security_alerts_count' => count($securityAlerts),
 				'inventory_differences' => floatval($s['open_units']),
 				'confirmed_losses_val' => $confirmedLossVal,
 				'waste_shrinkage_val' => $wasteVal,
-				'open_investigations' => intval($this->Val("SELECT COUNT(*) FROM sensitive_investigation_cases c WHERE c.workflow_status IN ('en_investigacion', 'reconteo')$b")),
+				'open_investigations' => intval($this->Val("SELECT COUNT(*) FROM sensitive_investigation_cases c WHERE c.workflow_status IN ('en_investigacion', 'in_progress', 'reconteo', 'pendiente_aprobacion', 'pending_approval')$b")),
 				'pending_tasks' => $tasksPending + intval($s['pending_counts']),
 				'available_staff' => $availableStaffCount,
 				'overdue_cases' => $overdueCount,
+				'unassigned_cases' => $unassignedCount,
 				'escalated_cases' => $escalatedCount,
 				'value_at_risk' => floatval($s['open_value']),
 				'avg_resolution_time' => round(floatval($this->Val("SELECT AVG((julianday(c.closed_at) - julianday(c.created_at)) * 24) FROM sensitive_investigation_cases c WHERE c.closed_at IS NOT NULL$b")), 1),
+				'evidence_compliance_pct' => $evidenceCompliancePct,
+				'recovered_total' => round($recoveredTotal, 2),
+				'recovery_rate_pct' => $recoverableExposure > 0 ? round($recoveredTotal / $recoverableExposure * 100, 1) : 0.0,
+				'pos_anomalies_count' => count($posAnomalies['anomalies'] ?? []),
+				'patterns_count' => count($posAnomalies['patterns'] ?? []),
 			],
 			'trend' => $this->Rows("SELECT $expr AS period, COUNT(*) AS diffs, ROUND(SUM(ABS(m.financial_impact)), 2) AS value FROM sensitive_inventory_movements m
 				WHERE m.event_type = 'cycle_count' AND m.difference_amount <> 0 AND m.created_at >= date('now', '-$days days')$bm GROUP BY 1 ORDER BY 1"),
-			'by_branch' => $this->Rows("SELECT IFNULL(br.name, '—') AS name, COUNT(*) AS cases, ROUND(SUM(c.financial_impact), 2) AS value FROM sensitive_investigation_cases c LEFT JOIN branches br ON br.id = c.branch_id WHERE c.workflow_status NOT IN ('resuelto', 'no_resuelto')$b GROUP BY c.branch_id ORDER BY value DESC LIMIT 10"),
+			'by_branch' => $this->Rows("SELECT IFNULL(br.name, '—') AS name, COUNT(*) AS cases, ROUND(SUM(c.financial_impact), 2) AS value FROM sensitive_investigation_cases c LEFT JOIN branches br ON br.id = c.branch_id WHERE c.workflow_status NOT IN " . self::CLOSED_STATUSES . "$b GROUP BY c.branch_id ORDER BY value DESC LIMIT 10"),
 			'by_product' => $this->Rows("SELECT p.name, COUNT(*) AS cases, ROUND(SUM(c.financial_impact), 2) AS value FROM sensitive_investigation_cases c JOIN products p ON p.id = c.product_id WHERE 1 = 1$b GROUP BY c.product_id ORDER BY value DESC LIMIT 8"),
-			'by_department' => $this->Rows("SELECT IFNULL(c.department, 'General') AS name, ROUND(SUM(c.financial_impact), 2) AS value FROM sensitive_investigation_cases c WHERE c.workflow_status NOT IN ('resuelto', 'no_resuelto')$b GROUP BY 1 ORDER BY value DESC"),
+			'by_department' => $this->Rows("SELECT IFNULL(c.department, 'General') AS name, ROUND(SUM(c.financial_impact), 2) AS value FROM sensitive_investigation_cases c WHERE c.workflow_status NOT IN " . self::CLOSED_STATUSES . "$b GROUP BY 1 ORDER BY value DESC"),
 			'by_status' => $this->Rows("SELECT c.workflow_status AS status, COUNT(*) AS n FROM sensitive_investigation_cases c WHERE 1 = 1$b GROUP BY 1"),
 			'count_state' => $this->Rows("SELECT c.status, COUNT(*) AS n FROM sensitive_count_tasks c WHERE (c.period_key >= date('now', '-7 days') OR c.status IN ('pending', 'recount'))$b GROUP BY 1"),
-			'cases' => $this->Cases($filters, 100),
+			'cases' => $casesList,
+			'devices_summary' => $deviceCounts + ['pending_holds' => $deviceHolds, 'chain_ok' => DeviceService::GetInstance()->VerifyChain() === null],
+			'security_alerts' => $securityAlerts,
+			'pos_anomalies' => $posAnomalies,
+			'cctv_logs' => $cctvLogs,
+			'audit_events' => $auditEvents,
+			'case_tasks' => $caseTasks,
+			'case_actions' => $caseActions,
+			'recovery_summary' => ['total_recovered' => round($recoveredTotal, 2), 'entries' => $recoveryEntries],
+			'chain_ok' => $this->VerifyChain() === null,
 			'staff_directory' => $this->StaffDirectory($branchId),
 			'map_data' => $this->BranchOperationalMap($branchId),
 			'productivity' => $this->ProductivityMetrics($branchId),
-			'preventive_plans' => $this->GetPreventivePlans($branchId),
+			'preventive_plans' => $preventivePlans,
 			'integrations' => $this->Integrations(),
 		];
 	}
@@ -2504,28 +2663,69 @@ class SensitiveCaseService extends BaseService
 		$recovery = [
 			'pending_diff' => floatval($data['pending_diff'] ?? abs(floatval($c['financial_impact']))),
 			'confirmed_loss' => floatval($data['confirmed_loss'] ?? 0),
-			'recovered_merchandise' => floatval($data['recovered_merchandise'] ?? 0),
-			'accounting_correction' => floatval($data['accounting_correction'] ?? 0),
-			'supplier_claim' => floatval($data['supplier_claim'] ?? 0),
-			'insurance_claim' => floatval($data['insurance_claim'] ?? 0),
-			'estimated_savings' => floatval($data['estimated_savings'] ?? 0),
-			'document_refs' => (array)($data['document_refs'] ?? []),
+			'recovered_merchandise' => max(0.0, floatval($data['recovered_merchandise'] ?? 0)),
+			'accounting_correction' => max(0.0, floatval($data['accounting_correction'] ?? 0)),
+			'supplier_claim' => max(0.0, floatval($data['supplier_claim'] ?? 0)),
+			'insurance_claim' => max(0.0, floatval($data['insurance_claim'] ?? 0)),
+			'estimated_savings' => max(0.0, floatval($data['estimated_savings'] ?? 0)),
+			'document_refs' => array_values(array_unique(array_filter(array_map('trim', (array)($data['document_refs'] ?? []))))),
 			'notes' => trim((string)($data['notes'] ?? '')),
 			'updated_at' => $now,
 			'updated_by_user_id' => $userId
 		];
 
+		$totalRec = round($recovery['recovered_merchandise'] + $recovery['supplier_claim'] + $recovery['insurance_claim'], 2);
+		$impactAbs = round(abs(floatval($c['financial_impact'])), 2);
+		if ($impactAbs > 0 && $totalRec > $impactAbs + 0.01)
+		{
+			throw new \Exception('El monto recuperado ($' . number_format($totalRec, 2) . ') no puede superar la exposición del caso ($' . number_format($impactAbs, 2) . ')');
+		}
 		if ($recovery['recovered_merchandise'] > 0 && empty($recovery['document_refs']) && empty($recovery['notes']))
 		{
 			throw new \Exception('Toda recuperación de mercancía física debe contar con soporte documental o notas de verificación in-situ');
 		}
+		if ($totalRec > 0 && empty($recovery['document_refs']))
+		{
+			throw new \Exception('Indique el folio o referencia documental única para evitar recuperaciones duplicadas');
+		}
+
+		// Anti-duplicados: validar que ningún folio documental haya sido aplicado en otro expediente ni duplicado idéntico en este mismo
+		$db = $this->Db();
+		if (!empty($recovery['document_refs']))
+		{
+			$others = $this->Rows("SELECT id, case_code, financial_recovery_json FROM sensitive_investigation_cases WHERE id <> ? AND financial_recovery_json IS NOT NULL AND financial_recovery_json <> ''", [$caseId]);
+			$newRefsUpper = array_map('strtoupper', $recovery['document_refs']);
+			foreach ($others as $other)
+			{
+				$oJson = json_decode((string)$other['financial_recovery_json'], true);
+				$oRefs = array_map(fn($r) => strtoupper(trim((string)$r)), (array)($oJson['document_refs'] ?? []));
+				$overlap = array_values(array_intersect($newRefsUpper, $oRefs));
+				if (!empty($overlap))
+				{
+					throw new \Exception('Recuperación duplicada: la referencia «' . $overlap[0] . '» ya fue aplicada al expediente ' . $other['case_code']);
+				}
+			}
+		}
+
+		$existing = json_decode((string)($c['financial_recovery_json'] ?? '{}'), true);
+		if (is_array($existing) && !empty($existing['updated_at']))
+		{
+			$oldTotal = round(floatval($existing['recovered_merchandise'] ?? 0) + floatval($existing['supplier_claim'] ?? 0) + floatval($existing['insurance_claim'] ?? 0), 2);
+			$oldRefs = array_map('strtoupper', array_values(array_filter(array_map('trim', (array)($existing['document_refs'] ?? [])))));
+			$curRefs = array_map('strtoupper', $recovery['document_refs']);
+			sort($oldRefs);
+			sort($curRefs);
+			if (abs($oldTotal - $totalRec) < 0.01 && $oldRefs === $curRefs && $totalRec > 0)
+			{
+				throw new \Exception('Esta recuperación financiera ya se encuentra registrada en el expediente');
+			}
+		}
 
 		$recJson = json_encode($recovery, JSON_UNESCAPED_UNICODE);
-		$db = $this->Db();
 		$stmt = $db->prepare('UPDATE sensitive_investigation_cases SET financial_recovery_json = ?, updated_at = ? WHERE id = ?');
 		$stmt->execute([$recJson, $now, $caseId]);
 
-		$this->Log($caseId, 'financial_recovery', $c['workflow_status'], $c['workflow_status'], "Balance de recuperación actualizado. Recuperado: $" . number_format($recovery['recovered_merchandise'] + $recovery['supplier_claim'] + $recovery['insurance_claim'], 2), [
+		$this->Log($caseId, 'financial_recovery', $c['workflow_status'], $c['workflow_status'], "Balance de recuperación actualizado. Recuperado: $" . number_format($totalRec, 2), [
 			'financial_recovery' => $recovery
 		], $userId);
 
@@ -2534,6 +2734,236 @@ class SensitiveCaseService extends BaseService
 			'financial_recovery' => $recovery,
 			'saved_at' => $now
 		];
+	}
+
+	/** Registro manual auditado de incidente: obliga responsable, nunca clasifica automáticamente como robo y registra evidencia si se aporta */
+	public function CreateManualIncident(array $d, int $userId): array
+	{
+		$this->Need(array_merge(self::SupervisorPerms(), self::CountPerms()), 'registrar incidentes de seguridad');
+		$productId = intval($d['product_id'] ?? ($d['product'] ?? 0));
+		$branchId = intval($d['branch_id'] ?? ($d['branch'] ?? 1));
+		$this->NeedBranch($branchId);
+		$assignedUserId = intval($d['assigned_user_id'] ?? 0);
+		if ($assignedUserId <= 0 || !$this->Val('SELECT 1 FROM users WHERE id = :u', [':u' => $assignedUserId]))
+		{
+			throw new \Exception('Todo incidente exige asignar un investigador responsable válido');
+		}
+		$p = $this->Row('SELECT * FROM products WHERE id = :p AND active = 1', [':p' => $productId]);
+		if (!$p)
+		{
+			throw new \Exception('Producto o activo no encontrado');
+		}
+		$existingOpen = $this->Row("SELECT id, case_code FROM sensitive_investigation_cases WHERE branch_id = ? AND product_id = ? AND IFNULL(device_id, 0) = 0 AND workflow_status NOT IN " . self::CLOSED_STATUSES . " LIMIT 1", [$branchId, $productId]);
+		if ($existingOpen)
+		{
+			throw new \Exception("Ya existe un expediente abierto ({$existingOpen['case_code']}) para este SKU en esta sucursal; agregue evidencia adicional directamente en ese expediente");
+		}
+		$qty = floatval($d['difference_qty'] ?? ($d['qty'] ?? 1));
+		if (abs($qty) <= 0.0001)
+		{
+			throw new \Exception('Indique una diferencia o cantidad afectada mayor a cero');
+		}
+		$notes = trim((string)($d['notes'] ?? ($d['note'] ?? '')));
+		if (mb_strlen($notes) < 5)
+		{
+			throw new \Exception('Describa el hallazgo inicial del incidente (mínimo 5 caracteres)');
+		}
+		$priority = in_array($d['priority'] ?? '', ['low', 'medium', 'high', 'urgent'], true) ? $d['priority'] : 'medium';
+		$zone = trim((string)($d['zone'] ?? 'Zona de Seguridad')) ?: 'Zona de Seguridad';
+		$expected = floatval($this->Engine()->Expected($productId, $branchId)['expected'] ?? 0);
+		$diff = -abs($qty);
+		$physical = max(0.0, $expected + $diff);
+		$unitCost = round(floatval($p['sale_price'] ?? 100.0) * 0.7, 2);
+		$impact = round(abs($diff) * $unitCost, 2);
+		$now = date('Y-m-d H:i:s');
+		$db = $this->Db();
+		$nextNum = intval($db->query('SELECT IFNULL(MAX(id), 0) + 1 FROM sensitive_investigation_cases')->fetchColumn());
+		$caseCode = 'INV-' . date('Y') . '-' . sprintf('%05d', $nextNum);
+
+		return $this->InTx(function () use ($db, $caseCode, $branchId, $productId, $p, $zone, $expected, $physical, $diff, $unitCost, $impact, $priority, $notes, $assignedUserId, $userId, $now, $d) {
+			// Nunca clasificar automáticamente como robo: nace 'indeterminada' hasta validar evidencia
+			$stmt = $db->prepare("
+				INSERT INTO sensitive_investigation_cases (
+					case_code, branch_id, product_id, department, location_name,
+					expected_stock, physical_count, difference_qty, unit_cost, financial_impact,
+					stage, workflow_status, priority, zone, shift, suspected_cause_category,
+					assigned_user_id, due_at, evidence_notes, created_by_user_id, created_at, updated_at
+				) VALUES (
+					?, ?, ?, ?, ?,
+					?, ?, ?, ?, ?,
+					'preliminar', 'en_investigacion', ?, ?, 'Turno General', 'indeterminada',
+					?, ?, ?, ?, ?, ?
+				)
+			");
+			$stmt->execute([
+				$caseCode, $branchId, $productId, $p['department'] ?: 'General', $zone,
+				$expected, $physical, $diff, $unitCost, $impact,
+				$priority, $zone, $assignedUserId, date('Y-m-d H:i:s', strtotime('+24 hours')), $notes, $userId, $now, $now
+			]);
+			$newId = intval($db->lastInsertId());
+			$this->Log($newId, 'case_created', 'detectado', 'en_investigacion', "Incidente registrado sin pre-clasificación de robo: $notes", ['assigned_user_id' => $assignedUserId], $userId);
+			if (!empty($d['evidence_title']))
+			{
+				$this->AddEvidenceRow($newId, $d['evidence_type'] ?? 'note', trim((string)$d['evidence_title']), $d['evidence_description'] ?? $notes, null, null, $d['camera_ref'] ?? null, $d['authorized_by'] ?? null, $userId);
+			}
+			$this->SyncAlert($newId, $userId, null);
+			return ['id' => $newId, 'case_code' => $caseCode, 'financial_impact' => $impact, 'difference_qty' => $diff, 'assigned_user_id' => $assignedUserId];
+		});
+	}
+
+	/** Consulta y registro auditado de accesos a CCTV / grabaciones */
+	public function RecordCctvAccess(array $d, int $userId): array
+	{
+		$this->Need(self::SupervisorPerms(), 'acceder a registros CCTV');
+		$branchId = intval($d['branch_id'] ?? 1);
+		$this->NeedBranch($branchId);
+		$cameraRef = trim((string)($d['camera_ref'] ?? ''));
+		$authorizedBy = trim((string)($d['authorized_by'] ?? ''));
+		$notes = trim((string)($d['notes'] ?? ($d['reason'] ?? '')));
+		$caseId = !empty($d['case_id']) ? intval($d['case_id']) : null;
+		if ($cameraRef === '' || $authorizedBy === '' || mb_strlen($notes) < 4)
+		{
+			throw new \Exception('El acceso a CCTV exige cámara/intervalo, autorizador y motivo documentado');
+		}
+		if ($caseId)
+		{
+			$this->Case($caseId);
+		}
+		$now = date('Y-m-d H:i:s');
+		$this->Db()->prepare("INSERT INTO security_access_audit_log (user_id, branch_id, case_id, access_type, resource_ref, authorized_by, notes, created_at) VALUES (?, ?, ?, 'cctv_view', ?, ?, ?, ?)")
+			->execute([$userId, $branchId, $caseId, $cameraRef, $authorizedBy, $notes, $now]);
+		$logId = intval($this->Db()->lastInsertId());
+		if ($caseId)
+		{
+			$c = $this->Case($caseId);
+			$this->AddEvidenceRow($caseId, 'camera', "Revisión CCTV $cameraRef", $notes, null, null, $cameraRef, $authorizedBy, $userId);
+			$this->Log($caseId, 'cctv_access', $c['workflow_status'], $c['workflow_status'], "Consulta CCTV $cameraRef autorizada por $authorizedBy", ['log_id' => $logId], $userId);
+		}
+		return ['success' => true, 'id' => $logId, 'camera_ref' => $cameraRef, 'authorized_by' => $authorizedBy, 'created_at' => $now];
+	}
+
+	public function CctvAccessLogs(?int $branchId = null, int $limit = 50): array
+	{
+		$this->Need(self::SupervisorPerms(), 'consultar auditoría de accesos y CCTV');
+		$w = $branchId ? (' AND (l.branch_id IS NULL OR l.branch_id = ' . intval($branchId) . ')') : '';
+		try
+		{
+			return $this->Rows("SELECT l.*, u.username, b.name AS branch_name, c.case_code
+				FROM security_access_audit_log l
+				LEFT JOIN users u ON u.id = l.user_id
+				LEFT JOIN branches b ON b.id = l.branch_id
+				LEFT JOIN sensitive_investigation_cases c ON c.id = l.case_id
+				WHERE 1 = 1$w
+				ORDER BY l.id DESC LIMIT " . intval($limit));
+		}
+		catch (\Throwable $e)
+		{
+			return [];
+		}
+	}
+
+	/** Anomalías reales de POS y patrones sospechosos (sin filas falsas) */
+	public function PosAnomaliesAndPatterns(?int $branchId = null, ?string $from = null, ?string $to = null): array
+	{
+		$from = $from ?: date('Y-m-d', strtotime('-30 days'));
+		$to = $to ?: date('Y-m-d');
+		$bSales = $this->BranchWhere($branchId, 's.branch_id');
+		$bRefunds = $this->BranchWhere($branchId, 'COALESCE(ret.branch_id, s.branch_id, 1)');
+		$bAuth = $this->BranchWhere($branchId, 'a.branch_id');
+		$bCases = $this->BranchWhere($branchId, 'c.branch_id');
+
+		$anomalies = [];
+		// 1) Descuentos altos manuales en ventas (>25% o discount > 50)
+		$discRows = $this->Rows("SELECT s.id, s.sale_number, s.branch_id, b.name AS branch_name, s.user_id, u.username, s.subtotal, s.discount_amount, s.total_amount, s.created_timestamp
+			FROM sales s LEFT JOIN branches b ON b.id = s.branch_id LEFT JOIN users u ON u.id = s.user_id
+			WHERE s.status = 'completed' AND date(s.created_timestamp) BETWEEN :f AND :t
+			  AND s.subtotal > 0 AND (s.discount_amount / s.subtotal >= 0.25 OR s.discount_amount >= 50)$bSales
+			ORDER BY s.discount_amount DESC LIMIT 20", [':f' => $from, ':t' => $to]);
+		foreach ($discRows as $r)
+		{
+			$pct = $r['subtotal'] > 0 ? round(floatval($r['discount_amount']) / floatval($r['subtotal']) * 100, 1) : 0;
+			$anomalies[] = [
+				'type' => 'Descuento Atípico POS',
+				'severity' => $pct >= 40 ? 'danger' : 'warning',
+				'document' => $r['sale_number'],
+				'detail' => "Descuento {$pct}% (" . ($r['username'] ?: 'cajero') . ")",
+				'branch_id' => intval($r['branch_id']),
+				'branch_name' => $r['branch_name'] ?: '—',
+				'amount' => round(floatval($r['discount_amount']), 2),
+				'at' => $r['created_timestamp'],
+			];
+		}
+
+		// 2) Reembolsos y devoluciones en POS
+		$refundRows = $this->Rows("SELECT r.*, COALESCE(ret.branch_id, s.branch_id, 1) AS branch_id, b.name AS branch_name, ret.code AS return_code, ret.notes AS return_notes
+			FROM daily_pos_refunds r
+			LEFT JOIN daily_pos_returns ret ON ret.id = r.return_id
+			LEFT JOIN sales s ON s.id = r.sale_id
+			LEFT JOIN branches b ON b.id = COALESCE(ret.branch_id, s.branch_id, 1)
+			WHERE date(r.created_at) BETWEEN :f AND :t$bRefunds
+			ORDER BY r.id DESC LIMIT 20", [':f' => $from, ':t' => $to]);
+		foreach ($refundRows as $r)
+		{
+			$anomalies[] = [
+				'type' => 'Devolución / Reembolso POS',
+				'severity' => floatval($r['amount'] ?? 0) >= 200 ? 'danger' : 'warning',
+				'document' => $r['return_code'] ?: ('REF-' . $r['id']),
+				'detail' => ($r['return_notes'] ?: ($r['reference'] ?: 'Reembolso registrado en POS')) . ' (' . ($r['method'] ?? 'POS') . ')',
+				'branch_id' => intval($r['branch_id'] ?? 1),
+				'branch_name' => $r['branch_name'] ?: '—',
+				'amount' => round(floatval($r['amount'] ?? 0), 2),
+				'at' => $r['created_at'] ?? '',
+			];
+		}
+
+		// 3) Autorizaciones POS de supervisión / anulaciones
+		$authRows = $this->Rows("SELECT a.*, b.name AS branch_name FROM daily_pos_authorizations a LEFT JOIN branches b ON b.id = a.branch_id WHERE date(a.created_at) BETWEEN :f AND :t$bAuth ORDER BY a.id DESC LIMIT 20", [':f' => $from, ':t' => $to]);
+		foreach ($authRows as $r)
+		{
+			$anomalies[] = [
+				'type' => 'Autorización POS Sensible',
+				'severity' => floatval($r['pct'] ?? 0) >= 25 || floatval($r['amount'] ?? 0) >= 200 ? 'danger' : 'warning',
+				'document' => 'AUTH-' . $r['id'],
+				'detail' => ($r['kind'] ?? 'manual') . ($r['reason'] ? ': ' . $r['reason'] : ''),
+				'branch_id' => intval($r['branch_id'] ?? 1),
+				'branch_name' => $r['branch_name'] ?: '—',
+				'amount' => round(floatval($r['amount'] ?? 0), 2),
+				'at' => $r['created_at'] ?? '',
+			];
+		}
+
+		// 4) Patrones sospechosos (SKUs con incidentes repetidos + sucursales reincidentes)
+		$patterns = [];
+		$repSkus = $this->Rows("SELECT c.product_id, p.name, p.sku, COUNT(*) AS incidents, ROUND(SUM(c.financial_impact), 2) AS total_impact
+			FROM sensitive_investigation_cases c JOIN products p ON p.id = c.product_id
+			WHERE c.created_at >= date('now', '-90 days')$bCases
+			GROUP BY c.product_id HAVING incidents > 1 ORDER BY total_impact DESC LIMIT 12");
+		foreach ($repSkus as $rp)
+		{
+			$patterns[] = [
+				'pattern' => 'Reincidencia de SKU',
+				'entity' => $rp['name'] . ($rp['sku'] ? ' (' . $rp['sku'] . ')' : ''),
+				'count' => intval($rp['incidents']),
+				'impact' => floatval($rp['total_impact']),
+				'recommendation' => 'Auditar custodia y activar conteo ciego selectivo'
+			];
+		}
+		$repUsers = $this->Rows("SELECT s.user_id, IFNULL(u.username, 'cajero') AS username, COUNT(*) AS high_disc, ROUND(SUM(s.discount_amount), 2) AS disc_total
+			FROM sales s LEFT JOIN users u ON u.id = s.user_id
+			WHERE s.status = 'completed' AND s.subtotal > 0 AND (s.discount_amount / s.subtotal >= 0.20) AND date(s.created_timestamp) BETWEEN :f AND :t$bSales
+			GROUP BY s.user_id HAVING high_disc >= 2 ORDER BY disc_total DESC LIMIT 10", [':f' => $from, ':t' => $to]);
+		foreach ($repUsers as $ru)
+		{
+			$patterns[] = [
+				'pattern' => 'Patrón de Descuentos por Usuario POS',
+				'entity' => $ru['username'],
+				'count' => intval($ru['high_disc']),
+				'impact' => floatval($ru['disc_total']),
+				'recommendation' => 'Verificar autorizaciones de PIN y cintas de auditoría'
+			];
+		}
+
+		return ['anomalies' => $anomalies, 'patterns' => $patterns];
 	}
 
 	private static function Ean13(string $twelve): string

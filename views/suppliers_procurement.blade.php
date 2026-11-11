@@ -30,21 +30,19 @@
 	$activeSuppliersCount = count(array_filter($suppliers, function($s) { return $s['active'] == 1; }));
 	$totalDeliveries = count($deliveries);
 	$onTimeDeliveries = count(array_filter($deliveries, function($d) { return $d['status'] === 'on_time'; }));
-	$globalOtif = $totalDeliveries > 0 ? round(($onTimeDeliveries / $totalDeliveries) * 100, 1) : 100;
+	$globalOtif = $totalDeliveries > 0 ? round(($onTimeDeliveries / $totalDeliveries) * 100, 1) : null;
 	$pendingIncidentsCount = count(array_filter($incidents, function($i) { return in_array($i['status'], ['open', 'claimed']); }));
 	$recomCount = count($recommendations);
-@endphp
-@php
-	$fillRate = 0; $ordered = 0; $received = 0;
+	$ordered = 0; $received = 0;
 	foreach ($deliveries as $d) { $ordered += floatval($d['items_ordered']); $received += floatval($d['items_received']); }
-	$fillRate = $ordered > 0 ? round($received / $ordered * 100, 1) : 100;
+	$fillRate = $ordered > 0 ? round($received / $ordered * 100, 1) : null;
 	$incidentCost = array_sum(array_map(function($i) { return in_array($i['status'], ['open', 'claimed']) ? floatval($i['cost_impact']) : 0; }, $incidents));
 	$recomCost = array_sum(array_map(function($r) { return floatval($r['estimated_cost']); }, $recommendations));
 @endphp
 @include('components.dairy_kpi_row', ['kpis' => [
 	['label' => 'Proveedores', 'value' => $activeSuppliersCount, 'sub' => 'de ' . count($suppliers) . ' registrados', 'icon' => 'fa-handshake', 'tone' => 'primary'],
-	['label' => 'Puntualidad OTIF', 'value' => $globalOtif . '%', 'sub' => $onTimeDeliveries . ' de ' . $totalDeliveries . ' a tiempo', 'icon' => 'fa-truck-fast', 'tone' => $globalOtif >= 95 ? 'success' : 'warning', 'alert' => $globalOtif < 95],
-	['label' => 'Nivel de Servicio', 'value' => $fillRate . '%', 'sub' => 'unidades recibidas / pedidas', 'icon' => 'fa-boxes-packing', 'tone' => $fillRate >= 98 ? 'success' : 'warning', 'alert' => $fillRate < 98],
+	['label' => 'Puntualidad OTIF', 'value' => $globalOtif !== null ? ($globalOtif . '%') : 'Sin datos', 'sub' => $onTimeDeliveries . ' de ' . $totalDeliveries . ' a tiempo', 'icon' => 'fa-truck-fast', 'tone' => $globalOtif === null ? 'secondary' : ($globalOtif >= 95 ? 'success' : 'warning'), 'alert' => ($globalOtif !== null && $globalOtif < 95)],
+	['label' => 'Nivel de Servicio', 'value' => $fillRate !== null ? ($fillRate . '%') : 'Sin datos', 'sub' => 'unidades recibidas / pedidas', 'icon' => 'fa-boxes-packing', 'tone' => $fillRate === null ? 'secondary' : ($fillRate >= 98 ? 'success' : 'warning'), 'alert' => ($fillRate !== null && $fillRate < 98)],
 	['label' => 'Incidencias Abiertas', 'value' => $pendingIncidentsCount, 'sub' => '$' . number_format($incidentCost, 2) . ' por recuperar', 'icon' => 'fa-file-circle-exclamation', 'tone' => $pendingIncidentsCount > 0 ? 'danger' : 'secondary', 'alert' => $pendingIncidentsCount > 0],
 	['label' => 'Pedido Sugerido', 'value' => $recomCount, 'sub' => 'productos a reponer', 'icon' => 'fa-cart-flatbed', 'tone' => $recomCount > 0 ? 'info' : 'secondary'],
 	['label' => 'Valor a Comprar', 'value' => '$' . number_format($recomCost, 2), 'sub' => 'costo del pedido sugerido', 'icon' => 'fa-file-invoice-dollar', 'tone' => 'purple'],
@@ -99,7 +97,7 @@
 	</li>
 	<li class="nav-item">
 		<a class="nav-link font-weight-bold text-success" id="tab-supplier-portal-link" data-toggle="pill" href="#tab-supplier-portal" role="tab">
-			<i class="fa-solid fa-network-wired mr-1"></i>Portal Proveedores B2B
+			<i class="fa-solid fa-handshake mr-1"></i>Confirmaciones & RFQ
 		</a>
 	</li>
 </ul>
@@ -151,8 +149,11 @@
 									<small class="text-muted"><i class="fa-solid fa-phone mr-1"></i>{{ $s['phone'] ?: 'N/D' }}</small>
 								</td>
 								<td>
-									<div>{{ $s['payment_terms'] }}</div>
-									<small class="text-muted">Mín: ${{ number_format($s['min_order_amount'], 2) }}</small>
+									<div>{{ $s['payment_terms'] ?: 'Sin definir' }} @if(!empty($s['incoterm']))<span class="badge badge-light border">{{ $s['incoterm'] }}</span>@endif</div>
+									<small class="text-muted">Mín: ${{ number_format($s['min_order_amount'], 2) }} · {{ $s['currency_code'] ?? 'USD' }}</small>
+									@if(empty($s['commercial_terms_verified']))
+									<div><span class="badge badge-warning text-dark">Condiciones incompletas</span></div>
+									@endif
 								</td>
 								<td class="text-center">
 									<span class="badge badge-info">{{ $s['lead_time_days'] }} días</span>
@@ -211,11 +212,11 @@
 			<div class="card-body py-3">
 				<div class="row align-items-center">
 					<div class="col-md-5">
-						<label class="font-weight-bold mb-1"><i class="fa-solid fa-cubes mr-1 text-primary"></i>Selecciona un Producto Lácteo para comparar:</label>
+						<label class="font-weight-bold mb-1"><i class="fa-solid fa-cubes mr-1 text-primary"></i>Selecciona un Producto para comparar:</label>
 						<select id="compare-product-select" class="custom-select shadow-sm" onchange="DairySuppliers.LoadComparison(this.value)">
-							<option value="">-- Seleccionar producto lácteo --</option>
+							<option value="">-- Seleccionar producto --</option>
 							@foreach($products as $p)
-							<option value="{{ $p->id }}" @if($p->id == 30) selected @endif>{{ $p->name }}</option>
+							<option value="{{ $p->id }}" @if($loop->first) selected @endif>{{ $p->name }}</option>
 							@endforeach
 						</select>
 					</div>
@@ -553,12 +554,12 @@
 					</div>
 				</div>
 				<div class="d-flex align-items-center">
-					<span class="badge badge-light border px-2 py-1 mr-2 text-muted" title="Cálculos demostrativos sobre catálogo comercial">
-						<i class="fa-solid fa-circle-info mr-1 text-primary"></i>Datos de ejemplo
+					<span class="badge badge-light border px-2 py-1 mr-2 text-muted" title="Calculado desde metas comerciales, recepciones y órdenes abiertas">
+						<i class="fa-solid fa-database mr-1 text-success"></i>Datos en vivo
 					</span>
-					<button type="button" class="btn btn-sm btn-outline-success" onclick="toastr.info('Presupuesto calculado en base a metas comerciales y órdenes de compra del período.');">
-						<i class="fa-solid fa-rotate mr-1"></i>Conciliar saldos
-					</button>
+					<a href="{{ $U('/mrp?tab=ordenes') }}" class="btn btn-sm btn-outline-success">
+						<i class="fa-solid fa-file-invoice mr-1"></i>Ver Órdenes MRP
+					</a>
 				</div>
 			</div>
 		</div>
@@ -691,14 +692,7 @@
 														</tr>
 														@empty
 														<tr>
-															<td><span class="text-muted">Orden Compra</span></td>
-															<td class="font-weight-bold font-mono">PO-{{ date('Ymd') }}-B01</td>
-															<td class="text-truncate" style="max-width: 140px;">Proveedor Preferente</td>
-															<td class="text-muted">{{ date('Y-m-d') }}</td>
-															<td class="text-right font-weight-bold">${{ number_format(max(150, $br['assigned'] * 0.12), 2) }}</td>
-															<td class="text-center">
-																<span class="badge badge-success" style="font-size: 11px;">Planificado</span>
-															</td>
+															<td colspan="6" class="text-center text-muted py-2">Sin movimientos ni compromisos registrados en esta sucursal durante el mes.</td>
 														</tr>
 														@endforelse
 													</tbody>
@@ -755,7 +749,7 @@
 						</div>
 					</div>
 					<div class="card-footer bg-light py-2 text-center text-muted small">
-						<i class="fa-solid fa-info-circle mr-1"></i>Los pagos y recepciones se sincronizan con Planificación MRP y Gestión de Equipos.
+						<i class="fa-solid fa-info-circle mr-1"></i>Los compromisos y recepciones se sincronizan en tiempo real con Planificación MRP.
 					</div>
 				</div>
 			</div>
@@ -764,34 +758,43 @@
 
 
 	<!-- TAB 8: Conciliación de Facturas (3-Way Matching) -->
+	@php
+		$invList = $invoices ?? [];
+		$invMeta = \Grocy\Services\SupplierInvoiceService::STATUS;
+		$invTotalSum = array_sum(array_map(fn($x) => floatval($x['total'] ?? 0), $invList));
+		$invMatchedCnt = count(array_filter($invList, fn($x) => in_array($x['status'], ['matched', 'approved_with_difference'], true)));
+		$invMatchedPct = count($invList) > 0 ? round($invMatchedCnt / count($invList) * 100, 1) : null;
+		$invRiskSum = array_sum(array_map(fn($x) => ($x['status'] === 'discrepancy' ? floatval($x['amount_at_risk'] ?? 0) : 0), $invList));
+		$invHeldCnt = count(array_filter($invList, fn($x) => in_array($x['status'], ['discrepancy', 'rejected'], true)));
+	@endphp
 	<div class="tab-pane fade" id="tab-threeway-matching" role="tabpanel">
 		<div class="row mb-3">
 			<div class="col-md-3">
 				<div class="card border-0 shadow-sm p-3 bg-white">
-					<div class="text-muted small font-weight-bold">FACTURAS EN CONCILIACIÓN</div>
-					<div class="h4 font-weight-bold text-dark mb-0">$58,400 <span class="small font-weight-normal text-muted">por liberar</span></div>
-					<div class="small text-muted mt-1"><i class="fa-solid fa-file-invoice mr-1 text-primary"></i> 18 facturas del mes</div>
+					<div class="text-muted small font-weight-bold">FACTURAS REGISTRADAS</div>
+					<div class="h4 font-weight-bold text-dark mb-0">${{ number_format($invTotalSum, 2) }}</div>
+					<div class="small text-muted mt-1"><i class="fa-solid fa-file-invoice mr-1 text-primary"></i>{{ count($invList) }} facturas reales</div>
 				</div>
 			</div>
 			<div class="col-md-3">
 				<div class="card border-0 shadow-sm p-3 bg-white">
-					<div class="text-muted small font-weight-bold">COINCIDENCIA EXACTA (3-WAY)</div>
-					<div class="h4 font-weight-bold text-success mb-0">88.5%</div>
-					<div class="small text-muted mt-1">PO = Recepción = Factura</div>
+					<div class="text-muted small font-weight-bold">COINCIDENCIA / APROBACIÓN</div>
+					<div class="h4 font-weight-bold text-success mb-0">{{ $invMatchedPct !== null ? $invMatchedPct . '%' : 'Sin facturas' }}</div>
+					<div class="small text-muted mt-1">OC = Recepción = Factura</div>
 				</div>
 			</div>
 			<div class="col-md-3">
 				<div class="card border-0 shadow-sm p-3 bg-white">
-					<div class="text-muted small font-weight-bold">DISCREPANCIA DE PRECIO</div>
-					<div class="h4 font-weight-bold text-warning mb-0">$1,250 <span class="small font-weight-normal text-muted">en disputa</span></div>
-					<div class="small text-muted mt-1">Precio factura &gt; Precio PO</div>
+					<div class="text-muted small font-weight-bold">MONTO EN DISPUTA</div>
+					<div class="h4 font-weight-bold text-warning mb-0">${{ number_format($invRiskSum, 2) }}</div>
+					<div class="small text-muted mt-1">Diferencias pendientes de decisión</div>
 				</div>
 			</div>
 			<div class="col-md-3">
 				<div class="card border-0 shadow-sm p-3 bg-white">
-					<div class="text-muted small font-weight-bold">FACTURAS RETENIDAS</div>
-					<div class="h4 font-weight-bold text-danger mb-0">2 facturas</div>
-					<div class="small text-muted mt-1">Bloqueo de pago preventivo</div>
+					<div class="text-muted small font-weight-bold">FACTURAS CON OBSERVACIÓN</div>
+					<div class="h4 font-weight-bold text-danger mb-0">{{ $invHeldCnt }} facturas</div>
+					<div class="small text-muted mt-1">Discrepancia o rechazada</div>
 				</div>
 			</div>
 		</div>
@@ -799,12 +802,12 @@
 		<div class="card shadow-sm border-0 mb-4">
 			<div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
 				<div>
-					<h5 class="mb-0 font-weight-bold text-dark"><i class="fa-solid fa-file-invoice-dollar text-primary mr-2"></i>Matriz 3-Way Matching (Orden de Compra vs Muelle vs Factura)</h5>
-					<div class="small text-muted">Validación estricta de precios cotizados, cantidades efectivamente recibidas y montos cobrados por el proveedor.</div>
+					<h5 class="mb-0 font-weight-bold text-dark"><i class="fa-solid fa-file-invoice-dollar text-primary mr-2"></i>Matriz 3-Way Matching (Orden de Compra vs Recepción vs Factura)</h5>
+					<div class="small text-muted">Validación estricta de precios cotizados, cantidades efectivamente recibidas y montos facturados por el proveedor.</div>
 				</div>
 				<div class="d-flex gap-2">
-					<a href="{{ $U('/action-center') }}" class="btn btn-sm btn-outline-danger font-weight-bold">
-						<i class="fa-solid fa-shield-halved mr-1"></i> Escalar a Action Center
+					<a href="{{ $U('/mrp?tab=ordenes#invoices') }}" class="btn btn-sm btn-outline-primary font-weight-bold">
+						<i class="fa-solid fa-plus mr-1"></i>Registrar Factura desde OC
 					</a>
 				</div>
 			</div>
@@ -812,71 +815,39 @@
 				<table class="table table-hover table-sm mb-0">
 					<thead class="thead-light">
 						<tr>
-							<th>Orden Compra (PO)</th>
-							<th>Recepción Muelle (GR)</th>
-							<th>Factura Proveedor</th>
+							<th>Folio Interno</th>
+							<th>Factura Prov.</th>
+							<th>Orden Compra</th>
 							<th>Proveedor</th>
-							<th class="text-right">Cant. PO</th>
-							<th class="text-right">Cant. Recibida</th>
-							<th class="text-right">Precio PO</th>
-							<th class="text-right">Precio Factura</th>
+							<th>Fecha</th>
 							<th class="text-right">Total Factura</th>
+							<th class="text-right">Monto en Riesgo</th>
 							<th>Estado Matching</th>
 							<th class="text-center">Acción</th>
 						</tr>
 					</thead>
 					<tbody>
-						<tr>
-							<td><code>PO-2026-0810</code></td>
-							<td><code>GR-449102</code></td>
-							<td><strong>FAC-A-99124</strong></td>
-							<td>Lácteos del Valle S.A.</td>
-							<td class="text-right">150 unids</td>
-							<td class="text-right font-weight-bold text-success">150 unids</td>
-							<td class="text-right">$1.15</td>
-							<td class="text-right">$1.15</td>
-							<td class="text-right font-weight-bold">$172.50</td>
-							<td><span class="badge badge-success"><i class="fa-solid fa-check mr-1"></i> Coincidencia 100%</span></td>
+						@forelse($invList as $inv)
+						@php $im = $invMeta[$inv['status']] ?? [$inv['status'], 'secondary']; @endphp
+						<tr class="@if($inv['status'] === 'discrepancy') table-warning @elseif($inv['status'] === 'rejected') table-danger @endif">
+							<td class="font-mono font-weight-bold">{{ $inv['invoice_code'] }}</td>
+							<td><strong>{{ $inv['invoice_number'] }}</strong></td>
+							<td><code>{{ $inv['order_code'] }}</code></td>
+							<td>{{ $inv['supplier_name'] }}</td>
+							<td class="small text-muted">{{ $inv['invoice_date'] }}</td>
+							<td class="text-right font-weight-bold">${{ number_format($inv['total'], 2) }}</td>
+							<td class="text-right font-weight-bold @if($inv['amount_at_risk'] > 0) text-danger @else text-success @endif">${{ number_format($inv['amount_at_risk'], 2) }}</td>
+							<td><span class="badge badge-{{ $im[1] }}">{{ $im[0] }}</span></td>
 							<td class="text-center">
-								<button class="btn btn-xs btn-outline-success font-weight-bold py-0 px-2" onclick="alert('Factura liberada para programación de pago.');">
-									<i class="fa-solid fa-thumbs-up mr-1"></i> Liberar Pago
+								<button type="button" class="btn btn-xs btn-outline-primary font-weight-bold py-0 px-2"
+									onclick="DairySuppliers.InspectInvoice({{ $inv['id'] }}, {{ json_encode($inv['invoice_code']) }}, {{ $inv['status'] === 'discrepancy' ? 'true' : 'false' }})">
+									<i class="fa-solid fa-eye mr-1"></i>Conciliar
 								</button>
 							</td>
 						</tr>
-						<tr class="table-danger">
-							<td><code>PO-2026-0811</code></td>
-							<td><code>GR-449103</code></td>
-							<td><strong>FAC-B-11029</strong></td>
-							<td>Avícola Santa Rita</td>
-							<td class="text-right">200 kg</td>
-							<td class="text-right font-weight-bold text-danger">180 kg</td>
-							<td class="text-right">$3.20</td>
-							<td class="text-right font-weight-bold text-danger">$3.45</td>
-							<td class="text-right font-weight-bold text-danger">$690.00</td>
-							<td><span class="badge badge-danger"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Sobreprecio y Faltante</span></td>
-							<td class="text-center">
-								<button class="btn btn-xs btn-danger font-weight-bold py-0 px-2" onclick="alert('Factura retenida. Notificación de discrepancia enviada a compras y contabilidad.');">
-									<i class="fa-solid fa-hand mr-1"></i> Retener Pago
-								</button>
-							</td>
-						</tr>
-						<tr class="table-warning">
-							<td><code>PO-2026-0812</code></td>
-							<td><code>GR-449105</code></td>
-							<td><strong>FAC-C-33812</strong></td>
-							<td>Distribuidora Fruver SAS</td>
-							<td class="text-right">400 kg</td>
-							<td class="text-right font-weight-bold text-success">400 kg</td>
-							<td class="text-right">$0.90</td>
-							<td class="text-right font-weight-bold text-warning">$0.95</td>
-							<td class="text-right font-weight-bold">$380.00</td>
-							<td><span class="badge badge-warning text-dark"><i class="fa-solid fa-circle-exclamation mr-1"></i> Diferencia Centavos (+$20.00)</span></td>
-							<td class="text-center">
-								<button class="btn btn-xs btn-outline-warning font-weight-bold py-0 px-2" onclick="alert('Nota de débito generada automáticamente por $20.00.');">
-									<i class="fa-solid fa-file-invoice mr-1"></i> Nota Débito
-								</button>
-							</td>
-						</tr>
+						@empty
+						<tr><td colspan="9" class="text-center text-muted py-4">Sin facturas de proveedores registradas. Genere o reciba una OC en Planificación MRP para conciliar facturas.</td></tr>
+						@endforelse
 					</tbody>
 				</table>
 			</div>
@@ -884,34 +855,40 @@
 	</div>
 
 	<!-- TAB 9: Gestión de Contratos -->
+	@php
+		$ctrList = $supplierContracts ?? [];
+		$ctrExpiring = count(array_filter($ctrList, fn($c) => ($c['status'] === 'expiring_soon') || (isset($c['days_remaining']) && $c['days_remaining'] >= 0 && $c['days_remaining'] <= 90)));
+		$ctrAvgCredit = count($ctrList) > 0 ? round(array_sum(array_column($ctrList, 'payment_terms_days')) / count($ctrList), 0) : null;
+		$ctrMinSum = array_sum(array_map(fn($c) => floatval($c['minimum_order_val'] ?? 0), $ctrList));
+	@endphp
 	<div class="tab-pane fade" id="tab-contracts" role="tabpanel">
 		<div class="row mb-3">
 			<div class="col-md-3">
 				<div class="card border-0 shadow-sm p-3 bg-white">
-					<div class="text-muted small font-weight-bold">CONTRATOS MARCO VIGENTES</div>
-					<div class="h4 font-weight-bold text-dark mb-0">{{ count($supplierContracts ?? []) }} <span class="small font-weight-normal text-muted">contratos</span></div>
-					<div class="small text-muted mt-1"><i class="fa-solid fa-file-signature text-success mr-1"></i> Cláusulas formalizadas</div>
+					<div class="text-muted small font-weight-bold">CONTRATOS REGISTRADOS</div>
+					<div class="h4 font-weight-bold text-dark mb-0">{{ count($ctrList) }} <span class="small font-weight-normal text-muted">contratos</span></div>
+					<div class="small text-muted mt-1"><i class="fa-solid fa-file-signature text-success mr-1"></i> Acuerdos en base de datos</div>
 				</div>
 			</div>
 			<div class="col-md-3">
 				<div class="card border-0 shadow-sm p-3 bg-white">
-					<div class="text-muted small font-weight-bold">POR VENCER (&lt; 90 DÍAS)</div>
-					<div class="h4 font-weight-bold text-warning mb-0">1 <span class="small font-weight-normal text-muted">contrato</span></div>
-					<div class="small text-muted mt-1"><i class="fa-solid fa-clock mr-1 text-warning"></i> Avícola Santa Rita (Revisión)</div>
+					<div class="text-muted small font-weight-bold">POR VENCER (&le; 90 DÍAS)</div>
+					<div class="h4 font-weight-bold @if($ctrExpiring > 0) text-warning @else text-success @endif mb-0">{{ $ctrExpiring }} <span class="small font-weight-normal text-muted">contratos</span></div>
+					<div class="small text-muted mt-1"><i class="fa-solid fa-clock mr-1 text-warning"></i> Seguimiento de vigencia</div>
 				</div>
 			</div>
 			<div class="col-md-3">
 				<div class="card border-0 shadow-sm p-3 bg-white">
-					<div class="text-muted small font-weight-bold">TÉRMINO MEDIO DE CRÉDITO</div>
-					<div class="h4 font-weight-bold text-info mb-0">30 días</div>
-					<div class="small text-muted mt-1">Plazo de pago a proveedores</div>
+					<div class="text-muted small font-weight-bold">CRÉDITO PROMEDIO</div>
+					<div class="h4 font-weight-bold text-info mb-0">{{ $ctrAvgCredit !== null ? $ctrAvgCredit . ' días' : '—' }}</div>
+					<div class="small text-muted mt-1">Plazo de pago contratado</div>
 				</div>
 			</div>
 			<div class="col-md-3">
 				<div class="card border-0 shadow-sm p-3 bg-white">
-					<div class="text-muted small font-weight-bold">AHORRO POR REBATE</div>
-					<div class="h4 font-weight-bold text-success mb-0">$6,400</div>
-					<div class="small text-muted mt-1">Descuentos por pronto pago y volumen</div>
+					<div class="text-muted small font-weight-bold">PEDIDO MÍN. ACUMULADO</div>
+					<div class="h4 font-weight-bold text-primary mb-0">${{ number_format($ctrMinSum, 2) }}</div>
+					<div class="small text-muted mt-1">Compromiso contractual base</div>
 				</div>
 			</div>
 		</div>
@@ -920,10 +897,10 @@
 			<div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
 				<div>
 					<h5 class="mb-0 font-weight-bold text-dark"><i class="fa-solid fa-file-signature text-warning mr-2"></i>Contratos de Proveedores y Condiciones Comerciales</h5>
-					<div class="small text-muted">Términos de pago, pedido mínimo, descuentos pactados, cláusulas de renovación y alertas de caducidad.</div>
+					<div class="small text-muted">Términos de pago, pedido mínimo, descuentos pactados, cláusulas de renovación y vigencia contractual.</div>
 				</div>
 				<div>
-					<button class="btn btn-sm btn-primary font-weight-bold" onclick="alert('Abriendo formulario de nuevo contrato comercial.');">
+					<button type="button" class="btn btn-sm btn-primary font-weight-bold" data-toggle="modal" data-target="#modal-contract-form">
 						<i class="fa-solid fa-plus mr-1"></i> Nuevo Contrato
 					</button>
 				</div>
@@ -941,58 +918,32 @@
 							<th>Condiciones / Descuento</th>
 							<th>Responsable</th>
 							<th>Estado</th>
-							<th class="text-center">Acción</th>
 						</tr>
 					</thead>
 					<tbody>
-						@forelse(($supplierContracts ?? []) as $ctr)
-						<tr class="@if($ctr['status'] === 'expiring_soon') table-warning @endif">
+						@forelse($ctrList as $ctr)
+						@php $expSoon = ($ctr['status'] === 'expiring_soon') || (isset($ctr['days_remaining']) && $ctr['days_remaining'] >= 0 && $ctr['days_remaining'] <= 90); @endphp
+						<tr class="@if($expSoon) table-warning @endif">
 							<td><code>{{ $ctr['contract_code'] }}</code></td>
 							<td class="font-weight-bold text-dark">{{ $ctr['supplier_name'] }}</td>
 							<td>{{ $ctr['title'] }}</td>
 							<td class="small text-muted">{{ date('d/m/Y', strtotime($ctr['start_date'])) }} al {{ date('d/m/Y', strtotime($ctr['end_date'])) }}</td>
 							<td class="text-right font-weight-bold">{{ $ctr['payment_terms_days'] }} días</td>
 							<td class="text-right">${{ number_format($ctr['minimum_order_val'], 2) }}</td>
-							<td><span class="badge badge-light border">{{ $ctr['discount_terms'] }}</span></td>
-							<td class="small">{{ $ctr['responsible_name'] }}</td>
+							<td><span class="badge badge-light border">{{ $ctr['discount_terms'] ?: 'Estándar' }}</span></td>
+							<td class="small">{{ $ctr['responsible_name'] ?: 'Compras' }}</td>
 							<td>
-								@if($ctr['status'] === 'active')
-									<span class="badge badge-success"><i class="fa-solid fa-check mr-1"></i> Vigente</span>
-								@else
+								@if($ctr['status'] === 'expired' || (isset($ctr['days_remaining']) && $ctr['days_remaining'] < 0))
+									<span class="badge badge-danger">Vencido</span>
+								@elseif($expSoon)
 									<span class="badge badge-warning text-dark"><i class="fa-solid fa-clock mr-1"></i> Por Vencer</span>
+								@else
+									<span class="badge badge-success"><i class="fa-solid fa-check mr-1"></i> Vigente</span>
 								@endif
-							</td>
-							<td class="text-center">
-								<button class="btn btn-xs btn-outline-secondary py-0 px-2" onclick="alert('Descargando contrato digitalizado en PDF...');">
-									<i class="fa-solid fa-file-pdf text-danger"></i> PDF
-								</button>
 							</td>
 						</tr>
 						@empty
-						<tr>
-							<td><code>CTR-2026-ALQ01</code></td>
-							<td class="font-weight-bold text-dark">Alquería Lácteos de Colombia</td>
-							<td>Abastecimiento continuo de cadena fría y lácteos</td>
-							<td class="small text-muted">{{ date('01/01/Y') }} al {{ date('31/12/Y') }}</td>
-							<td class="text-right font-weight-bold">30 días</td>
-							<td class="text-right">$5,000,000</td>
-							<td><span class="badge badge-light border">Descuento 4.5% pronto pago</span></td>
-							<td class="small">Jefe de Compras</td>
-							<td><span class="badge badge-success"><i class="fa-solid fa-check mr-1"></i> Vigente</span></td>
-							<td class="text-center"><button class="btn btn-xs btn-outline-secondary py-0 px-2"><i class="fa-solid fa-file-pdf text-danger"></i> PDF</button></td>
-						</tr>
-						<tr>
-							<td><code>CTR-2026-SAM02</code></td>
-							<td class="font-weight-bold text-dark">Samsung Electronics Colombia</td>
-							<td>Distribución autorizada telefonía y televisores</td>
-							<td class="small text-muted">{{ date('01/01/Y') }} al {{ date('31/12/Y') }}</td>
-							<td class="text-right font-weight-bold">45 días</td>
-							<td class="text-right">$25,000,000</td>
-							<td><span class="badge badge-light border">Rebate trimestral 3.0%</span></td>
-							<td class="small">Gerencia Comercial</td>
-							<td><span class="badge badge-success"><i class="fa-solid fa-check mr-1"></i> Vigente</span></td>
-							<td class="text-center"><button class="btn btn-xs btn-outline-secondary py-0 px-2"><i class="fa-solid fa-file-pdf text-danger"></i> PDF</button></td>
-						</tr>
+						<tr><td colspan="9" class="text-center text-muted py-4">No hay contratos comerciales registrados aún. Use «Nuevo Contrato» para crear uno.</td></tr>
 						@endforelse
 					</tbody>
 				</table>
@@ -1000,67 +951,97 @@
 		</div>
 	</div>
 
-	<!-- TAB 10: Portal de Proveedores B2B -->
+	<!-- TAB 10: Confirmaciones de Proveedor y Solicitudes RFQ -->
+	@php
+		$confOrders = array_values(array_filter($ordersForConfirmation ?? [], fn($o) => in_array($o->status, ['approved', 'sent', 'confirmed', 'partially_received'], true)));
+		$rfqList = $rfqs ?? [];
+	@endphp
 	<div class="tab-pane fade" id="tab-supplier-portal" role="tabpanel">
 		<div class="card shadow-sm border-0 mb-4">
-			<div class="card-header bg-white py-3">
-				<h5 class="mb-0 font-weight-bold text-dark"><i class="fa-solid fa-network-wired text-success mr-2"></i>Portal de Proveedores B2B (DAILY Vendor Portal)</h5>
-				<div class="small text-muted">Arquitectura y acceso seguro para proveedores comerciales autorizados.</div>
+			<div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+				<div>
+					<h5 class="mb-0 font-weight-bold text-dark"><i class="fa-solid fa-handshake text-success mr-2"></i>Seguimiento de Confirmaciones de Órdenes y RFQs</h5>
+					<div class="small text-muted">Acuse formal del proveedor, fecha ETA confirmada y estado de cotizaciones enviadas.</div>
+				</div>
+				<a href="{{ $U('/mrp?tab=ordenes') }}" class="btn btn-sm btn-outline-primary"><i class="fa-solid fa-arrow-up-right-from-square mr-1"></i>Ir a Planificación MRP</a>
 			</div>
-			<div class="card-body">
-				<div class="alert alert-info">
-					<i class="fa-solid fa-circle-info mr-2"></i>
-					El <strong>Portal B2B de Proveedores</strong> permite a los aliados comerciales consultar sus órdenes de compra activas, agendar citas de descarga en muelle, cargar manifiestos ASN electrónicos y consultar el estado contable de sus facturas en tiempo real.
-				</div>
+			<div class="table-responsive">
+				<table class="table table-hover table-sm mb-0">
+					<thead class="thead-light">
+						<tr>
+							<th>Orden OC</th>
+							<th>Proveedor</th>
+							<th>Sucursal</th>
+							<th>Estado</th>
+							<th>ETA Promesa / Confirmada</th>
+							<th>Contacto / Ref.</th>
+							<th class="text-right">Monto Est.</th>
+							<th class="text-center">Acción</th>
+						</tr>
+					</thead>
+					<tbody>
+						@forelse($confOrders as $co)
+						<tr>
+							<td class="font-mono font-weight-bold">{{ $co->order_code }}</td>
+							<td class="font-weight-600">{{ $co->supplier_name }}</td>
+							<td>{{ $co->branch_name }}</td>
+							<td>
+								@if($co->status === 'confirmed')
+								<span class="badge badge-primary">Confirmada Prov.</span>
+								@elseif($co->status === 'sent')
+								<span class="badge badge-info">Enviada · Esperando Conf.</span>
+								@elseif($co->status === 'approved')
+								<span class="badge badge-secondary">Aprobada · Por enviar</span>
+								@else
+								<span class="badge badge-warning text-dark">Parcial</span>
+								@endif
+							</td>
+							<td class="small font-weight-600">{{ $co->confirmed_delivery_date ?: ($co->expected_delivery_date ?: '—') }}</td>
+							<td class="small">{{ $co->confirmed_by_supplier_contact ?: '—' }} @if(!empty($co->supplier_confirmation_ref))<span class="badge badge-light border">{{ $co->supplier_confirmation_ref }}</span>@endif</td>
+							<td class="text-right font-weight-bold">${{ number_format(floatval($co->total_estimated_cost), 2) }}</td>
+							<td class="text-center">
+								@if($co->status === 'sent')
+								<button type="button" class="btn btn-xs btn-outline-info" onclick="DairySuppliers.ConfirmOrderPrompt({{ $co->id }}, {{ json_encode($co->order_code) }}, {{ json_encode($co->expected_delivery_date ?? '') }})">
+									<i class="fa-solid fa-check mr-1"></i>Confirmar ETA
+								</button>
+								@else
+								<a href="{{ $U('/document/order/' . $co->id) }}" class="btn btn-xs btn-outline-secondary"><i class="fa-solid fa-print"></i> OC</a>
+								@endif
+							</td>
+						</tr>
+						@empty
+						<tr><td colspan="8" class="text-center text-muted py-3">No hay órdenes activas esperando envío o confirmación de proveedor.</td></tr>
+						@endforelse
+					</tbody>
+				</table>
+			</div>
+		</div>
 
-				<div class="row">
-					<div class="col-md-4 mb-3">
-						<div class="border rounded p-3 h-100 bg-light">
-							<div class="d-flex align-items-center mb-2">
-								<div class="rounded-circle p-2 bg-primary text-white mr-2" style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;">
-									<i class="fa-solid fa-cart-shopping"></i>
-								</div>
-								<strong class="text-dark">1. Órdenes de Compra</strong>
-							</div>
-							<p class="small text-muted mb-2">Proveedores reciben órdenes en firme en formato EDI o PDF para iniciar alistamiento.</p>
-							<div class="small font-weight-bold text-success"><i class="fa-solid fa-circle mr-1" style="font-size:8px;"></i> 14 órdenes enviadas este mes</div>
-						</div>
-					</div>
-					<div class="col-md-4 mb-3">
-						<div class="border rounded p-3 h-100 bg-light">
-							<div class="d-flex align-items-center mb-2">
-								<div class="rounded-circle p-2 bg-warning text-dark mr-2" style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;">
-									<i class="fa-solid fa-calendar-check"></i>
-								</div>
-								<strong class="text-dark">2. Citas de Muelle (Slotting)</strong>
-							</div>
-							<p class="small text-muted mb-2">Reserva de horario de llegada en andén para evitar filas y cuellos de botella en recepción.</p>
-							<div class="small font-weight-bold text-primary"><i class="fa-solid fa-truck mr-1"></i> 6 citas programadas para hoy</div>
-						</div>
-					</div>
-					<div class="col-md-4 mb-3">
-						<div class="border rounded p-3 h-100 bg-light">
-							<div class="d-flex align-items-center mb-2">
-								<div class="rounded-circle p-2 bg-success text-white mr-2" style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;">
-									<i class="fa-solid fa-file-invoice"></i>
-								</div>
-								<strong class="text-dark">3. Carga ASN y Facturas</strong>
-							</div>
-							<p class="small text-muted mb-2">Carga automática de remisión electrónica y facturas fiscales XML/PDF para conciliación 3-Way.</p>
-							<div class="small font-weight-bold text-info"><i class="fa-solid fa-cloud-arrow-up mr-1"></i> Carga B2B activa</div>
-						</div>
-					</div>
-				</div>
-
-				<div class="d-flex justify-content-between align-items-center p-3 border rounded bg-white mt-2">
-					<div>
-						<span class="font-weight-bold text-dark">URL del Portal de Acceso Proveedores:</span>
-						<code class="ml-2">https://portal.dailyretail.com/b2b/suppliers</code>
-					</div>
-					<button type="button" class="btn btn-sm btn-outline-success font-weight-bold" onclick="alert('Enlace de invitación generado con token seguro de autenticación.');">
-						<i class="fa-solid fa-key mr-1"></i> Generar Invitación Proveedor
-					</button>
-				</div>
+		<div class="card shadow-sm border-0 mb-4">
+			<div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+				<h6 class="mb-0 font-weight-bold text-dark"><i class="fa-solid fa-file-pen text-primary mr-2"></i>Solicitudes de Cotización (RFQs)</h6>
+				<span class="badge badge-light border text-muted">{{ count($rfqList) }} solicitudes</span>
+			</div>
+			<div class="table-responsive">
+				<table class="table table-sm table-hover mb-0">
+					<thead class="thead-light">
+						<tr><th>Código RFQ</th><th>Proveedor</th><th>Sucursal</th><th>Asunto</th><th>Fecha Límite</th><th>Estado</th></tr>
+					</thead>
+					<tbody>
+						@forelse($rfqList as $rfq)
+						<tr>
+							<td class="font-mono font-weight-bold">{{ $rfq['rfq_code'] }}</td>
+							<td>{{ $rfq['supplier_name'] }}</td>
+							<td>{{ $rfq['branch_name'] }}</td>
+							<td>{{ $rfq['title'] }}</td>
+							<td class="small">{{ $rfq['deadline_date'] }}</td>
+							<td><span class="badge badge-info">{{ $rfq['status'] }}</span></td>
+						</tr>
+						@empty
+						<tr><td colspan="6" class="text-center text-muted py-3">No hay RFQs enviadas recientemente.</td></tr>
+						@endforelse
+					</tbody>
+				</table>
 			</div>
 		</div>
 	</div>
@@ -1116,14 +1097,33 @@
 						</div>
 					</div>
 					<div class="row">
-						<div class="col-md-6 form-group">
+						<div class="col-md-4 form-group">
 							<label class="font-weight-bold">Condiciones de Pago</label>
 							<input type="text" class="form-control" id="supplier-payment-terms" name="payment_terms" placeholder="p. ej. Crédito 15 días">
 						</div>
-						<div class="col-md-3 form-group">
-							<label class="font-weight-bold">Calificación Inicial (1-5)</label>
+						<div class="col-md-2 form-group">
+							<label class="font-weight-bold">Días Crédito</label>
+							<input type="number" class="form-control" id="supplier-credit-days" name="credit_days" value="15" min="0" max="180">
+						</div>
+						<div class="col-md-2 form-group">
+							<label class="font-weight-bold">Moneda</label>
+							<select class="custom-select" id="supplier-currency" name="currency_code">
+								<option value="USD">USD</option>
+								<option value="COP">COP</option>
+								<option value="MXN">MXN</option>
+								<option value="EUR">EUR</option>
+							</select>
+						</div>
+						<div class="col-md-2 form-group">
+							<label class="font-weight-bold">Incoterm</label>
+							<input type="text" class="form-control" id="supplier-incoterm" name="incoterm" placeholder="DDP/EXW">
+						</div>
+						<div class="col-md-2 form-group">
+							<label class="font-weight-bold">Calificación</label>
 							<input type="number" step="0.1" class="form-control" id="supplier-rating" name="rating" value="5.0" min="1" max="5">
 						</div>
+					</div>
+					<div class="row">
 						<div class="col-md-3 form-group">
 							<label class="font-weight-bold">Estado</label>
 							<select class="custom-select" id="supplier-active" name="active">
@@ -1131,10 +1131,10 @@
 								<option value="0">Inactivo</option>
 							</select>
 						</div>
-					</div>
-					<div class="form-group">
-						<label class="font-weight-bold">Descripción y Notas</label>
-						<textarea class="form-control" id="supplier-description" name="description" rows="2" placeholder="Flota refrigerada, requerimientos de entrega, etc."></textarea>
+						<div class="col-md-9 form-group">
+							<label class="font-weight-bold">Descripción y Notas Operativas</label>
+							<textarea class="form-control" id="supplier-description" name="description" rows="2" placeholder="Flota refrigerada, requerimientos de entrega, etc."></textarea>
+						</div>
 					</div>
 				</div>
 				<div class="modal-footer">
@@ -1173,23 +1173,31 @@
 						</select>
 					</div>
 					<div class="row">
-						<div class="col-md-6 form-group">
+						<div class="col-md-4 form-group">
 							<label class="font-weight-bold">Precio Unitario ($) *</label>
-							<input type="number" step="0.01" class="form-control font-weight-bold" name="price" required placeholder="0.00">
+							<input type="number" step="0.01" min="0.01" class="form-control font-weight-bold" name="price" required placeholder="0.00">
 						</div>
-						<div class="col-md-6 form-group">
-							<label class="font-weight-bold">Pedido Mínimo (Unidades)</label>
-							<input type="number" step="1" class="form-control" name="min_order_qty" value="10">
+						<div class="col-md-4 form-group">
+							<label class="font-weight-bold">MOQ (Mínimo u.)</label>
+							<input type="number" step="1" min="1" class="form-control" name="min_order_qty" value="1">
+						</div>
+						<div class="col-md-4 form-group">
+							<label class="font-weight-bold">Múltiplo Empaque</label>
+							<input type="number" step="1" min="1" class="form-control" name="order_multiple" value="1">
 						</div>
 					</div>
 					<div class="row">
-						<div class="col-md-6 form-group">
-							<label class="font-weight-bold">Días de Entrega</label>
-							<input type="number" class="form-control" name="delivery_lead_days" value="2">
+						<div class="col-md-4 form-group">
+							<label class="font-weight-bold">Días Entrega</label>
+							<input type="number" min="0" class="form-control" name="delivery_lead_days" value="2">
 						</div>
-						<div class="col-md-6 form-group">
+						<div class="col-md-4 form-group">
 							<label class="font-weight-bold">Vigente Desde</label>
 							<input type="date" class="form-control" name="valid_from" value="{{ date('Y-m-d') }}">
+						</div>
+						<div class="col-md-4 form-group">
+							<label class="font-weight-bold">Vigente Hasta</label>
+							<input type="date" class="form-control" name="valid_to">
 						</div>
 					</div>
 					<div class="form-group">
@@ -1200,6 +1208,68 @@
 				<div class="modal-footer">
 					<button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
 					<button type="submit" class="btn btn-primary"><i class="fa-solid fa-save mr-1"></i>Guardar Cotización</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+
+<!-- MODAL: Nuevo Contrato Comercial -->
+<div class="modal fade" id="modal-contract-form" tabindex="-1">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			<div class="modal-header bg-primary text-white">
+				<h5 class="modal-title"><i class="fa-solid fa-file-signature mr-2"></i>Registrar Contrato Comercial</h5>
+				<button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+			</div>
+			<form id="form-contract" onsubmit="DairySuppliers.SubmitContract(event)">
+				<div class="modal-body">
+					<div class="row">
+						<div class="col-md-6 form-group">
+							<label class="font-weight-bold">Proveedor *</label>
+							<select class="custom-select" name="supplier_id" required>
+								@foreach($suppliers as $s)
+								<option value="{{ $s['id'] }}">{{ $s['name'] }}</option>
+								@endforeach
+							</select>
+						</div>
+						<div class="col-md-6 form-group">
+							<label class="font-weight-bold">Título / Objeto del Acuerdo *</label>
+							<input type="text" class="form-control" name="title" required placeholder="Ej. Suministro continuo refrigerados">
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-md-3 form-group">
+							<label class="font-weight-bold">Inicio *</label>
+							<input type="date" class="form-control" name="start_date" value="{{ date('Y-m-d') }}" required>
+						</div>
+						<div class="col-md-3 form-group">
+							<label class="font-weight-bold">Vencimiento *</label>
+							<input type="date" class="form-control" name="end_date" value="{{ date('Y-m-d', strtotime('+1 year')) }}" required>
+						</div>
+						<div class="col-md-3 form-group">
+							<label class="font-weight-bold">Plazo Pago (días)</label>
+							<input type="number" class="form-control" name="payment_terms_days" value="30" min="0">
+						</div>
+						<div class="col-md-3 form-group">
+							<label class="font-weight-bold">Pedido Mínimo ($)</label>
+							<input type="number" step="0.01" class="form-control" name="minimum_order_val" value="0" min="0">
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-md-6 form-group">
+							<label class="font-weight-bold">Descuentos / Condiciones</label>
+							<input type="text" class="form-control" name="discount_terms" placeholder="Ej. 2% pronto pago a 10 días">
+						</div>
+						<div class="col-md-6 form-group">
+							<label class="font-weight-bold">Responsable</label>
+							<input type="text" class="form-control" name="responsible_name" placeholder="Gerencia de Compras">
+						</div>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+					<button type="submit" class="btn btn-primary"><i class="fa-solid fa-save mr-1"></i>Guardar Contrato</button>
 				</div>
 			</form>
 		</div>
@@ -1317,7 +1387,10 @@
 <script>
 var DairySuppliers = {
 	Init: function() {
-		this.LoadComparison(30); // Cargar Leche entera 1 galón por defecto
+		var initialPid = $('#compare-product-select').val();
+		if (initialPid) {
+			this.LoadComparison(initialPid);
+		}
 	},
 
 	FilterTable: function() {
@@ -1358,6 +1431,9 @@ var DairySuppliers = {
 		$('#supplier-lead-time').val(s.lead_time_days || 2);
 		$('#supplier-min-order').val(s.min_order_amount || 0);
 		$('#supplier-payment-terms').val(s.payment_terms || '');
+		$('#supplier-credit-days').val(s.credit_days != null ? s.credit_days : 15);
+		$('#supplier-currency').val(s.currency_code || 'USD');
+		$('#supplier-incoterm').val(s.incoterm || '');
 		$('#supplier-rating').val(s.rating || 5);
 		$('#supplier-active').val(s.active);
 		$('#supplier-description').val(s.description || '');
@@ -1461,8 +1537,8 @@ var DairySuppliers = {
 							'<hr class="my-2">' +
 							'<ul class="list-unstyled small mb-3">' +
 								'<li class="mb-1"><strong><i class="fa-solid fa-truck mr-1 text-muted"></i>Tiempo de Entrega:</strong> ' + opt.delivery_lead_days + ' días</li>' +
-								'<li class="mb-1"><strong><i class="fa-solid fa-boxes-stacked mr-1 text-muted"></i>Pedido Mínimo:</strong> ' + opt.min_order_qty + ' unidades</li>' +
-								'<li class="mb-1"><strong><i class="fa-solid fa-credit-card mr-1 text-muted"></i>Condiciones:</strong> ' + (opt.payment_terms || 'Sin definir') + '</li>' +
+								'<li class="mb-1"><strong><i class="fa-solid fa-boxes-stacked mr-1 text-muted"></i>MOQ / Múltiplo:</strong> ' + opt.min_order_qty + ' u. (×' + (opt.order_multiple || 1) + ')</li>' +
+								'<li class="mb-1"><strong><i class="fa-solid fa-credit-card mr-1 text-muted"></i>Condiciones:</strong> ' + (opt.payment_terms || 'Sin definir') + ' (' + (opt.currency_code || 'USD') + ')</li>' +
 								'<li class="mb-1"><strong><i class="fa-solid fa-star text-warning mr-1"></i>Calificación:</strong> ' + (opt.supplier_rating != null ? opt.supplier_rating + ' / 5.0' : 'Sin calificar') + '</li>' +
 								'<li class="mb-1"><strong><i class="fa-solid fa-chart-line text-success mr-1"></i>Puntualidad OTIF:</strong> ' + (opt.otif_percentage != null ? opt.otif_percentage + '%' : 'sin entregas registradas') + '</li>' + '<li class="mb-1"><strong><i class="fa-solid fa-ranking-star text-primary mr-1"></i>Puntaje:</strong> ' + opt.score + ' / 100 <small class="text-muted">(' + (opt.score_basis || []).join(', ') + ')</small></li>' +
 							'</ul>' +
@@ -1557,14 +1633,13 @@ var DairySuppliers = {
 	QuickCreateOrder: function(rec) {
 		bootbox.confirm('¿Generar orden de compra borrador por ' + rec.recommended_order_qty + ' ' + rec.qu_name + ' de ' + rec.product_name + ' con el proveedor ' + rec.suggested_supplier_name + '?', function(ok) {
 			if (!ok) return;
-			// Orden de compra real (procurement_orders): se aprueba, envía y recibe en Planificación MRP
 			Grocy.FrontendHelpers.BeginUiBusy();
 			fetch(Grocy.BaseUrl + '/api/mrp/order/create', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
 					supplier_id: rec.suggested_supplier_id,
-					branch_id: 1,
+					branch_id: @json($selectedBranchId ?? 1),
 					items: [{ product_id: rec.product_id, amount: rec.recommended_order_qty, unit_price: rec.unit_price }]
 				})
 			})
@@ -1582,6 +1657,93 @@ var DairySuppliers = {
 				Grocy.FrontendHelpers.EndUiBusy();
 				toastr.error('Error de conexión');
 			});
+		});
+	},
+
+	SubmitContract: function(e) {
+		e.preventDefault();
+		var data = $(e.target).serializeJSON();
+		Grocy.FrontendHelpers.BeginUiBusy();
+		fetch(Grocy.BaseUrl + '/api/suppliers/contracts', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify(data)
+		})
+		.then(function(r) { return r.json(); })
+		.then(function(res) {
+			Grocy.FrontendHelpers.EndUiBusy();
+			if (res.success) {
+				toastr.success(res.message);
+				$('#modal-contract-form').modal('hide');
+				window.location.reload();
+			} else {
+				toastr.error(res.error_message || 'Error al guardar contrato');
+			}
+		});
+	},
+
+	InspectInvoice: function(id, code, pending) {
+		var issueLabel = { qty_over_received: 'Factura más de lo recibido', qty_over_ordered: 'Factura más de lo pedido', price_over_po: 'Precio sobre la OC' };
+		$.getJSON(Grocy.BaseUrl + '/api/mrp/invoices/' + id + '/items').done(function(rows) {
+			var html = '<div class="table-responsive"><table class="table table-sm mb-0"><thead><tr><th>Producto</th><th class="text-right">Pedido</th><th class="text-right">Recibido</th><th class="text-right">Facturado</th><th class="text-right">Precio OC</th><th class="text-right">Precio fact.</th><th>Diferencia</th></tr></thead><tbody>'
+				+ rows.map(function(r) {
+					var iss = (r.issues || '').split(',').filter(Boolean).map(function(c) { return '<span class="badge badge-danger mr-1">' + (issueLabel[c] || c) + '</span>'; }).join('');
+					return '<tr><td>' + r.product_name + '</td><td class="text-right">' + r.ordered_amount + '</td><td class="text-right">' + r.received_amount + '</td><td class="text-right">' + (Number(r.previously_invoiced) + Number(r.invoiced_amount)) + '</td>'
+						+ '<td class="text-right">' + (r.order_unit_price !== null ? '$' + Number(r.order_unit_price).toFixed(2) : '—') + '</td><td class="text-right">$' + Number(r.invoice_unit_price).toFixed(2) + '</td>'
+						+ '<td>' + (iss || '<span class="text-success">OK</span>') + (Number(r.amount_at_risk) > 0 ? ' <strong class="text-danger">$' + Number(r.amount_at_risk).toFixed(2) + '</strong>' : '') + '</td></tr>';
+				}).join('') + '</tbody></table></div>';
+			var buttons = { close: { label: 'Cerrar', className: 'btn-light border' } };
+			if (pending) {
+				var decide = function(approve) {
+					bootbox.prompt({
+						title: approve ? 'Aprobar pagando la diferencia. Motivo:' : 'Rechazar la factura. Motivo:',
+						callback: function(reason) {
+							if (reason === null) return;
+							if (!reason.trim()) { toastr.warning('Indique el motivo'); return false; }
+							$.ajax({
+								url: Grocy.BaseUrl + '/api/mrp/invoices/' + id + '/decide',
+								method: 'POST',
+								contentType: 'application/json',
+								data: JSON.stringify({ approve: approve, reason: reason })
+							}).done(function() {
+								toastr.success(approve ? 'Factura aprobada con diferencia' : 'Factura rechazada');
+								setTimeout(function() { location.reload(); }, 700);
+							}).fail(function(xhr) {
+								toastr.error((xhr.responseJSON && xhr.responseJSON.error_message) || xhr.statusText);
+							});
+						}
+					});
+				};
+				buttons.reject = { label: 'Rechazar', className: 'btn-outline-danger', callback: function() { decide(false); } };
+				buttons.approve = { label: 'Aprobar con diferencia', className: 'btn-warning', callback: function() { decide(true); } };
+			}
+			bootbox.dialog({ title: 'Conciliación 3-Way · ' + code, message: html, size: 'extra-large', buttons: buttons });
+		});
+	},
+
+	ConfirmOrderPrompt: function(orderId, orderCode, defaultEta) {
+		bootbox.prompt({
+			title: 'Confirmar ETA del proveedor para ' + orderCode,
+			inputType: 'date',
+			value: defaultEta || moment().add(2, 'days').format('YYYY-MM-DD'),
+			callback: function(eta) {
+				if (!eta) return;
+				$.ajax({
+					url: Grocy.BaseUrl + '/api/mrp/order/' + orderId + '/confirm',
+					method: 'POST',
+					contentType: 'application/json',
+					data: JSON.stringify({
+						confirmed_by_supplier_contact: 'Confirmación Portal B2B',
+						supplier_confirmation_ref: 'CONF-' + orderCode,
+						confirmed_delivery_date: eta
+					})
+				}).done(function() {
+					toastr.success('Confirmación de proveedor registrada');
+					setTimeout(function() { location.reload(); }, 700);
+				}).fail(function(xhr) {
+					toastr.error((xhr.responseJSON && xhr.responseJSON.error_message) || xhr.statusText);
+				});
+			}
 		});
 	},
 

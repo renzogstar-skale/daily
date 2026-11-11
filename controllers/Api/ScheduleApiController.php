@@ -60,13 +60,27 @@ class ScheduleApiController extends BaseApiController
 		return $request->getParsedBody() ?? [];
 	}
 
+	private function IsEmployeeRole(): bool
+	{
+		return DairyAccess::GetSimulatedRole() === 'empleado'
+			|| !DairyAccess::HasAny([User::PERMISSION_WORKFORCE_SCHEDULE_MANAGE, User::PERMISSION_WORKFORCE_ATTENDANCE_MANAGE]);
+	}
+
 	private function Manage(Request $request): void
 	{
+		if (DairyAccess::GetSimulatedRole() === 'empleado')
+		{
+			throw new \Exception('Acción restringida para rol empleado');
+		}
 		User::CheckPermission($request, User::PERMISSION_WORKFORCE_SCHEDULE_MANAGE);
 	}
 
 	private function ForecastPerm(Request $request): void
 	{
+		if (DairyAccess::GetSimulatedRole() === 'empleado')
+		{
+			throw new \Exception('Acción restringida para rol empleado');
+		}
 		if (!DairyAccess::HasAny([User::PERMISSION_WORKFORCE_SCHEDULE_MANAGE, User::PERMISSION_KPIS_VIEW]))
 		{
 			User::CheckPermission($request, User::PERMISSION_WORKFORCE_SCHEDULE_MANAGE);
@@ -626,6 +640,7 @@ class ScheduleApiController extends BaseApiController
 
 	public function GetEquity(Request $request, Response $response, array $args)
 	{
+		$this->Manage($request);
 		$q = $request->getQueryParams();
 		return $this->Run($response, function () use ($q) {
 			$branchId = intval($q['branch_id'] ?? 1) ?: 1;
@@ -942,6 +957,7 @@ class ScheduleApiController extends BaseApiController
 
 	public function ExportMonthlySchedule(Request $request, Response $response, array $args)
 	{
+		$this->Manage($request);
 		$q = $request->getQueryParams();
 		$branchId = isset($q['branch_id']) ? intval($q['branch_id']) : 1;
 		$year = isset($q['year']) ? intval($q['year']) : 2026;
@@ -956,6 +972,7 @@ class ScheduleApiController extends BaseApiController
 
 	public function GetSkillsMatrix(Request $request, Response $response, array $args)
 	{
+		$this->Manage($request);
 		return $this->Run($response, function () {
 			return $this->Auto()->GetSkillsMatrix();
 		});
@@ -975,8 +992,16 @@ class ScheduleApiController extends BaseApiController
 	{
 		$q = $request->getQueryParams();
 		$month = $q['month'] ?? null;
-		return $this->Run($response, function () use ($month) {
-			return $this->Auto()->GetVacations($month);
+		$isEmployee = $this->IsEmployeeRole();
+		return $this->Run($response, function () use ($month, $isEmployee) {
+			$list = $this->Auto()->GetVacations($month);
+			if ($isEmployee)
+			{
+				$my = $this->Svc()->GetMySchedule(GROCY_USER_ID);
+				$myCode = $my['employee']->payroll_code ?? null;
+				return array_values(array_filter($list, fn($v) => ($v->payroll_code ?? ($v['payroll_code'] ?? null)) === $myCode));
+			}
+			return $list;
 		});
 	}
 
@@ -1048,6 +1073,7 @@ class ScheduleApiController extends BaseApiController
 
 	public function GetDemoCoverageMatrix(Request $request, Response $response, array $args)
 	{
+		$this->Manage($request);
 		$q = $request->getQueryParams();
 		$demoSvc = \Grocy\Services\DemoSchedulingScenarioService::GetInstance();
 		$branchId = !empty($q['branch_id']) ? intval($q['branch_id']) : \Grocy\Services\AttendanceService::GetInstance()->ResolveBranchId(null);
@@ -1086,6 +1112,148 @@ class ScheduleApiController extends BaseApiController
 				'case' => $sc,
 				'message' => "Caso de validación activado: {$sc['title']}"
 			];
+		});
+	}
+
+	/* =========================================================================
+	 * Ausencias, Cambios de Turno, Cobertura Dpto×Hora, Jurisdicción y Compensatorios
+	 * ========================================================================= */
+
+	public function RequestAbsence(Request $request, Response $response, array $args)
+	{
+		$body = $this->Body($request);
+		$isEmployee = $this->IsEmployeeRole();
+		return $this->Run($response, function () use ($body, $isEmployee) {
+			if ($isEmployee)
+			{
+				$my = $this->Svc()->GetMySchedule(GROCY_USER_ID);
+				if (empty($my['employee']->id))
+				{
+					throw new \Exception('Su usuario no tiene ficha de colaborador vinculada');
+				}
+				$myId = intval($my['employee']->id);
+				if (!empty($body['employee_id']) && intval($body['employee_id']) !== $myId)
+				{
+					throw new \Exception('Un empleado solo puede registrar sus propias ausencias');
+				}
+				$body['employee_id'] = $myId;
+			}
+			$id = $this->Svc()->RequestAbsence($body, GROCY_USER_ID);
+			return ['id' => $id];
+		});
+	}
+
+	public function DecideAbsence(Request $request, Response $response, array $args)
+	{
+		$this->Manage($request);
+		$body = $this->Body($request);
+		return $this->Run($response, function () use ($args, $body) {
+			$approve = !empty($body['approve']) && strval($body['approve']) !== 'false';
+			return $this->Svc()->DecideAbsence(intval($args['id']), $approve, GROCY_USER_ID);
+		});
+	}
+
+	public function RequestSwap(Request $request, Response $response, array $args)
+	{
+		$body = $this->Body($request);
+		$isEmployee = $this->IsEmployeeRole();
+		return $this->Run($response, function () use ($body, $isEmployee) {
+			$shiftId = intval($body['shift_id'] ?? 0);
+			$toEmployeeId = intval($body['to_employee_id'] ?? 0);
+			$targetShiftId = !empty($body['target_shift_id']) ? intval($body['target_shift_id']) : null;
+			$notes = !empty($body['notes']) ? strval($body['notes']) : null;
+			if ($isEmployee)
+			{
+				$my = $this->Svc()->GetMySchedule(GROCY_USER_ID);
+				$myId = !empty($my['employee']->id) ? intval($my['employee']->id) : 0;
+				$shift = $this->Svc()->GetShift($shiftId);
+				if ($myId <= 0 || intval($shift->employee_id) !== $myId)
+				{
+					throw new \Exception('Solo puede solicitar cambio sobre sus propios turnos');
+				}
+			}
+			$id = $this->Svc()->RequestSwap($shiftId, $toEmployeeId, GROCY_USER_ID, $notes, $targetShiftId);
+			return ['id' => $id];
+		});
+	}
+
+	public function DecideSwap(Request $request, Response $response, array $args)
+	{
+		$this->Manage($request);
+		$body = $this->Body($request);
+		return $this->Run($response, function () use ($args, $body) {
+			$approve = !empty($body['approve']) && strval($body['approve']) !== 'false';
+			return $this->Svc()->DecideSwap(intval($args['id']), $approve, GROCY_USER_ID);
+		});
+	}
+
+	public function GetJurisdictions(Request $request, Response $response, array $args)
+	{
+		return $this->Run($response, function () {
+			return \Grocy\Services\WorkforceLaborRulesService::GetJurisdictionProfiles();
+		});
+	}
+
+	public function GetDepartmentHourlyCoverage(Request $request, Response $response, array $args)
+	{
+		$q = $request->getQueryParams();
+		return $this->Run($response, function () use ($q) {
+			$branchId = $this->Branch(intval($q['branch_id'] ?? 1) ?: 1);
+			$date = $this->Day($q['date'] ?? null);
+			$syncAlerts = !empty($q['sync_alerts']) && !$this->IsEmployeeRole();
+			$cov = $this->Svc()->CoverageByDepartmentAndHour($branchId, $date);
+			if ($syncAlerts)
+			{
+				$cov['alerts'] = $this->Svc()->EvaluateAndSyncCoverageAlerts($branchId, $date);
+			}
+			return $cov;
+		});
+	}
+
+	public function GetCompensatoryLedger(Request $request, Response $response, array $args)
+	{
+		$q = $request->getQueryParams();
+		$isEmployee = $this->IsEmployeeRole();
+		return $this->Run($response, function () use ($q, $isEmployee) {
+			$branchId = $this->Branch(intval($q['branch_id'] ?? 1) ?: 1);
+			$empId = !empty($q['employee_id']) ? intval($q['employee_id']) : null;
+			if ($isEmployee)
+			{
+				$my = $this->Svc()->GetMySchedule(GROCY_USER_ID);
+				$empId = !empty($my['employee']->id) ? intval($my['employee']->id) : -1;
+			}
+			return $this->Svc()->GetCompensatoryLedger($branchId, $empId, strval($q['today'] ?? 'now'));
+		});
+	}
+
+	public function AccrueOrRedeemCompensatory(Request $request, Response $response, array $args)
+	{
+		$this->Manage($request);
+		$body = $this->Body($request);
+		return $this->Run($response, function () use ($body) {
+			$employeeId = intval($body['employee_id'] ?? 0);
+			$originSunday = strval($body['origin_sunday'] ?? '');
+			$choosePayout = !empty($body['choose_payout']) && strval($body['choose_payout']) !== 'false';
+			$redeemDate = !empty($body['redeem_date']) ? strval($body['redeem_date']) : null;
+			return $this->Svc()->AccrueOrRedeemCompensatory($employeeId, $originSunday, $choosePayout, $redeemDate, GROCY_USER_ID);
+		});
+	}
+
+	public function GetVacationBalances(Request $request, Response $response, array $args)
+	{
+		$q = $request->getQueryParams();
+		$isEmployee = $this->IsEmployeeRole();
+		return $this->Run($response, function () use ($q, $isEmployee) {
+			$branchId = $this->Branch(intval($q['branch_id'] ?? 1) ?: 1);
+			$year = !empty($q['year']) ? intval($q['year']) : 2026;
+			$list = $this->Svc()->GetVacationBalances($branchId, $year);
+			if ($isEmployee)
+			{
+				$my = $this->Svc()->GetMySchedule(GROCY_USER_ID);
+				$myId = !empty($my['employee']->id) ? intval($my['employee']->id) : 0;
+				return array_values(array_filter($list, fn($v) => intval($v['employee_id']) === $myId));
+			}
+			return $list;
 		});
 	}
 }
