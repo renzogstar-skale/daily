@@ -99,7 +99,9 @@ html.daily-dark .ded-state-pill.is-no_data { color: #94a3b8; }
 	$epPrevPer = \Grocy\Helpers\DailyFilters::PeriodLabel($epPrevFrom, $epPrevTo);
 
 	$hasSalesData = !empty($fs['has_data']) || ($sKpis['sales']['has_data'] ?? false);
-	$epNet = ($sKpis['sales']['has_data'] ?? false) ? floatval($fs['net_sales'] ?? 0) : null;
+	// Mismo estado de datos que HOY: $0 solo con corte confirmado; sin corte, «Sin información» y sin variación
+	$epSalesState = $epM->SalesDataState($selectedBranchId ?: null, $epR['start'], $epR['end'], (bool) ($sKpis['sales']['has_data'] ?? false));
+	$epNet = $epSalesState === 'data' ? floatval($fs['net_sales'] ?? 0) : ($epSalesState === 'confirmed_zero' ? 0.0 : null);
 	$epPrevNet = ($epP['sales']['has_data'] ?? false) ? floatval($epP['sales']['net_sales']) : null;
 	$salesDeltaPct = ($epNet !== null && $epPrevNet !== null && $epPrevNet > 0)
 		? round(($epNet - $epPrevNet) / $epPrevNet * 100, 1)
@@ -301,6 +303,8 @@ html.daily-dark .ded-state-pill.is-no_data { color: #94a3b8; }
 						@php
 							$bId = is_array($b) ? $b['id'] : $b->id;
 							$bName = trim(str_replace('[DEMO]', '', is_array($b) ? $b['name'] : $b->name));
+							$bCode = is_array($b) ? ($b['code'] ?? '') : ($b->code ?? '');
+							if ($bCode !== '' && $bCode !== null && !str_contains($bName, $bCode)) $bName .= ' · ' . $bCode;
 						@endphp
 						<option value="{{ $bId }}" @if((int)$selectedBranchId === (int)$bId) selected @endif>{{ $bName }}</option>
 					@endforeach
@@ -311,7 +315,7 @@ html.daily-dark .ded-state-pill.is-no_data { color: #94a3b8; }
 			<div class="ded-dropdown-container position-relative">
 				<button type="button" class="ded-select-btn ded-dropdown-toggle" id="btnExecDepartments" title="Filtrar por departamento">
 					<i data-lucide="layers"></i>
-					<span>{{ !empty($selectedDepartment) && $selectedDepartment !== 'todos' ? ($deptCatalog[$selectedDepartment][0] ?? 'Departamento') : 'Todos los departamentos' }}</span>
+					<span>{{ !empty($selectedDepartment) && $selectedDepartment !== 'todos' ? (isset($deptCatalog[$selectedDepartment]) ? \Grocy\Services\DailyMetricsService::DepartmentLabel($selectedDepartment) : 'Departamento') : 'Todos los departamentos' }}</span>
 					<i data-lucide="chevron-down" class="ded-chevron"></i>
 				</button>
 				<div class="ded-dropdown-menu dropdown-menu-right" aria-labelledby="btnExecDepartments" style="min-width: 220px;">
@@ -322,7 +326,7 @@ html.daily-dark .ded-state-pill.is-no_data { color: #94a3b8; }
 					<div class="dropdown-divider my-1"></div>
 					@foreach($deptCatalog as $dKey => $dDef)
 					<a href="{{ $ctxUrl('/kpis', ['department' => $dKey]) }}" class="ded-dropdown-item @if(($selectedDepartment ?? '') === $dKey) is-active @endif">
-						<span>{{ $dDef[0] }}</span>
+						<span>{{ \Grocy\Services\DailyMetricsService::DepartmentLabel($dKey) }}</span>
 					</a>
 					@endforeach
 				</div>

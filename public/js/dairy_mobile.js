@@ -49,11 +49,19 @@
 		if (!$c.find('.btn, button, select, input:not([type=hidden]), .dropdown').length) { return false; }
 		return $.trim($c.clone().find('.btn, button, select, input, .dropdown, .badge').remove().end().text()).length === 0;
 	}
+	// Tablas que no son listados de datos: calendarios, selectores de fecha, editores y tablas anidadas
+	var NOT_DATA = '.dataTables_scrollHead, .dataTables_scrollFoot, .daterangepicker, .fc, .bootstrap-datetimepicker-widget, .tempusdominus-bootstrap-4, .note-editor, .datepicker, [data-dairy-no-cards]';
 	function cardTable(table) {
 		var $t = $(table);
-		if (!$t.is('table') || $t.is(KEEP_TABLE) || $t.closest('.dataTables_scrollHead, .dataTables_scrollFoot, .daterangepicker').length) { return; }
+		if (!$t.is('table') || $t.is(KEEP_TABLE) || $t.is('.dairy-fit-table') || $t.closest(NOT_DATA).length || $t.parent().closest('table').length) { return; }
 		var heads = $t.find('> thead > tr:last-child > th, > thead > tr:last-child > td').map(function() { return $.trim($(this).text()); }).get();
-		if (heads.length < 4) { return; }
+		if (heads.length < 4) {
+			// 2–3 columnas (clave/valor, rankings cortos): caben en pantalla; solo se quita el ancho mínimo de escritorio
+			var cols = heads.length || $t.find('> tbody > tr:first-child > td, > tbody > tr:first-child > th').length;
+			if (cols > 0 && cols < 4) { $t.addClass('dairy-fit-table'); }
+			if (heads.length === 0 && cols >= 4) { heads = new Array(cols).join('.').split('.').map(function() { return ''; }); }
+			else { return; }
+		}
 		var titleCol = -1;
 		$.each(heads, function(i, h) { if (titleCol < 0 && /^(producto|product|nombre|name|artículo|empleado|proveedor|cliente)(\s|$)/i.test(h)) { titleCol = i; } });
 		$t.addClass('dairy-card-table');
@@ -84,7 +92,7 @@
 	}
 	function cardTables() {
 		if (!mqMobile.matches) { return; }
-		$('#page-content table.table, .modal table.table').each(function() { cardTable(this); });
+		$('#page-content table, .modal table').each(function() { cardTable(this); });
 	}
 	$(document).on('click', '.dairy-card-more', function(e) {
 		e.preventDefault();
@@ -138,8 +146,14 @@
 
 	/* ---------- Teclado abierto: oculta barra inferior y centra el campo enfocado ---------- */
 	var KB_FIELDS = 'input:not([type=checkbox]):not([type=radio]):not([type=button]):not([type=submit]):not([type=file]):not([type=range]), textarea, select';
+	// Solo cuenta como teclado abierto el foco que pone la persona (toque) o un visor que se achica: el autofoco
+	// de /scan, /purchase o /consume no abre el teclado en el teléfono y antes escondía la barra inferior.
+	var lastTouch = 0;
+	document.addEventListener('pointerdown', function() { lastTouch = Date.now(); }, true);
+	var vv = window.visualViewport;
+	function kbByViewport() { return !!vv && window.innerHeight - vv.height > 120; }
 	$(document).on('focusin', KB_FIELDS, function() {
-		if (!mqMobile.matches) { return; }
+		if (!mqMobile.matches || (Date.now() - lastTouch > 1500 && !kbByViewport())) { return; }
 		var el = this;
 		$('body').addClass('dairy-kb-open');
 		setTimeout(function() { if (document.activeElement === el && el.scrollIntoView) { el.scrollIntoView({ block: 'center' }); } }, 300);
@@ -147,6 +161,13 @@
 	$(document).on('focusout', KB_FIELDS, function() {
 		setTimeout(function() { if (!$(document.activeElement).is(KB_FIELDS)) { $('body').removeClass('dairy-kb-open'); } }, 100);
 	});
+	if (vv) {
+		vv.addEventListener('resize', function() {
+			if (!mqMobile.matches) { return; }
+			var open = kbByViewport() && $(document.activeElement).is(KB_FIELDS);
+			$('body').toggleClass('dairy-kb-open', open);
+		});
+	}
 
 	/* ---------- Escáner de códigos ---------- */
 	var reader = null, stream = null, busy = false, session = 0;

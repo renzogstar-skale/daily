@@ -1102,7 +1102,7 @@
 					RECIBE INFORMACIÓN DE
 				</div>
 				
-				<a href="{{ $U('/quality-expiry') }}" class="daily-conn-card">
+				<a href="{{ $U('/waste#tab-fefo') }}" class="daily-conn-card">
 					<div class="d-flex align-items-center" style="gap: 0.75rem;">
 						<div style="color: #00C83B; font-size: 1.15rem;"><i class="fa-solid fa-gear"></i></div>
 						<div>

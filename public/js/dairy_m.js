@@ -40,7 +40,7 @@
 	function can(p) { var ps = (S.me && S.me.permissions) || []; return ps.indexOf('ADMIN') >= 0 || [].concat(p).some(function (x) { return ps.indexOf(x) >= 0; }); }
 	var P = {
 		sales: ['SALES_VIEW', 'KPIS_VIEW'], stock: ['STOCK'], waste: ['WASTE_REPORT', 'WASTE_APPROVE', 'KPIS_VIEW'],
-		wasteReport: ['WASTE_REPORT'], count: ['STOCK_INVENTORY'], move: ['STOCK_TRANSFER']
+		wasteReport: ['WASTE_REPORT'], count: ['STOCK_INVENTORY'], move: ['STOCK_TRANSFER'], receive: ['STOCK_PURCHASE']
 	};
 	function key() { return (window.crypto && crypto.randomUUID) ? 'm-' + crypto.randomUUID() : 'm-' + Date.now().toString(36) + Math.random().toString(36).slice(2); }
 
@@ -803,8 +803,8 @@
 	function stepper(id, v) { return '<div class="m-stepper"><button type="button" data-step="-1" data-for="' + id + '" aria-label="Menos">−</button><input class="m-input" id="' + id + '" type="number" inputmode="decimal" min="0" step="any" value="' + h(v == null ? '' : v) + '"><button type="button" data-step="1" data-for="' + id + '" aria-label="Más">+</button></div>'; }
 	function bindStepper(root) { root.querySelectorAll('[data-step]').forEach(function (b) { b.onclick = function () { var i = root.querySelector('#' + b.dataset.for); i.value = Math.max(0, (Number(i.value) || 0) + Number(b.dataset.step)); i.dispatchEvent(new Event('input')); }; }); }
 
-	var CAPTURE = { waste: 'Registrar merma', count: 'Conteo rápido', adjust: 'Ajuste de inventario', move: 'Mover entre ubicaciones' };
-	var CAP_PERM = { waste: P.wasteReport, count: P.count, adjust: P.count, move: P.move };
+	var CAPTURE = { waste: 'Registrar merma', count: 'Conteo rápido', adjust: 'Ajuste de inventario', move: 'Mover entre ubicaciones', receive: 'Recepción de producto' };
+	var CAP_PERM = { waste: P.wasteReport, count: P.count, adjust: P.count, move: P.move, receive: P.receive };
 	VIEWS.capture = async function (r) {
 		var kind = r.path[1] || 'waste';
 		if (!CAPTURE[kind] || !can(CAP_PERM[kind])) { throw new Error('No tiene permiso para esta captura'); }
@@ -814,17 +814,23 @@
 		var F = { kind: kind, product: prod, reason: null, photo: null };
 		var html = '<form id="m-form" novalidate>';
 		html += '<div class="m-field"><span class="m-label">Producto</span><div id="m-prod"></div><div class="m-err" id="e-prod" hidden></div></div>';
-		html += '<div class="m-field" id="f-loc"></div>';
+		html += '<div class="m-field" id="f-loc"' + (kind === 'receive' ? ' hidden' : '') + '></div>';
 		if (kind === 'move') { html += '<div class="m-field" id="f-loc2"></div>'; }
-		html += '<div class="m-field"><label for="m-amt">' + (kind === 'count' ? 'Cantidad contada' : (kind === 'adjust' ? 'Cantidad real' : 'Cantidad')) + '</label>' + stepper('m-amt', kind === 'waste' || kind === 'move' ? 1 : '') + '<div class="m-sub" id="m-amt-hint" style="margin-top:6px"></div><div class="m-err" id="e-amt" hidden></div></div>';
+		html += '<div class="m-field"><label for="m-amt">' + (kind === 'count' ? 'Cantidad contada' : (kind === 'adjust' ? 'Cantidad real' : (kind === 'receive' ? 'Cantidad recibida' : 'Cantidad'))) + '</label>' + stepper('m-amt', kind === 'waste' || kind === 'move' || kind === 'receive' ? 1 : '') + '<div class="m-sub" id="m-amt-hint" style="margin-top:6px"></div><div class="m-err" id="e-amt" hidden></div></div>';
+		if (kind === 'receive') {
+			// Recepción: cantidad esperada (si difiere, queda la diferencia registrada) y documento del proveedor
+			html += '<div class="m-field"><label for="m-exp">Cantidad esperada (opcional)</label><input type="number" inputmode="decimal" min="0" step="any" id="m-exp" class="m-input" placeholder="Igual a la recibida"></div>'
+				+ '<div class="m-field"><label for="m-doc">Documento (orden, factura o guía)</label><input type="text" id="m-doc" class="m-input" autocomplete="off" placeholder="Ej.: PO-2026-0012"></div>'
+				+ '<div class="m-field"><label for="m-sup">Proveedor (opcional)</label><input type="text" id="m-sup" class="m-input" autocomplete="off"></div>';
+		}
 		if (kind === 'waste') {
 			html += '<div class="m-field"><span class="m-label">Motivo</span><div class="m-reasons">' + lk.reasons.map(function (x, i) { var bk = BUCKETS[x.bucket] || BUCKETS.operativa; return '<button type="button" class="m-reason" data-reason="' + x.id + '"' + (i >= 6 ? ' hidden' : '') + '><span class="m-dot c-' + bk[1] + '"></span>' + h(x.name) + '</button>'; }).join('') + '</div>'
 				+ (lk.reasons.length > 6 ? '<button type="button" class="m-btn ghost sm" id="m-more-r" style="width:100%;margin-top:8px">Más motivos (' + (lk.reasons.length - 6) + ')</button>' : '') + '<div class="m-err" id="e-reason" hidden></div></div>';
 			html += '<div class="m-field"><span class="m-label">Evidencia <span id="m-ev-req"></span></span><label class="m-photo-btn" for="m-photo"><i class="fa-solid fa-camera"></i> <span id="m-photo-l">Tomar o elegir foto</span></label><input type="file" id="m-photo" accept="image/*" hidden><img id="m-photo-prev" class="m-photo" hidden alt="Vista previa"><div class="m-err" id="e-photo" hidden></div></div>';
 		}
 		if (kind !== 'move') { html += '<div class="m-field"><label for="m-notes">' + (kind === 'adjust' ? 'Motivo del ajuste' : 'Nota (opcional)') + '</label><textarea id="m-notes" class="m-input" rows="2" placeholder="' + (kind === 'adjust' ? 'Ej.: producto encontrado en bodega, error de recepción…' : '') + '"></textarea><div class="m-err" id="e-notes" hidden></div></div>'; }
-		var info = { waste: 'Queda por aprobar si la causal lo exige; el stock se descuenta al aprobar.', count: 'Conteo ciego: no ve el stock del sistema. Si hay diferencia, queda para aprobación de otra persona.', adjust: 'El ajuste no se aplica directo: genera una diferencia que otra persona aprueba (segregación de funciones).', move: 'Mueve existencias entre ubicaciones de la misma sucursal. Para otra sucursal use Traslados en la versión web.' };
-		html += '<div class="m-info">' + info[kind] + '</div><button type="submit" class="m-btn accent" id="m-submit"><i class="fa-solid fa-check"></i> ' + (kind === 'waste' ? 'Registrar merma' : (kind === 'move' ? 'Mover' : 'Registrar')) + '</button></form>';
+		var info = { receive: 'Registra la entrada de mercadería en la sucursal; si lo recibido difiere de lo esperado, la diferencia queda para conciliación.', waste: 'Queda por aprobar si la causal lo exige; el stock se descuenta al aprobar.', count:'Conteo ciego: no ve el stock del sistema. Si hay diferencia, queda para aprobación de otra persona.', adjust: 'El ajuste no se aplica directo: genera una diferencia que otra persona aprueba (segregación de funciones).', move: 'Mueve existencias entre ubicaciones de la misma sucursal. Para otra sucursal use Traslados en la versión web.' };
+		html += '<div class="m-info">' + info[kind] + '</div><button type="submit" class="m-btn accent" id="m-submit"><i class="fa-solid fa-check"></i> ' + (kind === 'waste' ? 'Registrar merma' : (kind === 'move' ? 'Mover' : (kind === 'receive' ? 'Registrar recepción' : 'Registrar'))) + '</button></form>';
 		$main.innerHTML = html;
 		var form = document.getElementById('m-form');
 		bindStepper(form);
@@ -852,8 +858,12 @@
 			try { F.product = await get('/m/sku/' + id, { branch_id: S.branch }); } catch (e) { toast(e.message, 'err'); return; }
 			renderProd(); renderLoc();
 		}
-		function locOptions(onlyWithStock, sel) {
-			var locs = lk.locations.filter(function (l) { return !S.branch || n(l.branch_id) === n(S.branch); });
+		function locOptions(onlyWithStock, sel, branchOnly) {
+			var sc = F.product && F.product.storage_class;
+			var locs = lk.locations.filter(function (l) {
+				// Destino: misma sucursal y misma clase de almacenamiento (ambiente/refrigerado/congelado); la BD rechaza el resto
+				return (!S.branch || n(l.branch_id) === n(S.branch)) && (!branchOnly || (n(l.branch_id) === n(branchOnly) && (!sc || !l.storage_class || l.storage_class === sc)));
+			});
 			var stockBy = {}; (F.product ? F.product.locations : []).forEach(function (l) { stockBy[l.id] = l; });
 			if (onlyWithStock && F.product) { locs = locs.filter(function (l) { return stockBy[l.id]; }); }
 			return locs.map(function (l) { return '<option value="' + l.id + '"' + (String(l.id) === String(sel) ? ' selected' : '') + '>' + h(l.name) + (stockBy[l.id] && kind !== 'count' ? ' · ' + qty(stockBy[l.id].qty) : '') + '</option>'; }).join('');
@@ -861,13 +871,21 @@
 		function renderLoc() {
 			var first = F.product && F.product.locations[0] ? F.product.locations[0].id : '';
 			document.getElementById('f-loc').innerHTML = '<label for="m-loc">' + (kind === 'move' ? 'Desde' : 'Ubicación') + '</label><select id="m-loc" class="m-input">' + (kind === 'move' ? '' : '<option value="">Todas / principal</option>') + locOptions(kind === 'move' || kind === 'waste', first) + '</select><div class="m-err" id="e-loc" hidden></div>';
-			if (kind === 'move') { document.getElementById('f-loc2').innerHTML = '<label for="m-loc2">Hacia</label><select id="m-loc2" class="m-input"><option value="">— Seleccione —</option>' + locOptions(false) + '</select><div class="m-err" id="e-loc2" hidden></div>'; }
+			// Mover/reponer es dentro de la misma sucursal: el destino se limita a la sucursal del origen
+			// (con «Toda la red» antes ofrecía ubicaciones de otras tiendas y la API lo rechazaba)
+			function renderDest() {
+				if (kind !== 'move') { return; }
+				var o = lk.locations.find(function (l) { return String(l.id) === String(document.getElementById('m-loc').value); });
+				document.getElementById('f-loc2').innerHTML = '<label for="m-loc2">Hacia</label><select id="m-loc2" class="m-input"><option value="">— Seleccione —</option>' + locOptions(false, null, o ? o.branch_id : null) + '</select><div class="m-err" id="e-loc2" hidden></div>';
+			}
+			renderDest();
 			hint();
-			document.getElementById('m-loc').onchange = hint;
+			document.getElementById('m-loc').onchange = function () { hint(); renderDest(); };
 		}
 		function hint() {
 			var el = document.getElementById('m-amt-hint'), loc = document.getElementById('m-loc');
 			if (!F.product || kind === 'count') { el.textContent = ''; return; }
+			if (kind === 'receive') { el.textContent = 'Existencia actual: ' + qty(F.product.qty) + ' ' + (F.product.unit || 'u.'); return; }
 			var l = F.product.locations.find(function (x) { return String(x.id) === String(loc && loc.value); });
 			el.textContent = kind === 'adjust' ? 'Sistema: ' + qty(l ? l.qty : F.product.qty) + ' ' + (F.product.unit || 'u.') : 'Disponible: ' + qty(l ? l.available : F.product.available) + ' ' + (F.product.unit || 'u.');
 		}
@@ -897,7 +915,8 @@
 			['e-prod', 'e-amt', 'e-reason', 'e-photo', 'e-notes', 'e-loc', 'e-loc2'].forEach(function (x) { err(x); });
 			if (!F.product) { err('e-prod', 'Seleccione o escanee un producto'); ok = false; }
 			var a = Number(amt);
-			if (amt === '' || isNaN(a) || a < 0 || ((kind === 'waste' || kind === 'move') && a <= 0)) { err('e-amt', kind === 'waste' || kind === 'move' ? 'La cantidad debe ser mayor que 0' : 'Ingrese una cantidad (0 o más)'); ok = false; }
+			var positive = kind === 'waste' || kind === 'move' || kind === 'receive';
+			if (amt === '' || isNaN(a) || a < 0 || (positive && a <= 0)) { err('e-amt', positive ? 'La cantidad debe ser mayor que 0' : 'Ingrese una cantidad (0 o más)'); ok = false; }
 			if (kind === 'waste') {
 				if (!F.reason) { err('e-reason', 'Elija el motivo'); ok = false; }
 				if (F.reason && n(F.reason.requires_evidence) && !F.photo) { err('e-photo', 'Esta causal exige foto de evidencia'); ok = false; }
@@ -928,6 +947,11 @@
 						wbody.confirm_duplicate = true;
 						res = await post('/waste/report', wbody, btn);
 					}
+				} else if (kind === 'receive') {
+					btn.dataset.key = btn.dataset.key || key();
+					var exp = document.getElementById('m-exp').value;
+					res = await post('/m/ops/receive', { product_id: F.product.id, quantity: a, expected_quantity: exp === '' ? a : Number(exp), document: document.getElementById('m-doc').value.trim(), supplier_name: document.getElementById('m-sup').value.trim(), branch_id: branch, operation_id: btn.dataset.key }, btn, 'Recepción de ' + F.product.name);
+					if (res && !res.queued && !res.message) { res = { message: 'Recibido: ' + qty(a) + ' ' + (F.product.unit || 'u.') }; }
 				} else if (kind === 'move') {
 					res = await post('/stock/products/' + F.product.id + '/transfer', { amount: a, location_id_from: loc, location_id_to: document.getElementById('m-loc2').value }, btn, 'Movimiento de ' + F.product.name);
 					if (res && !res.queued) { res = { message: 'Movido: ' + qty(a) + ' ' + (F.product.unit || 'u.') }; }
@@ -992,6 +1016,7 @@
 	document.getElementById('m-search-btn').addEventListener('click', function () { go('search'); });
 	function captureItems() {
 		return [
+			['receive', 'fa-box-open', 'Recepción de producto', 'Cantidad recibida y documento', P.receive],
 			['waste', 'fa-trash-can', 'Registrar merma', 'Producto, cantidad, motivo y foto', P.wasteReport],
 			['count', 'fa-clipboard-list', 'Conteo rápido', 'Conteo ciego de un producto', P.count],
 			['adjust', 'fa-scale-balanced', 'Ajuste de inventario', 'Corrección con aprobación', P.count],
@@ -1196,7 +1221,7 @@
 				+ '</span>'
 				+ '<span class="m-qbtn-label">' + (isEn ? 'Count' : 'Conteos') + '</span>'
 			+ '</a>'
-			+ '<a href="#/ops/receive" class="m-qbtn" id="m-qbtn-receive">'
+			+ '<a href="#/capture/receive" class="m-qbtn" id="m-qbtn-receive">'
 				+ '<span class="m-qbtn-icon">'
 					+ '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
 						+ '<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>'

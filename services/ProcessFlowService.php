@@ -22,7 +22,7 @@ class ProcessFlowService extends BaseService
 		'customer_return' => ['Devolución de cliente', '/returns', 'Devoluciones e Incidencias'],
 		'alert' => ['Alerta operativa', '/alerts', 'Centro de Alertas'],
 		'inventory_adjustment' => ['Ajuste de inventario', '/inventory-control', 'Control de Inventario'],
-		'quarantine' => ['Cuarentena / bloqueo', '/quality', 'Calidad & Vencimientos'],
+		'quarantine' => ['Cuarentena / bloqueo', '/waste?fefo_estado=cuarentena#tab-fefo', 'Calidad & Vencimientos'],
 		'count_session' => ['Conteo físico', '/inventory', 'Conteos Físicos'],
 		'store_task' => ['Tarea de tienda', '/workforce', 'Tareas y Roles'],
 	];

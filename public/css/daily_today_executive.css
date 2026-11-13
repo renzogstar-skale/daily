@@ -129,6 +129,12 @@
 	font-size: 12px;
 	color: #64748b;
 	padding: 0 4px;
+	flex-wrap: wrap;
+}
+
+.today-exec-refresh-note:not(:empty) {
+	color: #0f766e;
+	font-weight: 600;
 }
 
 .today-exec-dot {
@@ -1685,3 +1691,144 @@
 }
 
 
+
+.today-exec-scope:not(:empty) {
+	flex-basis: 100%;
+	font-size: 12px;
+	color: #475569;
+	background: #f1f5f9;
+	border-radius: 6px;
+	padding: 4px 8px;
+}
+
+.today-scope-tag {
+	display: inline-block;
+	margin-left: 4px;
+	padding: 0 6px;
+	border-radius: 4px;
+	background: #f1f5f9;
+	color: #475569;
+	font-size: 12px;
+	white-space: nowrap;
+}
+
+.today-level-jump {
+	display: inline-flex;
+	gap: 2px;
+	margin-left: 10px;
+	padding: 2px;
+	border-radius: 8px;
+	background: #f1f5f9;
+	vertical-align: middle;
+}
+
+.today-level-jump a {
+	padding: 2px 10px;
+	border-radius: 6px;
+	font-size: 12px;
+	font-weight: 600;
+	color: #475569;
+	text-decoration: none;
+}
+
+.today-level-jump a[aria-current="page"] {
+	background: #fff;
+	color: #008e48;
+	box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
+}
+
+.today-tab-sub {
+	font-weight: 400;
+	opacity: 0.75;
+}
+
+/* ===== HOY · Comercial (lecturas únicas, período visible) ===== */
+.today-exec-kpi-grid.today-exec-kpi-grid-auto { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+.today-exec-kpi-grid-auto .today-exec-kpi-card { align-items: flex-start; }
+.today-exec-kpi-grid-auto .today-exec-kpi-content { min-width: 0; flex: 1; }
+.today-exec-kpi-grid-auto .today-exec-kpi-label { white-space: normal; overflow: visible; }
+.today-exec-kpi-grid-auto .today-exec-kpi-sub { flex-wrap: wrap; white-space: normal; }
+.today-exec-period { display: inline-block; font-size: 11px; font-weight: 600; color: #475569; background: #f1f5f9; border-radius: 4px; padding: 1px 6px; margin-left: 4px; white-space: nowrap; }
+.today-exec-spark-card > .today-exec-period { margin: 0 0 6px; align-self: flex-start; }
+.today-exec-kpi-fields { display: flex; flex-direction: column; gap: 2px; margin-top: 4px; font-size: 12px; color: #475569; }
+.today-exec-kpi-value-2 { font-size: 0.6em; font-weight: 600; color: #475569; margin-left: 4px; }
+.today-exec-mini-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 4px 0; }
+.today-exec-mini-val { display: block; font-size: 17px; font-weight: 700; color: var(--daily-text-main, #0f172a); font-variant-numeric: tabular-nums; line-height: 1.2; }
+.today-exec-mini-lbl { display: block; font-size: 11px; color: #64748b; }
+.today-exec-kpi-sub span + span { margin-left: 6px; }
+.today-exec-legend-dash { display: inline-block; width: 14px; border-top: 2px dashed; margin-right: 4px; vertical-align: middle; }
+.today-exec-proj-basis { display: block; margin-top: 6px; font-size: 11.5px; line-height: 1.35; color: #475569; }
+.today-exec-card-period { margin: -4px 0 8px; font-size: 12px; color: #64748b; }
+.today-exec-card-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 8px; padding-top: 6px; border-top: 1px solid #e2e8f0; font-size: 11.5px; color: #64748b; }
+.today-exec-insight-head { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 4px; font-size: 12px; }
+.today-exec-insight-tag { font-size: 11px; font-weight: 600; padding: 1px 6px; border-radius: 4px; }
+.today-exec-insight-tag.is-peak { background: #fee2e2; color: #b91c1c; }
+.today-exec-insight-tag.is-valley { background: #e0f2fe; color: #0369a1; }
+.today-exec-insight-text { font-size: 11.5px; line-height: 1.35; color: #64748b; }
+.today-exec-comp-row { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: baseline; padding: 4px 0; border-bottom: 1px solid #f1f5f9; font-size: 12px; }
+.today-exec-comp-row.is-current { font-weight: 600; }
+.today-exec-comp-label { color: #475569; }
+.today-exec-comp-val { font-variant-numeric: tabular-nums; }
+.today-exec-comp-diff { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.today-exec-module-tag, .today-exec-count-tag { font-size: 11px; font-weight: 600; padding: 1px 6px; border-radius: 4px; border: 1px solid #e2e8f0; color: #475569; background: #fff; flex-shrink: 0; }
+.today-exec-count-tag { background: #f8fafc; }
+.today-exec-decision-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 2px; font-size: 11.5px; color: #64748b; }
+.today-exec-split { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
+.today-exec-split a { display: flex; flex-direction: column; padding: 8px 10px; border-radius: 8px; background: #f8fafc; text-decoration: none; color: inherit; }
+.today-exec-split a:hover, .today-exec-split a:focus-visible { background: #f1f5f9; }
+.today-exec-split-val { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--daily-text-main, #0f172a); }
+.today-exec-split-lbl { font-size: 12px; color: #475569; }
+.today-exec-plain-card { text-decoration: none; color: inherit; display: flex; flex-direction: column; gap: 4px; }
+.today-exec-plain-card:hover { text-decoration: none; color: inherit; }
+.today-exec-table-row[data-href] { cursor: pointer; }
+.t-danger { color: #dc2626; }
+.t-warning { color: #b45309; }
+
+/* Pulso: qué pasó, dónde, quién responde y a qué hora vence */
+.today-pulse { display: grid; grid-template-columns: minmax(220px, 1fr) 2.2fr; gap: 16px 24px; align-items: start; }
+.today-pulse-scope { font-size: 12px; color: #64748b; }
+.today-pulse-head { font-size: 1.05rem; font-weight: 700; margin: 0; color: var(--daily-text-main); }
+.today-pulse-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.today-pulse-item { padding: 6px 10px; background: #fef2f2; border-radius: 6px; }
+.today-pulse-item.is-overdue { background: #fffbeb; }
+.today-pulse-what { font-size: 13.5px; font-weight: 600; color: var(--daily-text-main); }
+.today-pulse-what a { color: inherit; }
+.today-pulse-meta { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 2px; font-size: 12px; color: #475569; }
+.today-pulse-meta i { margin-right: 3px; color: #94a3b8; }
+.today-pulse-empty { margin: 0; font-size: 13px; color: #475569; align-self: center; }
+.today-pulse-more { grid-column: 2; justify-self: end; font-size: 12.5px; font-weight: 600; color: #008e48; }
+/* Sin corte del POS: una sola lectura «Pendiente de sincronización» para el grupo */
+.today-exec-mini-stats.all-pending { grid-template-columns: 1fr; }
+.today-exec-mini-stats.all-pending > div:not(:first-child), .today-exec-mini-stats.all-pending .today-exec-mini-lbl { display: none; }
+/* Estados sin cifra («Pendiente de sincronización», «Sin meta…») en tamaño de texto, no de cifra */
+.today-exec-kpi-value.is-pending, .today-exec-kpi-value .is-pending, .today-exec-mini-val.is-pending { font-size: 15px; font-weight: 600; color: #64748b; line-height: 1.3; }
+@media (max-width: 859.98px) {
+	/* La capa móvil (dm-grid-fit) reparte a 2 columnas: estas lecturas llevan texto y van a una */
+	#page-content .today-exec-kpi-grid.today-exec-kpi-grid-auto, #page-content .today-exec-kpi-grid.today-exec-kpi-grid-auto.dm-grid-fit { grid-template-columns: minmax(0, 1fr) !important; }
+	#page-content .today-exec-middle-row.dm-grid-fit, #page-content .today-exec-bottom-row.dm-grid-fit { grid-template-columns: minmax(0, 1fr) !important; }
+	.today-pulse { grid-template-columns: 1fr; }
+	.today-pulse-more { grid-column: 1; justify-self: start; }
+	.today-exec-mini-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+	.today-exec-comp-row { grid-template-columns: 1fr auto; }
+	.today-exec-comp-diff { grid-column: 1 / -1; text-align: left; }
+}
+
+/* Modo noche */
+html.daily-dark .today-exec-period, html.daily-dark .today-exec-split a, html.daily-dark .today-exec-count-tag, html.daily-dark .today-exec-module-tag { background: rgba(148, 163, 184, 0.14); color: #cbd5e1; border-color: rgba(148, 163, 184, 0.25); }
+html.daily-dark .today-exec-split-val, html.daily-dark .today-exec-mini-val, html.daily-dark .today-pulse-what, html.daily-dark .today-pulse-head { color: #f1f5f9; }
+html.daily-dark .today-exec-kpi-fields, html.daily-dark .today-exec-mini-lbl, html.daily-dark .today-exec-split-lbl, html.daily-dark .today-exec-proj-basis, html.daily-dark .today-exec-comp-label, html.daily-dark .today-pulse-meta, html.daily-dark .today-exec-kpi-value-2 { color: #94a3b8; }
+html.daily-dark .today-pulse-item { background: rgba(239, 68, 68, 0.12); }
+html.daily-dark .today-pulse-item.is-overdue { background: rgba(245, 158, 11, 0.12); }
+html.daily-dark .today-exec-comp-row, html.daily-dark .today-exec-card-foot { border-color: rgba(148, 163, 184, 0.18); }
+html.daily-dark .t-danger { color: #f87171; }
+html.daily-dark .t-warning { color: #fbbf24; }
+
+/* Procesos: detalle accionable por fila */
+.today-proc-details { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 3px; font-size: 12px; }
+.today-proc-details li { position: relative; padding-left: 12px; color: #475569; line-height: 1.35; }
+.today-proc-details li::before { content: ''; position: absolute; left: 0; top: 0.5em; width: 6px; height: 6px; border-radius: 50%; background: #94a3b8; }
+.today-proc-details li.is-danger::before { background: #ef4444; }
+.today-proc-details li.is-warning::before { background: #f59e0b; }
+.today-proc-details a { color: inherit; text-decoration: underline; text-decoration-color: rgba(100, 116, 139, 0.4); text-underline-offset: 2px; }
+.today-proc-details a:hover { color: #008e48; }
+html.daily-dark .today-proc-details li { color: #cbd5e1; }

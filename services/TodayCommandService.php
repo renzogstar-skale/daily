@@ -137,7 +137,7 @@ class TodayCommandService extends BaseService
 				$this->Qty($r['qty']) . ' u. · ' . ($expired ? 'venció ' : 'vence ') . $this->Day($r['bbd']), $r,
 				floatval($r['value']), $expired ? 'confirmed' : 'estimated', null, $r['bbd'] . ' 23:59:59', null,
 				$expired ? 'Retiro pendiente' : ($days === 0 ? 'Vence hoy' : "Vence en $days d"), $expired ? 'Registrar merma' : 'Rebajar o trasladar',
-				$expired ? '/waste/report' : '/quality', null, $expired ? 'critical' : ($days <= 1 ? 'high' : 'medium'), true, $expired ? 'Producto vencido a la venta' : null);
+				$expired ? '/waste/report' : '/waste?fefo_q=' . rawurlencode($r['name']) . (!empty($r['branch_id']) ? '&branch_id=' . intval($r['branch_id']) : '') . '#tab-fefo', null, $expired ? 'critical' : ($days <= 1 ? 'high' : 'medium'), true, $expired ? 'Producto vencido a la venta' : null);
 		}
 
 		foreach ($this->Rows("SELECT w.id, IFNULL(w.case_number, 'MRM-' || w.id) AS code, IFNULL(p.name, '#' || w.product_id) AS name, w.amount, w.total_cost, w.created_timestamp, w.branch_id, b.name AS branch, r.name AS reason
@@ -166,7 +166,7 @@ class TodayCommandService extends BaseService
 		{
 			$uid = 'quarantine:' . $r['id'];
 			$out[$uid] = $this->D($uid, 'Lote en cuarentena', 'quality', $r['name'], $this->Qty($r['amount']) . ' u. · ' . ($r['reason'] ?: 'sin motivo'), $r,
-				floatval($r['value']), 'estimated', null, null, $r['entered_timestamp'], 'Bloqueado', 'Liberar, dar de baja o devolver', '/quality', ['quarantine', $r['id']], 'high', true, null);
+				floatval($r['value']), 'estimated', null, null, $r['entered_timestamp'], 'Bloqueado', 'Liberar, dar de baja o devolver', '/waste?fefo_estado=cuarentena#tab-fefo', ['quarantine', $r['id']], 'high', true, null);
 		}
 
 		$recallIdx = [];
@@ -538,9 +538,9 @@ class TodayCommandService extends BaseService
 	private function Prevention(array $r): array
 	{
 		$o = [
-			['n' => $r['cold']['n'], 'sev' => 3, 'icon' => 'fa-temperature-high', 'title' => 'Temperatura fuera de rango hoy', 'detail' => $r['cold']['n'] . ' ubicación(es) · ' . $r['cold']['readings'] . ' lectura(s)', 'value' => null, 'href' => '/quality', 'action' => 'Revisar cadena de frío'],
-			['n' => $r['expiring']['n'], 'sev' => 2, 'icon' => 'fa-hourglass-half', 'title' => 'Lotes que vencen en 3 días', 'detail' => $r['expiring']['n'] . ' lote(s) a la venta', 'value' => $r['expiring']['value'], 'href' => '/quality', 'action' => 'Rebajar o trasladar'],
-			['n' => $r['quarantine']['n'], 'sev' => 2, 'icon' => 'fa-shield-virus', 'title' => 'Mercancía en cuarentena', 'detail' => $r['quarantine']['n'] . ' lote(s) bloqueado(s)', 'value' => $r['quarantine']['value'], 'href' => '/quality', 'action' => 'Dictaminar'],
+			['n' => $r['cold']['n'], 'sev' => 3, 'icon' => 'fa-temperature-high', 'title' => 'Temperatura fuera de rango hoy', 'detail' => $r['cold']['n'] . ' ubicación(es) · ' . $r['cold']['readings'] . ' lectura(s)', 'value' => null, 'href' => '/waste#tab-frio', 'action' => 'Revisar cadena de frío'],
+			['n' => $r['expiring']['n'], 'sev' => 2, 'icon' => 'fa-hourglass-half', 'title' => 'Lotes que vencen en 3 días', 'detail' => $r['expiring']['n'] . ' lote(s) a la venta', 'value' => $r['expiring']['value'], 'href' => '/waste?fefo_estado=rotacion#tab-fefo', 'action' => 'Rebajar o trasladar'],
+			['n' => $r['quarantine']['n'], 'sev' => 2, 'icon' => 'fa-shield-virus', 'title' => 'Mercancía en cuarentena', 'detail' => $r['quarantine']['n'] . ' lote(s) bloqueado(s)', 'value' => $r['quarantine']['value'], 'href' => '/waste?fefo_estado=cuarentena#tab-fefo', 'action' => 'Dictaminar'],
 			['n' => $r['counts']['n'], 'sev' => 1, 'icon' => 'fa-list-check', 'title' => 'Conteos programados sin ejecutar', 'detail' => $r['counts']['n'] . ' conteo(s) para hoy o antes', 'value' => null, 'href' => '/waste#tab-conteos', 'action' => 'Contar'],
 			['n' => $r['receipts']['n'], 'sev' => 1, 'icon' => 'fa-truck-ramp-box', 'title' => 'Diferencias de recepción (7 días)', 'detail' => $r['receipts']['n'] . ' recepción(es) con rechazo', 'value' => $r['receipts']['value'], 'href' => '/mrp', 'action' => 'Reclamar'],
 			['n' => $r['price']['n'], 'sev' => 1, 'icon' => 'fa-tags', 'title' => 'Errores de precio abiertos', 'detail' => $r['price']['n'] . ' diferencia(s) POS / góndola', 'value' => $r['price']['value'], 'href' => '/waste#tab-precios', 'action' => 'Corregir precio'],
@@ -702,7 +702,7 @@ class TodayCommandService extends BaseService
 			"SELECT a.resolved_at AS at, CASE a.status WHEN 'closed' THEN 'Alerta resuelta' ELSE 'Alerta descartada' END AS action, a.title AS subject, IFNULL(a.resolution, '') AS result, $who AS who,
 				CASE a.status WHEN 'closed' THEN 'success' ELSE 'neutral' END AS tone, '/alerts' AS href, a.branch_id
 			FROM dairy_alerts a LEFT JOIN users u ON u.id = a.resolved_by_user_id WHERE a.status IN ('closed', 'dismissed') AND a.resolved_at >= $from" . $this->B('a.branch_id'),
-			"SELECT q.resolved_timestamp AS at, 'Cuarentena dictaminada' AS action, p.name AS subject, IFNULL(q.resolution_notes, q.status) AS result, $who AS who, 'success' AS tone, '/quality' AS href, q.branch_id
+			"SELECT q.resolved_timestamp AS at, 'Cuarentena dictaminada' AS action, p.name AS subject, IFNULL(q.resolution_notes, q.status) AS result, $who AS who, 'success' AS tone, '/waste?fefo_estado=cuarentena#tab-fefo' AS href, q.branch_id
 			FROM quarantine_items q JOIN products p ON p.id = q.product_id LEFT JOIN users u ON u.id = q.resolved_by WHERE q.status != 'in_quarantine' AND q.resolved_timestamp >= $from" . $this->B('q.branch_id'),
 			"SELECT sr.resolved_timestamp AS at, 'Reclamo a proveedor cerrado' AS action, IFNULL(sr.case_number, 'DEV-' || sr.id) AS subject, 'recuperado $' || printf('%.2f', IFNULL(sr.credit_recovered_amount, 0)) AS result, NULL AS who, 'success' AS tone, '/waste#tab-recuperacion' AS href, sr.branch_id
 			FROM supplier_returns sr WHERE sr.status != 'pending_credit' AND sr.resolved_timestamp >= $from" . $this->B('sr.branch_id'),

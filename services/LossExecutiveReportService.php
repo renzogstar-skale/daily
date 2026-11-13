@@ -299,7 +299,7 @@ class LossExecutiveReportService extends BaseService
 		{
 			if (in_array($r['cause'], self::EXPIRED_CAUSES, true))
 			{
-				$add('vencido', $r, 'baja', 'Revisar rotación FEFO y pedido sugerido', '/quality');
+				$add('vencido', $r, 'baja', 'Revisar rotación FEFO y pedido sugerido', '/waste#tab-fefo');
 			}
 			elseif (in_array($r['cause'], self::DAMAGE_CAUSES, true))
 			{

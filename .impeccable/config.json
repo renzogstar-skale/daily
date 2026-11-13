@@ -51,6 +51,87 @@
         ],
         "createdAt": "2026-11-10T15:50:36.146Z",
         "reason": "user confirmed: conservar diseño original de DAILY (encabezados 10px del menú)"
+      },
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [
+          "unslop-story/story.html"
+        ],
+        "createdAt": "2026-11-12T19:04:40.977Z",
+        "reason": "story del video unslop: el paso 0 reproduce a propósito el slop original"
+      },
+      {
+        "rule": "gradient-text",
+        "value": "*",
+        "files": [
+          "unslop-story/story.html"
+        ],
+        "createdAt": "2026-11-12T19:04:41.235Z",
+        "reason": "story del video unslop: el paso 0 reproduce a propósito el slop original"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "unslop-story/story.html"
+        ],
+        "createdAt": "2026-11-12T19:04:41.495Z",
+        "reason": "story del video unslop: el paso 0 reproduce a propósito el slop original"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          "unslop-story/story.html"
+        ],
+        "createdAt": "2026-11-12T19:12:44.979Z",
+        "reason": "story del video unslop: el paso 0 reproduce el original; el eyebrow final no tiene fondo ni borde"
+      },
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [
+          "unslop-story/sales.html"
+        ],
+        "createdAt": "2026-11-12T19:27:32.399Z",
+        "reason": "story del video unslop: el paso 0 reproduce a propósito el slop original de /sales"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "unslop-story/sales.html"
+        ],
+        "createdAt": "2026-11-12T19:27:32.624Z",
+        "reason": "story del video unslop: el paso 0 reproduce a propósito el slop original de /sales"
+      },
+      {
+        "rule": "tiny-text",
+        "value": "*",
+        "files": [
+          "unslop-story/sales.html"
+        ],
+        "createdAt": "2026-11-12T19:27:32.840Z",
+        "reason": "story del video unslop: el paso 0 reproduce a propósito el slop original de /sales"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          "unslop-story/sales.html"
+        ],
+        "createdAt": "2026-11-12T19:27:33.045Z",
+        "reason": "story del video unslop: el paso 0 reproduce a propósito el slop original de /sales"
+      },
+      {
+        "rule": "undersized-ui-text",
+        "value": "*",
+        "files": [
+          "unslop-story/sales.html"
+        ],
+        "createdAt": "2026-11-12T19:32:20.078Z",
+        "reason": "story del video unslop: el paso 0 reproduce los 9.8-11px del /sales original"
       }
     ]
   }

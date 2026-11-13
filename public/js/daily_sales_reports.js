@@ -81,7 +81,8 @@
 		var d = D.dashboard;
 		var trend = function (n) {
 			var days = d.trend90.days.slice(-n), net = d.trend90.net.slice(-n);
-			make('srepDashTrend', base('bar', { labels: days.map(dayLabel), datasets: [{ label: 'Ventas netas', data: net, backgroundColor: GREEN, hoverBackgroundColor: GREEN_D, maxBarThickness: 13 }] },
+			var lastSale = -1; net.forEach(function (v, i) { if (v > 0) lastSale = i; });
+			make('srepDashTrend', base('bar', { labels: days.map(dayLabel), datasets: [{ label: 'Ventas netas', data: net, backgroundColor: net.map(function (v, i) { return i === lastSale ? GREEN : alpha(GRAY, 0.42); }), hoverBackgroundColor: net.map(function (v, i) { return i === lastSale ? GREEN_D : alpha(GRAY, 0.7); }), maxBarThickness: 13 }] },
 				{ tooltips: tip(), scales: { xAxes: xCat(), yAxes: yMoney() } }));
 		};
 		trend(30);

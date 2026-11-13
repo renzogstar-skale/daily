@@ -1541,7 +1541,7 @@ class StockExecutiveOverviewService extends BaseService
 				'line1' => 'Valor en riesgo: $' . number_format($riskVal, 0) . " | \u{2264} $fefoDays días", 'line2' => 'Sucursales: ' . $expBranches . ' | Lotes: ' . $expLots,
 				'risk_val_fmt' => '$' . number_format($riskVal, 0), 'days_threshold' => "\u{2264} $fefoDays días", 'branches_count' => $expBranches, 'lots_count' => $expLots,
 				'owner' => 'Calidad y FEFO', 'date' => $now,
-				'priority' => 'Crítica', 'status' => 'Pendiente', 'action_type' => 'open_fefo_modal', 'action_label' => 'Ejecutar FEFO', 'href' => '/quality' . $qs];
+				'priority' => 'Crítica', 'status' => 'Pendiente', 'action_type' => 'open_fefo_modal', 'action_label' => 'Ejecutar FEFO', 'href' => '/waste' . $qs . '#tab-fefo'];
 		}
 		if ($outOfStockCount > 0)
 		{

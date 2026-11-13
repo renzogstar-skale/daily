@@ -1384,7 +1384,7 @@
 				<div class="daily-conn-col-title">Recibe información de</div>
 				<div class="daily-conn-items-list">
 					<!-- Calidad & Vencimientos -->
-					<a href="{{ $U('/quality') }}" class="daily-conn-item">
+					<a href="{{ $U('/waste#tab-fefo') }}" class="daily-conn-item">
 						<div class="daily-conn-item-left">
 							<div class="daily-conn-item-icon">
 								<i class="fa-solid fa-snowflake"></i>

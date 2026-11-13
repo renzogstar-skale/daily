@@ -199,11 +199,25 @@
 			}));
 			INCIDENTS.forEach(normalizeIncident);
 			state.load = 'ready';
+			// Enlace directo desde HOY, el caso demo o un módulo: ?alert=ID abre ese expediente (si está en la bandeja cargada)
+			var urlAlert = new URLSearchParams(window.location.search).get('alert');
+			if (urlAlert && findIncident(String(urlAlert))) state.selectedId = String(urlAlert);
 			if (!state.selectedId && INCIDENTS.length) state.selectedId = INCIDENTS[0].id;
 			populateFilterOptions();
 			if (urlBranch) $('#alcFilterBranch').val(urlBranch);
 			refreshAll();
 			renderSummary();
+			if (urlAlert && state.selectedId === String(urlAlert)) selectIncident(state.selectedId, true);
+			// Fuera de la página cargada (la bandeja trae 200 por prioridad): se trae ese expediente y se agrega arriba
+			else if (urlAlert) Grocy.Api.Get('alerts/' + encodeURIComponent(urlAlert), function (d) {
+				if (!d || !d.alert || findIncident(String(d.alert.id))) return;
+				var it = fromApi($.extend({}, d.alert, { allowed: d.allowed || [] }));
+				normalizeIncident(it);
+				INCIDENTS.unshift(it);
+				state.selectedId = it.id;
+				refreshAll();
+				selectIncident(it.id, true);
+			});
 		}).fail(function () {
 			state.load = 'error';
 			renderTable();

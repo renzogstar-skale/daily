@@ -11,10 +11,10 @@
 		<div class="dlx-kpi dlx-tone-amber"><div class="k-l">Exposición total</div><div class="k-v">{{ array_sum(array_column($exc, 'minutes')) }} min</div><div class="k-s">fuera de rango</div></div>
 		<div class="dlx-kpi dlx-tone-red"><div class="k-l">Valor en riesgo</div><div class="k-v">{{ $money(array_sum(array_column($exc, 'value_at_risk'))) }}</div><div class="k-s">lotes hoy en esas ubicaciones</div></div>
 		<div class="dlx-kpi"><div class="k-l">Merma por frío</div><div class="k-v">{{ $money(array_sum(array_map(fn($r) => floatval($r['cost']), $cold['cold_chain_loss']))) }}</div><div class="k-s">causal CFR confirmada</div></div>
-		<a class="dlx-kpi" href="{{ $U('/quality') }}"><div class="k-l">Calidad</div><div class="k-v"><i class="fa-solid fa-arrow-right"></i></div><div class="k-s">registrar lectura / cuarentena</div></a>
+		<a class="dlx-kpi" href="{{ $U('/waste#tab-fefo') }}"><div class="k-l">Calidad</div><div class="k-v"><i class="fa-solid fa-arrow-right"></i></div><div class="k-s">registrar lectura / cuarentena</div></a>
 	</div>
 	@if(!$cold['readings'])
-		<div class="dlx-empty">Sin lecturas de temperatura en el período. Conecte sensores o registre lecturas en Calidad.<div><a class="btn btn-sm btn-outline-dark" href="{{ $U('/quality') }}">Ir a Calidad</a></div></div>
+		<div class="dlx-empty">Sin lecturas de temperatura en el período. Conecte sensores o registre lecturas en Calidad.<div><a class="btn btn-sm btn-outline-dark" href="{{ $U('/waste#tab-fefo') }}">Ir a Calidad</a></div></div>
 	@else
 	<div class="row">
 		<div class="col-lg-5 mb-3"><h6 class="font-weight-700 mb-1">Tendencia: lecturas fuera de rango por día</h6><div class="dlx-chart is-sm"><canvas id="lcTrend" role="img" aria-label="Tendencia de cadena de frío"></canvas></div></div>

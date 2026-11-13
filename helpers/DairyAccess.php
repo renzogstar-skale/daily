@@ -75,6 +75,10 @@ class DairyAccess
 		'/api/admin/economics/expense' => [User::PERMISSION_ADMIN],
 		'/alerts' => [User::PERMISSION_ALERTS_MANAGE, User::PERMISSION_ALERTS_SUPERVISE, User::PERMISSION_KPIS_VIEW, User::PERMISSION_WASTE_APPROVE, User::PERMISSION_STOCK_INVENTORY],
 		'/action-center' => [User::PERMISSION_ADMIN, User::PERMISSION_ALERTS_SUPERVISE, User::PERMISSION_KPIS_VIEW],
+		// Caso demo de principio a fin: lo ve quien ve HOY; avanzarlo o restablecerlo, solo administración
+		'/demo/case' => [User::PERMISSION_KPIS_VIEW, User::PERMISSION_WASTE_APPROVE, User::PERMISSION_PROCUREMENT_MANAGE],
+		'/api/demo/case' => [User::PERMISSION_KPIS_VIEW, User::PERMISSION_WASTE_APPROVE, User::PERMISSION_PROCUREMENT_MANAGE],
+		'/api/demo/case/{action}' => [User::PERMISSION_ADMIN],
 	];
 
 	// Permiso para ver cada tipo de documento imprimible

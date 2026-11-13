@@ -30,7 +30,7 @@ class ManagerAgendaService extends BaseService
 			FROM stock s JOIN products p ON p.id = s.product_id JOIN locations l ON l.id = s.location_id
 			WHERE s.best_before_date BETWEEN date('now', 'localtime') AND date('now', 'localtime', '+3 day') AND IFNULL(l.is_transit, 0) = 0 $stockBranch
 			GROUP BY s.product_id, s.best_before_date ORDER BY s.best_before_date, value DESC");
-		$items[] = $this->Item('expiring', 'warning', 'fa-hourglass-half', 'Rebajar o trasladar lo que vence en 3 días', 'Decidir rebaja FEFO, traslado a otra sucursal o donación antes de que sea merma.', $rows, '/quality', 'Ver vencimientos', 'vence');
+		$items[] = $this->Item('expiring', 'warning', 'fa-hourglass-half', 'Rebajar o trasladar lo que vence en 3 días', 'Decidir rebaja FEFO, traslado a otra sucursal o donación antes de que sea merma.', $rows, '/waste?fefo_estado=rotacion#tab-fefo', 'Ver vencimientos', 'vence');
 
 		// Mermas por aprobar (segregación: no puede aprobarlas quien las reportó)
 		$rows = $q("
@@ -85,7 +85,7 @@ class ManagerAgendaService extends BaseService
 			SELECT p.name, q.reason AS detail, q.amount AS qty, NULL AS value, 'quarantine' AS doc_type, q.id AS doc_id
 			FROM quarantine_items q JOIN products p ON p.id = q.product_id
 			WHERE q.status = 'in_quarantine'" . $b('q.branch_id') . ' ORDER BY q.entered_timestamp');
-		$items[] = $this->Item('quarantine', 'warning', 'fa-shield-virus', 'Decidir lotes en cuarentena', 'Liberar, dar de baja o devolver al proveedor.', $rows, '/quality', 'Ir a calidad');
+		$items[] = $this->Item('quarantine', 'warning', 'fa-shield-virus', 'Decidir lotes en cuarentena', 'Liberar, dar de baja o devolver al proveedor.', $rows, '/waste?fefo_estado=cuarentena#tab-fefo', 'Ir a calidad');
 
 		// Casos de merma con plazo vencido
 		$rows = $q("

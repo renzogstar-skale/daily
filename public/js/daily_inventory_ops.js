@@ -88,7 +88,9 @@
 	/* ------------------------------------------------------------ pestañas */
 	var TABS = {
 		positions: function () {
-			var q = $('#iop-pos-q').val() || '', st = $('#iop-pos-state').val() || '';
+			// ?iop_state=out|below_min#inv-ops-positions (enlaces desde HOY) se aplica solo en la primera carga
+			var q = $('#iop-pos-q').val() || '', st = $('#iop-pos-state').length ? ($('#iop-pos-state').val() || '') : (new URLSearchParams(location.search).get('iop_state') || '');
+			if (!STATE[st]) st = '';
 			paint('<div class="iop-toolbar"><input class="iop-grow" id="iop-pos-q" placeholder="Producto, SKU o UPC" value="' + esc(q) + '">' +
 				'<select id="iop-pos-state"><option value="">Todos los estados</option>' + Object.keys(STATE).map(function (s) { return '<option value="' + s + '"' + (s === st ? ' selected' : '') + '>' + STATE[s] + '</option>'; }).join('') + '</select></div>' +
 				'<div class="iop-note">Disponible = físico − cuarentena − vencido − merma por aprobar − reservado.</div><div id="iop-pos-body"><div class="iop-loading">Cargando existencias</div></div>');

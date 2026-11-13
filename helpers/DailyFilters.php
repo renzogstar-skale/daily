@@ -137,7 +137,7 @@ class DailyFilters
 		{
 			if ($values === null || array_intersect_key($present, array_flip($values)))
 			{
-				$departments[] = ['key' => $key, 'name' => $name];
+				$departments[] = ['key' => $key, 'name' => DailyMetricsService::DepartmentLabel($key)];
 			}
 		}
 
@@ -171,7 +171,7 @@ class DailyFilters
 		return [
 			'company' => $f['company_id'] !== null ? $find($options['companies'], $f['company_id']) : 'Todas',
 			'branch' => $f['branch_id'] !== null ? ($find($options['branches'], $f['branch_id']) ?? 'Sucursal ' . $f['branch_id']) : 'Todas las sucursales',
-			'department' => $f['department'] !== null ? DailyMetricsService::Departments()[$f['department']][0] : 'Todos los departamentos',
+			'department' => $f['department'] !== null ? DailyMetricsService::DepartmentLabel($f['department']) : 'Todos los departamentos',
 			'group' => $f['group_id'] !== null ? ($find($options['groups'], $f['group_id']) ?? 'Sin categoría') : 'Todas las categorías',
 			'subcategory' => $f['subcategory'] ?? 'Todas',
 			'product' => $f['product'],

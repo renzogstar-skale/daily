@@ -1,0 +1,19 @@
+{
+    "HOY": "TODAY",
+    "Vender": "Sell",
+    "Turnos": "Shifts",
+    "Recepción de producto": "Product receiving",
+    "Cantidad recibida y documento": "Received quantity and document",
+    "Cantidad recibida": "Received quantity",
+    "Cantidad esperada (opcional)": "Expected quantity (optional)",
+    "Igual a la recibida": "Same as received",
+    "Documento (orden, factura o guía)": "Document (order, invoice or delivery note)",
+    "Proveedor (opcional)": "Supplier (optional)",
+    "Registrar recepción": "Record receiving",
+    "Ej.: PO-2026-0012": "E.g.: PO-2026-0012",
+    "Registra la entrada de mercadería en la sucursal; si lo recibido difiere de lo esperado, la diferencia queda para conciliación.": "Records incoming goods at the branch; if what was received differs from what was expected, the difference is left for reconciliation.",
+    "Existencia actual: {0} {1}": "Current stock: {0} {1}",
+    "Recibido: {0} {1}": "Received: {0} {1}",
+    "Recepción de {0}": "Receiving of {0}",
+    "Merma con foto": "Shrink with photo"
+}

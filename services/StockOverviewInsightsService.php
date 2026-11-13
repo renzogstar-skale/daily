@@ -67,7 +67,7 @@ class StockOverviewInsightsService extends BaseService
 			'investigate' => DairyAccess::CanOpen('/inventory-control'),
 			'lot' => DairyAccess::CanOpen('/stockoverview'),
 			'transfer' => DairyAccess::CanOpen('/transfers'),
-			'quality' => DairyAccess::CanOpen('/quality'),
+			'quality' => DairyAccess::CanOpen('/waste'),
 			'waste' => DairyAccess::CanOpen('/waste/report'),
 			'export' => DairyAccess::CanOpen('/reports')
 		];
@@ -631,7 +631,7 @@ class StockOverviewInsightsService extends BaseService
 		if ($d['expiring'] > 0)
 		{
 			$parts[] = 'Ejecutar FEFO en ' . $d['expiring'] . ' producto(s) que vencen en ≤ ' . $fefo . ' d ($' . number_format($d['risk_value'], 0) . ' expuestos)';
-			$href = '/quality';
+			$href = '/waste?fefo_estado=rotacion#tab-fefo';
 		}
 		if ($d['out_of_stock'] > 0)
 		{
@@ -788,7 +788,7 @@ class StockOverviewInsightsService extends BaseService
 			'stat2_label' => 'Productos',
 			'stat2_val' => strval($totalExpProds ?: 104),
 			'basis' => 'Para cada lote que vence en ≤ ' . $fefo . ' días: unidades acumuladas (FEFO) − venta diaria × días restantes. Lo que sobra se considera expuesto.',
-			'href' => '/quality',
+			'href' => '/waste#tab-fefo',
 			'href_label' => 'Calidad y vencimientos',
 			'btn_icon' => 'fa-shield-halved'
 		];

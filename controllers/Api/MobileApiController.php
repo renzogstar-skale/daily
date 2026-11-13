@@ -117,7 +117,7 @@ class MobileApiController extends BaseApiController
 				'can_approve' => \Grocy\Services\MobileWorkService::CanApprove() && DailySubscription::Has('waste.approve'),
 				'can_team' => \Grocy\Services\MobileWorkService::CanSeeTeam() && DailySubscription::Has('workforce.schedule'), 'can_ai' => false,
 				'onboarded' => \Grocy\Services\MobileWorkService::GetInstance()->GetSetting(GROCY_USER_ID, 'dairy_m_onboarded') === '1',
-				'web' => array_values(array_filter(['/schedule', '/workforce', '/kardex', '/transfers', '/mrp', '/suppliers', '/quality', '/recalls', '/alerts', '/kpis', '/reports', '/branches', '/scan', '/orders', '/traceability', '/audits', '/inventory-control'], fn($p) => DairyAccess::CanOpen($p) && DailySubscription::MissingForRoute($p) === null))];
+				'web' => array_values(array_filter(['/schedule', '/workforce', '/kardex', '/transfers', '/mrp', '/suppliers', '/recalls', '/alerts', '/kpis', '/reports', '/branches', '/scan', '/orders', '/traceability', '/audits', '/inventory-control'], fn($p) => DairyAccess::CanOpen($p) && DailySubscription::MissingForRoute($p) === null))];
 		});
 	}
 

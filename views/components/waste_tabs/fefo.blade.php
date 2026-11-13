@@ -402,13 +402,13 @@
 						<i class="fa-solid fa-bolt text-warning mr-1"></i>Acciones Rápidas
 					</button>
 					<div class="dropdown-menu dropdown-menu-right shadow-sm border-0" style="border-radius: 10px; font-size: 0.82rem;">
-						<a class="dropdown-item py-2" href="{{ $U('/quality') }}">
+						<a class="dropdown-item py-2" href="{{ $U('/waste#tab-fefo') }}">
 							<i class="fa-solid fa-temperature-half text-primary mr-2"></i>Registrar lectura en Calidad
 						</a>
 						<a class="dropdown-item py-2" href="javascript:void(0)" onclick="dailyOpenQuickQuarantineModal();">
 							<i class="fa-solid fa-shield-halved text-danger mr-2"></i>Bloquear lote en cuarentena
 						</a>
-						<a class="dropdown-item py-2" href="{{ $U('/quality-expiry') }}">
+						<a class="dropdown-item py-2" href="{{ $U('/waste#tab-fefo') }}">
 							<i class="fa-solid fa-tag text-success mr-2"></i>Rebaja preventiva FEFO
 						</a>
 					</div>
@@ -1215,7 +1215,7 @@
 
 		<div class="row row-cols-1 row-cols-sm-2 row-cols-lg-5 g-2">
 			<div class="col mb-2 mb-lg-0">
-				<a href="{{ $U('/quality-expiry') }}" class="daily-conn-card">
+				<a href="{{ $U('/waste#tab-fefo') }}" class="daily-conn-card">
 					<div class="d-flex align-items-center" style="gap: 0.65rem;">
 						<div style="color: #00C83B; font-size: 1.15rem;"><i class="fa-solid fa-snowflake"></i></div>
 						<div>
@@ -1346,7 +1346,7 @@
 							<i class="fa-solid fa-lock mr-1"></i>Poner en Cuarentena
 						</button>
 					@endif
-					<a href="{{ $U('/quality') }}" class="btn btn-sm btn-outline-primary font-weight-600">
+					<a href="{{ $U('/waste#tab-fefo') }}" class="btn btn-sm btn-outline-primary font-weight-600">
 						<i class="fa-solid fa-microscope mr-1"></i>Ir a Calidad
 					</a>
 				</div>
@@ -1572,8 +1572,20 @@ function dailyFilterFefoTableByText(txt) {
 	}
 }
 
+var fefoUrlApplied = false;
 function dailyInitFefoPagination() {
+	// Enlaces desde HOY, Agenda y Alertas: ?fefo_q=<producto o lote>&fefo_estado=<cuarentena|rotacion|critico>#tab-fefo
+	var p = new URLSearchParams(window.location.search), deep = !fefoUrlApplied && (p.get('fefo_q') || p.get('fefo_estado'));
+	if (deep) {
+		fefoUrlApplied = true;
+		if (p.get('fefo_q')) $('#dailyFefoSearch').val(p.get('fefo_q'));
+		if (p.get('fefo_estado')) $('#dailyFefoSanitaryFilter').val(p.get('fefo_estado'));
+	}
 	dailyApplyFefoFilters();
+	if (deep) {
+		var t = document.getElementById('dailyFefoTablesExport');
+		if (t) t.scrollIntoView({ block: 'start' });
+	}
 }
 
 function dailyRenderFefoPage() {

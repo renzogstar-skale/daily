@@ -841,3 +841,12 @@ body.night-mode { --dlx-neutral: #24272A; --dlx-surface: #2C3034; --dlx-line: #3
 .dlx-prog { height: 4px; border-radius: 2px; background: var(--dlx-line); margin-top: 3px; overflow: hidden; }
 .dlx-prog > span { display: block; height: 100%; background: var(--dlx-amber); }
 .dlx-section .dairy-export + *, .dlx-section > .d-flex + .dlx-kpis { margin-top: 12px; }
+
+/* Menú lateral sin ruido (unslop, 12/11/2026): categorías en tipo oración, número aparte y activo como un escalón de superficie */
+.dnav .dnav-cat-btn .dnav-name { display: inline-block; text-transform: lowercase; }
+.dnav .dnav-cat-btn .dnav-name::first-letter { text-transform: uppercase; }
+.dnav .dnav-cat-btn .nav-link-text { display: flex; align-items: baseline; gap: 4px; }
+.dnav .dnav-cat-btn .dnav-num { flex: none; font-variant-numeric: tabular-nums; opacity: .6; }
+.dnav .dnav-cat-btn { font-weight: 500; letter-spacing: 0; }
+.dnav .dnav-item.is-active > .dnav-link { background: rgba(148, 163, 184, .1); box-shadow: inset 0 0 0 1px rgba(148, 163, 184, .14); font-weight: 500; }
+html:not(.daily-dark) .dnav .dnav-item.is-active > .dnav-link { background: rgba(15, 23, 42, .06); box-shadow: inset 0 0 0 1px rgba(15, 23, 42, .08); }

@@ -37,6 +37,13 @@ class SystemController extends BaseController
 			$demoDataGeneratorService->PopulateDemoData(isset($request->getQueryParams()['nodemodata']));
 		}
 
+		// Tras la migración disparada por app.php se vuelve a la página pedida (solo rutas internas relativas)
+		$next = (string) ($request->getQueryParams()['next'] ?? '');
+		if ($next !== '' && $next[0] === '/' && !str_starts_with($next, '//') && !str_contains($next, '\\'))
+		{
+			return $response->withRedirect($this->AppContainer->get('UrlManager')->ConstructUrl($next));
+		}
+
 		// Visitantes sin sesión ven el sitio comercial; usuarios con sesión entran a la aplicación como antes
 		$token = $request->getCookieParams()[SessionService::SESSION_TOKEN_COOKIE_NAME_ACCESS] ?? '';
 		if ($token !== '' && SessionService::GetInstance()->ValidateToken(SessionService::SESSION_TOKEN_TYPE_ACCESS, $token))

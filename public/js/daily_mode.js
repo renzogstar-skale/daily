@@ -296,6 +296,15 @@
 		return 'hsl(' + Math.round(x[0]) + ', ' + Math.round(s * 100) + '%, ' + Math.round(target * 100) + '%)';
 	}
 
+	// Sin cajas propias: display:none (se omite) o display:contents (sus hijos sí tienen cajas). Se decide por
+	// geometría: getComputedStyle sobre un elemento display:none no se cachea y cuesta ~7 ms en páginas grandes;
+	// con las tablas → tarjetas del móvil (miles de celdas de detalle ocultas) congelaba /mrp en modo noche.
+	function contentsBox(el)
+	{
+		for (var c = el.firstElementChild; c; c = c.nextElementSibling) if (c.getClientRects().length) return true;
+		return false;
+	}
+
 	function collect(start)
 	{
 		var list = [];
@@ -304,7 +313,7 @@
 			if (list.length >= MAX) return;
 			if (el.matches(SKIP)) return;
 			var isSvg = el.namespaceURI === 'http://www.w3.org/2000/svg';
-			if (!isSvg && !el.getClientRects().length && getComputedStyle(el).display !== 'contents') return;
+			if (!isSvg && !el.getClientRects().length && !contentsBox(el)) return;
 			list.push(el);
 			for (var c = el.firstElementChild; c; c = c.nextElementSibling) walk(c);
 		})(start);
@@ -432,6 +441,9 @@
 		raf = 0;
 		var batch = queue; queue = [];
 		if (!root.classList.contains('daily-dark')) return;
+		// Cambios masivos (p. ej. tablas → tarjetas en móvil marcan miles de celdas): una sola pasada sobre el body.
+		// Procesarlos uno a uno fuerza un recálculo de estilos por elemento y congela páginas grandes (/mrp).
+		if (batch.length > 150) { adapt(d.body); return; }
 		var seen = new Set();
 		for (var i = 0; i < batch.length; i++)
 		{

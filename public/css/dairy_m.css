@@ -104,6 +104,9 @@ a { color: inherit; text-decoration: none; }
 .m-hero svg { display: block; width: 100%; height: 44px; margin-top: 8px; }
 
 .m-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+/* Celdas que pueden encogerse: sin esto el contenido más ancho fija la columna y la fila se sale a 320 px */
+.m-grid > *, .m-tabs > * { min-width: 0; }
+.m-kpi { overflow-wrap: anywhere; }
 .m-kpi { display: block; position: relative; background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 12px 12px 10px; min-height: 96px; border-left: 4px solid transparent; }
 .m-kpi .lbl { font-size: 12.5px; color: var(--muted); display: flex; gap: 6px; align-items: center; }
 .m-kpi .val { font-size: 21px; font-weight: 700; margin-top: 4px; letter-spacing: -.2px; }

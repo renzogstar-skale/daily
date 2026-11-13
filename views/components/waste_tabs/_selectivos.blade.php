@@ -860,7 +860,7 @@
 		</div>
 		<div class="row row-cols-1 row-cols-sm-2 row-cols-lg-5 g-2">
 			<div class="col mb-2 mb-lg-0">
-				<a href="{{ $U('/quality-expiry') }}" class="daily-conn-card">
+				<a href="{{ $U('/waste#tab-fefo') }}" class="daily-conn-card">
 					<i class="fa-solid fa-snowflake text-primary" style="font-size: 1.25rem;"></i>
 					<div>
 						<div class="font-weight-bold text-dark small">Calidad & Vencimientos</div>

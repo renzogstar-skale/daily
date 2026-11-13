@@ -1,0 +1,95 @@
+/* ==========================================================================
+   DAILY — Ventas y Rentabilidad sin ruido (unslop, 12/11/2026)
+   Capa final sobre daily_sales_dashboard.css / daily_sales_reports.css / daily_dark.css.
+   Superficies neutras, un solo acento, cifras en mono tabular (firma «cinta de caja»).
+   Selectores con :not(#dk) para ganar a las tintas automáticas del modo noche.
+   ========================================================================== */
+
+.srep {
+	--su-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+	--su-text: #0f172a; --su-text-2: #475569; --su-muted: #64748b;
+	--su-line: rgba(15, 23, 42, 0.08); --su-step: rgba(15, 23, 42, 0.04);
+	--su-up: #047857; --su-down: #b91c1c; --su-accent: #047857;
+}
+html.daily-dark .srep {
+	--su-text: #f1f5f9; --su-text-2: #cbd5e1; --su-muted: #94a3b8;
+	--su-line: rgba(148, 163, 184, 0.14); --su-step: rgba(148, 163, 184, 0.08);
+	--su-up: #5fc79a; --su-down: #f19595; --su-accent: #34d399;
+}
+
+/* 1. Espaciado: rejilla de 4, mismo relleno en tarjetas hermanas */
+.srep-head { margin: 8px 0 16px; }
+.srep .ded-card { padding: 20px; border-radius: 12px; }
+.srep .ded-card-header { margin-bottom: 16px; }
+.srep .ded-row-2, .srep .ded-row-3 { gap: 16px; margin-bottom: 16px; }
+.srep-kpis { gap: 12px; margin-bottom: 16px; }
+.srep .ded-kpi-card { padding: 16px; border-radius: 12px; gap: 4px; display: flex; flex-direction: column; }
+.srep .ded-kpi-card > .ded-kpi-sub { margin-top: auto; padding-top: 8px; }
+.srep-note { margin-top: 8px; font-size: 12px; line-height: 16px; }
+
+/* 6. Layout: Ventas netas y acumuladas más anchas; ritmo 2+1+1+1 / 1+1+1+2 */
+#srep-dashboard .srep-kpis.srep-kpis-8 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+#srep-dashboard .srep-kpis-8 > .ded-kpi-card:first-child,
+#srep-dashboard .srep-kpis-8 > [data-testid="srep-kpi-accumulated"] { grid-column: span 2; }
+@media (max-width: 1100px) {
+	#srep-dashboard .srep-kpis.srep-kpis-8 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* 2–3. Color e iconos: sin degradados, brillos ni iconos decorativos en los KPI */
+.srep .ded-kpi-top { display: none; }
+.srep .ded-kpi-card, .srep .ded-kpi-card:hover { transform: none; }
+.srep .ded-kpi-card.is-highlight,
+.srep .ded-kpi-card.is-highlight:hover { background: #fff; border: 1px solid var(--su-line); box-shadow: none; color: var(--su-text); }
+html.daily-dark body.crystal-ui .srep .ded-kpi-card.is-highlight {
+	background: var(--crystal-sheen), linear-gradient(180deg, var(--crystal-tint-top), var(--crystal-tint-bottom)) !important;
+	background-color: var(--dk-surface-solid) !important;
+	border: 1px solid var(--crystal-border) !important;
+}
+html body .srep .ded-card, html body .srep .ded-kpi-card, html body .srep .ded-kpi-card.is-highlight { box-shadow: none !important; }
+
+/* 5. Tipo: cifras en mono tabular 500, etiquetas en tipo oración 400 */
+.srep .ded-kpi-label, html.daily-dark .srep .ded-kpi-label:not(#dk) { font-size: 12px; line-height: 16px; font-weight: 400; letter-spacing: 0; color: var(--su-muted) !important; }
+.srep .ded-kpi-val, html.daily-dark .srep .ded-kpi-val:not(#dk) {
+	font-family: var(--su-mono); font-weight: 500; font-size: 22px; line-height: 28px; letter-spacing: 0;
+	font-variant-numeric: tabular-nums; color: var(--su-text) !important; background: none; -webkit-text-fill-color: currentColor;
+}
+#srep-dashboard .srep-kpis-8 > .ded-kpi-card:first-child .ded-kpi-val { font-size: 32px; line-height: 40px; }
+.srep .ded-kpi-sub, html.daily-dark .srep .ded-kpi-sub:not(#dk),
+.srep .ded-kpi-card.is-highlight .ded-kpi-sub { font-size: 12px; line-height: 16px; color: var(--su-muted) !important; }
+.srep-acc, html.daily-dark .srep-acc:not(#dk) { font-size: 12px; color: var(--su-muted) !important; gap: 4px; }
+.srep-acc strong, html.daily-dark .srep-acc strong:not(#dk) { font-family: var(--su-mono); font-weight: 500; font-size: 14px; color: var(--su-text) !important; font-variant-numeric: tabular-nums; }
+.srep .ded-card-title, html.daily-dark .srep .ded-card-title:not(#dk) { font-weight: 500; font-size: 15px; letter-spacing: 0; color: var(--su-text) !important; }
+.srep .ded-subtitle, html.daily-dark .srep .ded-subtitle:not(#dk) { font-size: 13px; color: var(--su-text-2) !important; }
+.srep table td, .srep table th { font-variant-numeric: tabular-nums; }
+.srep table th, html.daily-dark .srep table th:not(#dk) { font-weight: 500; text-transform: none; letter-spacing: 0; color: var(--su-muted) !important; }
+
+/* Variaciones: texto con su referencia, sin píldora */
+.srep .ded-kpi-badge-green, .srep .ded-pill-red {
+	background: none !important; border: 0 !important; padding: 0; box-shadow: none; font-weight: 500; font-variant-numeric: tabular-nums;
+}
+.srep .ded-kpi-card .ded-kpi-badge-green, .srep .ded-kpi-card .ded-pill-red, .srep td .ded-kpi-badge-green, .srep td .ded-pill-red { font-family: var(--su-mono); }
+.srep .ded-kpi-badge-green, html.daily-dark .srep .ded-kpi-badge-green:not(#dk) { color: var(--su-up) !important; }
+.srep .ded-pill-red, html.daily-dark .srep .ded-pill-red:not(#dk) { color: var(--su-down) !important; }
+
+/* 7. Detalles: controles 8, tarjetas 12, rangos como cifras, activo = escalón de superficie */
+.srep .ded-select-btn { border-radius: 8px; }
+.srep-seg .ded-select-btn.is-active,
+html.daily-dark .srep-seg .ded-select-btn.is-active:not(#dk) { background: var(--su-step) !important; border-color: var(--su-line) !important; color: var(--su-text) !important; font-weight: 500; box-shadow: inset 0 0 0 1px var(--su-line); }
+.srep .ded-rank-circle, html.daily-dark .srep .ded-rank-circle:not(#dk) {
+	background: none !important; border: 0 !important; box-shadow: none !important; width: auto; height: auto; min-width: 0;
+	font-family: var(--su-mono); font-size: 12px; font-weight: 400; color: var(--su-muted) !important;
+}
+.ded-nav-tab { border-radius: 8px !important; }
+.ded-nav-tab.is-active, html.daily-dark .ded-nav-tab.is-active:not(#dk) {
+	background: rgba(148, 163, 184, 0.12) !important; border-color: rgba(148, 163, 184, 0.24) !important; box-shadow: none !important;
+}
+html:not(.daily-dark) .ded-nav-tab.is-active { background: rgba(15, 23, 42, 0.06) !important; color: #0f172a !important; }
+
+/* 9. Movimiento: solo color en hover, sin saltos */
+.srep .ded-kpi-card, .srep .ded-select-btn { transition: background-color .15s cubic-bezier(.22, 1, .36, 1), border-color .15s cubic-bezier(.22, 1, .36, 1), color .15s cubic-bezier(.22, 1, .36, 1); }
+
+/* La variación de la tarjeta principal y las de cada KPI: texto continuo, sin fondo */
+.srep .ded-kpi-card.is-highlight .ded-kpi-badge-green, .srep .ded-kpi-card.is-highlight .ded-pill-red { background: none !important; border: 0 !important; font-weight: 500 !important; }
+.srep .ded-kpi-card.is-highlight .ded-kpi-badge-green { color: var(--su-up) !important; }
+.srep .ded-kpi-card.is-highlight .ded-pill-red { color: var(--su-down) !important; }
+.srep .ded-kpi-card > .ded-kpi-sub { display: block; }

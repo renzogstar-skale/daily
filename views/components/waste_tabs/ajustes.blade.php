@@ -692,7 +692,7 @@
 					Recibe información de
 				</div>
 				<div class="d-flex flex-column gap-2">
-					<a href="{{ $U('/quality-expiry') }}" class="daily-oc-module-link">
+					<a href="{{ $U('/waste#tab-fefo') }}" class="daily-oc-module-link">
 						<div class="daily-oc-module-info">
 							<div class="daily-oc-module-icon"><i class="fa-solid fa-snowflake"></i></div>
 							<div>

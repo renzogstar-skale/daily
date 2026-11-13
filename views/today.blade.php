@@ -91,7 +91,7 @@
 	$riskActive = $rk['cold']['n'] + $rk['expiring']['n'] + $rk['quarantine']['n'] + $rk['counts']['n'] + $rk['counts']['diff'];
 
 	// Estado operativo: reglas objetivas, explicadas en el título
-	$state = $s['urgent'] > 0 ? ['Crítico', 'danger', 'Hay decisiones con prioridad crítica (puntuación ≥ 60).']
+	$state = $s['urgent'] > 0 ? ['Crítico', 'danger', 'Hay decisiones con prioridad crítica.']
 		: ($s['overdue'] > 0 || $tasksLate > 0 ? ['Requiere atención', 'warning', 'Hay decisiones o tareas fuera de plazo, sin ninguna crítica.']
 		: ['En orden', 'success', 'Sin decisiones críticas ni atrasos registrados.']);
 	$pl = fn($n, $one, $many) => '<b>' . $n . '</b> ' . ($n === 1 ? $one : $many);
@@ -121,9 +121,11 @@
 			<h1 class="today-exec-title">HOY</h1>
 			<p class="today-exec-subtitle">
 				Resumen ejecutivo · Ventas y operación comercial
-				<a href="javascript:void(0);" id="btn-toggle-ops" style="margin-left: 10px; color: #008E48; font-weight: 600; text-decoration: none; font-size: 12px; display: inline-flex; align-items: center; gap: 4px;">
-					<i class="fa-solid fa-clipboard-check"></i> <span id="toggle-ops-text">Ver Operaciones</span>
-				</a>
+				<nav class="today-level-jump" aria-label="Vistas de HOY">
+					<a href="?tab=commercial" data-level="#daily-tab-commercial" aria-current="page">Comercial</a>
+					<a href="?tab=processes" data-level="#daily-tab-processes">Procesos</a>
+					<a href="?tab=operations" data-level="#daily-tab-operations">Decisiones</a>
+				</nav>
 			</p>
 		</div>
 		<div class="today-exec-filters">
@@ -144,7 +146,7 @@
 						<option value="all" @if(!$selectedBranchId) selected @endif>Todas</option>
 					@endif
 					@foreach($branches as $b)
-						<option value="{{ $b->id }}" @if($selectedBranchId === intval($b->id)) selected @endif>{{ $b->name }}</option>
+						<option value="{{ $b->id }}" @if($selectedBranchId === intval($b->id)) selected @endif>{{ $b->name }}{{ !empty($b->code) && !str_contains($b->name, $b->code) ? ' · ' . $b->code : '' }}</option>
 					@endforeach
 				</select>
 			</div>
@@ -155,7 +157,7 @@
 				<select id="exec-filter-dept" aria-label="Departamento">
 					<option value="todos" @if($selectedDept === 'todos') selected @endif>Todos</option>
 					@foreach(($departments ?? \Grocy\Services\DailyMetricsService::Departments()) as $dk => $dv)
-					<option value="{{ $dk }}" @if($selectedDept === $dk) selected @endif>{{ $dv[0] }}</option>
+					<option value="{{ $dk }}" @if($selectedDept === $dk) selected @endif>{{ \Grocy\Services\DailyMetricsService::DepartmentLabel($dk) }}</option>
 					@endforeach
 				</select>
 			</div>
@@ -172,11 +174,14 @@
 					<option value="non_food" @if($selectedCategory === 'non_food') selected @endif>Non-Food</option>
 				</select>
 			</div>
+			<span class="today-exec-scope" id="exec-scope-note" role="status" aria-live="polite"></span>
 
 			<!-- Status Indicator -->
 			<div class="today-exec-status">
 				<span class="today-exec-dot"></span>
-				<span>Última actualización <strong id="exec-last-update">{{ $exec['last_updated'] }}</strong></span>
+				<span>Última sincronización <strong id="exec-last-update">{{ $exec['last_updated'] }}</strong></span>
+				<span>· Última comprobación <strong id="exec-last-check">{{ $exec['checked_at'] ?? date('d/m/Y H:i:s') }}</strong></span>
+				<span id="exec-refresh-note" class="today-exec-refresh-note" role="status" aria-live="polite"></span>
 			</div>
 
 			<!-- Refresh Button -->
@@ -186,82 +191,69 @@
 		</div>
 	</header>
 
-	<!-- ==================== NIVEL 1: PULSO OPERATIVO EJECUTIVO ==================== -->
-	<section class="daily-pulse-banner" style="grid-template-columns: 1.5fr 1fr 1fr 1fr;" aria-label="Pulso Operativo del Turno">
+	<!-- ==================== PULSO OPERATIVO DEL TURNO: qué pasó, dónde, quién responde y a qué hora vence ==================== -->
+	@php
+		$pulseItems = array_slice(array_values(array_filter($d['decisions'], fn($q) => $q['score'] >= 60)), 0, 3);
+		if (!$pulseItems) $pulseItems = array_slice(array_values(array_filter($d['decisions'], fn($q) => $q['state'] === 'overdue')), 0, 3);
+		$pulseDue = function ($due) use ($now) {
+			if (!$due) return 'Sin plazo';
+			$c = \Carbon\Carbon::parse($due)->locale('es');
+			$h = $c->format('H:i') === '23:59' ? '' : ' ' . $c->format('H:i');
+			return ($c->isToday() ? 'hoy' : ($c->isTomorrow() ? 'mañana' : ($c->isYesterday() ? 'ayer' : $c->isoFormat('D MMM')))) . $h;
+		};
+		$pulseHead = $s['urgent'] > 0 ? $s['urgent'] . ' ' . ($s['urgent'] === 1 ? 'decisión crítica abierta' : 'decisiones críticas abiertas')
+			: ($s['overdue'] > 0 || $tasksLate > 0 ? ($s['overdue'] + $tasksLate) . ' decisión(es) o tarea(s) fuera de plazo' : 'Sin decisiones críticas ni atrasos');
+	@endphp
+	<section class="daily-pulse-banner today-pulse" aria-label="Pulso operativo del turno">
 		<div class="daily-pulse-status">
 			<div class="daily-pulse-indicator is-{{ $state[1] === 'danger' ? 'danger' : ($state[1] === 'warning' ? 'warning' : 'good') }}">
 				<i class="fa-solid {{ $state[1] === 'danger' ? 'fa-triangle-exclamation' : ($state[1] === 'warning' ? 'fa-bell' : 'fa-circle-check') }}"></i>
 			</div>
 			<div class="daily-pulse-info">
 				<div class="d-flex align-items-center gap-2 mb-1">
-					<span class="daily-badge daily-badge-{{ $state[1] === 'danger' ? 'danger' : ($state[1] === 'warning' ? 'warning' : 'success') }}">
-						{{ $state[0] }}
-					</span>
-					<span class="text-muted" style="font-size: 11px;">Turno activo · {{ $branchName }}</span>
+					<span class="daily-badge daily-badge-{{ $state[1] === 'danger' ? 'danger' : ($state[1] === 'warning' ? 'warning' : 'success') }}">{{ $state[0] }}</span>
+					<span class="today-pulse-scope">Turno activo · {{ $branchName }} · toda la sucursal</span>
 				</div>
-				<h3 style="font-size: 1.05rem; font-weight: 700; margin: 0; color: var(--daily-text-main);">{{ $state[2] }}</h3>
-				<p style="margin: 3px 0 0; font-size: 0.8rem; color: var(--daily-text-muted);">
-					@if($nCritical > 0)
-						<span class="text-danger font-weight-bold">{{ $nCritical }} avisos críticos</span> que requieren intervención inmediata.
-					@elseif($tasksLate > 0)
-						<span class="text-warning font-weight-bold">{{ $tasksLate }} tareas fuera de plazo</span> en la tienda.
-					@else
-						Operación estabilizada sin desviaciones críticas registradas.
-					@endif
-				</p>
+				<h3 class="today-pulse-head">{{ $pulseHead }}</h3>
 			</div>
 		</div>
-
-		<!-- Métrica Macro 1: Ventas Netas -->
-		<div class="daily-pulse-metric">
-			<span class="daily-pulse-metric-label"><i class="fa-solid fa-chart-line text-success mr-1"></i> Ventas Netas</span>
-			<span class="daily-pulse-metric-value daily-tabular" id="pulse-sales-val">{{ $exec['kpis']['sales_net']['value'] }}</span>
-			<span class="daily-pulse-metric-sub">
-				<span class="daily-delta {{ ['good' => 'is-good', 'bad' => 'is-bad'][$exec['kpis']['sales_net']['tone'] ?? ''] ?? 'is-neutral' }}">
-					{{ $exec['kpis']['sales_net']['delta_pct'] }}
-				</span>
-				<span>vs. período anterior</span>
-			</span>
-		</div>
-
-		<!-- Métrica Macro 2: Cumplimiento de Meta -->
-		<div class="daily-pulse-metric">
-			<span class="daily-pulse-metric-label"><i class="fa-solid fa-bullseye text-warning mr-1"></i> Cumplimiento Meta</span>
-			<span class="daily-pulse-metric-value daily-tabular" id="pulse-target-val">{{ $exec['kpis']['target_compliance']['value'] }}</span>
-			<span class="daily-pulse-metric-sub">
-				<span class="daily-delta {{ ['good' => 'is-good', 'bad' => 'is-bad'][$exec['kpis']['target_compliance']['tone'] ?? ''] ?? 'is-neutral' }}">
-					{{ $exec['kpis']['target_compliance']['gap_pp'] }}
-				</span>
-				<span>{{ $exec['kpis']['target_compliance']['target_text'] }}</span>
-			</span>
-		</div>
-
-		<!-- Métrica Macro 3: Margen Bruto -->
-		<div class="daily-pulse-metric">
-			<span class="daily-pulse-metric-label"><i class="fa-solid fa-percent text-info mr-1"></i> Margen Bruto</span>
-			<span class="daily-pulse-metric-value daily-tabular" id="pulse-margin-val">{{ $exec['kpis']['gross_margin']['value'] }}</span>
-			<span class="daily-pulse-metric-sub">
-				<span class="daily-delta {{ ['good' => 'is-good', 'bad' => 'is-bad'][$exec['kpis']['gross_margin']['tone'] ?? ''] ?? 'is-neutral' }}">
-					{{ $exec['kpis']['gross_margin']['delta_pp'] }}
-				</span>
-				<span>{{ $exec['kpis']['gross_margin']['comparison_text'] }}</span>
-			</span>
-		</div>
+		@if($pulseItems)
+		<ol class="today-pulse-list">
+			@foreach($pulseItems as $q)
+			@php $qHref = $docLink($q['doc']) ?: ($canGo($q['href']) ? $link($q['href']) : null); @endphp
+			<li class="today-pulse-item {{ $q['state'] === 'overdue' ? 'is-overdue' : '' }}">
+				<div class="today-pulse-what">
+					@if($qHref)<a href="{{ $qHref }}">{{ $q['type'] }}: {{ $q['subject'] }}</a>@else<span>{{ $q['type'] }}: {{ $q['subject'] }}</span>@endif
+				</div>
+				<div class="today-pulse-meta">
+					<span><i class="fa-solid fa-store"></i> {{ $q['branch'] ?: $branchName }}</span>
+					<span><i class="fa-regular fa-user"></i> @if($q['owner']){{ $q['owner'] }}@else<span class="t-warning">Sin responsable</span>@endif</span>
+					<span class="{{ $q['state'] === 'overdue' ? 't-danger' : '' }}"><i class="fa-regular fa-clock"></i> {{ $q['state'] === 'overdue' ? 'Venció ' : 'Vence ' }}{{ $pulseDue($q['due']) }}</span>
+				</div>
+			</li>
+			@endforeach
+		</ol>
+		@else
+		<p class="today-pulse-empty">No hay decisiones críticas ni vencidas en este alcance.</p>
+		@endif
+		@if(count($d['decisions']) > count($pulseItems))
+		<a class="today-pulse-more" href="?tab=operations" data-level="#daily-tab-operations">Ver la agenda completa ({{ count($d['decisions']) }}) y el detalle de prioridad</a>
+		@endif
 	</section>
 
 	<!-- ==================== CONTROL DE NIVELES (SEGMENTED TABS) ==================== -->
 	<div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
 		<div class="daily-segmented-tabs" role="tablist">
 			<button type="button" class="daily-tab-btn active" data-tab-target="#daily-tab-commercial">
-				<i class="fa-solid fa-chart-line mr-1 text-success"></i> Nivel 1 · Pulso Comercial
+				<i class="fa-solid fa-chart-line mr-1 text-success"></i> Comercial <span class="today-tab-sub">· ventas y margen</span>
 			</button>
 			<button type="button" class="daily-tab-btn" data-tab-target="#daily-tab-processes">
-				<i class="fa-solid fa-bars-progress mr-1 text-warning"></i> Nivel 2 · Estado de Procesos & Desviaciones
+				<i class="fa-solid fa-bars-progress mr-1 text-warning"></i> Procesos <span class="today-tab-sub">· estado y desviaciones</span>
 			</button>
 			<button type="button" class="daily-tab-btn" data-tab-target="#daily-tab-operations">
-				<i class="fa-solid fa-list-check mr-1 text-primary"></i> Nivel 3 · Decisiones, Tareas & Aprobaciones
+				<i class="fa-solid fa-list-check mr-1 text-primary"></i> Decisiones <span class="today-tab-sub">· tareas y aprobaciones</span>
 				@if($nCritical > 0 || count($ap['items']) > 0)
-					<span class="daily-badge daily-badge-danger ml-1" style="font-size: 10px; padding: 1px 6px;">{{ $nCritical + count($ap['items']) }}</span>
+					<span class="daily-badge daily-badge-danger ml-1" style="font-size: 10px; padding: 1px 6px;" title="Avisos críticos + aprobaciones de toda la sucursal (no se filtra por Departamento ni Categoría)">{{ $nCritical + count($ap['items']) }}</span>
 				@endif
 			</button>
 		</div>
@@ -270,149 +262,105 @@
 		</div>
 	</div>
 
-	<!-- TAB 1: PULSO COMERCIAL & VENTAS -->
+	<!-- TAB 1: COMERCIAL -->
 	<div class="daily-tab-pane active" id="daily-tab-commercial">
-		<!-- 2. Fila 1 · KPI Financieros -->
-	<div class="today-exec-kpi-grid">
-		<!-- KPI 1: Ventas netas -->
-		<div class="today-exec-kpi-card" id="card-kpi-sales" title="Ventas netas acumuladas del período">
-			<div class="today-exec-kpi-icon is-green">
-				<i class="fa-solid fa-chart-simple"></i>
-			</div>
+	@php
+		$k = $exec['kpis'];
+		$tone = fn($o) => ['good' => 'delta-up', 'bad' => 'delta-down'][$o['tone'] ?? ''] ?? '';
+		$sTone = fn($o) => ['good' => 'delta-up', 'bad' => 'delta-up-bad'][$o['tone'] ?? ''] ?? '';
+		$op = $exec['operational_kpis'];
+		$pr = $exec['profitability_kpis'];
+		$ri = $exec['risk_inventory'];
+		$wf = $exec['workforce_kpis'];
+	@endphp
+	<!-- Lecturas comerciales: una por concepto, con corte y comparación -->
+	<div class="today-exec-kpi-grid today-exec-kpi-grid-auto">
+		<!-- Ventas netas -->
+		<div class="today-exec-kpi-card" id="card-kpi-sales">
+			<div class="today-exec-kpi-icon is-green"><i class="fa-solid fa-chart-simple"></i></div>
 			<div class="today-exec-kpi-content">
-				<span class="today-exec-kpi-label">Ventas netas</span>
-				<span class="today-exec-kpi-value" id="kpi-sales-val">{{ $exec['kpis']['sales_net']['value'] }}</span>
+				<span class="today-exec-kpi-label">Ventas netas <span class="today-exec-period" id="kpi-sales-cut">{{ $k['sales_net']['cutoff_text'] }}</span></span>
+				<span class="today-exec-kpi-value" id="kpi-sales-val">{{ $k['sales_net']['value'] }}</span>
 				<span class="today-exec-kpi-sub">
-					<span class="{{ ['good' => 'delta-up', 'bad' => 'delta-down'][$exec['kpis']['sales_net']['tone'] ?? ''] ?? '' }}" id="kpi-sales-delta" data-spark="0">{{ $exec['kpis']['sales_net']['delta_pct'] }}</span>
-					<span id="kpi-sales-comp">{{ $exec['kpis']['sales_net']['comparison_text'] }}</span>
+					<span class="{{ $tone($k['sales_net']) }}" id="kpi-sales-delta" data-spark="0">{{ $k['sales_net']['delta_pct'] }}</span>
+					<span id="kpi-sales-comp">{{ $k['sales_net']['comparison_text'] }}</span>
 				</span>
 			</div>
 		</div>
 
-		<!-- KPI 2: Cumplimiento meta -->
-		<div class="today-exec-kpi-card" id="card-kpi-target" title="Cumplimiento frente a la meta comercial">
-			<div class="today-exec-kpi-icon is-red">
-				<i class="fa-solid fa-bullseye"></i>
-			</div>
+		<!-- Avance contra la meta acumulada al corte -->
+		<div class="today-exec-kpi-card" id="card-kpi-target" title="Venta al corte ÷ meta acumulada a la misma hora (la meta del día se reparte según el perfil horario del mismo día de la semana pasada)">
+			<div class="today-exec-kpi-icon is-red"><i class="fa-solid fa-bullseye"></i></div>
 			<div class="today-exec-kpi-content">
-				<span class="today-exec-kpi-label">Cumplimiento meta</span>
-				<span class="today-exec-kpi-value" id="kpi-target-val">{{ $exec['kpis']['target_compliance']['value'] }}</span>
+				<span class="today-exec-kpi-label">Avance vs. meta al corte</span>
+				<span class="today-exec-kpi-value" id="kpi-target-val">{{ $k['target_compliance']['value'] }}</span>
 				<span class="today-exec-kpi-sub">
-					<span class="{{ ['good' => 'delta-up', 'bad' => 'delta-down'][$exec['kpis']['target_compliance']['tone'] ?? ''] ?? '' }}" id="kpi-target-delta" data-spark="0">{{ $exec['kpis']['target_compliance']['gap_pp'] }}</span>
-					<span id="kpi-target-meta" style="margin-left: 8px;">{{ $exec['kpis']['target_compliance']['target_text'] }}</span>
+					<span class="{{ $tone($k['target_compliance']) }}" id="kpi-target-delta" data-spark="0">{{ $k['target_compliance']['gap_pp'] }}</span>
+				</span>
+				<span class="today-exec-kpi-fields">
+					<span id="kpi-target-cut">{{ $k['target_compliance']['cutoff_target_text'] }}</span>
+					<span id="kpi-target-meta">{{ $k['target_compliance']['target_text'] }}</span>
 				</span>
 			</div>
 		</div>
 
-		<!-- KPI 3: Margen bruto -->
-		<div class="today-exec-kpi-card" id="card-kpi-margin" title="Margen bruto porcentual sobre ventas netas">
-			<div class="today-exec-kpi-icon is-green">
-				<i class="fa-solid fa-percent"></i>
-			</div>
+		<!-- Margen bruto: % y $ con el alcance del costo -->
+		<div class="today-exec-kpi-card" id="card-kpi-margin">
+			<div class="today-exec-kpi-icon is-green"><i class="fa-solid fa-percent"></i></div>
 			<div class="today-exec-kpi-content">
-				<span class="today-exec-kpi-label">Margen bruto</span>
-				<span class="today-exec-kpi-value" id="kpi-margin-val">{{ $exec['kpis']['gross_margin']['value'] }}</span>
+				<span class="today-exec-kpi-label">Margen y utilidad bruta</span>
+				<span class="today-exec-kpi-value"><span id="kpi-margin-val">{{ $k['gross_margin']['value'] }}</span> <span class="today-exec-kpi-value-2" id="kpi-profit-val">{{ $k['gross_margin']['numeric'] !== null ? $k['gross_margin']['amount'] : '' }}</span></span>
 				<span class="today-exec-kpi-sub">
-					<span class="{{ ['good' => 'delta-up', 'bad' => 'delta-down'][$exec['kpis']['gross_margin']['tone'] ?? ''] ?? '' }}" id="kpi-margin-delta" data-spark="0">{{ $exec['kpis']['gross_margin']['delta_pp'] }}</span>
-					<span id="kpi-margin-comp">{{ $exec['kpis']['gross_margin']['comparison_text'] }}</span>
+					<span class="{{ $tone($k['gross_margin']) }}" id="kpi-margin-delta" data-spark="0">{{ $k['gross_margin']['delta_pp'] }}</span>
+					<span id="kpi-margin-comp">{{ $k['gross_margin']['comparison_text'] }}</span>
+				</span>
+				<span class="today-exec-kpi-fields">
+					<span id="kpi-margin-cogs">{{ $k['gross_margin']['cogs_text'] }}</span>
+					<span id="kpi-margin-scope" class="{{ $k['gross_margin']['missing_cost_lines'] ? 't-warning' : '' }}">{{ $k['gross_margin']['cogs_scope'] }}</span>
 				</span>
 			</div>
 		</div>
 
-		<!-- KPI 4: Utilidad bruta -->
-		<div class="today-exec-kpi-card" id="card-kpi-profit" title="Utilidad bruta en valor monetario">
-			<div class="today-exec-kpi-icon is-green">
-				<i class="fa-solid fa-coins"></i>
-			</div>
+		<!-- Ticket promedio, transacciones y unidades por ticket -->
+		<div class="today-exec-kpi-card" id="card-kpi-ticket">
+			<div class="today-exec-kpi-icon is-green"><i class="fa-solid fa-cart-shopping"></i></div>
 			<div class="today-exec-kpi-content">
-				<span class="today-exec-kpi-label">Utilidad bruta</span>
-				<span class="today-exec-kpi-value" id="kpi-profit-val">{{ $exec['kpis']['gross_profit']['value'] }}</span>
+				<span class="today-exec-kpi-label">Ticket y transacciones</span>
+				<div class="today-exec-mini-stats">
+					<div><span class="today-exec-mini-val" id="kpi-ticket-val">{{ $k['avg_ticket']['value'] }}</span><span class="today-exec-mini-lbl">Ticket promedio</span></div>
+					<div><span class="today-exec-mini-val" id="kpi-tx-val">{{ $k['transactions']['value'] }}</span><span class="today-exec-mini-lbl">Transacciones</span></div>
+					<div><span class="today-exec-mini-val" id="kpi-upt-val">{{ $k['units_per_tx']['value'] }}</span><span class="today-exec-mini-lbl">Unid. por ticket</span></div>
+				</div>
 				<span class="today-exec-kpi-sub">
-					<span class="{{ ['good' => 'delta-up', 'bad' => 'delta-down'][$exec['kpis']['gross_profit']['tone'] ?? ''] ?? '' }}" id="kpi-profit-delta" data-spark="0">{{ $exec['kpis']['gross_profit']['delta_pct'] }}</span>
-					<span id="kpi-profit-sub">{{ $exec['kpis']['gross_profit']['subtext'] }}</span>
-				</span>
-			</div>
-		</div>
-	</div>
-
-	<!-- 3. Fila 2 · KPI Operativos -->
-	<div class="today-exec-kpi-grid">
-		<!-- KPI 5: Ticket promedio -->
-		<div class="today-exec-kpi-card" id="card-kpi-ticket" title="Valor medio de compra por ticket emitido">
-			<div class="today-exec-kpi-icon is-green">
-				<i class="fa-solid fa-cart-shopping"></i>
-			</div>
-			<div class="today-exec-kpi-content">
-				<span class="today-exec-kpi-label">Ticket promedio</span>
-				<span class="today-exec-kpi-value" id="kpi-ticket-val">{{ $exec['kpis']['avg_ticket']['value'] }}</span>
-				<span class="today-exec-kpi-sub">
-					<span class="{{ ['good' => 'delta-up', 'bad' => 'delta-down'][$exec['kpis']['avg_ticket']['tone'] ?? ''] ?? '' }}" id="kpi-ticket-delta" data-spark="0">{{ $exec['kpis']['avg_ticket']['delta_pct'] }}</span>
-					<span id="kpi-ticket-sub">{{ $exec['kpis']['avg_ticket']['subtext'] }}</span>
+					<span class="{{ $tone($k['avg_ticket']) }}" id="kpi-ticket-delta" data-spark="0">{{ $k['avg_ticket']['delta_pct'] ? 'Ticket ' . $k['avg_ticket']['delta_pct'] : '' }}</span>
+					<span class="{{ $tone($k['transactions']) }}" id="kpi-tx-delta" data-spark="0">{{ $k['transactions']['delta_pct'] ? 'Transacciones ' . $k['transactions']['delta_pct'] : '' }}</span>
 				</span>
 			</div>
 		</div>
 
-		<!-- KPI 6: Transacciones -->
-		<div class="today-exec-kpi-card" id="card-kpi-tx" title="Número total de transacciones y tickets válidos">
-			<div class="today-exec-kpi-icon is-green">
-				<i class="fa-regular fa-file-lines"></i>
-			</div>
+		<!-- Venta por hora: fichada si hay asistencia, programada si solo hay turnos -->
+		<div class="today-exec-kpi-card" id="card-kpi-labor" title="{{ $k['labor_sales_per_hour']['tooltip'] }}">
+			<div class="today-exec-kpi-icon is-green"><i class="fa-regular fa-clock"></i></div>
 			<div class="today-exec-kpi-content">
-				<span class="today-exec-kpi-label">Transacciones</span>
-				<span class="today-exec-kpi-value" id="kpi-tx-val">{{ $exec['kpis']['transactions']['value'] }}</span>
+				<span class="today-exec-kpi-label" id="kpi-labor-title">{{ $k['labor_sales_per_hour']['title'] }}</span>
+				<span class="today-exec-kpi-value" id="kpi-labor-val">{{ $k['labor_sales_per_hour']['value'] }}</span>
 				<span class="today-exec-kpi-sub">
-					<span class="{{ ['good' => 'delta-up', 'bad' => 'delta-down'][$exec['kpis']['transactions']['tone'] ?? ''] ?? '' }}" id="kpi-tx-delta" data-spark="0">{{ $exec['kpis']['transactions']['delta_pct'] }}</span>
-					<span id="kpi-tx-sub">{{ $exec['kpis']['transactions']['subtext'] }}</span>
-				</span>
-			</div>
-		</div>
-
-		<!-- KPI 7: Venta por hora laboral -->
-		<div class="today-exec-kpi-card" id="card-kpi-labor" title="Ventas netas entre horas laborales reales">
-			<div class="today-exec-kpi-icon is-green">
-				<i class="fa-regular fa-clock"></i>
-			</div>
-			<div class="today-exec-kpi-content">
-				<span class="today-exec-kpi-label">Venta por hora laboral</span>
-				<span class="today-exec-kpi-value" id="kpi-labor-val">{{ $exec['kpis']['labor_sales_per_hour']['value'] }}</span>
-				<span class="today-exec-kpi-sub">
-					<span class="{{ ['good' => 'delta-up', 'bad' => 'delta-down'][$exec['kpis']['labor_sales_per_hour']['tone'] ?? ''] ?? '' }}" id="kpi-labor-delta" data-spark="0">{{ $exec['kpis']['labor_sales_per_hour']['delta_pct'] }}</span>
-					<span id="kpi-labor-sub">{{ $exec['kpis']['labor_sales_per_hour']['subtext'] }}</span>
-				</span>
-			</div>
-		</div>
-
-		<!-- KPI 8: Merma sobre ventas -->
-		<div class="today-exec-kpi-card" id="card-kpi-waste" title="Porcentaje de merma operativa frente a ventas">
-			<div class="today-exec-kpi-icon is-red">
-				<i class="fa-solid fa-triangle-exclamation"></i>
-			</div>
-			<div class="today-exec-kpi-content">
-				<span class="today-exec-kpi-label">Merma sobre ventas</span>
-				<span class="today-exec-kpi-value" id="kpi-waste-val">{{ $exec['kpis']['waste_ratio']['value'] }}</span>
-				<span class="today-exec-kpi-sub">
-					<span class="{{ ['good' => 'delta-up', 'bad' => 'delta-down'][$exec['kpis']['waste_ratio']['tone'] ?? ''] ?? '' }}" id="kpi-waste-delta" data-spark="0">{{ $exec['kpis']['waste_ratio']['delta_pp'] }}</span>
-					<span id="kpi-waste-sub">{{ $exec['kpis']['waste_ratio']['subtext'] }}</span>
+					<span class="{{ $tone($k['labor_sales_per_hour']) }}" id="kpi-labor-delta" data-spark="0">{{ $k['labor_sales_per_hour']['delta_pct'] }}</span>
+					<span id="kpi-labor-sub">{{ $k['labor_sales_per_hour']['subtext'] }}</span>
 				</span>
 			</div>
 		</div>
 	</div>
 
-	<!-- 4 & 5. Fila Central · Gráfico de Línea + Gráfico de Dona -->
+	<!-- Ventas reales vs. meta y proyección · Ventas por departamento -->
 	<div class="today-exec-middle-row">
-		<!-- Gráfico Principal: Ventas reales vs. meta por hora -->
 		<div class="today-exec-card">
 			<div class="today-exec-card-head">
-				<h3 class="today-exec-card-title">Ventas reales vs. meta por hora</h3>
+				<h3 class="today-exec-card-title">Ventas del día: real, meta y proyección</h3>
 				<div class="today-exec-legend">
-					<div class="today-exec-legend-item">
-						<span class="today-exec-legend-dot" style="background: #00C83B;"></span>
-						<span>Venta real</span>
-					</div>
-					<div class="today-exec-legend-item">
-						<span class="today-exec-legend-dot" style="background: #94A3B8;"></span>
-						<span>Meta</span>
-					</div>
+					<div class="today-exec-legend-item"><span class="today-exec-legend-dot" style="background: #00C83B;"></span><span id="leg-real">{{ $exec['main_chart']['legend']['real'] }}</span></div>
+					<div class="today-exec-legend-item"><span class="today-exec-legend-dash" style="border-color: #94A3B8;"></span><span>{{ $exec['main_chart']['legend']['target'] }}</span></div>
+					<div class="today-exec-legend-item"><span class="today-exec-legend-dash" style="border-color: #0EA5E9;"></span><span>{{ $exec['main_chart']['legend']['projection'] }}</span></div>
 				</div>
 			</div>
 			<div class="today-exec-main-chart-body">
@@ -423,14 +371,14 @@
 					<span class="today-exec-proj-label">Proyección de cierre</span>
 					<span class="today-exec-proj-val" id="exec-proj-val">{{ $exec['main_chart']['projected_closing']['amount'] }}</span>
 					<span class="today-exec-proj-sub">
-						<span class="{{ ['good' => 'delta-up', 'bad' => 'delta-down'][$exec['main_chart']['projected_closing']['tone'] ?? ''] ?? '' }}" id="exec-proj-delta" data-spark="0">{{ $exec['main_chart']['projected_closing']['variance_pct'] }}</span>
+						<span class="{{ $tone($exec['main_chart']['projected_closing']) }}" id="exec-proj-delta" data-spark="0">{{ $exec['main_chart']['projected_closing']['variance_pct'] }}</span>
 						<span id="exec-proj-text">{{ $exec['main_chart']['projected_closing']['variance_text'] }}</span>
 					</span>
+					<span class="today-exec-proj-basis" id="exec-proj-basis">{{ $exec['main_chart']['projected_closing']['basis_text'] }}</span>
 				</div>
 			</div>
 		</div>
 
-		<!-- Gráfico de Dona: Ventas por departamento -->
 		<div class="today-exec-card">
 			<div class="today-exec-card-head">
 				<h3 class="today-exec-card-title">Ventas por departamento</h3>
@@ -450,100 +398,67 @@
 					</div>
 				</div>
 				<div class="today-exec-dept-list" id="exec-dept-list">
-					@foreach($exec['donut_chart']['departments'] as $dept)
-					<div class="today-exec-dept-row" data-dept-id="{{ $dept['id'] }}" title="Filtrar por {{ $dept['name'] }}">
-						<div class="today-exec-dept-left">
-							<span class="today-exec-dept-dot" style="background: {{ $dept['color'] }};"></span>
-							<span>{{ $dept['name'] }}</span>
-						</div>
-						<div class="today-exec-dept-right">
-							<span class="today-exec-dept-pct">{{ number_format($dept['share_pct'], 1) }}%</span>
-							<span class="today-exec-dept-amount">${{ number_format($dept['sales'], 0) }}</span>
-						</div>
+					@foreach(collect($exec['donut_chart']['departments'])->sortByDesc('sales') as $dept)
+					<div class="today-exec-dept-row" data-dept-id="{{ $dept['id'] }}" role="button" tabindex="0" title="Abrir {{ $dept['name'] }}">
+						<div class="today-exec-dept-left"><span class="today-exec-dept-dot" style="background: {{ $dept['color'] }};"></span><span>{{ $dept['name'] }}</span></div>
+						<div class="today-exec-dept-right"><span class="today-exec-dept-pct">{{ number_format($dept['share_pct'], 1) }}%</span><span class="today-exec-dept-amount">${{ number_format($dept['sales'], 0) }}</span></div>
 					</div>
 					@endforeach
+					@if(empty($exec['donut_chart']['departments']))
+					<div class="text-muted small py-2">{{ $k['sales_net']['state'] === 'no_data' ? 'Pendiente de sincronización: sin ventas del día por departamento' : 'Sin ventas por departamento en este filtro' }}</div>
+					@endif
 				</div>
 			</div>
 		</div>
 	</div>
 
-	<!-- 6, 7 & 8. Fila Inferior · Mapa de calor + Comparativo + Decisiones prioritarias -->
+	<!-- Actividad de venta · Comparativo · Frentes de atención -->
 	<div class="today-exec-bottom-row">
-		<!-- Card 1: Mapa de calor de ventas -->
 		<div class="today-exec-card">
 			<div class="today-exec-card-head">
-				<h3 class="today-exec-card-title" style="white-space: nowrap; flex-shrink: 0;">Mapa de calor de ventas</h3>
-				<select class="today-exec-select-sm" id="exec-heatmap-metric" aria-label="Métrica mapa de calor">
+				<h3 class="today-exec-card-title" style="white-space: nowrap; flex-shrink: 0;">Actividad de venta</h3>
+				<select class="today-exec-select-sm" id="exec-heatmap-metric" aria-label="Métrica de actividad">
 					<option value="sales" selected>Por ventas</option>
 					<option value="tx">Por transacciones</option>
 				</select>
 			</div>
+			<p class="today-exec-card-period" id="exec-heat-period">{{ $exec['heatmap']['period_text'] ?? 'Histórico de 4 semanas' }} · promedio por día de la semana</p>
 			<div class="today-exec-heatmap-body">
 				<div class="today-exec-heatmap-table" id="exec-heatmap-table">
 					@foreach($exec['heatmap']['grid'] as $row)
 					<div class="today-exec-heatmap-row">
 						<span class="today-exec-heatmap-day-label">{{ $row['day'] }}</span>
 						@foreach($row['cells'] as $cell)
-						<div class="today-exec-heatmap-cell" 
-							 style="background-color: {{ $cell['color'] }};" 
-							 title="{{ $cell['day'] }} {{ $cell['hour'] }}: {{ $cell['formatted_sales'] }} (Intensidad {{ $cell['intensity'] }}%)"
-							 data-day="{{ $cell['day'] }}"
-							 data-hour="{{ $cell['hour'] }}"
-							 data-sales="{{ $cell['formatted_sales'] }}"></div>
+						<div class="today-exec-heatmap-cell" style="background-color: {{ $cell['color'] }};" title="{{ $cell['day'] }} {{ $cell['hour'] }}: {{ $cell['formatted_sales'] }} promedio (intensidad {{ $cell['intensity'] }}%)" data-day="{{ $cell['day'] }}" data-hour="{{ $cell['hour'] }}" data-sales="{{ $cell['formatted_sales'] }}"></div>
 						@endforeach
 					</div>
 					@endforeach
 					<div class="today-exec-heatmap-hours-row">
 						<span class="today-exec-heatmap-day-label"></span>
-						@foreach($exec['heatmap']['hours'] as $h)
-						<span class="today-exec-heatmap-hour-label">{{ $h }}</span>
-						@endforeach
+						@foreach($exec['heatmap']['hours'] as $h)<span class="today-exec-heatmap-hour-label">{{ $h }}</span>@endforeach
 					</div>
 				</div>
-				<div class="today-exec-heatmap-scale">
-					<span>Menor venta</span>
-					<div class="today-exec-scale-bar"></div>
-					<span>Mayor venta</span>
-				</div>
-
-				<!-- Diagnóstico Operativo de Franjas (No repetido en ningún dashboard) -->
+				<div class="today-exec-heatmap-scale"><span>Menor actividad</span><div class="today-exec-scale-bar"></div><span>Mayor actividad</span></div>
+				@php $hi = $exec['heatmap']['insights'] ?? null; @endphp
 				<div class="today-exec-heatmap-insights border-top pt-2 mt-2">
-					<div class="d-flex align-items-center justify-content-between mb-1" style="font-size: 11px;">
-						<span class="text-muted font-weight-bold">
-							<i class="fa-solid fa-chart-simple text-success mr-1"></i>Diagnóstico de afluencia
-						</span>
-						<span class="text-muted" style="font-size: 10px;">Lun–Dom · 08:00 a 20:00</span>
-					</div>
-					@php $hi = $exec['heatmap']['insights'] ?? null; @endphp
 					<div class="today-exec-heatmap-insights-grid">
 						<div class="today-exec-insight-item is-peak">
-							<div class="d-flex justify-content-between align-items-center mb-1">
-								<span class="badge badge-danger px-1" style="font-size: 9.5px; font-weight: 600;"><i class="fa-solid fa-fire mr-1"></i>Pico</span>
-								<strong class="text-dark" style="font-size: 11px; white-space: nowrap;">{{ $hi['peak'] ?? 'Sin información' }}</strong>
-							</div>
-							<div class="text-muted" style="font-size: 10.5px; line-height: 1.35;">
-								@if($hi)<strong>{{ $hi['peak_sales'] }}</strong> promedio por día (4 semanas).@else Sin ventas en las últimas 4 semanas.@endif
-							</div>
+							<div class="today-exec-insight-head"><span class="today-exec-insight-tag is-peak">Pico</span><strong>{{ $hi['peak'] ?? 'Sin información' }}</strong></div>
+							<div class="today-exec-insight-text">@if($hi)<strong>{{ $hi['peak_sales'] }}</strong> promedio por día en el período.@else Sin ventas en el período.@endif</div>
 						</div>
 						<div class="today-exec-insight-item is-valley">
-							<div class="d-flex justify-content-between align-items-center mb-1">
-								<span class="badge badge-info px-1" style="font-size: 9.5px; font-weight: 600;"><i class="fa-solid fa-boxes-packing mr-1"></i>Valle</span>
-								<strong class="text-dark" style="font-size: 11px; white-space: nowrap;">{{ $hi['valley'] ?? 'Sin información' }}</strong>
-							</div>
-							<div class="text-muted" style="font-size: 10.5px; line-height: 1.35;">
-								@if($hi)<strong>{{ $hi['valley_sales'] }}</strong> promedio: franja para recepción y conteos.@else Sin ventas en las últimas 4 semanas.@endif
-							</div>
+							<div class="today-exec-insight-head"><span class="today-exec-insight-tag is-valley">Valle</span><strong>{{ $hi['valley'] ?? 'Sin información' }}</strong></div>
+							<div class="today-exec-insight-text">@if($hi)<strong>{{ $hi['valley_sales'] }}</strong> promedio: franja para recepción y conteos.@else Sin ventas en el período.@endif</div>
 						</div>
 					</div>
-					<div class="d-flex align-items-center justify-content-between mt-2 pt-1 border-top" style="font-size: 10px; color: #64748b;">
-						<span><i class="fa-solid fa-circle-info mr-1 text-primary"></i>@if($hi){{ $hi['top_share'] }}% de la venta en 18 de 91 franjas @else Sin información @endif</span>
-						<a href="{{ $U('/sales#section-heatmap') }}" class="daily-link-action" style="font-size: 10px; white-space: nowrap;">Ver franjas <i class="fa-solid fa-chevron-right ml-1"></i></a>
+					<div class="today-exec-card-foot">
+						<span>@if($hi){{ $hi['top_share'] }}% de la venta en 18 de 91 franjas @else Sin información @endif</span>
+						<a href="{{ $U('/sales#section-heatmap') }}" class="daily-link-action">Ver franjas <i class="fa-solid fa-chevron-right ml-1"></i></a>
 					</div>
 				</div>
 			</div>
 		</div>
 
-		<!-- Card 2: Comparativo de ventas -->
 		<div class="today-exec-card">
 			<div class="today-exec-card-head">
 				<h3 class="today-exec-card-title">Comparativo de ventas</h3>
@@ -553,428 +468,194 @@
 					<option value="profit" @if(($selectedCompMetric ?? 'sales') === 'profit') selected @endif>Utilidad bruta</option>
 				</select>
 			</div>
-			<div class="today-exec-comparative-body">
-				<canvas id="execComparativeChart"></canvas>
-			</div>
-
-			<!-- Desglose de Variación vs Referencias (No repetido en ningún dashboard) -->
-			<div class="today-exec-comparative-insights border-top pt-2 mt-2">
-				<div class="d-flex align-items-center justify-content-between mb-1" style="font-size: 11px;">
-					<span class="text-muted font-weight-bold">
-						<i class="fa-solid fa-scale-balanced text-primary mr-1"></i>Variaciones vs referencias
-					</span>
-					<span class="badge badge-success px-1" style="font-size: 9px; white-space: nowrap;">Hoy: ${{ number_format($exec['kpis']['sales_net']['numeric'] ?? 0, 0) }}</span>
-				</div>
-				<div class="today-exec-comparative-insights-list">
-					@php
-						$cmpItems = $exec['comparative']['metrics']['sales']['items'] ?? [];
-						$todayVal = $exec['kpis']['sales_net']['numeric'];
-					@endphp
-					@foreach($cmpItems as $ci)
+			<p class="today-exec-card-period" id="exec-comp-note">{{ $exec['comparative']['note'] ?? '' }}</p>
+			<div class="today-exec-comparative-body"><canvas id="execComparativeChart"></canvas></div>
+			<div class="today-exec-comparative-insights border-top pt-2 mt-2" id="exec-comp-list">
+				@foreach($exec['comparative']['metrics']['sales']['items'] ?? [] as $ci)
+				<div class="today-exec-comp-row {{ $ci['is_current'] ? 'is-current' : '' }}">
+					<span class="today-exec-comp-label">{{ $ci['label'] }} · {{ $ci['date'] }} · {{ $ci['cut'] }}</span>
+					<span class="today-exec-comp-val">{{ $ci['formatted'] }}</span>
+					<span class="today-exec-comp-diff">
 						@if(!$ci['is_current'])
-						<div class="d-flex justify-content-between align-items-center py-1 border-bottom" style="font-size: 11px;">
-							<span class="text-muted">vs. {{ $ci['label'] }} ({{ $ci['formatted'] }}):</span>
-							<div class="text-right" style="white-space: nowrap;">
-								@if(empty($ci['no_data']) && $todayVal !== null && $ci['value'] > 0)
-									@php $diff = $todayVal - $ci['value']; @endphp
-									<strong class="{{ $diff >= 0 ? 'text-success' : 'text-danger' }}">{{ $diff >= 0 ? '+' : '' }}{{ number_format($diff / $ci['value'] * 100, 1) }}%</strong>
-									<span class="text-muted" style="font-size: 10px;">({{ $diff >= 0 ? '+' : '-' }}${{ number_format(abs($diff), 0) }})</span>
-								@else
-									<span class="text-muted">Sin información</span>
-								@endif
-							</div>
-						</div>
+							@if($ci['diff_abs'] !== null)
+								<strong class="{{ $ci['diff_abs'] >= 0 ? 'text-success' : 'text-danger' }}">{{ $ci['diff_text'] }}@if($ci['diff_pct'] !== null) ({{ $ci['diff_pct'] >= 0 ? '+' : '' }}{{ number_format($ci['diff_pct'], 1) }}%)@endif</strong>
+							@else
+								<span class="text-muted">Sin base para comparar</span>
+							@endif
 						@endif
-					@endforeach
+					</span>
 				</div>
-				<div class="d-flex align-items-center justify-content-between mt-1 pt-1 border-top" style="font-size: 10px; color: #64748b;">
-					<span><i class="fa-solid fa-clock mr-1 text-success"></i>{{ $exec['comparative']['note'] ?? '' }}</span>
-					<a href="{{ $U('/sales') }}" class="daily-link-action" style="font-size: 10px; white-space: nowrap;">Auditar <i class="fa-solid fa-chevron-right ml-1"></i></a>
-				</div>
+				@endforeach
+				<div class="today-exec-card-foot"><span>Hoy vs. cada fecha, al mismo corte</span><a href="{{ $U('/sales') }}" class="daily-link-action">Auditar <i class="fa-solid fa-chevron-right ml-1"></i></a></div>
 			</div>
 		</div>
 
-		<!-- Card 3: Decisiones prioritarias -->
 		<div class="today-exec-card">
 			<div class="today-exec-card-head">
-				<h3 class="today-exec-card-title">Avisos que requieren atención hoy</h3>
-				<span class="badge badge-warning text-dark font-weight-normal" id="exec-decisions-count" style="font-size: 11px; white-space: nowrap; flex-shrink: 0;">{{ count($exec['priority_decisions'] ?? []) }} pendientes</span>
+				<h3 class="today-exec-card-title">Frentes de atención</h3>
+				<span class="badge badge-warning text-dark font-weight-normal" id="exec-decisions-count" style="font-size: 12px; white-space: nowrap; flex-shrink: 0;">{{ count($exec['priority_decisions'] ?? []) }} frentes de atención</span>
 			</div>
 			<div class="today-exec-decisions-list" id="exec-decisions-list">
-				@if(!empty($exec['priority_decisions']))
-					@foreach($exec['priority_decisions'] as $dec)
-					<a href="{{ $U($dec['href']) }}" class="today-exec-decision-card is-{{ $dec['severity'] }}">
-						<div class="today-exec-decision-left">
-							<div class="today-exec-decision-icon">
-								<i class="fa-solid {{ $dec['icon'] }}"></i>
+				@forelse($exec['priority_decisions'] ?? [] as $dec)
+				<a href="{{ $U($dec['href']) }}" class="today-exec-decision-card is-{{ $dec['severity'] }}" title="Abrir el detalle filtrado por este frente">
+					<div class="today-exec-decision-left">
+						<div class="today-exec-decision-icon"><i class="fa-solid {{ $dec['icon'] }}"></i></div>
+						<div class="today-exec-decision-info">
+							<div class="d-flex align-items-center flex-wrap mb-1" style="gap: 5px;">
+								@if(!empty($dec['module_label']))<span class="today-exec-module-tag">{{ $dec['module_label'] }}</span>@endif
+								<span class="today-exec-decision-title">{{ $dec['title'] }}</span>
+								@if(isset($dec['count']))<span class="today-exec-count-tag">{{ number_format($dec['count']) }} registro(s)</span>@endif
 							</div>
-							<div class="today-exec-decision-info">
-								<div class="d-flex align-items-center flex-wrap mb-1" style="gap: 5px;">
-									@if(!empty($dec['module_label']))
-									<span class="badge badge-light border text-muted" style="font-size: 9.5px; padding: 1px 5px; font-weight: 600; flex-shrink: 0;">{{ $dec['module_label'] }}</span>
-									@endif
-									<span class="today-exec-decision-title">{{ $dec['title'] }}</span>
-								</div>
-								<span class="today-exec-decision-desc">{{ $dec['description'] }}</span>
-								<div class="d-flex align-items-center flex-wrap" style="gap: 8px; margin-top: 2px;">
-									<span class="today-exec-decision-impact {{ $dec['impact_class'] }}">{{ $dec['impact_text'] }}</span>
-									@if(!empty($dec['owner']))<span class="text-muted" style="font-size: 10px;"><i class="fa-regular fa-user mr-1"></i>{{ $dec['owner'] }}</span>@endif
-									@if(!empty($dec['due_date']))<span class="text-muted" style="font-size: 10px;"><i class="fa-regular fa-clock mr-1"></i>{{ $dec['due_date'] }}</span>@endif
-								</div>
+							<span class="today-exec-decision-desc">{{ $dec['description'] }}</span>
+							<div class="today-exec-decision-meta">
+								<span class="today-exec-decision-impact {{ $dec['impact_class'] }}">{{ $dec['impact_text'] }}</span>
+								@if(!empty($dec['owner']))<span><i class="fa-regular fa-user mr-1"></i>{{ $dec['owner'] }}</span>@endif
+								@if(!empty($dec['due_date']))<span><i class="fa-regular fa-clock mr-1"></i>{{ $dec['due_date'] }}</span>@endif
 							</div>
 						</div>
-						<i class="fa-solid fa-chevron-right today-exec-decision-arrow"></i>
-					</a>
-					@endforeach
-				@else
-					<div class="text-center py-4 text-muted small">
-						<i class="fa-regular fa-circle-question mr-1"></i>Sin información de avisos prioritarios para hoy
 					</div>
-				@endif
+					<i class="fa-solid fa-chevron-right today-exec-decision-arrow"></i>
+				</a>
+				@empty
+				<div class="text-center py-4 text-muted small"><i class="fa-regular fa-circle-check mr-1"></i>Sin frentes de atención abiertos</div>
+				@endforelse
 			</div>
 		</div>
 	</div>
 
-	<!-- SVG Gradients Definition for Sparklines -->
-	<svg width="0" height="0" style="position: absolute; pointer-events: none;">
-		<defs>
-			<linearGradient id="execGreenGrad" x1="0" y1="0" x2="0" y2="1">
-				<stop offset="0%" stop-color="#10b981" stop-opacity="0.32" />
-				<stop offset="100%" stop-color="#10b981" stop-opacity="0.0" />
-			</linearGradient>
-			<linearGradient id="execRedGrad" x1="0" y1="0" x2="0" y2="1">
-				<stop offset="0%" stop-color="#ef4444" stop-opacity="0.28" />
-				<stop offset="100%" stop-color="#ef4444" stop-opacity="0.0" />
-			</linearGradient>
-		</defs>
-	</svg>
-
-	<!-- 4. Indicadores operativos del día -->
+	<!-- Indicadores operativos: cada valor con su período -->
 	<div class="today-exec-section">
 		<div class="today-exec-section-header">
-			<h2 class="today-exec-section-title">
-				<i class="fa-solid fa-chart-simple"></i> Indicadores operativos del día
-			</h2>
+			<h2 class="today-exec-section-title"><i class="fa-solid fa-chart-simple"></i> Indicadores operativos</h2>
 			<a href="{{ $U('/kpis') }}" class="today-exec-ver-todas">Ver todas</a>
 		</div>
 		<div class="today-exec-cards-row-4">
-			<!-- Card 1: Disponibilidad en bodega -->
+			@foreach([['on_shelf_availability', 'op-disp', 'fa-warehouse', 'is-green', 'availability', 'execGreenGrad', '#10b981', '/stockoverview'], ['returns', 'op-returns', 'fa-arrow-rotate-left', 'is-red', 'returns', 'execRedGrad', '#ef4444', '/returns'], ['staff_coverage', 'op-staff', 'fa-user-group', 'is-amber', 'coverage', 'execGreenGrad', '#10b981', '/operations/scheduling'], ['on_time_delivery', 'op-otif', 'fa-truck-fast', 'is-green', 'on_time', 'execGreenGrad', '#10b981', '/dispatches']] as [$key, $idp, $icon, $cls, $spark, $grad, $col, $href])
 			<div class="today-exec-spark-card">
 				<div class="today-exec-spark-head">
-					<div class="today-exec-spark-icon is-green">
-						<i class="fa-solid fa-warehouse"></i>
-					</div>
-					<span class="today-exec-spark-title">Disponibilidad en bodega</span>
+					<div class="today-exec-spark-icon {{ $cls }}"><i class="fa-solid {{ $icon }}"></i></div>
+					<span class="today-exec-spark-title">{{ $op[$key]['title'] }}</span>
 				</div>
+				<span class="today-exec-period" id="{{ $idp }}-period">{{ $op[$key]['period'] ?? '' }}</span>
 				<div class="today-exec-spark-body">
 					<div class="today-exec-spark-val-col">
-						<span class="today-exec-spark-val" id="op-disp-val">{{ $exec['operational_kpis']['on_shelf_availability']['value'] }}</span>
-						<span class="today-exec-spark-delta {{ ['good' => 'delta-up', 'bad' => 'delta-up-bad'][$exec['operational_kpis']['on_shelf_availability']['tone'] ?? ''] ?? '' }}" id="op-disp-delta" data-spark="1">{{ $exec['operational_kpis']['on_shelf_availability']['delta'] }}</span>
+						<span class="today-exec-spark-val" id="{{ $idp }}-val">{{ $op[$key]['value'] }}</span>
+						@if(!empty($op[$key]['secondary']))<span class="today-exec-spark-subline" id="{{ $idp }}-sub">{{ $op[$key]['secondary'] }}</span>@endif
+						<span class="today-exec-spark-delta {{ $sTone($op[$key]) }}" id="{{ $idp }}-delta" data-spark="1">{{ $op[$key]['delta'] }}</span>
 					</div>
-					<div class="today-exec-sparkline-box">
-						{!! $sparkLine($exec['sparks']['availability'] ?? [], 'execGreenGrad', '#10b981') !!}
-					</div>
+					<div class="today-exec-sparkline-box">{!! $sparkLine($exec['sparks'][$spark] ?? [], $grad, $col) !!}</div>
 				</div>
-				<a href="{{ $U('/stockoverview') }}" class="today-exec-spark-link" title="{{ $exec['operational_kpis']['on_shelf_availability']['tooltip'] }}">Ver detalle →</a>
+				<a href="{{ $link($href) }}" class="today-exec-spark-link" title="{{ $op[$key]['tooltip'] }}">Ver detalle →</a>
 			</div>
-
-			<!-- Card 2: Devoluciones -->
-			<div class="today-exec-spark-card">
-				<div class="today-exec-spark-head">
-					<div class="today-exec-spark-icon is-red">
-						<i class="fa-solid fa-arrow-rotate-left"></i>
-					</div>
-					<span class="today-exec-spark-title">Devoluciones</span>
-				</div>
-				<div class="today-exec-spark-body">
-					<div class="today-exec-spark-val-col">
-						<span class="today-exec-spark-val" id="op-returns-val">{{ $exec['operational_kpis']['returns']['value'] }}</span>
-						<span class="today-exec-spark-delta {{ ['good' => 'delta-up', 'bad' => 'delta-up-bad'][$exec['operational_kpis']['returns']['tone'] ?? ''] ?? '' }}" id="op-returns-delta" data-spark="1">{{ $exec['operational_kpis']['returns']['delta'] }}</span>
-					</div>
-					<div class="today-exec-sparkline-box">
-						{!! $sparkLine($exec['sparks']['returns'] ?? [], 'execRedGrad', '#ef4444') !!}
-					</div>
-				</div>
-				<a href="{{ $U('/returns') }}" class="today-exec-spark-link" title="{{ $exec['operational_kpis']['returns']['tooltip'] }}">Ver detalle →</a>
-			</div>
-
-			<!-- Card 3: Cobertura de personal -->
-			<div class="today-exec-spark-card">
-				<div class="today-exec-spark-head">
-					<div class="today-exec-spark-icon is-amber">
-						<i class="fa-solid fa-user-group"></i>
-					</div>
-					<span class="today-exec-spark-title">Cobertura de personal</span>
-				</div>
-				<div class="today-exec-spark-body">
-					<div class="today-exec-spark-val-col">
-						<span class="today-exec-spark-val" id="op-staff-val">{{ $exec['operational_kpis']['staff_coverage']['value'] }}</span>
-						<span class="today-exec-spark-delta {{ ['good' => 'delta-up', 'bad' => 'delta-up-bad'][$exec['operational_kpis']['staff_coverage']['tone'] ?? ''] ?? '' }}" id="op-staff-delta" data-spark="1">{{ $exec['operational_kpis']['staff_coverage']['delta'] }}</span>
-					</div>
-					<div class="today-exec-sparkline-box">
-						{!! $sparkLine($exec['sparks']['coverage'] ?? [], 'execGreenGrad', '#10b981') !!}
-					</div>
-				</div>
-				<a href="{{ $U('/operations/scheduling') }}" class="today-exec-spark-link" title="{{ $exec['operational_kpis']['staff_coverage']['tooltip'] }}">Ver detalle →</a>
-			</div>
-
-			<!-- Card 4: Pedidos a tiempo -->
-			<div class="today-exec-spark-card">
-				<div class="today-exec-spark-head">
-					<div class="today-exec-spark-icon is-green">
-						<i class="fa-solid fa-truck-fast"></i>
-					</div>
-					<span class="today-exec-spark-title">Pedidos a tiempo</span>
-				</div>
-				<div class="today-exec-spark-body">
-					<div class="today-exec-spark-val-col">
-						<span class="today-exec-spark-val" id="op-otif-val">{{ $exec['operational_kpis']['on_time_delivery']['value'] }}</span>
-						<span class="today-exec-spark-delta {{ ['good' => 'delta-up', 'bad' => 'delta-up-bad'][$exec['operational_kpis']['on_time_delivery']['tone'] ?? ''] ?? '' }}" id="op-otif-delta" data-spark="1">{{ $exec['operational_kpis']['on_time_delivery']['delta'] }}</span>
-					</div>
-					<div class="today-exec-sparkline-box">
-						{!! $sparkLine($exec['sparks']['on_time'] ?? [], 'execGreenGrad', '#10b981') !!}
-					</div>
-				</div>
-				<a href="{{ $U('/dispatches') }}" class="today-exec-spark-link" title="{{ $exec['operational_kpis']['on_time_delivery']['tooltip'] }}">Ver detalle →</a>
-			</div>
+			@endforeach
 		</div>
 	</div>
 
-	<!-- 5. Rentabilidad y desempeño -->
+	<!-- Rentabilidad: abre el desglose en Ventas › Rentabilidad -->
 	<div class="today-exec-section">
 		<div class="today-exec-section-header">
-			<h2 class="today-exec-section-title">
-				<i class="fa-solid fa-circle-dot"></i> Rentabilidad y desempeño
-			</h2>
-			<a href="{{ $U('/kpis') }}" class="today-exec-ver-todas">Ver todas</a>
+			<h2 class="today-exec-section-title"><i class="fa-solid fa-circle-dot"></i> Costo y descuentos</h2>
+			<a href="{{ $U($pr['cogs']['href']) }}" class="today-exec-ver-todas">Ver rentabilidad</a>
+		</div>
+		<div class="today-exec-cards-row-3" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));">
+			@foreach([['cogs', 'prof-cogs', 'fa-chart-pie', 'is-purple', 'cogs', 'execRedGrad', '#ef4444'], ['discounts', 'prof-disc', 'fa-tag', 'is-amber', 'discounts', 'execGreenGrad', '#10b981']] as [$key, $idp, $icon, $cls, $spark, $grad, $col])
+			<div class="today-exec-spark-card">
+				<div class="today-exec-spark-head">
+					<div class="today-exec-spark-icon {{ $cls }}"><i class="fa-solid {{ $icon }}"></i></div>
+					<span class="today-exec-spark-title">{{ $pr[$key]['title'] }}</span>
+				</div>
+				<span class="today-exec-period">{{ $pr[$key]['period'] ?? '' }}</span>
+				<div class="today-exec-spark-body">
+					<div class="today-exec-spark-val-col">
+						<span class="today-exec-spark-val" id="{{ $idp }}-val">{{ $pr[$key]['value'] }}</span>
+						<span class="today-exec-spark-subline" id="{{ $idp }}-sub">{{ $pr[$key]['subline'] }}</span>
+						<span class="today-exec-spark-delta {{ $sTone($pr[$key]) }}" id="{{ $idp }}-delta" data-spark="1">{{ $pr[$key]['delta'] }}</span>
+					</div>
+					<div class="today-exec-sparkline-box">{!! $sparkLine($exec['sparks'][$spark] ?? [], $grad, $col) !!}</div>
+				</div>
+				<a href="{{ $U($pr[$key]['href']) }}" class="today-exec-spark-link" title="{{ $pr[$key]['tooltip'] }}">Ver desglose →</a>
+			</div>
+			@endforeach
+		</div>
+	</div>
+
+	<!-- Inventario en riesgo: agotados y bajo mínimo separados, costo expuesto, acciones distintas -->
+	<div class="today-exec-section">
+		<div class="today-exec-section-header">
+			<h2 class="today-exec-section-title"><i class="fa-solid fa-boxes-stacked"></i> Inventario en riesgo</h2>
+			<a href="{{ $link('/stockoverview') }}" class="today-exec-ver-todas">Ver inventario</a>
 		</div>
 		<div class="today-exec-cards-row-3">
-			<!-- Card 1: Costo de ventas -->
 			<div class="today-exec-spark-card">
-				<div class="today-exec-spark-head">
-					<div class="today-exec-spark-icon is-purple">
-						<i class="fa-solid fa-chart-pie"></i>
-					</div>
-					<span class="today-exec-spark-title">Costo de ventas</span>
+				<div class="today-exec-spark-head"><div class="today-exec-spark-icon is-red"><i class="fa-solid fa-box-open"></i></div><span class="today-exec-spark-title">{{ $ri['low_stock']['title'] }}</span></div>
+				<span class="today-exec-period">{{ $ri['low_stock']['period'] }}</span>
+				<div class="today-exec-split" title="{{ $ri['low_stock']['tooltip'] }}">
+					<a href="{{ $U($ri['low_stock']['href_out']) }}"><span class="today-exec-split-val t-danger" id="risk-out-val">{{ number_format($ri['low_stock']['out']) }}</span><span class="today-exec-split-lbl">Agotados</span></a>
+					<a href="{{ $U($ri['low_stock']['href']) }}"><span class="today-exec-split-val" id="risk-below-val">{{ number_format($ri['low_stock']['below']) }}</span><span class="today-exec-split-lbl">Bajo mínimo con stock</span></a>
 				</div>
-				<div class="today-exec-spark-body">
-					<div class="today-exec-spark-val-col">
-						<span class="today-exec-spark-val" id="prof-cogs-val">{{ $exec['profitability_kpis']['cogs']['value'] }}</span>
-						<span class="today-exec-spark-subline" id="prof-cogs-sub">{{ $exec['profitability_kpis']['cogs']['subline'] }}</span>
-						<span class="today-exec-spark-delta {{ ['good' => 'delta-up', 'bad' => 'delta-up-bad'][$exec['profitability_kpis']['cogs']['tone'] ?? ''] ?? '' }}" id="prof-cogs-delta" data-spark="1">{{ $exec['profitability_kpis']['cogs']['delta'] }}</span>
-					</div>
-					<div class="today-exec-sparkline-box">
-						{!! $sparkLine($exec['sparks']['cogs'] ?? [], 'execRedGrad', '#ef4444') !!}
-					</div>
-				</div>
-				<a href="{{ $U('/kpis') }}" class="today-exec-spark-link" title="{{ $exec['profitability_kpis']['cogs']['tooltip'] }}">Ver detalle →</a>
 			</div>
-
-			<!-- Card 2: Descuentos -->
 			<div class="today-exec-spark-card">
-				<div class="today-exec-spark-head">
-					<div class="today-exec-spark-icon is-amber">
-						<i class="fa-solid fa-tag"></i>
-					</div>
-					<span class="today-exec-spark-title">Descuentos</span>
+				<div class="today-exec-spark-head"><div class="today-exec-spark-icon is-amber"><i class="fa-regular fa-calendar-xmark"></i></div><span class="today-exec-spark-title">{{ $ri['expiring']['title'] }}</span></div>
+				<span class="today-exec-period">{{ $ri['expiring']['period'] }}</span>
+				<div class="today-exec-spark-val-col">
+					<span class="today-exec-spark-val" id="risk-expiring-val">{{ $ri['expiring']['value'] }}</span>
+					<span class="today-exec-spark-delta {{ $sTone($ri['expiring']) }}" id="risk-expiring-delta" data-spark="1">{{ $ri['expiring']['delta'] }}</span>
 				</div>
-				<div class="today-exec-spark-body">
-					<div class="today-exec-spark-val-col">
-						<span class="today-exec-spark-val" id="prof-disc-val">{{ $exec['profitability_kpis']['discounts']['value'] }}</span>
-						<span class="today-exec-spark-subline" id="prof-disc-sub">{{ $exec['profitability_kpis']['discounts']['subline'] }}</span>
-						<span class="today-exec-spark-delta {{ ['good' => 'delta-up', 'bad' => 'delta-up-bad'][$exec['profitability_kpis']['discounts']['tone'] ?? ''] ?? '' }}" id="prof-disc-delta" data-spark="1">{{ $exec['profitability_kpis']['discounts']['delta'] }}</span>
-					</div>
-					<div class="today-exec-sparkline-box">
-						{!! $sparkLine($exec['sparks']['discounts'] ?? [], 'execGreenGrad', '#10b981') !!}
-					</div>
-				</div>
-				<a href="{{ $U('/sales') }}" class="today-exec-spark-link" title="{{ $exec['profitability_kpis']['discounts']['tooltip'] }}">Ver detalle →</a>
+				<a href="{{ $U($ri['expiring']['href']) }}" class="today-exec-spark-link" title="{{ $ri['expiring']['tooltip'] }}">Rebajar o trasladar →</a>
 			</div>
-
-			<!-- Card 3: Unidades por transacción -->
 			<div class="today-exec-spark-card">
-				<div class="today-exec-spark-head">
-					<div class="today-exec-spark-icon is-blue">
-						<i class="fa-solid fa-bag-shopping"></i>
-					</div>
-					<span class="today-exec-spark-title">Unidades por transacción</span>
+				<div class="today-exec-spark-head"><div class="today-exec-spark-icon is-orange"><i class="fa-solid fa-triangle-exclamation"></i></div><span class="today-exec-spark-title">{{ $ri['sensitive_diffs']['title'] }}</span></div>
+				<span class="today-exec-period">{{ $ri['sensitive_diffs']['period'] }}</span>
+				<div class="today-exec-split" title="{{ $ri['sensitive_diffs']['tooltip'] }}">
+					<a href="{{ $U($ri['sensitive_diffs']['href_adjust']) }}"><span class="today-exec-split-val" id="risk-adjust-val">{{ $ri['sensitive_diffs']['adjust'] }}</span><span class="today-exec-split-lbl">Ajustes por aprobar →</span></a>
+					<a href="{{ $U($ri['sensitive_diffs']['href_investigations']) }}"><span class="today-exec-split-val" id="risk-inv-val">{{ $ri['sensitive_diffs']['investigations'] }}</span><span class="today-exec-split-lbl">Investigaciones abiertas →</span></a>
 				</div>
-				<div class="today-exec-spark-body">
-					<div class="today-exec-spark-val-col">
-						<span class="today-exec-spark-val" id="prof-upt-val">{{ $exec['profitability_kpis']['units_per_tx']['value'] }}</span>
-						<span class="today-exec-spark-delta {{ ['good' => 'delta-up', 'bad' => 'delta-up-bad'][$exec['profitability_kpis']['units_per_tx']['tone'] ?? ''] ?? '' }}" id="prof-upt-delta" data-spark="1">{{ $exec['profitability_kpis']['units_per_tx']['delta'] }}</span>
-					</div>
-					<div class="today-exec-sparkline-box">
-						{!! $sparkLine($exec['sparks']['upt'] ?? [], 'execGreenGrad', '#10b981') !!}
-					</div>
-				</div>
-				<a href="{{ $U('/sales') }}" class="today-exec-spark-link" title="{{ $exec['profitability_kpis']['units_per_tx']['tooltip'] }}">Ver detalle →</a>
 			</div>
 		</div>
 	</div>
 
-	<!-- 6. Inventario y productos en riesgo -->
+	<!-- Prioridades por sucursal: ordenadas por impacto -->
 	<div class="today-exec-section">
 		<div class="today-exec-section-header">
-			<h2 class="today-exec-section-title">
-				<i class="fa-solid fa-boxes-stacked"></i> Inventario y productos en riesgo
-			</h2>
-			<a href="{{ $U('/stockoverview') }}" class="today-exec-ver-todas">Ver todas</a>
-		</div>
-		<div class="today-exec-cards-row-3">
-			<!-- Card 1: Bajo stock -->
-			<div class="today-exec-spark-card">
-				<div class="today-exec-spark-head">
-					<div class="today-exec-spark-icon is-red">
-						<i class="fa-solid fa-box-open"></i>
-					</div>
-					<span class="today-exec-spark-title">Bajo stock</span>
-				</div>
-				<div class="today-exec-spark-body">
-					<div class="today-exec-spark-val-col">
-						<span class="today-exec-spark-val" id="risk-lowstock-val">{{ $exec['risk_inventory']['low_stock']['value'] }}</span>
-						<span class="today-exec-spark-delta {{ ['good' => 'delta-up', 'bad' => 'delta-up-bad'][$exec['risk_inventory']['low_stock']['tone'] ?? ''] ?? '' }}" id="risk-lowstock-delta" data-spark="1">{{ $exec['risk_inventory']['low_stock']['delta'] }}</span>
-					</div>
-					<div class="today-exec-sparkline-box">
-						{!! $sparkBars($exec['sparks']['low_stock'] ?? [], '#dc2626') !!}
-					</div>
-				</div>
-				<a href="{{ $U('/stockoverview?filter=below_min') }}" class="today-exec-spark-link" title="{{ $exec['risk_inventory']['low_stock']['tooltip'] }}">Ver detalle →</a>
-			</div>
-
-			<!-- Card 2: Próximos a vencer -->
-			<div class="today-exec-spark-card">
-				<div class="today-exec-spark-head">
-					<div class="today-exec-spark-icon is-amber">
-						<i class="fa-regular fa-calendar-xmark"></i>
-					</div>
-					<span class="today-exec-spark-title">Próximos a vencer</span>
-				</div>
-				<div class="today-exec-spark-body">
-					<div class="today-exec-spark-val-col">
-						<span class="today-exec-spark-val" id="risk-expiring-val">{{ $exec['risk_inventory']['expiring']['value'] }}</span>
-						<span class="today-exec-spark-delta {{ ['good' => 'delta-up', 'bad' => 'delta-up-bad'][$exec['risk_inventory']['expiring']['tone'] ?? ''] ?? '' }}" id="risk-expiring-delta" data-spark="1">{{ $exec['risk_inventory']['expiring']['delta'] }}</span>
-					</div>
-					<div class="today-exec-sparkline-box">
-						{!! $sparkBars($exec['sparks']['expiring'] ?? [], '#16a34a') !!}
-					</div>
-				</div>
-				<a href="{{ $U('/traceability') }}" class="today-exec-spark-link" title="{{ $exec['risk_inventory']['expiring']['tooltip'] }}">Ver detalle →</a>
-			</div>
-
-			<!-- Card 3: Productos sensibles -->
-			<div class="today-exec-spark-card">
-				<div class="today-exec-spark-head">
-					<div class="today-exec-spark-icon is-orange">
-						<i class="fa-solid fa-triangle-exclamation"></i>
-					</div>
-					<span class="today-exec-spark-title">Productos sensibles</span>
-				</div>
-				<div class="today-exec-spark-body">
-					<div class="today-exec-spark-val-col">
-						<span class="today-exec-spark-val" id="risk-sens-val">{{ $exec['risk_inventory']['sensitive_diffs']['value'] }}</span>
-						<span class="today-exec-spark-delta {{ ['good' => 'delta-up', 'bad' => 'delta-up-bad'][$exec['risk_inventory']['sensitive_diffs']['tone'] ?? ''] ?? '' }}" id="risk-sens-delta" data-spark="1">{{ $exec['risk_inventory']['sensitive_diffs']['delta'] }}</span>
-					</div>
-					<div class="today-exec-sparkline-box">
-						{!! $sparkBars($exec['sparks']['sensitive'] ?? [], '#dc2626') !!}
-					</div>
-				</div>
-				<a href="{{ $U('/reconciliation?tab=investigations') }}" class="today-exec-spark-link" title="{{ $exec['risk_inventory']['sensitive_diffs']['tooltip'] }}">Ver detalle →</a>
-			</div>
-		</div>
-	</div>
-
-	<!-- 7. Prioridades por sucursal -->
-	<div class="today-exec-section">
-		<div class="today-exec-section-header">
-			<h2 class="today-exec-section-title">
-				<i class="fa-solid fa-location-dot"></i> Prioridades por sucursal
-			</h2>
-			<a href="{{ $U('/stockoverview') }}" class="today-exec-ver-todas">Ver todas</a>
+			<h2 class="today-exec-section-title"><i class="fa-solid fa-location-dot"></i> Prioridades por sucursal</h2>
+			<span class="today-exec-period">Ordenadas por impacto en dólares</span>
 		</div>
 		<div class="today-exec-table-card">
 			<table class="today-exec-table">
 				<thead>
-					<tr>
-						<th style="width: 22%;">Sucursal</th>
-						<th style="width: 18%;">Estado</th>
-						<th style="width: 14%;">Prioridad</th>
-						<th>Detalle</th>
-						<th style="width: 30px;"></th>
-					</tr>
+					<tr><th style="width: 20%;">Sucursal</th><th style="width: 14%;">Excepción</th><th style="width: 18%;">Impacto</th><th>Causa principal</th><th style="width: 30px;"></th></tr>
 				</thead>
 				<tbody id="exec-branch-priorities-body">
-					@foreach($exec['branch_priorities'] as $bp)
-					<tr class="today-exec-table-row" onclick="window.location='{{ $U($bp['href']) }}'">
+					@forelse($exec['branch_priorities'] as $bp)
+					<tr class="today-exec-table-row" data-href="{{ $U($bp['href']) }}" tabindex="0">
 						<td class="today-exec-branch-name">{{ $bp['branch'] }}</td>
-						<td>
-							<span class="today-exec-table-state">
-								<i class="fa-solid {{ $bp['status_icon'] }}" style="color: {{ $bp['status_icon_color'] }}; font-size: 13px;"></i>
-								{{ $bp['status_text'] }}
-							</span>
-						</td>
-						<td>
-							<span class="today-exec-prio-badge {{ $bp['priority_class'] }}">{{ $bp['priority'] }}</span>
-						</td>
+						<td><span class="today-exec-table-state"><i class="fa-solid {{ $bp['status_icon'] }}" style="color: {{ $bp['status_icon_color'] }}; font-size: 13px;"></i> {{ $bp['status_text'] }}</span></td>
+						<td><span class="today-exec-prio-badge {{ $bp['priority_class'] }}">{{ $bp['impact'] }}</span></td>
 						<td class="today-exec-table-detail">{{ $bp['detail'] }}</td>
-						<td>
-							<i class="fa-solid fa-chevron-right today-exec-chevron"></i>
-						</td>
+						<td><a href="{{ $U($bp['href']) }}" aria-label="Abrir {{ $bp['status_text'] }} en {{ $bp['branch'] }}"><i class="fa-solid fa-chevron-right today-exec-chevron"></i></a></td>
 					</tr>
-					@endforeach
+					@empty
+					<tr><td colspan="5" class="text-center text-muted py-3">Sin excepciones por sucursal</td></tr>
+					@endforelse
 				</tbody>
 			</table>
 		</div>
 	</div>
 
-	<!-- 8. Personal y productividad -->
+	<!-- Carga laboral: programadas, fichadas y déficit de cobertura -->
 	<div class="today-exec-section">
 		<div class="today-exec-section-header">
-			<h2 class="today-exec-section-title">
-				<i class="fa-solid fa-user-check"></i> Productividad y carga laboral
-			</h2>
-			<a href="{{ $U('/operations/scheduling') }}" class="today-exec-ver-todas">Ver detalle</a>
+			<h2 class="today-exec-section-title"><i class="fa-solid fa-user-check"></i> Carga laboral del día</h2>
+			<a href="{{ $U($wf['scheduled']['href']) }}" class="today-exec-ver-todas">Ver turnos</a>
 		</div>
-		<div class="today-exec-cards-row-3" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));">
-			<!-- Card 1: Productividad por hora -->
-			<div class="today-exec-spark-card">
-				<div class="today-exec-spark-head">
-					<div class="today-exec-spark-icon is-blue">
-						<i class="fa-regular fa-clock"></i>
-					</div>
-					<span class="today-exec-spark-title">Productividad por hora</span>
-				</div>
-				<div class="today-exec-spark-body">
-					<div class="today-exec-spark-val-col">
-						<span class="today-exec-spark-val" id="prod-prod-val">{{ $exec['workforce_kpis']['productivity']['value'] }}</span>
-						<span class="today-exec-spark-delta {{ ['good' => 'delta-up', 'bad' => 'delta-up-bad'][$exec['workforce_kpis']['productivity']['tone'] ?? ''] ?? '' }}" id="prod-prod-delta" data-spark="1">{{ $exec['workforce_kpis']['productivity']['delta'] }}</span>
-					</div>
-					<div class="today-exec-sparkline-box">
-						{!! $sparkLine($exec['sparks']['productivity'] ?? [], 'execGreenGrad', '#10b981') !!}
-					</div>
-				</div>
-				<a href="{{ $U('/operations/scheduling') }}" class="today-exec-spark-link" title="{{ $exec['workforce_kpis']['productivity']['tooltip'] }}">Ver detalle →</a>
-			</div>
-
-			<!-- Card 2: Horas programadas -->
-			<div class="today-exec-spark-card">
-				<div class="today-exec-spark-head">
-					<div class="today-exec-spark-icon is-purple">
-						<i class="fa-regular fa-clock"></i>
-					</div>
-					<span class="today-exec-spark-title">Horas programadas</span>
-				</div>
-				<div class="today-exec-spark-body">
-					<div class="today-exec-spark-val-col">
-						<span class="today-exec-spark-val" id="prod-ot-val">{{ $exec['workforce_kpis']['overtime']['value'] }}</span>
-						<span class="today-exec-spark-delta {{ ['good' => 'delta-up', 'bad' => 'delta-up-bad'][$exec['workforce_kpis']['overtime']['tone'] ?? ''] ?? '' }}" id="prod-ot-delta" data-spark="1">{{ $exec['workforce_kpis']['overtime']['delta'] }}</span>
-					</div>
-					<div class="today-exec-sparkline-box">
-						{!! $sparkLine($exec['sparks']['hours'] ?? [], 'execRedGrad', '#ef4444') !!}
-					</div>
-				</div>
-				<a href="{{ $U('/operations/scheduling') }}" class="today-exec-spark-link" title="{{ $exec['workforce_kpis']['overtime']['tooltip'] }}">Ver detalle →</a>
-			</div>
+		<div class="today-exec-cards-row-3">
+			@foreach(['scheduled' => ['fa-clock', 'is-purple'], 'punched' => ['fa-user-check', 'is-blue'], 'deficit' => ['fa-user-clock', 'is-amber']] as $key => [$icon, $cls])
+			<a class="today-exec-spark-card today-exec-plain-card" href="{{ $U($wf[$key]['href']) }}">
+				<div class="today-exec-spark-head"><div class="today-exec-spark-icon {{ $cls }}"><i class="fa-solid {{ $icon }}"></i></div><span class="today-exec-spark-title">{{ $wf[$key]['title'] }}</span></div>
+				<span class="today-exec-spark-val {{ ($wf[$key]['tone'] ?? '') === 'bad' ? 't-danger' : '' }}" id="wf-{{ $key }}-val">{{ $wf[$key]['value'] }}</span>
+				<span class="today-exec-spark-subline" id="wf-{{ $key }}-sub">{{ $wf[$key]['sub'] }}</span>
+			</a>
+			@endforeach
 		</div>
 	</div>
 	</div><!-- /#daily-tab-commercial -->
@@ -1094,7 +775,7 @@
 		<div class="cc-headtools">
 			<select class="cc-select cc-scope-select" id="cc-scope-select" aria-label="Sucursal">
 				@if(!$restricted)<option value="" @if(!$selectedBranchId) selected @endif>Red Consolidada</option>@endif
-				@foreach($branches as $b)<option value="{{ $b->id }}" @if($selectedBranchId === intval($b->id)) selected @endif>{{ $b->name }}</option>@endforeach
+				@foreach($branches as $b)<option value="{{ $b->id }}" @if($selectedBranchId === intval($b->id)) selected @endif>{{ $b->name }}{{ !empty($b->code) && !str_contains($b->name, $b->code) ? ' · ' . $b->code : '' }}</option>@endforeach
 			</select>
 			@if($canGo('/alerts'))
 			<a class="cc-icon-btn" href="{{ $link('/alerts') }}" title="{{ $al['critical'] }} alerta(s) crítica(s) abierta(s)" aria-label="Alertas críticas: {{ $al['critical'] }}"><i class="fa-solid fa-bell"></i>@if($al['critical'] > 0)<span class="cc-badge">{{ $al['critical'] > 99 ? '99+' : $al['critical'] }}</span>@endif</a>
@@ -1253,10 +934,39 @@
 			@if($showBranchFilter)
 			<select class="cc-select" id="cc-q-branch" aria-label="Sucursal">
 				<option value="all">Todas las sucursales</option>
-				@foreach($branches as $b)<option value="{{ $b->id }}">{{ $b->name }}</option>@endforeach
+				@foreach($branches as $b)<option value="{{ $b->id }}">{{ $b->name }}{{ !empty($b->code) && !str_contains($b->name, $b->code) ? ' · ' . $b->code : '' }}</option>@endforeach
 			</select>
 			@endif
 		</div>
+		@php
+			// Sin responsable: primero una cola manejable, agrupada por sucursal y causa (la lista completa sigue abajo)
+			$unownedGroups = [];
+			foreach ($d['decisions'] as $q)
+			{
+				if ($q['owner']) continue;
+				$gk = ($q['branch_id'] ?? '') . '|' . $q['cat'];
+				$unownedGroups[$gk] = $unownedGroups[$gk] ?? ['br' => (string) ($q['branch_id'] ?? ''), 'branch' => $q['branch'] ?: $branchName, 'cat' => $q['cat'], 'n' => 0, 'crit' => 0, 'over' => 0];
+				$unownedGroups[$gk]['n']++;
+				if ($q['score'] >= 60) $unownedGroups[$gk]['crit']++;
+				if ($q['state'] === 'overdue') $unownedGroups[$gk]['over']++;
+			}
+			uasort($unownedGroups, fn($x, $y) => [$y['crit'], $y['over'], $y['n']] <=> [$x['crit'], $x['over'], $x['n']]);
+			$unownedTop = array_slice(array_values($unownedGroups), 0, 8);
+		@endphp
+		@if($unownedTop)
+		<div class="cc-groups" id="cc-unowned-groups" hidden>
+			<p class="cc-groups-t">Empiece por aquí: {{ count($unownedTop) }} de {{ count($unownedGroups) }} grupos sin responsable, por sucursal y causa. Asigne un responsable por grupo.@if(count($d['decisions']) > 150) La lista de abajo muestra las {{ 150 }} de mayor prioridad.@endif</p>
+			<ul class="cc-groups-list">
+				@foreach($unownedTop as $g)
+				<li><button type="button" class="cc-group" data-gbr="{{ $g['br'] }}" data-gcat="{{ $g['cat'] }}">
+					<b>{{ $g['n'] }}</b> {{ $cats[$g['cat']] ?? $g['cat'] }} · {{ $g['branch'] }}
+					@if($g['crit'])<span class="t-danger">{{ $g['crit'] }} críticas</span>@endif
+					@if($g['over'])<span class="t-warning">{{ $g['over'] }} vencidas</span>@endif
+				</button></li>
+				@endforeach
+			</ul>
+		</div>
+		@endif
 		<div class="cc-q-head" aria-hidden="true"><span>Prioridad</span><span>Tipo</span><span>Descripción</span><span style="text-align:right">Impacto</span><span>Responsable</span><span>Límite</span><span style="text-align:right">Acción</span></div>
 		<ol class="cc-q" id="cc-q">
 			@php $visibleDecisions = array_slice($d['decisions'], 0, 150); @endphp
@@ -1637,6 +1347,8 @@
 		$('#cc-next').prop('disabled', F.page >= pages - 1);
 		$('#cc-q-all').text(F.all ? 'Ver menos' : 'Ver todas');
 		$('.cc-pill[data-st]').removeClass('is-on').filter('[data-st="' + F.st + '"]').addClass('is-on');
+		$('#cc-unowned-groups').prop('hidden', F.st !== 'unowned');
+		$('.cc-group').removeClass('is-on').filter(function() { return this.getAttribute('data-gbr') === F.br && this.getAttribute('data-gcat') === F.cat; }).addClass('is-on');
 	}
 	function toQueue() { var el = document.getElementById('cc-queue'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
 	var searchT;
@@ -1651,6 +1363,11 @@
 		F.cat = this.getAttribute('data-cat-go'); F.st = 'all'; F.page = 0;
 		$('#cc-q-cat').val(F.cat); render(); toQueue();
 	});
+	$(document).on('click', '.cc-group', function() {
+		var on = $(this).hasClass('is-on');
+		F.br = on ? 'all' : this.getAttribute('data-gbr'); F.cat = on ? 'all' : this.getAttribute('data-gcat'); F.page = 0;
+		$('#cc-q-branch').val(F.br); $('#cc-q-cat').val(F.cat); render();
+	});
 	$('#cc-q-all').on('click', function() { F.all = !F.all; F.page = 0; render(); });
 	$('#cc-prev').on('click', function() { F.page--; render(); });
 	$('#cc-next').on('click', function() { F.page++; render(); toQueue(); });
@@ -1659,6 +1376,9 @@
 		var f = $(this).closest('.cc-q-row').find('.cc-factors'), open = f.prop('hidden');
 		f.prop('hidden', !open); this.setAttribute('aria-expanded', open);
 	});
+	// ?qcat=<categoría> (desde «Frentes de atención»): abre la agenda filtrada por ese frente
+	var qcat = new URLSearchParams(location.search).get('qcat');
+	if (qcat && $('#cc-q-cat option[value="' + qcat + '"]').length) { F.cat = qcat; $('#cc-q-cat').val(qcat); }
 	if (rows.length) { render(); }
 
 	// ---- Aprobaciones: pestañas por tipo, 3 visibles
@@ -1826,7 +1546,7 @@
 				labels: main.labels,
 				datasets: [
 					{
-						label: 'Venta real',
+						label: (main.legend && main.legend.real) || 'Real al corte',
 						data: main.real_sales,
 						borderColor: '#00C83B',
 						borderWidth: 2.5,
@@ -1840,7 +1560,7 @@
 						lineTension: 0.35
 					},
 					{
-						label: 'Meta',
+						label: (main.legend && main.legend.target) || 'Meta al corte',
 						data: main.target_sales,
 						borderColor: '#94A3B8',
 						borderWidth: 2,
@@ -1850,6 +1570,19 @@
 						pointRadius: 0,
 						pointHoverRadius: 0,
 						lineTension: 0.35
+					},
+					{
+						label: (main.legend && main.legend.projection) || 'Proyección de cierre',
+						data: main.projection_sales || [],
+						borderColor: '#0EA5E9',
+						borderWidth: 2,
+						borderDash: [2, 4],
+						backgroundColor: 'transparent',
+						fill: false,
+						spanGaps: true,
+						pointRadius: 3,
+						pointBackgroundColor: '#0EA5E9',
+						lineTension: 0
 					}
 				]
 			},
@@ -1874,6 +1607,7 @@
 					displayColors: true,
 					callbacks: {
 						label: function(t, d) {
+							if (t.yLabel === null || isNaN(t.yLabel)) return null;
 							return ' ' + d.datasets[t.datasetIndex].label + ': $' + Number(t.yLabel).toLocaleString();
 						}
 					}
@@ -1892,7 +1626,7 @@
 							beginAtZero: true,
 							maxTicksLimit: 5,
 							suggestedMax: (function() {
-								var vals = (main.real_sales || []).concat(main.target_sales || []).filter(function(v) { return v !== null && !isNaN(v); });
+								var vals = (main.real_sales || []).concat(main.target_sales || [], main.projection_sales || []).filter(function(v) { return v !== null && !isNaN(v); });
 								var mx = vals.length ? Math.max.apply(null, vals) : 0;
 								return mx > 0 ? mx * 1.1 : 100;
 							})()
@@ -1910,7 +1644,8 @@
 		if (execDonutChart) { execDonutChart.destroy(); }
 
 		metricKey = metricKey || $('#exec-donut-metric').val() || 'sales';
-		var depts = donut.departments || [];
+		var sortVal = function(d) { return metricKey === 'margin' ? Number(d.margin_pct || 0) : (metricKey === 'profit' ? Number(d.gross_profit || 0) : (metricKey === 'units' ? Number(d.units || 0) : Number(d.sales || 0))); };
+		var depts = (donut.departments || []).slice().sort(function(a, b) { return sortVal(b) - sortVal(a); });
 
 		var values = [];
 		var formatFn;
@@ -2013,10 +1748,10 @@
 				amountStr = '$' + Number(dept.scaled_sales || dept.sales || 0).toLocaleString();
 			}
 
-			html += '<div class="today-exec-dept-row" data-dept-id="' + dept.id + '" title="Filtrar por ' + dept.name + '">' +
+			html += '<div class="today-exec-dept-row" data-dept-id="' + esc(dept.id) + '" role="button" tabindex="0" title="Abrir ' + esc(dept.name) + '">' +
 				'<div class="today-exec-dept-left">' +
 					'<span class="today-exec-dept-dot" style="background: ' + dept.color + ';"></span>' +
-					'<span>' + dept.name + '</span>' +
+					'<span>' + esc(dept.name) + '</span>' +
 				'</div>' +
 				'<div class="today-exec-dept-right">' +
 					'<span class="today-exec-dept-pct">' + pctStr + '</span>' +
@@ -2025,6 +1760,25 @@
 			'</div>';
 		});
 		$list.html(html);
+	}
+
+	function renderCompList(comp) {
+		var key = $('#exec-comparative-metric').val() || 'sales';
+		var m = comp.metrics && comp.metrics[key] ? comp.metrics[key] : null;
+		if (!m) return;
+		var html = '';
+		m.items.forEach(function(ci) {
+			var diff = '';
+			if (!ci.is_current) {
+				diff = ci.diff_abs !== null && ci.diff_abs !== undefined
+					? '<strong class="' + (ci.diff_abs >= 0 ? 'text-success' : 'text-danger') + '">' + esc(ci.diff_text) + (ci.diff_pct !== null ? ' (' + (ci.diff_pct >= 0 ? '+' : '') + Number(ci.diff_pct).toFixed(1) + '%)' : '') + '</strong>'
+					: '<span class="text-muted">Sin base para comparar</span>';
+			}
+			html += '<div class="today-exec-comp-row' + (ci.is_current ? ' is-current' : '') + '"><span class="today-exec-comp-label">' + esc(ci.label + ' · ' + ci.date + ' · ' + ci.cut) + '</span>' +
+				'<span class="today-exec-comp-val">' + esc(ci.formatted) + '</span><span class="today-exec-comp-diff">' + diff + '</span></div>';
+		});
+		var $foot = $('#exec-comp-list .today-exec-card-foot').detach();
+		$('#exec-comp-list').html(html).append($foot);
 	}
 
 	function initCompChart(comp, metricKey) {
@@ -2048,6 +1802,7 @@
 		});
 
 		var values = items.map(function(it) {
+			if (it.no_data) return null;
 			if (typeof it.value !== 'undefined') return it.value;
 			if (metricKey === 'margin' && typeof it.margin !== 'undefined') return it.margin;
 			if (metricKey === 'profit' && typeof it.profit !== 'undefined') return it.profit;
@@ -2152,7 +1907,9 @@
 		});
 	}
 
-	function fetchExecSales() {
+	function fetchExecSales(manual) {
+		manual = manual === true;
+		$('#exec-refresh-note').text(manual ? 'Comprobando…' : '');
 		var date = $('#exec-filter-date').val();
 		var branch = $('#exec-filter-branch').val();
 		var dept = $('#exec-filter-dept').val();
@@ -2177,12 +1934,17 @@
 			success: function(res) {
 				$('#exec-refresh-btn').removeClass('spinning');
 				if (!res) return;
+				if (manual) {
+					var prevSync = execData ? execData.last_updated_iso : null;
+					$('#exec-refresh-note').text(prevSync && res.last_updated_iso === prevSync ? 'Comprobado: sin novedades desde la última sincronización' : 'Datos nuevos cargados');
+				}
 				execData = res;
 				updateDOM(res);
 				initExecCharts(res);
 			},
 			error: function(err) {
 				$('#exec-refresh-btn').removeClass('spinning');
+				if (manual) $('#exec-refresh-note').text('No se pudo comprobar: intente de nuevo');
 				console.error('Error fetching executive sales:', err);
 			}
 		});
@@ -2199,58 +1961,66 @@
 		el.text(obj[field] || '');
 	}
 
+	function markPending() {
+		$('#kpi-sales-val, #kpi-target-val, #kpi-margin-val, #kpi-labor-val, .today-exec-mini-val, #exec-proj-val').each(function() {
+			$(this).toggleClass('is-pending', /^(Pendiente|Sin )/.test($.trim($(this).text())));
+		});
+		$('.today-exec-mini-stats').toggleClass('all-pending', /^Pendiente/.test($.trim($('#kpi-tx-val').text())));
+	}
+	$(markPending);
+
 	function updateDOM(data) {
 		var k = data.kpis;
-		$('#pulse-sales-val').text(k.sales_net.value);
-		$('#pulse-target-val').text(k.target_compliance.value);
-		$('#pulse-margin-val').text(k.gross_margin.value);
+		$('#exec-last-update').text(data.last_updated);
+		$('#exec-last-check').text(data.checked_at || '');
+		$('#kpi-sales-val').text(k.sales_net.value);
+		$('#kpi-sales-cut').text(k.sales_net.cutoff_text || '');
 		setDelta('#kpi-sales-delta', k.sales_net, 'delta_pct');
 		$('#kpi-sales-comp').text(k.sales_net.comparison_text);
-		setDelta('#kpi-margin-delta', k.gross_margin, 'delta_pp');
-		$('#kpi-margin-comp').text(k.gross_margin.comparison_text);
-		setDelta('#kpi-profit-delta', k.gross_profit, 'delta_pct');
-		$('#kpi-profit-sub').text(k.gross_profit.subtext);
-		setDelta('#kpi-ticket-delta', k.avg_ticket, 'delta_pct');
-		$('#kpi-ticket-sub').text(k.avg_ticket.subtext);
-		setDelta('#kpi-tx-delta', k.transactions, 'delta_pct');
-		$('#kpi-tx-sub').text(k.transactions.subtext);
-		setDelta('#kpi-labor-delta', k.labor_sales_per_hour, 'delta_pct');
-		$('#kpi-labor-sub').text(k.labor_sales_per_hour.subtext);
-		setDelta('#kpi-waste-delta', k.waste_ratio, 'delta_pp');
-		$('#kpi-waste-sub').text(k.waste_ratio.subtext);
-		$('#exec-last-update').text(data.last_updated);
-		$('#kpi-sales-val').text(k.sales_net.value);
 		$('#kpi-target-val').text(k.target_compliance.value);
 		setDelta('#kpi-target-delta', k.target_compliance, 'gap_pp');
+		$('#kpi-target-cut').text(k.target_compliance.cutoff_target_text || '');
 		$('#kpi-target-meta').text(k.target_compliance.target_text);
-
 		$('#kpi-margin-val').text(k.gross_margin.value);
-		$('#kpi-profit-val').text(k.gross_profit.value);
-
+		$('#kpi-profit-val').text(k.gross_margin.numeric !== null ? k.gross_margin.amount : '');
+		setDelta('#kpi-margin-delta', k.gross_margin, 'delta_pp');
+		$('#kpi-margin-comp').text(k.gross_margin.comparison_text);
+		$('#kpi-margin-cogs').text(k.gross_margin.cogs_text || '');
+		$('#kpi-margin-scope').text(k.gross_margin.cogs_scope || '').toggleClass('t-warning', !!k.gross_margin.missing_cost_lines);
 		$('#kpi-ticket-val').text(k.avg_ticket.value);
 		$('#kpi-tx-val').text(k.transactions.value);
+		$('#kpi-upt-val').text(k.units_per_tx ? k.units_per_tx.value : '');
+		setDelta('#kpi-ticket-delta', $.extend({}, k.avg_ticket, { label: k.avg_ticket.delta_pct ? 'Ticket ' + k.avg_ticket.delta_pct : '' }), 'label');
+		setDelta('#kpi-tx-delta', $.extend({}, k.transactions, { label: k.transactions.delta_pct ? 'Transacciones ' + k.transactions.delta_pct : '' }), 'label');
+		$('#kpi-labor-title').text(k.labor_sales_per_hour.title || 'Venta por hora');
+		$('#card-kpi-labor').attr('title', k.labor_sales_per_hour.tooltip || '');
 		$('#kpi-labor-val').text(k.labor_sales_per_hour.value);
-		$('#kpi-waste-val').text(k.waste_ratio.value);
+		setDelta('#kpi-labor-delta', k.labor_sales_per_hour, 'delta_pct');
+		$('#kpi-labor-sub').text(k.labor_sales_per_hour.subtext);
 
-		$('#exec-proj-val').text(data.main_chart.projected_closing.amount);
-		setDelta('#exec-proj-delta', data.main_chart.projected_closing, 'variance_pct');
-		$('#exec-proj-text').text(data.main_chart.projected_closing.variance_text);
+		var pc = data.main_chart.projected_closing;
+		$('#exec-proj-val').text(pc.amount);
+		setDelta('#exec-proj-delta', pc, 'variance_pct');
+		$('#exec-proj-text').text(pc.variance_text);
+		$('#exec-proj-basis').text(pc.basis_text || '');
+		if (data.main_chart.legend) $('#leg-real').text(data.main_chart.legend.real);
+		if (data.heatmap && data.heatmap.period_text) $('#exec-heat-period').text(data.heatmap.period_text + ' · promedio por día de la semana');
+		if (data.comparative) { $('#exec-comp-note').text(data.comparative.note || ''); renderCompList(data.comparative); }
 
 		$('#donut-center-val').text(data.donut_chart.total_sales);
 
+		markPending();
+
 		if (data.operational_kpis) {
 			var op = data.operational_kpis;
-			$('#op-disp-val').text(op.on_shelf_availability.value);
-			setDelta('#op-disp-delta', op.on_shelf_availability, 'delta');
-
-			$('#op-returns-val').text(op.returns.value);
-			setDelta('#op-returns-delta', op.returns, 'delta');
-
-			$('#op-staff-val').text(op.staff_coverage.value);
-			setDelta('#op-staff-delta', op.staff_coverage, 'delta');
-
-			$('#op-otif-val').text(op.on_time_delivery.value);
-			setDelta('#op-otif-delta', op.on_time_delivery, 'delta');
+			[['on_shelf_availability', 'op-disp'], ['returns', 'op-returns'], ['staff_coverage', 'op-staff'], ['on_time_delivery', 'op-otif']].forEach(function(m) {
+				var o = op[m[0]];
+				if (!o) return;
+				$('#' + m[1] + '-val').text(o.value);
+				$('#' + m[1] + '-period').text(o.period || '');
+				if (o.secondary) $('#' + m[1] + '-sub').text(o.secondary);
+				setDelta('#' + m[1] + '-delta', o, 'delta');
+			});
 		}
 
 		if (data.profitability_kpis) {
@@ -2258,76 +2028,68 @@
 			$('#prof-cogs-val').text(pr.cogs.value);
 			$('#prof-cogs-sub').text(pr.cogs.subline);
 			setDelta('#prof-cogs-delta', pr.cogs, 'delta');
-
 			$('#prof-disc-val').text(pr.discounts.value);
 			$('#prof-disc-sub').text(pr.discounts.subline);
 			setDelta('#prof-disc-delta', pr.discounts, 'delta');
-
-			$('#prof-upt-val').text(pr.units_per_tx.value);
-			setDelta('#prof-upt-delta', pr.units_per_tx, 'delta');
 		}
 
 		if (data.risk_inventory) {
-			var rk = data.risk_inventory;
-			$('#risk-lowstock-val').text(rk.low_stock.value);
-			setDelta('#risk-lowstock-delta', rk.low_stock, 'delta');
-
+			var rk = data.risk_inventory, nf = function(v) { return Number(v || 0).toLocaleString('en-US'); };
+			$('#risk-out-val').text(nf(rk.low_stock.out));
+			$('#risk-below-val').text(nf(rk.low_stock.below));
 			$('#risk-expiring-val').text(rk.expiring.value);
 			setDelta('#risk-expiring-delta', rk.expiring, 'delta');
-
-			$('#risk-sens-val').text(rk.sensitive_diffs.value);
-			setDelta('#risk-sens-delta', rk.sensitive_diffs, 'delta');
+			$('#risk-adjust-val').text(rk.sensitive_diffs.adjust);
+			$('#risk-inv-val').text(rk.sensitive_diffs.investigations);
 		}
 
 		if (data.workforce_kpis) {
-			var wf = data.workforce_kpis;
-			$('#prod-cov-val').text(wf.coverage.value);
-			setDelta('#prod-cov-delta', wf.coverage, 'delta');
-
-			$('#prod-prod-val').text(wf.productivity.value);
-			setDelta('#prod-prod-delta', wf.productivity, 'delta');
-
-			$('#prod-ot-val').text(wf.overtime.value);
-			setDelta('#prod-ot-delta', wf.overtime, 'delta');
+			['scheduled', 'punched', 'deficit'].forEach(function(key) {
+				var w = data.workforce_kpis[key];
+				if (!w) return;
+				$('#wf-' + key + '-val').text(w.value).toggleClass('t-danger', w.tone === 'bad');
+				$('#wf-' + key + '-sub').text(w.sub || '');
+			});
 		}
 
 		if (data.branch_priorities) {
 			var bpHtml = '';
 			var baseUrl = (window.Grocy && window.Grocy.BaseUrl) ? window.Grocy.BaseUrl.replace(/\/$/, '') : '';
 			data.branch_priorities.forEach(function(bp) {
-				bpHtml += '<tr class="today-exec-table-row" onclick="window.location=\'' + baseUrl + bp.href + '\'">' +
+				bpHtml += '<tr class="today-exec-table-row" data-href="' + esc(baseUrl + bp.href) + '" tabindex="0">' +
 					'<td class="today-exec-branch-name">' + esc(bp.branch) + '</td>' +
 					'<td><span class="today-exec-table-state"><i class="fa-solid ' + esc(bp.status_icon) + '" style="color: ' + esc(bp.status_icon_color) + '; font-size: 13px;"></i> ' + esc(bp.status_text) + '</span></td>' +
-					'<td><span class="today-exec-prio-badge ' + esc(bp.priority_class) + '">' + esc(bp.priority) + '</span></td>' +
+					'<td><span class="today-exec-prio-badge ' + esc(bp.priority_class) + '">' + esc(bp.impact || bp.priority) + '</span></td>' +
 					'<td class="today-exec-table-detail">' + esc(bp.detail) + '</td>' +
-					'<td><i class="fa-solid fa-chevron-right today-exec-chevron"></i></td>' +
+					'<td><a href="' + esc(baseUrl + bp.href) + '" aria-label="Abrir"><i class="fa-solid fa-chevron-right today-exec-chevron"></i></a></td>' +
 				'</tr>';
 			});
 			if (!bpHtml) {
-				bpHtml = '<tr><td colspan="5" class="text-center text-muted py-3">Sin información de sucursales</td></tr>';
+				bpHtml = '<tr><td colspan="5" class="text-center text-muted py-3">Sin excepciones por sucursal</td></tr>';
 			}
 			$('#exec-branch-priorities-body').html(bpHtml);
 		}
 
 		if (data.priority_decisions) {
 			var decBase = (window.Grocy && window.Grocy.BaseUrl) ? window.Grocy.BaseUrl.replace(/\/$/, '') : '';
-			$('#exec-decisions-count').text(data.priority_decisions.length + ' pendientes');
+			$('#exec-decisions-count').text(data.priority_decisions.length + (data.priority_decisions.length === 1 ? ' frente de atención' : ' frentes de atención'));
 			if (data.priority_decisions.length > 0) {
 				var decHtml = '';
 				data.priority_decisions.forEach(function(dec) {
-					decHtml += '<a href="' + decBase + esc(dec.href) + '" class="today-exec-decision-card is-' + esc(dec.severity) + '">' +
+					decHtml += '<a href="' + decBase + esc(dec.href) + '" class="today-exec-decision-card is-' + esc(dec.severity) + '" title="Abrir el detalle filtrado por este frente">' +
 						'<div class="today-exec-decision-left">' +
 							'<div class="today-exec-decision-icon"><i class="fa-solid ' + esc(dec.icon) + '"></i></div>' +
 							'<div class="today-exec-decision-info">' +
 								'<div class="d-flex align-items-center flex-wrap mb-1" style="gap: 5px;">' +
-									(dec.module_label ? '<span class="badge badge-light border text-muted" style="font-size: 9.5px; padding: 1px 5px; font-weight: 600; flex-shrink: 0;">' + esc(dec.module_label) + '</span>' : '') +
+									(dec.module_label ? '<span class="today-exec-module-tag">' + esc(dec.module_label) + '</span>' : '') +
 									'<span class="today-exec-decision-title">' + esc(dec.title) + '</span>' +
+									(dec.count !== undefined ? '<span class="today-exec-count-tag">' + Number(dec.count).toLocaleString('en-US') + ' registro(s)</span>' : '') +
 								'</div>' +
 								'<span class="today-exec-decision-desc">' + esc(dec.description) + '</span>' +
-								'<div class="d-flex align-items-center flex-wrap" style="gap: 8px; margin-top: 2px;">' +
+								'<div class="today-exec-decision-meta">' +
 									'<span class="today-exec-decision-impact ' + esc(dec.impact_class) + '">' + esc(dec.impact_text) + '</span>' +
-									(dec.owner ? '<span class="text-muted" style="font-size: 10px;"><i class="fa-regular fa-user mr-1"></i>' + esc(dec.owner) + '</span>' : '') +
-									(dec.due_date ? '<span class="text-muted" style="font-size: 10px;"><i class="fa-regular fa-clock mr-1"></i>' + esc(dec.due_date) + '</span>' : '') +
+									(dec.owner ? '<span><i class="fa-regular fa-user mr-1"></i>' + esc(dec.owner) + '</span>' : '') +
+									(dec.due_date ? '<span><i class="fa-regular fa-clock mr-1"></i>' + esc(dec.due_date) + '</span>' : '') +
 								'</div>' +
 							'</div>' +
 						'</div>' +
@@ -2336,7 +2098,7 @@
 				});
 				$('#exec-decisions-list').html(decHtml);
 			} else {
-				$('#exec-decisions-list').html('<div class="text-center py-4 text-muted small"><i class="fa-regular fa-circle-check mr-1"></i>Sin avisos prioritarios pendientes para este filtro</div>');
+				$('#exec-decisions-list').html('<div class="text-center py-4 text-muted small"><i class="fa-regular fa-circle-check mr-1"></i>Sin frentes de atención abiertos</div>');
 			}
 		}
 
@@ -2374,8 +2136,9 @@
 			var impactClass = (p.economic_impact !== null && Number(p.economic_impact) < 0) ? 'text-danger font-weight-bold' : '';
 
 			var href = p.href;
-			if (branchParam && href.indexOf('branch_id=') === -1) {
-				href += (href.indexOf('?') === -1 ? '?' : '&') + branchParam;
+			if (branchParam) {
+				var hp = href.split('#'), path = hp[0].replace(/([?&])branch_id=[^&]*&?/, '$1').replace(/[?&]$/, '');
+				href = path + (path.indexOf('?') === -1 ? '?' : '&') + branchParam + (hp[1] ? '#' + hp[1] : '');
 			}
 
 			tbodyHtml += '<tr class="today-process-row" data-key="' + esc(p.key) + '">' +
@@ -2401,6 +2164,10 @@
 						'<span class="today-proc-situation-text">' + esc(situation) + '</span>' +
 						'<small class="text-muted d-block" style="font-size: 10.5px;">Responsable: <strong>' + esc(p.owner || 'Operaciones') + '</strong> · ' + esc(p.last_updated || lastUpdated || '') + '</small>' +
 						(p.scope_note ? '<span class="today-proc-scope-tag" title="El filtro actual de departamento no subdivide este proceso global">' + esc(p.scope_note) + '</span>' : '') +
+						((p.details && p.details.length) ? '<ul class="today-proc-details">' + p.details.map(function(dt) {
+							var t = esc(dt.text);
+							return '<li class="is-' + esc(dt.tone || 'neutral') + '">' + (dt.href ? '<a href="' + baseUrl + esc(dt.href) + '">' + t + '</a>' : t) + '</li>';
+						}).join('') + '</ul>' : '') +
 					'</div>' +
 				'</td>' +
 				'<td class="today-process-action-cell text-right">' +
@@ -2423,6 +2190,7 @@
 		var metric = $(this).val();
 		if (execData && execData.comparative) {
 			initCompChart(execData.comparative, metric);
+			renderCompList(execData.comparative);
 		}
 	});
 
@@ -2434,15 +2202,26 @@
 	});
 
 	$('#exec-filter-date').on('change', fetchExecSales);
+	// Departamento y categoría filtran solo los cuadros comerciales; avisos, alertas y agenda mantienen toda la sucursal
+	function updateScopeNote() {
+		var dept = $('#exec-filter-dept').val(), cat = $('#exec-filter-category').val();
+		var parts = [];
+		if (dept && dept !== 'todos') parts.push($('#exec-filter-dept option:selected').text());
+		if (cat && cat !== 'todas') parts.push($('#exec-filter-category option:selected').text());
+		$('#exec-scope-note').text(parts.length ? 'Filtro comercial: ' + parts.join(' › ') + ' (ventas, margen y tickets). Avisos, alertas y agenda: toda la sucursal.' : '');
+	}
+	updateScopeNote();
+	$('#exec-filter-dept, #exec-filter-category').on('change', updateScopeNote);
 	$('#exec-filter-branch, #exec-filter-dept, #exec-filter-category').on('change', fetchExecSales);
 	$('#exec-heatmap-metric').on('change', fetchExecSales);
-	$('#exec-refresh-btn').on('click', fetchExecSales);
+	$('#exec-refresh-btn').on('click', function () { fetchExecSales(true); });
 
 	// Segmented Tabs Navigation
 	$(document).on('click', '.daily-tab-btn', function() {
 		var target = $(this).data('tab-target');
-		$('.daily-tab-btn').removeClass('active');
-		$(this).addClass('active');
+		$('.daily-tab-btn').removeClass('active').attr('aria-selected', 'false');
+		$(this).addClass('active').attr('aria-selected', 'true');
+		$('.today-level-jump a').removeAttr('aria-current').filter('[data-level="' + target + '"]').attr('aria-current', 'page');
 		$('.daily-tab-pane').removeClass('active');
 		$(target).addClass('active');
 
@@ -2455,13 +2234,25 @@
 		}
 	});
 
-	$('#btn-toggle-ops, #btn-show-all-decisions').on('click', function(e) {
+	$('#btn-show-all-decisions').on('click', function(e) {
 		e.preventDefault();
 		$('.daily-tab-btn[data-tab-target="#daily-tab-operations"]').trigger('click');
 		$('html, body').animate({ scrollTop: $('#daily-tab-operations').offset().top - 40 }, 250);
 	});
+	$('.today-level-jump a, .today-pulse-more').on('click', function(e) {
+		e.preventDefault();
+		var target = $(this).data('level');
+		$('.daily-tab-btn[data-tab-target="' + target + '"]').trigger('click');
+		$('html, body').animate({ scrollTop: $(target).offset().top - 40 }, 250);
+	});
 
 	var urlParams = new URLSearchParams(window.location.search);
+	$(document).on('click keydown', '.today-exec-table-row[data-href]', function(e) {
+		if (e.type === 'keydown' && e.key !== 'Enter') return;
+		if ($(e.target).closest('a').length) return;
+		window.location = this.getAttribute('data-href');
+	});
+	$(document).on('keydown', '.today-exec-dept-row', function(e) { if (e.key === 'Enter') $(this).trigger('click'); });
 	if (urlParams.get('tab') === 'processes' || urlParams.get('tab') === 'proc') {
 		$('.daily-tab-btn[data-tab-target="#daily-tab-processes"]').trigger('click');
 	} else if (urlParams.get('tab') === 'operations' || urlParams.get('tab') === 'ops') {

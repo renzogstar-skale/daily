@@ -266,6 +266,11 @@ $app->group('', function (RouteCollectorProxy $group)
 	$group->get('/locations/labels', [OperationsController::class, 'LocationLabels']);
 	$group->get('/locations/map', [OperationsController::class, 'LocationMap']);
 	$group->get('/traceability', [OperationsController::class, 'Traceability']);
+	// Calidad y vencimientos viven en Mermas › Vencimientos y FEFO (filtros: fefo_q, fefo_estado, branch_id)
+	$group->get('/quality', function (Request $request, Response $response) {
+		$qs = $request->getUri()->getQuery();
+		return $response->withRedirect($this->get('UrlManager')->ConstructUrl('/waste' . ($qs !== '' ? '?' . $qs : '')) . '#tab-fefo', 302);
+	});
 	$group->get('/orders', [OperationsController::class, 'Orders']);
 	$group->get('/dispatches', [RetailPreventionController::class, 'Dispatch']);
 	$group->get('/dispatch', [RetailPreventionController::class, 'Dispatch']);
@@ -289,6 +294,7 @@ $app->group('', function (RouteCollectorProxy $group)
 	$group->get('/system-map', [SystemMapController::class, 'Overview']);
 	$group->get('/action-center', [\Grocy\Controllers\DailyActionCenterController::class, 'Index']);
 	$group->get('/process-flow', [\Grocy\Controllers\ProcessFlowController::class, 'Inbox']);
+	$group->get('/demo/case', [\Grocy\Controllers\DemoCaseController::class, 'Overview']);
 	$group->get('/admin/economics', [\Grocy\Controllers\ProductEconomicsController::class, 'Dashboard']);
 	$group->get('/settings', [\Grocy\Controllers\SystemAdminController::class, 'Settings']);
 	$group->get('/audit-log', [\Grocy\Controllers\SystemAdminController::class, 'AuditLog']);
@@ -795,6 +801,8 @@ $app->group('/api', function (RouteCollectorProxy $group)
 	$group->get('/process-flow/exceptions', [\Grocy\Controllers\Api\ProcessFlowApiController::class, 'Exceptions']);
 	$group->get('/process-flow/inbox',[\Grocy\Controllers\Api\ProcessFlowApiController::class, 'Inbox']);
 	$group->get('/process-flow/{type:[a-z_]+}/{id:[0-9]+}', [\Grocy\Controllers\Api\ProcessFlowApiController::class, 'Get']);
+	$group->get('/demo/case', [\Grocy\Controllers\DemoCaseController::class, 'Summary']);
+	$group->post('/demo/case/{action:[a-z_]+}', [\Grocy\Controllers\DemoCaseController::class, 'Action']);
 	$group->get('/kpi-catalog/compute', [\Grocy\Controllers\Api\CoreArchitectureApiController::class, 'KpiCompute']);
 	$group->post('/kpi-catalog/{code:[a-z_]+}/settings', [\Grocy\Controllers\Api\CoreArchitectureApiController::class, 'SaveKpiSettings']);
 	$group->get('/inventory-movements/types', [\Grocy\Controllers\Api\CoreArchitectureApiController::class, 'MovementTypes']);

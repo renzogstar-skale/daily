@@ -1,14 +1,29 @@
 {{-- Navegación móvil DAIRY: barra inferior, hoja de accesos rápidos y escáner. Reusa $dairyNav del layout y DairyAccess. --}}
 @php
-$mobileTabs = array_values(array_filter([
-	// En el teléfono el inicio del manager es la app DAIRY Mobile (/m); la barra solo existe < 768 px
-	\Grocy\Helpers\DairyAccess::CanOpen('/m') ? ['/m', 'fa-house', 'Inicio', ['today']] : ['/today', 'fa-list-check', 'Hoy', ['today']],
-	['/waste', 'fa-trash-can', 'Mermas', ['waste_overview', 'waste_approvals', 'waste_reasons']],
-	['/stockoverview', 'fa-boxes-stacked', 'Inventario', ['stockoverview', 'stockentries', 'stockjournal', 'transfer', 'inventory', 'kardex']],
-], fn($t) => \Grocy\Helpers\DairyAccess::CanOpen($t[0])));
-if (count($mobileTabs) < 3 && \Grocy\Helpers\DairyAccess::CanOpen('/kpis')) { $mobileTabs[] = ['/kpis', 'fa-chart-line', 'Panel', ['executive_dashboard']]; }
-$mobileLeft = array_slice($mobileTabs, 0, 2);
-$mobileRight = array_slice($mobileTabs, 2, 1);
+// Barra inferior (< 768 px): HOY · Módulos · Escanear · Alertas. Cada destino depende del rol y del plan:
+// sin /today, HOY lleva al inicio del rol; sin escáner, el botón central es la acción principal permitida;
+// sin /alerts, la última pestaña es el primer módulo operativo disponible. «Módulos» abre todas las áreas habilitadas.
+$mobileFirst = function (array $opts) { foreach ($opts as $t) { if (\Grocy\Helpers\DairyAccess::CanOpen($t[0])) return $t; } return null; };
+$mobileHome = $mobileFirst([
+	['/today', 'fa-list-check', 'HOY', ['today']],
+	['/operations/attendance?role_view=employee', 'fa-list-check', 'HOY', ['operations_attendance', 'attendance']],
+	['/sales', 'fa-list-check', 'HOY', ['sales_history']],
+]);
+$mobileCanScan = \Grocy\Helpers\DairyAccess::CanOpen('/scan');
+$mobileCenter = $mobileCanScan ? null : $mobileFirst([
+	['/waste/report', 'fa-camera', 'Merma', ['waste_report']],
+	['/loss-prevention/counts', 'fa-clipboard-list', 'Conteo', ['loss_prevention_counts']],
+	['/pos', 'fa-cash-register', 'Vender', ['pos']],
+]);
+$mobileLast = $mobileFirst([
+	['/alerts', 'fa-bell', 'Alertas', ['alert_center']],
+	['/operations/scheduling', 'fa-calendar-days', 'Turnos', ['operations_scheduling', 'schedule']],
+	['/workforce', 'fa-users', 'Personal', ['workforce']],
+]);
+// El menú del sidebar se arma dentro de su propio @include (ámbito aislado): la hoja «Módulos» lo construye aquí;
+// antes leía un $dairyNav inexistente y la hoja salía vacía.
+$dairyNav = \Grocy\Helpers\DairyNavigation::Build($viewName, fn($s) => $__t($s));
+$mobileHref = function ($route) use ($U) { $p = explode('#', $route, 2); return $U($p[0]) . (isset($p[1]) ? '#' . $p[1] : ''); };
 $mobileCan = [
 	'waste' => \Grocy\Helpers\DairyAccess::CanOpen('/waste/report'),
 	'kardex' => \Grocy\Helpers\DairyAccess::CanOpen('/kardex'),
@@ -18,44 +33,49 @@ $mobileCan = [
 @endphp
 
 <nav id="dairyBottomNav" class="dairy-bottom-nav d-md-none" aria-label="Navegación principal móvil">
-	@foreach($mobileLeft as $t)
-	<a href="{{ $U($t[0]) }}" class="dairy-bottom-nav-item @if(in_array($viewName, $t[3])) is-active @endif">
-		<i class="fa-solid {{ $t[1] }}"></i><span>{{ $t[2] }}</span>
+	@if($mobileHome)
+	<a href="{{ $mobileHref($mobileHome[0]) }}" class="dairy-bottom-nav-item @if(in_array($viewName, $mobileHome[3])) is-active @endif" @if(in_array($viewName, $mobileHome[3])) aria-current="page" @endif>
+		<i class="fa-solid {{ $mobileHome[1] }}"></i><span>{{ $mobileHome[2] }}</span>
 	</a>
-	@endforeach
-	@if($mobileCan['waste'])
-	<a href="{{ $U('/waste/report') }}" class="dairy-bottom-nav-item dairy-bottom-nav-scan @if($viewName === 'waste_report') is-active @endif" aria-label="Registrar merma">
-		<span class="dairy-bottom-nav-fab"><i class="fa-solid fa-plus"></i></span><span>Registrar</span>
-	</a>
-	@else
+	@endif
+	<button type="button" class="dairy-bottom-nav-item" data-toggle="modal" data-target="#dairyQuickSheet" aria-haspopup="dialog" aria-label="Módulos">
+		<i class="fa-solid fa-grip"></i><span>Módulos</span>
+	</button>
+	@if($mobileCanScan)
 	<button type="button" class="dairy-bottom-nav-item dairy-bottom-nav-scan" data-dairy-scan aria-label="Escanear código">
 		<span class="dairy-bottom-nav-fab"><i class="fa-solid fa-barcode"></i></span><span>Escanear</span>
 	</button>
-	@endif
-	@foreach($mobileRight as $t)
-	<a href="{{ $U($t[0]) }}" class="dairy-bottom-nav-item @if(in_array($viewName, $t[3])) is-active @endif">
-		<i class="fa-solid {{ $t[1] }}"></i><span>{{ $t[2] }}</span>
+	@elseif($mobileCenter)
+	<a href="{{ $mobileHref($mobileCenter[0]) }}" class="dairy-bottom-nav-item dairy-bottom-nav-scan @if(in_array($viewName, $mobileCenter[3])) is-active @endif" aria-label="{{ $mobileCenter[2] }}">
+		<span class="dairy-bottom-nav-fab"><i class="fa-solid {{ $mobileCenter[1] }}"></i></span><span>{{ $mobileCenter[2] }}</span>
 	</a>
-	@endforeach
-	<button type="button" class="dairy-bottom-nav-item" data-toggle="modal" data-target="#dairyQuickSheet" aria-label="Más módulos">
-		<i class="fa-solid fa-grip"></i><span>Más</span>
-	</button>
+	@endif
+	@if($mobileLast)
+	<a href="{{ $mobileHref($mobileLast[0]) }}" class="dairy-bottom-nav-item @if(in_array($viewName, $mobileLast[3])) is-active @endif" @if(in_array($viewName, $mobileLast[3])) aria-current="page" @endif>
+		<i class="fa-solid {{ $mobileLast[1] }}"></i><span>{{ $mobileLast[2] }}</span>
+	</a>
+	@endif
 </nav>
 
-{{-- Hoja de accesos rápidos: todos los módulos visibles para el rol --}}
-<div class="modal fade dairy-sheet" id="dairyQuickSheet" tabindex="-1" role="dialog" aria-label="Accesos rápidos" aria-hidden="true">
+{{-- Hoja «Módulos»: acciones rápidas y todos los módulos visibles para el rol, agrupados por área operativa --}}
+<div class="modal fade dairy-sheet" id="dairyQuickSheet" tabindex="-1" role="dialog" aria-label="Módulos" aria-hidden="true">
 	<div class="modal-dialog" role="document">
 		<div class="modal-content">
 			<div class="dairy-sheet-handle"></div>
 			<div class="dairy-sheet-header">
-				<strong>Accesos rápidos</strong>
+				<strong>Módulos</strong>
 				<button type="button" class="close" data-dismiss="modal" aria-label="Cerrar"><span aria-hidden="true">&times;</span></button>
 			</div>
 			<div class="dairy-sheet-body">
 				<div class="dairy-sheet-actions">
+					@if($mobileCanScan)
 					<button type="button" class="dairy-sheet-action" data-dairy-scan data-dismiss="modal"><i class="fa-solid fa-barcode"></i>Escanear</button>
+					@endif
 					@if($mobileCan['waste'])
 					<a class="dairy-sheet-action" href="{{ $U('/waste/report') }}"><i class="fa-solid fa-camera"></i>Merma con foto</a>
+					@endif
+					@if(\Grocy\Helpers\DairyAccess::CanOpen('/m'))
+					<a class="dairy-sheet-action" href="{{ $U('/m') }}#/tasks"><i class="fa-solid fa-clipboard-check"></i>Tareas</a>
 					@endif
 					<button type="button" class="dairy-sheet-action" id="dairyNotifyToggle"><i class="fa-solid fa-bell"></i><span>Notificaciones</span></button>
 					<button type="button" class="dairy-sheet-action d-none" id="dairyInstallApp"><i class="fa-solid fa-download"></i>Instalar app</button>
@@ -79,7 +99,7 @@ $mobileCan = [
 					@if(isset($navItem['children']))
 						@foreach($navItem['children'] as $child)
 						<a class="dairy-sheet-tile @if(!empty($child['active'])) is-active @endif" href="{{ $dnavHref($child['route']) }}">
-							<i class="fa-solid fa-cube text-primary"></i><span>{{ $child['label'] }}</span>
+							<i class="fa-solid {{ $child['icon'] ?? $navItem['icon'] ?? 'fa-cube' }} text-primary"></i><span>{{ $child['label'] }}</span>
 						</a>
 						@endforeach
 					@elseif(!empty($navItem['route']))

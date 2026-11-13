@@ -417,7 +417,7 @@ class MobileManagerService extends BaseService
 
 	public function Sku(int $productId, ?int $branchId): ?array
 	{
-		$p = $this->One("SELECT p.id, p.name, p.sku, p.brand, p.min_stock_amount, p.max_stock_amount, p.sale_price, p.picture_file_name, p.product_group_id, IFNULL(g.name, 'Sin departamento') AS group_name,
+		$p = $this->One("SELECT p.id, p.name, p.sku, p.brand, IFNULL(p.storage_class, '') AS storage_class, p.min_stock_amount, p.max_stock_amount, p.sale_price, p.picture_file_name, p.product_group_id, IFNULL(g.name, 'Sin departamento') AS group_name,
 				qu.name AS unit, (SELECT barcode FROM product_barcodes WHERE product_id = p.id ORDER BY id LIMIT 1) AS barcode
 			FROM products p LEFT JOIN product_groups g ON g.id = p.product_group_id LEFT JOIN quantity_units qu ON qu.id = p.qu_id_stock WHERE p.id = :id", [':id' => $productId]);
 		if (!$p)
@@ -660,7 +660,7 @@ class MobileManagerService extends BaseService
 			'reasons' => $this->Rows("SELECT r.id, r.name, r.requires_evidence, r.requires_approval, " . self::BUCKET_SQL . " AS bucket,
 				(SELECT COUNT(*) FROM waste_records w WHERE w.waste_reason_id = r.id AND w.created_timestamp >= date('now', '-90 days')) AS uses
 				FROM waste_reasons r WHERE r.active = 1 ORDER BY uses DESC, r.name"),
-			'locations' => $this->Rows('SELECT id, name, branch_id FROM locations WHERE active = 1 AND IFNULL(is_transit, 0) = 0 ORDER BY name'),
+			'locations' => $this->Rows("SELECT id, name, branch_id, IFNULL(storage_class, '') AS storage_class FROM locations WHERE active = 1 AND IFNULL(is_transit, 0) = 0 ORDER BY name"),
 			'branches' => $this->Rows('SELECT id, name, code FROM branches WHERE active = 1 ORDER BY id'),
 			'groups' => $this->Rows('SELECT id, name FROM product_groups WHERE IFNULL(active, 1) = 1 ORDER BY name'),
 			'users' => $this->Rows('SELECT u.id, ' . self::UserName('u') . ' AS name FROM users u ORDER BY name'),

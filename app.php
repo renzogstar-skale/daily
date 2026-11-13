@@ -69,7 +69,8 @@ if (!file_exists($viewcachePath))
 // routes.php changed (in every mode: a stale route cache maps URLs to the wrong handlers)
 $hash = hash('sha256', file_get_contents(__DIR__ . '/version.json') . GROCY_BASE_URL . GROCY_BASE_PATH . file_get_contents(__DIR__ . '/routes.php'));
 $hashCacheFile = $viewcachePath . "/$hash.txt";
-if (!file_exists($hashCacheFile))
+// Solo GET/HEAD: un POST redirigido perdería su cuerpo; la migración la hará la siguiente navegación
+if (!file_exists($hashCacheFile) && in_array($_SERVER['REQUEST_METHOD'] ?? 'GET', ['GET', 'HEAD'], true))
 {
 	EmptyFolder($viewcachePath);
 	touch($hashCacheFile);
@@ -79,8 +80,16 @@ if (!file_exists($hashCacheFile))
 		opcache_reset();
 	}
 
-	// Schema migration happens on the root route, so redirect to there
-	header('Location: ' . (new UrlManager(GROCY_BASE_URL))->ConstructUrl('/'));
+	// Schema migration happens on the root route, so redirect to there and back to the requested page
+	// (antes caía siempre en la portada: la primera visita a /sales, /pos o una llamada /api devolvía la página de inicio)
+	$next = (string) ($_SERVER['REQUEST_URI'] ?? '/');
+	$basePath = rtrim((string) parse_url(GROCY_BASE_URL, PHP_URL_PATH), '/');
+	if ($basePath !== '' && str_starts_with($next, $basePath))
+	{
+		$next = substr($next, strlen($basePath));
+	}
+	$isRoot = $next === '' || $next === '/' || str_starts_with($next, '/?');
+	header('Location: ' . (new UrlManager(GROCY_BASE_URL))->ConstructUrl('/') . ($isRoot ? '' : '?next=' . rawurlencode($next)));
 	exit();
 }
 

@@ -82,6 +82,17 @@ class DailyMetricsService extends BaseService
 		return self::$departments = $out;
 	}
 
+	/** Nombre visible del departamento según el catálogo acordado: «90 Congelados» cuando tiene código; igual en Ventas, Inventario, Mermas y HOY */
+	public static function DepartmentLabel(string $key): string
+	{
+		$d = self::Departments()[$key] ?? null;
+		if ($d === null)
+		{
+			return $key;
+		}
+		return $d[3] !== null && $d[3] !== '' ? $d[3] . ' ' . $d[0] : $d[0];
+	}
+
 	/**
 	 * Guarda la configuración de departamentos. $rows = [['key', 'code', 'name', 'color', 'sort_order', 'source_values' => [..], 'delete']].
 	 * Rechaza códigos o nombres repetidos y valores de producto asignados a dos departamentos (evita categorías duplicadas).
@@ -247,6 +258,24 @@ class DailyMetricsService extends BaseService
 	/* ---------------------------------------------------------------- Ventas */
 
 	/**
+	 * Estado de datos de ventas de un rango, común a HOY y al Panel Ejecutivo:
+	 * 'data' (hay tickets), 'confirmed_zero' (corte confirmado sin ventas: caja cerrada en el rango o el registro ya
+	 * llegó a una fecha posterior) o 'no_data' (aún no hay corte: se muestra «Sin información», sin variación).
+	 */
+	public function SalesDataState(?int $branchId, string $from, string $to, bool $hasData): string
+	{
+		if ($hasData)
+		{
+			return 'data';
+		}
+		$b = $this->BranchSql($branchId);
+		$st = $this->Db()->prepare("SELECT EXISTS (SELECT 1 FROM pos_cash_shifts WHERE status = 'closed' AND date(IFNULL(closed_at, opened_at)) BETWEEN :f AND :t$b)
+			OR EXISTS (SELECT 1 FROM sales WHERE status = 'completed' AND date(created_timestamp) > :t$b)");
+		$st->execute([':f' => $from, ':t' => $to]);
+		return intval($st->fetchColumn()) ? 'confirmed_zero' : 'no_data';
+	}
+
+	/**
 	 * Ventas del rango [from, to] (fechas Y-m-d). $untilTime (HH:MM:SS) recorta cada día a esa hora (comparativos del día en curso).
 	 * Con filtro de departamento se calcula desde las líneas de esas mismas ventas.
 	 */
@@ -350,7 +379,7 @@ class DailyMetricsService extends BaseService
 				continue;
 			}
 			$s = $this->Sales($branchId, $from, $to, [$k]);
-			$out[$k] = ['id' => $k, 'name' => $name, 'color' => $color, 'sales' => $s['net_sales'], 'gross_profit' => $s['gross_margin'],
+			$out[$k] = ['id' => $k, 'name' => self::DepartmentLabel($k), 'color' => $color, 'sales' => $s['net_sales'], 'gross_profit' => $s['gross_margin'],
 				'margin_pct' => $s['margin_pct'] ?? 0, 'units' => $s['units'], 'tickets' => $s['tickets']];
 		}
 		return $out;
@@ -542,6 +571,107 @@ class DailyMetricsService extends BaseService
 		}
 		return ['shifts' => $n, 'people' => count($people), 'hours' => round($hours, 1), 'absent_hours' => round($absentHours, 1), 'absent_people' => count($absent),
 			'present_hours' => round($hours - $absentHours, 1), 'has_data' => $n > 0];
+	}
+
+	/**
+	 * Horas fichadas del día (entrada → salida, o hasta ahora si el turno sigue abierto, menos la pausa registrada).
+	 * null cuando la sucursal no registra asistencia ese día: la productividad se informa entonces sobre horas programadas.
+	 */
+	public function PunchedHours(?int $branchId, string $date): ?float
+	{
+		$st = $this->Db()->prepare("SELECT t.clock_in, t.clock_out, t.break_start, t.break_end FROM employee_attendance t JOIN employee_shifts s ON s.id = t.shift_id
+			WHERE s.shift_date = :d AND t.clock_in IS NOT NULL" . $this->BranchSql($branchId, 's.branch_id'));
+		$st->execute([':d' => $date]);
+		$rows = $st->fetchAll(\PDO::FETCH_ASSOC);
+		if (!$rows)
+		{
+			return null;
+		}
+		$now = time();
+		$h = 0.0;
+		foreach ($rows as $r)
+		{
+			$in = strtotime($r['clock_in']);
+			$out = $r['clock_out'] ? strtotime($r['clock_out']) : min($now, strtotime("$date 23:59:59"));
+			$brk = ($r['break_start'] && $r['break_end']) ? max(0, strtotime($r['break_end']) - strtotime($r['break_start'])) : 0;
+			$h += max(0, $out - $in - $brk) / 3600;
+		}
+		return round($h, 1);
+	}
+
+	/**
+	 * Cobertura con el mismo alcance que el requerimiento: por hora y departamento, personas programadas vs. mínimo.
+	 * covered_h = Σ min(programadas, requeridas) por franja (≤ requeridas); in_window_h = programadas dentro de las franjas.
+	 * Si los departamentos de los turnos no coinciden con los de la cobertura, se compara por hora con la dotación total.
+	 */
+	public function CoverageDetail(?int $branchId, string $date): ?array
+	{
+		$st = $this->Db()->prepare('SELECT branch_id, department, start_time, end_time, min_staff FROM coverage_requirements WHERE weekday IN (0, :w)' . $this->BranchSql($branchId));
+		$st->execute([':w' => intval(date('N', strtotime($date)))]);
+		$req = $st->fetchAll(\PDO::FETCH_ASSOC);
+		if (!$req)
+		{
+			return null;
+		}
+		$st = $this->Db()->prepare("SELECT branch_id, department, start_time, end_time FROM employee_shifts WHERE shift_date = :d AND status <> 'cancelled'" . $this->BranchSql($branchId));
+		$st->execute([':d' => $date]);
+		$shifts = $st->fetchAll(\PDO::FETCH_ASSOC);
+		$reqDepts = array_unique(array_column($req, 'department'));
+		$byDept = (bool) array_intersect($reqDepts, array_unique(array_column($shifts, 'department')));
+		$hm = fn($t) => intval(substr($t, 0, 2)) + intval(substr($t, 3, 2)) / 60;
+		$slots = [];
+		foreach ($req as $r)
+		{
+			for ($h = intval(floor($hm($r['start_time']))); $h < $hm($r['end_time']); $h++)
+			{
+				$k = $r['branch_id'] . '|' . ($byDept ? $r['department'] : '*') . '|' . $h;
+				$slots[$k] = ($slots[$k] ?? ['b' => $r['branch_id'], 'd' => $byDept ? $r['department'] : null, 'h' => $h, 'req' => 0, 'have' => 0]);
+				$slots[$k]['req'] += intval($r['min_staff']);
+			}
+		}
+		foreach ($shifts as $s)
+		{
+			$a = $hm($s['start_time']);
+			$e = $hm($s['end_time']);
+			if ($e <= $a) $e += 24;
+			foreach ($slots as $k => $sl)
+			{
+				if ($sl['b'] == $s['branch_id'] && ($sl['d'] === null || $sl['d'] === $s['department']) && $a <= $sl['h'] && $e >= $sl['h'] + 1)
+				{
+					$slots[$k]['have']++;
+				}
+			}
+		}
+		$reqH = 0;
+		$covered = 0;
+		$inWin = 0;
+		$gaps = [];
+		foreach ($slots as $sl)
+		{
+			$reqH += $sl['req'];
+			$covered += min($sl['have'], $sl['req']);
+			$inWin += $sl['have'];
+			if ($sl['have'] < $sl['req'])
+			{
+				$gaps[] = ['hour' => sprintf('%02d:00', $sl['h']), 'dept' => $sl['d'], 'branch_id' => intval($sl['b']), 'req' => $sl['req'], 'have' => $sl['have']];
+			}
+		}
+		usort($gaps, fn($x, $y) => [$x['hour'], $y['req'] - $y['have']] <=> [$y['hour'], $x['req'] - $x['have']]);
+		return ['required_h' => $reqH, 'covered_h' => $covered, 'in_window_h' => $inWin, 'pct' => $reqH > 0 ? round($covered / $reqH * 100, 0) : null,
+			'by_department' => $byDept, 'departments' => array_values($reqDepts), 'gaps' => $gaps, 'gap_h' => $reqH - $covered];
+	}
+
+	/** Horas requeridas por la cobertura mínima configurada para el día (null = sin requerimiento) */
+	public function RequiredHours(?int $branchId, string $date): ?float
+	{
+		$st = $this->Db()->prepare('SELECT start_time, end_time, min_staff FROM coverage_requirements WHERE weekday IN (0, :w)' . $this->BranchSql($branchId));
+		$st->execute([':w' => intval(date('N', strtotime($date)))]);
+		$req = 0.0;
+		foreach ($st->fetchAll(\PDO::FETCH_ASSOC) as $r)
+		{
+			$req += max(0, (strtotime("2000-01-01 {$r['end_time']}") - strtotime("2000-01-01 {$r['start_time']}")) / 3600) * intval($r['min_staff']);
+		}
+		return $req > 0 ? round($req, 1) : null;
 	}
 
 	/* ---------------------------------------------------------------- Metas */

@@ -472,7 +472,7 @@ class AlertCenterService extends BaseService
 				{
 					$out[] = ['key' => "{$r['location_id']}:{$r['d']}", 'title' => 'Temperatura fuera de rango: ' . ($r['name'] ?? 'ubicación #' . $r['location_id']),
 						'detail' => "{$r['n']} lectura(s) fuera de rango el {$r['d']} (mín {$r['tmin']} °C · máx {$r['tmax']} °C)" . ($r['crit'] ? ' · nivel crítico' : '') . '. Evaluar lotes expuestos y cuarentena.',
-						'value' => null, 'href' => '/quality'];
+						'value' => null, 'href' => '/waste#tab-fefo'];
 				}
 				break;
 			case 'expiring_lots':
@@ -486,7 +486,7 @@ class AlertCenterService extends BaseService
 					$days = (int) round((strtotime($r['d']) - strtotime($today)) / 86400);
 					$out[] = ['key' => "{$r['stock_id']}:{$r['d']}", 'title' => 'Lote por vencer: ' . ($r['name'] ?? 'producto #' . $r['product_id']), 'product_id' => $r['product_id'],
 						'detail' => ($days === 0 ? 'Vence hoy' : "Vence en $days día(s)") . " ({$r['d']}) · {$r['qty']} u. en {$r['loc']} · {$money($r['value'])} a costo. Rebajar (FEFO), trasladar o reubicar al frente.",
-						'value' => $r['value'], 'href' => '/quality'];
+						'value' => $r['value'], 'href' => '/waste#tab-fefo'];
 				}
 				break;
 			case 'recall_unconfirmed':
@@ -629,7 +629,7 @@ class AlertCenterService extends BaseService
 					WHERE q.branch_id = :b AND q.status = 'in_quarantine' AND q.entered_timestamp <= :lim", [':b' => $b, ':lim' => date('Y-m-d H:i:s', time() - 86400 * ($t ?? 2))]) as $r)
 				{
 					$out[] = ['key' => "{$r['id']}", 'title' => 'Cuarentena sin decisión: ' . $r['name'], 'product_id' => $r['product_id'], 'detail' => floatval($r['amount']) . ' u. en cuarentena desde ' . substr($r['entered_timestamp'], 0, 16) . ' · ' . $r['reason'],
-						'value' => $r['price'] ? round(floatval($r['price']) * floatval($r['amount']), 2) : null, 'href' => '/quality'];
+						'value' => $r['price'] ? round(floatval($r['price']) * floatval($r['amount']), 2) : null, 'href' => '/waste#tab-fefo'];
 				}
 				break;
 			case 'shift_unpublished':
@@ -721,7 +721,7 @@ class AlertCenterService extends BaseService
 				{
 					$out[] = ['key' => "{$r['stock_id']}", 'title' => 'Lote vencido a la venta: ' . ($r['name'] ?? 'producto #' . $r['product_id']), 'product_id' => $r['product_id'],
 						'detail' => "Venció el {$r['d']} · {$r['qty']} u. en {$r['loc']} · {$money($r['value'])} a costo. Bloquear en cuarentena y decidir merma o devolución.",
-						'value' => $r['value'], 'href' => '/quality'];
+						'value' => $r['value'], 'href' => '/waste#tab-fefo'];
 				}
 				break;
 			case 'waste_approval_stale':
@@ -801,7 +801,7 @@ class AlertCenterService extends BaseService
 						'product_id' => $r['product_id'],
 						'detail' => "Quedan $days día(s) para vencer. Demanda estimada no absorberá {$r['units_at_risk']} u. Pérdida: {$money($r['total_value_risk'])}. Sugerido: {$r['recommended_action']}.",
 						'value' => floatval($r['total_value_risk']),
-						'href' => '/quality#tab-predictive'
+						'href' => '/waste#tab-fefo'
 					];
 				}
 				break;
@@ -1394,10 +1394,10 @@ class AlertCenterService extends BaseService
 	// Pasos por regla (prioritario) o por tipo de alerta. [etiqueta, enlace al módulo, requisito: 0 ninguno · 1 evidencia · 2 aprobación concedida]
 	// {product} y {branch} se reemplazan por los datos de la alerta; el enlace abre el flujo real del módulo (un solo registro principal).
 	const PLAYBOOKS = [
-		'expiry' => [['Revisar el lote y su fecha de vencimiento', '/quality'], ['Verificar FEFO en góndola y bodega', '/stockentries?product={product}'], ['Rebajar, trasladar, retirar o poner en cuarentena según corresponda', '/quality'], ['Registrar evidencia del estado del lote', null, 1]],
+		'expiry' => [['Revisar el lote y su fecha de vencimiento', '/waste#tab-fefo'], ['Verificar FEFO en góndola y bodega', '/stockentries?product={product}'], ['Rebajar, trasladar, retirar o poner en cuarentena según corresponda', '/waste#tab-fefo'], ['Registrar evidencia del estado del lote', null, 1]],
 		'count_diff' => [['Revisar movimientos del producto en el Kardex', '/kardex?product_id={product}&branch_id={branch}'], ['Programar o ejecutar el conteo', '/waste#tab-conteos'], ['Registrar la diferencia contada (foto del conteo)', null, 1], ['Solicitar y obtener aprobación del ajuste', null, 2], ['Conciliar el inventario', '/inventory-control']],
 		'waste' => [['Identificar producto, lote y movimiento', '/kardex?product_id={product}&branch_id={branch}'], ['Registrar la causa en Registrar Merma', '/waste/report'], ['Evaluar recuperación (proveedor, rebaja o donación)', '/waste#tab-recuperacion'], ['Solicitar y obtener aprobación', null, 2], ['Contabilizar y adjuntar respaldo', null, 1]],
-		'cold_chain' => [['Verificar y registrar la temperatura actual', '/quality', 1], ['Identificar lotes afectados', '/quality'], ['Inmovilizar el producto (cuarentena)', '/quality'], ['Evaluar la calidad del producto', null, 1], ['Liberar o retirar con autorización', null, 2]],
+		'cold_chain' => [['Verificar y registrar la temperatura actual', '/waste#tab-fefo', 1], ['Identificar lotes afectados', '/waste#tab-fefo'], ['Inmovilizar el producto (cuarentena)', '/waste#tab-fefo'], ['Evaluar la calidad del producto', null, 1], ['Liberar o retirar con autorización', null, 2]],
 		'staff' => [['Identificar el turno descubierto', '/schedule?branch_id={branch}'], ['Consultar horarios y ausencias', '/schedule?branch_id={branch}'], ['Verificar disponibilidad y horas permitidas', '/schedule?branch_id={branch}'], ['Reasignar personal', '/schedule?branch_id={branch}'], ['Confirmar la cobertura', null]],
 		'purchasing' => [['Identificar el riesgo de quiebre', '/stockentries?product={product}'], ['Consultar demanda e inventario', '/mrp'], ['Proponer el pedido', '/mrp'], ['Obtener aprobación del pedido', null, 2], ['Emitir la orden', '/mrp'], ['Confirmar la recepción', '/mrp']],
 		'stock_low' => [['Identificar el riesgo de quiebre', '/stockentries?product={product}'], ['Consultar demanda e inventario', '/mrp'], ['Reponer desde bodega o trasladar', '/transfers'], ['Proponer pedido si no hay existencias', '/mrp'], ['Confirmar exhibición o recepción', null]],
@@ -1407,9 +1407,9 @@ class AlertCenterService extends BaseService
 		'recall_unconfirmed' => [['Separar físicamente los lotes del retiro', '/recalls', 1], ['Confirmar el retiro en Retiros de Producto', '/recalls']],
 		// Procedimientos por regla (tienen prioridad sobre el tipo)
 		'pos_unreconciled' => [['Validar la venta (número, fecha y líneas)', '/sales?branch_id={branch}'], ['Verificar la venta en la integración POS', '/sales?branch_id={branch}'], ['Comparar las líneas contra el Kardex', '/kardex?product_id={product}&branch_id={branch}'], ['Investigar la diferencia y documentarla', null, 1], ['Corregir el descargo con autorización', null, 2], ['Conciliar inventario y venta', '/kardex?product_id={product}&branch_id={branch}']],
-		'cold_chain_breach' => [['Confirmar la temperatura fuera de rango', '/quality?branch_id={branch}', 1], ['Identificar los lotes expuestos', '/quality?branch_id={branch}'], ['Inmovilizar los lotes (cuarentena)', '/quality?branch_id={branch}'], ['Evaluar la calidad del producto', null], ['Autorizar el destino (liberar, merma o retiro)', null, 2], ['Registrar evidencia del destino aplicado', '/waste/report', 1]],
+		'cold_chain_breach' => [['Confirmar la temperatura fuera de rango', '/waste?branch_id={branch}#tab-fefo', 1], ['Identificar los lotes expuestos', '/waste?branch_id={branch}#tab-fefo'], ['Inmovilizar los lotes (cuarentena)', '/waste?branch_id={branch}#tab-fefo'], ['Evaluar la calidad del producto', null], ['Autorizar el destino (liberar, merma o retiro)', null, 2], ['Registrar evidencia del destino aplicado', '/waste/report', 1]],
 		'count_overdue' => [['Confirmar el incumplimiento del conteo programado', '/waste#tab-conteos'], ['Asignar el equipo de conteo', '/schedule?branch_id={branch}'], ['Programar el conteo', '/waste#tab-conteos'], ['Escanear y contar', '/scan'], ['Conciliar contra el sistema', '/inventory-control'], ['Aprobar las diferencias (ajuste)', null, 2]],
-		'expiring_lots' => [['Identificar el lote y su vencimiento', '/quality?branch_id={branch}'], ['Comprobar FEFO en góndola y bodega', '/stockentries?product={product}'], ['Revisar la rotación del producto', '/kardex?product_id={product}&branch_id={branch}'], ['Definir acción: rebaja, traslado o donación', '/transfers'], ['Ejecutar la acción (con evidencia)', null, 1]],
+		'expiring_lots' => [['Identificar el lote y su vencimiento', '/waste?branch_id={branch}#tab-fefo'], ['Comprobar FEFO en góndola y bodega', '/stockentries?product={product}'], ['Revisar la rotación del producto', '/kardex?product_id={product}&branch_id={branch}'], ['Definir acción: rebaja, traslado o donación', '/transfers'], ['Ejecutar la acción (con evidencia)', null, 1]],
 		'other' => [['Verificar la condición en el módulo de origen', '{href}'], ['Ejecutar la acción recomendada', null], ['Registrar evidencia', null, 1]],
 	];
 
@@ -2742,7 +2742,7 @@ class AlertCenterService extends BaseService
 		foreach ($this->Rows("SELECT s.best_before_date AS d, p.name, SUM(s.amount) AS qty FROM stock s JOIN locations l ON l.id = s.location_id LEFT JOIN products p ON p.id = s.product_id
 			WHERE s.amount > 0 AND IFNULL(l.is_transit, 0) = 0 AND s.best_before_date IN (:t, :m)" . $branchSql('l.branch_id') . ' GROUP BY s.product_id, s.best_before_date ORDER BY d LIMIT 10', [':t' => $today, ':m' => $tomorrow]) as $r)
 		{
-			$add($r['d'] . ' 23:59:00', 'Producto vence ' . ($r['d'] === $today ? 'hoy' : 'mañana'), $r['name'] . ' · ' . floatval($r['qty']) . ' u.', 'preventive', 'fa-calendar-xmark', '/quality');
+			$add($r['d'] . ' 23:59:00', 'Producto vence ' . ($r['d'] === $today ? 'hoy' : 'mañana'), $r['name'] . ' · ' . floatval($r['qty']) . ' u.', 'preventive', 'fa-calendar-xmark', '/waste#tab-fefo');
 		}
 		foreach ($this->Rows("SELECT o.order_code, o.expected_delivery_date AS d, sl.name FROM procurement_orders o LEFT JOIN shopping_locations sl ON sl.id = o.supplier_id WHERE o.status IN ('sent', 'partially_received') AND o.expected_delivery_date IN (:t, :m)" . $branchSql('o.branch_id') . ' LIMIT 10', [':t' => $today, ':m' => $tomorrow]) as $r)
 		{
@@ -2756,7 +2756,7 @@ class AlertCenterService extends BaseService
 		foreach ($this->Rows("SELECT l.id, l.name FROM locations l WHERE EXISTS (SELECT 1 FROM cold_chain_temperatures c WHERE c.location_id = l.id AND c.recorded_timestamp >= :w)
 			AND NOT EXISTS (SELECT 1 FROM cold_chain_temperatures c WHERE c.location_id = l.id AND date(c.recorded_timestamp) = :t)" . $branchSql('l.branch_id') . ' LIMIT 10', [':w' => date('Y-m-d', strtotime('-7 days')), ':t' => $today]) as $r)
 		{
-			$add($today . ' 23:59:00', 'Revisión de temperatura', $r['name'] . ' sin lectura hoy', 'preventive', 'fa-temperature-half', '/quality');
+			$add($today . ' 23:59:00', 'Revisión de temperatura', $r['name'] . ' sin lectura hoy', 'preventive', 'fa-temperature-half', '/waste#tab-frio');
 		}
 		usort($items, fn($a, $b) => strcmp($a['at'], $b['at']));
 		$bucket = function (string $at) use ($now, $today) {

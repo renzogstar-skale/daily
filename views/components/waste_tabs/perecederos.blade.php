@@ -577,7 +577,7 @@
 
 	<!-- 8. MÓDULOS RELACIONADOS (ACCESOS HORIZONTALES) -->
 	<div class="daily-rel-bar">
-		<a href="{{ $U('/quality') }}" class="daily-rel-link">
+		<a href="{{ $U('/waste#tab-fefo') }}" class="daily-rel-link">
 			<div class="daily-rel-icon"><i class="fa-solid fa-snowflake"></i></div>
 			<div>
 				<div class="daily-rel-title">Calidad y Vencimientos</div>

@@ -20,12 +20,12 @@
 			. '<div class="ded-kpi-label">' . $h($label) . '</div><div class="ded-kpi-val">' . $h($value) . '</div><div class="ded-kpi-sub">' . $sub . '</div></article>';
 	};
 	$titles = [
-		'dashboard' => ['Informe comercial · Tablero de ventas', '¿Cuánto estamos vendiendo y cómo evolucionan las ventas?'],
-		'departments' => ['Informe comercial · Ventas por departamento', '¿Qué departamento genera más ventas?'],
-		'products' => ['Informe comercial · Productos de venta', '¿Cuáles son los productos más vendidos de toda la empresa?'],
-		'branches' => ['Informe comercial · Sucursales', '¿Cuál tienda vende más y cuál tiene mejor desempeño comercial?'],
-		'history' => ['Informe comercial · Historial de ventas', '¿Cómo han evolucionado las ventas a lo largo del tiempo?'],
-		'profitability' => ['Informe comercial · Rentabilidad', '¿Qué ventas generan mayor utilidad bruta?']
+		'dashboard' => ['Tablero de ventas', '¿Cuánto estamos vendiendo y cómo evolucionan las ventas?'],
+		'departments' => ['Ventas por departamento', '¿Qué departamento genera más ventas?'],
+		'products' => ['Productos de venta', '¿Cuáles son los productos más vendidos de toda la empresa?'],
+		'branches' => ['Sucursales', '¿Cuál tienda vende más y cuál tiene mejor desempeño comercial?'],
+		'history' => ['Historial de ventas', '¿Cómo han evolucionado las ventas a lo largo del tiempo?'],
+		'profitability' => ['Rentabilidad', '¿Qué ventas generan mayor utilidad bruta?']
 	];
 	$P = $R['period'] ?? null;
 	$scope = ($filterNames['branch'] ?? 'Todas las sucursales') . ' · ' . ($filterNames['department'] ?? 'Todos los departamentos')

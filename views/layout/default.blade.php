@@ -173,6 +173,9 @@ $dailyDark = $dailyModePref === 'dark';
 	<!-- Efecto Hover interactivo verde en todas las tarjetas KPI de DAILY -->
 	<link href="{{ $U('/css/daily_kpi_hover.css?v=', true) }}{{ daily_asset_version('/css/daily_kpi_hover.css') }}"
 		rel="stylesheet">
+	<!-- Capa móvil: áreas seguras, filtros compactos e indicadores esenciales (solo ≤ 991 px) -->
+	<link href="{{ $U('/css/daily_mobile.css?v=', true) }}{{ daily_asset_version('/css/daily_mobile.css') }}"
+		rel="stylesheet">
 
 	@if(file_exists(GROCY_DATAPATH . '/custom_css.html'))
 	@php include GROCY_DATAPATH . '/custom_css.html' @endphp
@@ -503,7 +506,7 @@ $dailyDark = $dailyModePref === 'dark';
 								<span class="daily-profile-control-title">
 									<i class="fa-solid fa-store text-muted mr-2" style="width: 16px;"></i>Centro Operativo:
 								</span>
-								<span class="badge badge-pill badge-light border text-muted font-weight-bold" style="font-size: 10.5px;">
+								<span class="badge badge-pill badge-light border text-muted font-weight-bold" style="font-size: 11px;">
 									{{ $hdrBranchName }}
 								</span>
 							</div>
@@ -512,7 +515,7 @@ $dailyDark = $dailyModePref === 'dark';
 									onchange="window.location.href='?branch_id=' + this.value;"
 									aria-label="Seleccionar centro operativo">
 									@foreach($hdrBranches as $hb)
-										<option value="{{ $hb->id }}" @if($hdrBranchId === intval($hb->id)) selected @endif>{{ $hb->name }}</option>
+										<option value="{{ $hb->id }}" @if($hdrBranchId === intval($hb->id)) selected @endif>{{ $hb->name }}{{ !empty($hb->code) && !str_contains($hb->name, $hb->code) ? ' · ' . $hb->code : '' }}</option>
 									@endforeach
 									@unless($hdrRestricted)
 										<option value="" @if($hdrBranchId === null) selected @endif>Red Consolidada (Todas)</option>
@@ -793,6 +796,9 @@ $dailyDark = $dailyModePref === 'dark';
 			<div class="row mb-0 mx-0">
 				<div id="page-content"
 					class="col-12 px-0 content-text fa-width-auto" style="min-width: 0;">
+					@if(GROCY_AUTHENTICATED && !$embedded)
+					@include('components.demo_case_strip')
+					@endif
 					@yield('content')
 					@if(GROCY_AUTHENTICATED && !$embedded)
 					@include('components.dairy_related')
@@ -997,6 +1003,7 @@ $dailyDark = $dailyModePref === 'dark';
 	<script src="{{ $U('/js/daily_process_flow.js?v=', true) }}{{ daily_asset_version('/js/daily_process_flow.js') }}"></script>
 	@if(GROCY_AUTHENTICATED && !$embedded)
 	<script src="{{ $U('/js/dairy_mobile.js?v=', true) }}{{ daily_asset_version('/js/dairy_mobile.js') }}"></script>
+	<script src="{{ $U('/js/daily_mobile.js?v=', true) }}{{ daily_asset_version('/js/daily_mobile.js') }}"></script>
 	<script src="{{ $U('/js/dairy_offline.js?v=', true) }}{{ daily_asset_version('/js/dairy_offline.js') }}"></script>
 	<script src="{{ $U('/js/dairy_ui.js?v=', true) }}{{ daily_asset_version('/js/dairy_ui.js') }}"></script>
 	<script src="{{ $U('/js/dairy_scan.js?v=', true) }}{{ daily_asset_version('/js/dairy_scan.js') }}"></script>

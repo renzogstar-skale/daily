@@ -1,0 +1,99 @@
+/* ==========================================================================
+   DAILY · Capa móvil (iPhone, Android, terminales industriales)
+   Se carga al final para ganar a las hojas de módulo. Todo vive en media queries
+   ≤ 991.98 px o (pointer: coarse): el escritorio no cambia.
+   ========================================================================== */
+
+/* Áreas seguras: muesca/isla y barras del sistema (viewport-fit=cover ya está en el layout) */
+@media (max-width: 991.98px) {
+	:root {
+		--dairy-safe-top: env(safe-area-inset-top, 0px);
+		--dairy-safe-left: env(safe-area-inset-left, 0px);
+		--dairy-safe-right: env(safe-area-inset-right, 0px);
+		--dairy-header-height: calc(56px + var(--dairy-safe-top));
+	}
+	#mainNav { padding-top: var(--dairy-safe-top); padding-left: max(8px, var(--dairy-safe-left)); padding-right: max(8px, var(--dairy-safe-right)); box-sizing: border-box; }
+	#page-content { padding-left: max(var(--dairy-gutter, 16px), var(--dairy-safe-left)) !important; padding-right: max(var(--dairy-gutter, 16px), var(--dairy-safe-right)) !important; }
+	.dairy-bottom-nav { padding-left: var(--dairy-safe-left); padding-right: var(--dairy-safe-right); }
+	/* Nunca scroll horizontal de página: lo ancho se desplaza dentro de su caja */
+	/* clip (no hidden): no crea contenedor de scroll, así sticky y el scroll de ventana siguen funcionando */
+	html, body { overflow-x: clip; }
+}
+
+/* Filtros compactos: barra «Filtros · n» + la caja original como hoja inferior (daily_mobile.js) */
+.dm-filter-bar, .dm-filter-head, .dm-filter-backdrop, .dm-kpi-more { display: none; }
+@media (max-width: 767.98px) {
+	.dm-filter-bar { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; min-width: 0; }
+	.dm-filter-btn {
+		flex: 0 0 auto; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px;
+		border: 1px solid var(--dairy-border); border-radius: 999px; background: var(--dairy-surface);
+		color: var(--dairy-text-body); font-size: 15px; font-weight: 600;
+	}
+	.dm-filter-btn i { color: var(--dairy-primary); }
+	.dm-filter-count:not(:empty) { min-width: 22px; height: 22px; padding: 0 6px; border-radius: 11px; background: var(--dairy-primary); color: #fff; font-size: 12px; line-height: 22px; text-align: center; }
+	.dm-filter-summary { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; color: var(--dairy-text-muted); }
+	#page-content .dm-filter-sheet:not(.is-open) { display: none !important; }
+	#page-content .dm-filter-sheet.is-open {
+		display: flex !important; flex-direction: column; align-items: stretch !important; gap: 12px !important;
+		position: fixed !important; left: 0; right: 0; bottom: 0; top: auto !important; z-index: 1060; margin: 0 !important;
+		width: 100% !important; max-width: none !important; max-height: 82dvh; overflow-y: auto; overscroll-behavior: contain;
+		padding: 0 max(16px, var(--dairy-safe-right, 0px)) calc(16px + var(--dairy-safe-bottom, 0px)) max(16px, var(--dairy-safe-left, 0px)) !important;
+		background: var(--dairy-surface) !important; border-radius: 16px 16px 0 0 !important; border: 0 !important;
+		box-shadow: 0 -8px 30px rgba(15, 23, 42, .18) !important; animation: dm-sheet-in .22s cubic-bezier(.4, 0, .2, 1);
+		-webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+	}
+	#page-content .dm-filter-sheet.is-open > *, #page-content .dm-filter-sheet.is-open .row > [class*="col"] { width: 100% !important; max-width: 100% !important; flex: 0 0 auto !important; }
+	#page-content .dm-filter-sheet.is-open .row { margin: 0 !important; flex-direction: column; gap: 12px; }
+	#page-content .dm-filter-sheet.is-open select, #page-content .dm-filter-sheet.is-open input:not([type=checkbox]):not([type=radio]), #page-content .dm-filter-sheet.is-open .btn { min-height: 44px !important; height: auto !important; font-size: 16px !important; width: 100%; }
+	#page-content .dm-filter-sheet.is-open .dm-filter-head { display: flex; position: sticky; top: 0; z-index: 1; align-items: center; justify-content: space-between; margin: 0 -16px; padding: 14px 16px 10px; background: inherit; border-bottom: 1px solid var(--dairy-border); font-size: 17px; }
+	#page-content .dm-filter-sheet.is-open .dm-filter-head .btn { width: auto; min-width: 88px; }
+	body.dm-filters-open .dm-filter-backdrop { display: block; position: fixed; inset: 0; z-index: 1059; background: rgba(15, 23, 42, .45); }
+	body.dm-filters-open { overflow: hidden; }
+	body.dm-filters-open .dairy-bottom-nav { display: none !important; }
+
+	/* Tablas de 2–3 columnas: ocupan el ancho disponible (sin el mínimo de 600 px de escritorio) */
+	table.dairy-fit-table { min-width: 0 !important; width: 100% !important; }
+	table.dairy-fit-table td, table.dairy-fit-table th { white-space: normal !important; overflow-wrap: anywhere; }
+
+	/* Rejillas de gráficos apiladas en una columna (daily_mobile.js las marca si el gráfico queda < 220 px) */
+	.dm-grid-stack { grid-template-columns: minmax(0, 1fr) !important; }
+	.dm-grid-stack > * { grid-column: auto !important; min-width: 0; }
+	.dm-flex-stack { flex-wrap: wrap !important; }
+	.dm-flex-stack > * { flex: 1 1 100% !important; max-width: 100% !important; min-width: 0; }
+
+	/* Indicadores esenciales: 4 visibles, el resto bajo «Ver más» */
+	.dm-kpi-collapsed > .dm-kpi-extra { display: none !important; }
+	.dm-kpi-more {
+		display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 44px; margin: 4px 0 14px;
+		border: 1px dashed var(--dairy-border); border-radius: var(--dairy-radius-md, 10px); background: transparent;
+		color: var(--dairy-primary); font-size: 15px; font-weight: 600;
+	}
+	.dm-kpi-more[aria-expanded="true"] i { transform: rotate(180deg); }
+}
+
+/* Ajuste a la pantalla en teléfono y tableta (daily_mobile.js marca solo lo que desborda su caja; el escritorio
+   con ratón no cambia). Misma consulta que FIT_MQ en daily_mobile.js. */
+@media (max-width: 991.98px), (pointer: coarse) and (max-width: 1199.98px) {
+	#page-content .dm-wrap { flex-wrap: wrap !important; row-gap: 8px; }
+	#page-content .dm-wrap > * { min-width: 0; max-width: 100%; }
+	#page-content .dm-grid-fit { grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr)) !important; }
+	#page-content .dm-grid-fit > * { min-width: 0; grid-column: auto !important; }
+	#page-content .dm-shrink { min-width: 0 !important; max-width: 100% !important; flex-shrink: 1 !important; }
+	#page-content .dm-text-wrap { white-space: normal !important; overflow-wrap: break-word; text-overflow: clip; min-width: 0; max-width: 100%; }
+	/* Campos con ancho fijo de escritorio: nunca más anchos que la pantalla */
+	#page-content input:not([type=checkbox]):not([type=radio]), #page-content select, #page-content textarea, #page-content .input-group, #page-content .bootstrap-select { max-width: 100% !important; }
+	#page-content h1, #page-content h2, #page-content h3 { overflow-wrap: break-word; }
+}
+@keyframes dm-sheet-in { from { transform: translateY(100%); } to { transform: none; } }
+/* Modo noche: superficies opacas (los tokens de superficie son translúcidos en noche) */
+html.daily-dark .dm-filter-btn { background: var(--dk-raise-solid); border-color: var(--dk-border-strong); color: var(--dk-text); }
+html.daily-dark #page-content .dm-filter-sheet.is-open { background: var(--dk-surface-solid) !important; color: var(--dk-text); }
+html.daily-dark #page-content .dm-filter-sheet.is-open .dm-filter-head { border-color: var(--dk-border); }
+
+@media (max-width: 991.98px), (pointer: coarse) and (max-width: 1199.98px) {
+	#page-content .dm-scroll-x { overflow-x: auto !important; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
+}
+@media (max-width: 767.98px) {
+	/* «Detalle» de las tarjetas: sin margen negativo a la derecha (se salía 8 px de la tarjeta) */
+	.dairy-card-more { margin-right: 0 !important; }
+}

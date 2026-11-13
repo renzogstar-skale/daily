@@ -657,7 +657,7 @@ class SalesReportsService extends BaseService
 		$depts = [];
 		foreach (DailyMetricsService::Departments() as $k => $d)
 		{
-			$depts[$k] = ['key' => $k, 'name' => $d[0], 'color' => $d[1], 'code' => $d[3]];
+			$depts[$k] = ['key' => $k, 'name' => DailyMetricsService::DepartmentLabel($k), 'color' => $d[1], 'code' => $d[3]];
 		}
 
 		$ctx = compact('f', 'from', 'to', 'days', 'prevFrom', 'prevTo', 'prevLabel', 'compareWith', 'cur', 'prev', 'goals', 'branchNames', 'depts', 'L', 'deptTargets');

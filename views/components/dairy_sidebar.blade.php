@@ -36,7 +36,10 @@ $dnavHref = function ($route) use ($U) {
 			title="{{ $cat['label'] }}">
 			<i class="fa-solid {{ $cat['icon'] }} dnav-icon"
 				aria-hidden="true"></i>
-			<span class="nav-link-text">{{ $cat['label'] }}</span>
+			@php
+				$catParts = preg_match('/^(\d+\.)\s*(.+)$/u', $cat['label'], $catM) ? [$catM[1], $catM[2]] : [null, $cat['label']];
+			@endphp
+			<span class="nav-link-text">@if($catParts[0])<span class="dnav-num">{{ $catParts[0] }}</span> @endif<span class="dnav-name">{{ $catParts[1] }}</span></span>
 			<span class="dnav-dot d-none"
 				aria-hidden="true"></span>
 			<i class="fa-solid fa-chevron-down dnav-caret"
