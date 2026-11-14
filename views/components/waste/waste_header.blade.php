@@ -23,7 +23,7 @@
 <header class="ded-header dp-ded-header">
 	<div class="ded-header-left">
 		<h1 class="ded-title">Mermas y Prevención</h1>
-		<p class="ded-subtitle" style="font-size: 13px; color: #475569; margin-bottom: 0;">¿Cuánto estamos perdiendo, dónde se concentra la pérdida y qué requiere acción hoy?</p>
+		<p class="ded-subtitle" title="¿Cuánto estamos perdiendo, dónde se concentra la pérdida y qué requiere acción hoy?">¿Cuánto estamos perdiendo, dónde se concentra la pérdida y qué requiere acción hoy?</p>
 	</div>
 
 	<div class="ded-header-right">

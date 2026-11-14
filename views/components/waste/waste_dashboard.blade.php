@@ -16,7 +16,7 @@
 	<!-- ====================================================================
 	     FILA 1 — 8 INDICADORES CLAVE (UNA SOLA FILA EN ESCRITORIO >= 1500px)
 	     ==================================================================== -->
-	<section class="ded-kpis-grid has-8-cards dp-kpis-8 mb-3" aria-label="Indicadores Clave de Mermas y Prevención">
+	<section class="ded-kpis-grid has-8-cards" aria-label="Indicadores Clave de Mermas y Prevención">
 		<!-- 1. Merma confirmada a costo (Hero Verde) -->
 		<article class="ded-kpi-card is-highlight" title="Total de mermas y bajas confirmadas a costo durante el período comercial">
 			<div class="ded-kpi-top-highlight d-flex justify-content-between align-items-center">
@@ -124,7 +124,7 @@
 	<!-- ====================================================================
 	     FILA 2 — PANELES: EVOLUCIÓN DE LA MERMA (1.7) + MERMA POR SUCURSAL (1.0)
 	     ==================================================================== -->
-	<section class="ded-row-2 dp-row-evolution mb-3">
+	<section class="ded-row-2">
 		<!-- Izquierda (1.7): Evolución de la merma -->
 		<article class="ded-card dp-card-chart">
 			<header class="ded-card-header d-flex justify-content-between align-items-center">
@@ -165,7 +165,7 @@
 				<h2 class="ded-card-title">Merma por sucursal</h2>
 			</header>
 			<div class="table-responsive">
-				<table class="table table-sm ded-table ded-table-branches mb-0">
+				<table class="ded-table ded-table-top5 ded-table-branches">
 					<thead>
 						<tr>
 							<th style="width: 32%;">Sucursal</th>
@@ -200,7 +200,7 @@
 	<!-- ====================================================================
 	     FILA 3 — PANELES: CASOS (1.7) + PARETO (1.0) + TOP 5 PRODUCTOS (1.0)
 	     ==================================================================== -->
-	<section class="ded-row-3 dp-row-details mb-3">
+	<section class="ded-row-3">
 		<!-- Columna 1 (1.7): Casos que requieren atención -->
 		<article class="ded-card dp-card-attention">
 			<header class="ded-card-header d-flex justify-content-between align-items-center">
@@ -212,7 +212,7 @@
 				</div>
 			</header>
 			<div class="table-responsive">
-				<table class="table table-sm ded-table ded-table-top5 mb-0" id="tableAttentionCases">
+				<table class="ded-table ded-table-top5" id="tableAttentionCases">
 					<thead>
 						<tr>
 							<th style="width: 18%;">ID</th>
@@ -295,7 +295,7 @@
 			</header>
 
 			<div class="table-responsive">
-				<table class="table table-sm ded-table ded-table-top5 mb-0">
+				<table class="ded-table ded-table-top5">
 					<thead>
 						<tr>
 							<th style="width: 22%;">SKU</th>

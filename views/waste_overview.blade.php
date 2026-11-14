@@ -10,6 +10,9 @@
 <link href="{{ $U('/css/daily_waste_control.css?v=', true) }}{{ daily_asset_version('/css/daily_waste_control.css') }}" rel="stylesheet">
 <link href="{{ $U('/css/daily_waste_control_center.css?v=', true) }}{{ daily_asset_version('/css/daily_waste_control_center.css') }}" rel="stylesheet">
 <link href="{{ $U('/css/daily_waste_normalize.css?v=', true) }}{{ daily_asset_version('/css/daily_waste_normalize.css') }}" rel="stylesheet">
+<link href="{{ $U('/css/daily_sales_unslop.css?v=', true) }}{{ daily_asset_version('/css/daily_sales_unslop.css') }}" rel="stylesheet">
+<link href="{{ $U('/css/daily_a11y.css?v=', true) }}{{ daily_asset_version('/css/daily_a11y.css') }}" rel="stylesheet">
+<link href="{{ $U('/css/daily_dashboard_kit.css?v=', true) }}{{ daily_asset_version('/css/daily_dashboard_kit.css') }}" rel="stylesheet">
 <style>
 	#page-content > .dairy-related { display: none !important; }
 	#dailyTopKpisBar { display: none !important; }
@@ -2770,6 +2773,7 @@ $(document).ready(function() {
 </script>
 <script src="{{ $U('/js/lucide.min.js') }}"></script>
 <script src="{{ $U('/js/daily_waste_dashboard.js?v=', true) }}{{ daily_asset_version('/js/daily_waste_dashboard.js') }}"></script>
+<script src="{{ $U('/js/daily_dashboard_kit.js?v=', true) }}{{ daily_asset_version('/js/daily_dashboard_kit.js') }}"></script>
 @endpush
 	</div>
 </div>

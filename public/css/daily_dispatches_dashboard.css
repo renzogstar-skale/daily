@@ -15,157 +15,17 @@
 	--dp-text-muted: #64748b;
 }
 
-/* Ocultar barra superior caso demo en el dashboard ejecutivo para réplica limpia */
-.dcase-strip,
-[data-testid="demo-case-strip"],
-.demo-case-strip {
-	display: none !important;
-}
-
-/* Números en fuente monoespaciada para legibilidad financiera/operativa */
+/* Números de tablas en monoespaciada (los KPI usan la tipografía de /sales) */
 .dp-num-cell,
-.ded-kpi-val,
 .dp-order-code {
 	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
 	font-variant-numeric: tabular-nums;
 	letter-spacing: -0.02em;
 }
 
-/* Tarjetas principales con borde de 16 px */
-#page-content .ded-card,
-#page-content .ded-kpi-card {
-	border-radius: 16px !important;
-	border: 1px solid var(--dp-border);
-	box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
-}
+/* KPI, rejillas y tarjetas: heredan de daily_sales_dashboard.css + daily_sales_unslop.css (sin overrides) */
 
-/* 8 Indicadores: En escritorio desde 1500 px, una sola fila con la primera tarjeta más ancha */
-@media (min-width: 1500px) {
-	.ded-kpis-grid.has-8-cards.dp-kpis-8 {
-		display: grid !important;
-		grid-template-columns: 1.25fr repeat(7, 1fr) !important;
-		gap: 10px !important;
-	}
-}
 
-/* Por debajo de 1500 px usa cuatro columnas */
-@media (max-width: 1499.98px) and (min-width: 768px) {
-	.ded-kpis-grid.has-8-cards.dp-kpis-8 {
-		display: grid !important;
-		grid-template-columns: repeat(4, 1fr) !important;
-		gap: 10px !important;
-	}
-}
-
-/* En móvil dos columnas sin desbordamiento */
-@media (max-width: 767.98px) {
-	.ded-kpis-grid.has-8-cards.dp-kpis-8 {
-		display: grid !important;
-		grid-template-columns: repeat(2, 1fr) !important;
-		gap: 8px !important;
-	}
-}
-
-/* Altura y padding homogéneo de las tarjetas KPI */
-.dp-kpis-8 .ded-kpi-card {
-	min-height: 105px !important;
-	display: flex;
-	flex-direction: column;
-	justify-content: space-between;
-	padding: 12px 14px !important;
-}
-
-.dp-kpis-8 .ded-kpi-card.is-highlight {
-	background: #10b26c !important;
-	color: #ffffff !important;
-	border-color: #10b26c !important;
-}
-
-.dp-kpis-8 .ded-highlight-brand {
-	display: flex;
-	align-items: center;
-	gap: 6px;
-	color: #ffffff;
-	font-size: 12px;
-	font-weight: 600;
-}
-.dp-kpis-8 .ded-highlight-brand svg {
-	width: 15px;
-	height: 15px;
-}
-
-.dp-kpis-8 .ded-kpi-card.is-highlight .ded-kpi-val {
-	color: #ffffff !important;
-	font-size: 28px !important;
-	font-weight: 800 !important;
-	line-height: 1.1;
-}
-
-.dp-kpis-8 .ded-kpi-top {
-	display: flex;
-	align-items: center;
-	margin-bottom: 2px;
-}
-
-.dp-kpis-8 .ded-kpi-icon {
-	width: 24px;
-	height: 24px;
-	border-radius: 6px;
-	background: #ecfdf5;
-	color: #059669;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-}
-.dp-kpis-8 .ded-kpi-icon svg {
-	width: 13px;
-	height: 13px;
-}
-.dp-kpis-8 .ded-kpi-icon.is-danger {
-	background: #fee2e2;
-	color: #ef4444;
-}
-.dp-kpis-8 .ded-kpi-icon.is-warning {
-	background: #fef3c7;
-	color: #d97706;
-}
-
-.dp-kpis-8 .ded-kpi-label {
-	font-size: 11.5px;
-	font-weight: 500;
-	color: #64748b;
-	line-height: 1.25;
-}
-
-.dp-kpis-8 .ded-kpi-val {
-	font-size: 22px;
-	font-weight: 800;
-	color: #0f172a;
-	line-height: 1.1;
-}
-
-/* Primera fila de paneles: Proporción 1.7 a 1 */
-.dp-row-evolution {
-	display: grid;
-	grid-template-columns: 1.7fr 1fr;
-	gap: 14px;
-	align-items: stretch;
-}
-
-/* Segunda fila de paneles: Proporción 1.7 a 1 a 1 */
-.dp-row-details {
-	display: grid;
-	grid-template-columns: 1.7fr 1fr 1fr;
-	gap: 14px;
-	align-items: stretch;
-}
-
-@media (max-width: 1080px) {
-	.dp-row-evolution,
-	.dp-row-details {
-		grid-template-columns: 1fr !important;
-	}
-}
 
 .dp-legend-line {
 	display: inline-block;
@@ -176,18 +36,6 @@
 	vertical-align: middle;
 }
 
-/* Encabezados de tabla en minúsculas/capitalizado exacto a la foto */
-.ded-table th {
-	text-transform: none !important;
-	font-size: 12px !important;
-	font-weight: 600 !important;
-	color: #64748b !important;
-	padding: 8px 12px !important;
-}
-.ded-table td {
-	padding: 8px 12px !important;
-	font-size: 12.5px !important;
-}
 
 /* Badges de pedidos de atención */
 .dp-pill-status {
@@ -336,73 +184,12 @@ body.night-mode #page-content .ded-wrapper,
 html.daily-dark,
 body.night-mode,
 html[data-daily-mode="night"] {
-	--ded-text-main: #f8fafc;
-	--ded-text-muted: #94a3b8;
 	--dp-text-main: #f8fafc;
 	--dp-text-muted: #94a3b8;
 	--dp-card-bg: #1e293b;
 	--dp-border: #334155;
 }
 
-html.daily-dark #page-content .ded-kpi-card:not(.is-highlight),
-body.night-mode #page-content .ded-kpi-card:not(.is-highlight),
-html.daily-dark .ded-kpi-card:not(.is-highlight),
-body.night-mode .ded-kpi-card:not(.is-highlight) {
-	background: #1e293b !important;
-	border-color: #334155 !important;
-}
-
-html.daily-dark #page-content .ded-kpi-card:not(.is-highlight) .ded-kpi-val,
-body.night-mode #page-content .ded-kpi-card:not(.is-highlight) .ded-kpi-val,
-html.daily-dark .dp-dashboard-content .ded-kpi-card:not(.is-highlight) .ded-kpi-val,
-body.night-mode .dp-dashboard-content .ded-kpi-card:not(.is-highlight) .ded-kpi-val,
-html.daily-dark .ded-kpi-card:not(.is-highlight) .ded-kpi-val,
-body.night-mode .ded-kpi-card:not(.is-highlight) .ded-kpi-val {
-	color: #f8fafc !important;
-}
-
-html.daily-dark .ded-kpi-card:not(.is-highlight) .ded-kpi-label,
-body.night-mode .ded-kpi-card:not(.is-highlight) .ded-kpi-label {
-	color: #94a3b8 !important;
-}
-
-html.daily-dark .ded-card,
-body.night-mode .ded-card {
-	background: #1e293b !important;
-	border-color: #334155 !important;
-}
-
-html.daily-dark .ded-card-title,
-body.night-mode .ded-card-title {
-	color: #f8fafc !important;
-}
-
-html.daily-dark .text-dark,
-body.night-mode .text-dark {
-	color: #f8fafc !important;
-}
-
-html.daily-dark .ded-title,
-body.night-mode .ded-title {
-	color: #f8fafc !important;
-}
-
-html.daily-dark .ded-subtitle,
-body.night-mode .ded-subtitle {
-	color: #cbd5e1 !important;
-}
-
-html.daily-dark .ded-table td,
-body.night-mode .ded-table td {
-	color: #f1f5f9 !important;
-	border-color: #334155 !important;
-}
-
-html.daily-dark .ded-table th,
-body.night-mode .ded-table th {
-	color: #94a3b8 !important;
-	border-color: #334155 !important;
-}
 
 html.daily-dark .dp-mod-box,
 body.night-mode .dp-mod-box {

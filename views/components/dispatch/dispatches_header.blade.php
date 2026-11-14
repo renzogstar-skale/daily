@@ -22,7 +22,7 @@
 <header class="ded-header dp-ded-header">
 	<div class="ded-header-left">
 		<h1 class="ded-title">Despachos y Devoluciones</h1>
-		<p class="ded-subtitle" style="font-size: 13px; color: #475569; margin-bottom: 0;">Seguimiento de pedidos, entregas y devoluciones</p>
+		<p class="ded-subtitle">Seguimiento de pedidos, entregas y devoluciones</p>
 	</div>
 
 	<div class="ded-header-right">

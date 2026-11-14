@@ -75,7 +75,7 @@
 					<i data-lucide="trending-up"></i>
 				</div>
 			</div>
-			<div class="ded-kpi-val">${{ number_format($stockValue, 0) }}</div>
+			<div class="ded-kpi-val"><span class="ded-val-full">${{ number_format($stockValue, 0) }}</span><span class="ded-val-compact">${{ number_format($stockValue / 1000000, 2) }} M</span></div>
 			<div class="ded-kpi-sub-highlight">
 				▲ +3.8 % vs. período anterior · {{ number_format($stockUnits, 0) }} unidades
 			</div>
@@ -137,7 +137,7 @@
 				<span class="ded-kpi-icon" style="background:#eff6ff; color:#2563eb;"><i data-lucide="truck"></i></span>
 			</div>
 			<div class="ded-kpi-label">Traslados pendientes</div>
-			<div class="ded-kpi-val">3 envíos</div>
+			<div class="ded-kpi-val">3</div>
 			<div class="ded-kpi-sub">1,340 u · pendientes recepción</div>
 		</article>
 

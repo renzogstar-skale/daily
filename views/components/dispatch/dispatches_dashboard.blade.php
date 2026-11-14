@@ -16,12 +16,14 @@
 	<!-- ====================================================================
 	     FILA 1 — 8 INDICADORES CLAVE (UNA SOLA FILA EN ESCRITORIO >= 1500px)
 	     ==================================================================== -->
-	<section class="ded-kpis-grid has-8-cards dp-kpis-8 mb-3" aria-label="Indicadores Clave de Despachos y Devoluciones">
+	<section class="ded-kpis-grid has-8-cards" aria-label="Indicadores Clave de Despachos y Devoluciones">
 		<!-- 1. Pedidos despachados (Hero Verde) -->
 		<article class="ded-kpi-card is-highlight" onclick="switchDispatchTab('pedidos');" style="cursor: pointer;" title="Total de pedidos despachados en el período comercial">
-			<div class="ded-highlight-brand">
-				<i data-lucide="truck"></i>
-				<span>Pedidos despachados</span>
+			<div class="ded-kpi-top-highlight">
+				<div class="ded-highlight-brand">
+					<i data-lucide="truck"></i>
+					<span>Pedidos despachados</span>
+				</div>
 			</div>
 			<div class="ded-kpi-val">{{ number_format($k['dispatched']['value'] ?? 1248, 0) }}</div>
 		</article>
@@ -93,7 +95,7 @@
 	<!-- ====================================================================
 	     FILA 2 — PANELES: DESPACHOS Y ENTREGAS POR DÍA (1.7) + CUMPLIMIENTO POR SUCURSAL (1.0)
 	     ==================================================================== -->
-	<section class="ded-row-2 dp-row-evolution mb-3">
+	<section class="ded-row-2">
 		<!-- Izquierda (1.7): Despachos y entregas por día -->
 		<article class="ded-card dp-card-chart">
 			<header class="ded-card-header">
@@ -131,7 +133,7 @@
 				<h2 class="ded-card-title">Cumplimiento por sucursal</h2>
 			</header>
 			<div class="table-responsive">
-				<table class="table table-sm ded-table ded-table-branches mb-0">
+				<table class="ded-table ded-table-top5 ded-table-branches">
 					<thead>
 						<tr>
 							<th style="width: 40%;">Sucursal</th>
@@ -158,7 +160,7 @@
 	<!-- ====================================================================
 	     FILA 3 — PANELES: ATENCIÓN (1.7) + ESTADO ENTREGAS (1.0) + DEVOLUCIONES MOTIVO (1.0)
 	     ==================================================================== -->
-	<section class="ded-row-3 dp-row-details mb-3">
+	<section class="ded-row-3">
 		<!-- Columna 1 (1.7): Pedidos que requieren atención -->
 		<article class="ded-card dp-card-attention">
 			<header class="ded-card-header">
@@ -170,7 +172,7 @@
 				</div>
 			</header>
 			<div class="table-responsive">
-				<table class="table table-sm ded-table ded-table-top5 mb-0" id="tableAttentionOrders">
+				<table class="ded-table ded-table-top5" id="tableAttentionOrders">
 					<thead>
 						<tr>
 							<th style="width: 6%;">#</th>

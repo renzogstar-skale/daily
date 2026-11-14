@@ -5,8 +5,10 @@
 @push('pageStyles')
 <link href="{{ $U('/css/daily_sales_dashboard.css?v=', true) }}{{ daily_asset_version('/css/daily_sales_dashboard.css') }}" rel="stylesheet">
 <link href="{{ $U('/css/daily_dispatches_dashboard.css?v=', true) }}{{ daily_asset_version('/css/daily_dispatches_dashboard.css') }}" rel="stylesheet">
-<link href="{{ $U('/css/daily_a11y.css?v=', true) }}{{ daily_asset_version('/css/daily_a11y.css') }}" rel="stylesheet">
 <link href="{{ $U('/css/daily_dispatch.css?v=', true) }}{{ daily_asset_version('/css/daily_dispatch.css') }}" rel="stylesheet">
+<link href="{{ $U('/css/daily_sales_unslop.css?v=', true) }}{{ daily_asset_version('/css/daily_sales_unslop.css') }}" rel="stylesheet">
+<link href="{{ $U('/css/daily_a11y.css?v=', true) }}{{ daily_asset_version('/css/daily_a11y.css') }}" rel="stylesheet">
+<link href="{{ $U('/css/daily_dashboard_kit.css?v=', true) }}{{ daily_asset_version('/css/daily_dashboard_kit.css') }}" rel="stylesheet">
 <style>
 	/* Ciclo Operativo Stepper */
 	.dp-lifecycle-card {
@@ -2635,5 +2637,6 @@ document.addEventListener('DOMContentLoaded', function () {
 @push('pageScripts')
 <script src="{{ $U('/js/lucide.min.js') }}"></script>
 <script src="{{ $U('/js/daily_dispatches_dashboard.js?v=', true) }}{{ daily_asset_version('/js/daily_dispatches_dashboard.js') }}" defer></script>
+<script src="{{ $U('/js/daily_dashboard_kit.js?v=', true) }}{{ daily_asset_version('/js/daily_dashboard_kit.js') }}"></script>
 <script src="{{ $U('/viewjs/dispatch.js?v=', true) }}{{ daily_asset_version('/viewjs/dispatch.js') }}"></script>
 @endpush

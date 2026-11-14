@@ -1,0 +1,104 @@
+/* ==========================================================================
+   DAILY — Kit compartido de tableros (Stock, Despachos, Mermas)
+   Cargar DESPUÉS de daily_sales_dashboard.css + daily_sales_unslop.css + daily_a11y.css.
+   /sales no la carga: es la referencia y sus medidas salen del contenido.
+   Valores medidos en /sales con getBoundingClientRect (14-nov-2026):
+   tarjeta KPI = 10 px + ícono 17 + etiqueta 13,2/línea + valor 29,9 (+2) + nota 16,5/línea + 10 px + borde 2
+   → 99,8 px (1 línea de etiqueta) y 116,3 px (2 líneas) según el ancho de columna.
+   ========================================================================== */
+
+:root {
+	--ded-kpi-h: 116.3px;
+}
+@media (min-width: 1750px) {
+	:root { --ded-kpi-h: 99.8px; }
+}
+/* Entre 768 y 1249 px /sales pasa a 4 columnas anchas: etiquetas en una línea */
+@media (min-width: 768px) and (max-width: 1249.98px) {
+	:root { --ded-kpi-h: 99.8px; }
+}
+
+/* KPICard (tableta y escritorio): misma altura que /sales; el texto largo se recorta, nunca crece la tarjeta.
+   En móvil no se aplica: /sales deja que daily_mobile.js reacomode la rejilla y ajuste cifras. */
+@media (min-width: 768px) {
+	#page-content .ded-kpis-grid > .ded-kpi-card {
+		height: var(--ded-kpi-h);
+		min-height: 0;
+		overflow: hidden;
+	}
+	#page-content .ded-kpis-grid > .ded-kpi-card .ded-kpi-label {
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 2;
+		overflow: hidden;
+	}
+	#page-content .ded-kpis-grid > .ded-kpi-card .ded-kpi-val {
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+	#page-content .ded-kpis-grid > .ded-kpi-card > .ded-kpi-sub {
+		display: block;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	/* Destacada: nombre del indicador en máximo 2 líneas (como "Valor del inventario") */
+	#page-content .ded-kpis-grid > .ded-kpi-card.is-highlight .ded-highlight-brand > span:last-child {
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 2;
+		overflow: hidden;
+	}
+	/* Notas con dos partes (período + variación) en una sola línea recortable */
+	#page-content .ded-kpis-grid > .ded-kpi-card > .ded-kpi-sub.d-flex {
+		display: block !important;
+	}
+	#page-content .ded-kpis-grid > .ded-kpi-card > .ded-kpi-sub.d-flex > span + span {
+		margin-left: 4px;
+	}
+}
+
+/* DashboardGrid: columnas con las proporciones de /sales (1.45fr 1fr · 1.15fr 0.95fr 0.95fr);
+   sin min-width 0 una tabla ancha estira su columna y rompe la proporción */
+#page-content .ded-row-2 > .ded-card,
+#page-content .ded-row-3 > .ded-card {
+	min-width: 0;
+}
+
+/* Móvil: el resultado que /sales obtiene de daily_mobile.js (dm-grid-fit), fijado aquí para no depender
+   de que la capa móvil detecte el desborde: columnas de 140 px y la destacada sin ocupar dos columnas */
+@media (max-width: 767.98px) {
+	#page-content .ded-kpis-grid.has-8-cards {
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr)) !important;
+	}
+	#page-content .ded-kpis-grid.has-8-cards > * {
+		min-width: 0;
+		grid-column: auto !important;
+	}
+}
+
+/* DashboardHeader: el bloque de título cede ancho a los filtros (Mermas tiene 4) sin crecer en alto;
+   el subtítulo largo se recorta en una línea y conserva el texto completo en title */
+@media (min-width: 769px) {
+	#page-content .ded-header-left {
+		flex-shrink: 1;
+		min-width: 0;
+	}
+	#page-content .ded-header-left .ded-title {
+		white-space: nowrap;
+	}
+	#page-content .ded-header-left .ded-subtitle {
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+}
+
+/* Cifras de 7+ dígitos: forma compacta solo donde la columna de /sales no las admite completas
+   (el monto exacto sigue en el title de la tarjeta) */
+.ded-kpi-val .ded-val-compact { display: none; }
+@media (min-width: 1201px) and (max-width: 1439.98px) {
+	.ded-kpi-val .ded-val-full { display: none; }
+	.ded-kpi-val .ded-val-compact { display: inline; }
+}

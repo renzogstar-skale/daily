@@ -11,6 +11,7 @@
 <link href="{{ $U('/css/daily_inventory_ops.css?v=', true) }}{{ daily_asset_version('/css/daily_inventory_ops.css') }}" rel="stylesheet">
 <link href="{{ $U('/css/daily_sales_unslop.css?v=', true) }}{{ daily_asset_version('/css/daily_sales_unslop.css') }}" rel="stylesheet">
 <link href="{{ $U('/css/daily_a11y.css?v=', true) }}{{ daily_asset_version('/css/daily_a11y.css') }}" rel="stylesheet">
+<link href="{{ $U('/css/daily_dashboard_kit.css?v=', true) }}{{ daily_asset_version('/css/daily_dashboard_kit.css') }}" rel="stylesheet">
 @endpush
 
 @push('pageScripts')

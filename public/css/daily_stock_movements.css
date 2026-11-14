@@ -16,12 +16,9 @@
    TARJETAS KPI — 8 EN LÍNEA HORIZONTAL (EXACTO A VENTAS)
    ========================================================================== */
 /* Rejilla, tarjeta destacada y filas 2/3 heredan tal cual las reglas de daily_sales_dashboard.css */
+/* Altura, hover y sombra: los de Ventas + daily_dashboard_kit.css (sin overrides propios) */
 #stockMovementsBoard .ded-kpi-card {
-	min-height: 98px;
-	/* En escritorio la fila de Ventas mide 135 px (anillo de horas en la tarjeta 8) */
-	@media (min-width: 1201px) { min-height: 135px; }
 	min-width: 0;
-	transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 	cursor: default;
 }
 
@@ -29,15 +26,6 @@
 #stockMovementsBoard .ded-kpi-card[onclick],
 #stockMovementsBoard .is-clickable {
 	cursor: pointer;
-}
-
-#stockMovementsBoard .ded-kpi-card:hover {
-	transform: translateY(-2px);
-	box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
-}
-
-#stockMovementsBoard .ded-kpi-card:not(.is-highlight):hover {
-	border-color: #10b981 !important;
 }
 
 /* ==========================================================================
@@ -114,13 +102,8 @@
 /* ==========================================================================
    RESPONSIVIDAD Y BREAKPOINTS (IDÉNTICOS A VENTAS)
    ========================================================================== */
+/* Rejilla KPI, encabezado y pestañas: heredan los breakpoints de daily_sales_dashboard.css */
 @media (max-width: 1200px) {
-	#stockMovementsBoard .ded-kpis-grid.has-8-cards {
-		grid-template-columns: repeat(4, 1fr) !important;
-	}
-	#stockMovementsBoard .ded-kpis-grid.has-8-cards > *:first-child {
-		grid-column: span 2 !important;
-	}
 	#page-content #stockMovementsBoard .ded-row-2,
 	#page-content #stockMovementsBoard .ded-row-2.dm-grid-fit,
 	#page-content #stockMovementsBoard .ded-row-3,
@@ -130,32 +113,11 @@
 }
 
 @media (max-width: 768px) {
-	#stockMovementsBoard .ded-header {
-		flex-direction: column !important;
-		align-items: flex-start !important;
-	}
-	#stockMovementsBoard .ded-header-right {
-		width: 100% !important;
-		justify-content: space-between !important;
-		flex-wrap: wrap !important;
-		gap: 6px !important;
-	}
-	#stockMovementsBoard .ded-kpis-grid.has-8-cards {
-		grid-template-columns: 1fr 1fr !important;
-	}
-	#stockMovementsBoard .ded-kpis-grid.has-8-cards > *:first-child {
-		grid-column: span 2 !important;
-	}
 	#page-content #stockMovementsBoard .ded-row-2,
 	#page-content #stockMovementsBoard .ded-row-2.dm-grid-fit,
 	#page-content #stockMovementsBoard .ded-row-3,
 	#page-content #stockMovementsBoard .ded-row-3.dm-grid-fit {
 		grid-template-columns: minmax(0, 1fr) !important;
-	}
-	#stockMovementsBoard .ded-nav-tabs-bar {
-		overflow-x: auto !important;
-		flex-wrap: nowrap !important;
-		padding-bottom: 4px !important;
 	}
 }
 
