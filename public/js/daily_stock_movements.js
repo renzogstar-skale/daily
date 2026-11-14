@@ -42,7 +42,7 @@
 			b.classList.toggle('is-active', on);
 			b.setAttribute('aria-selected', on ? 'true' : 'false');
 		});
-		root.querySelectorAll('.smv-top-tab').forEach(function (b) {
+		root.querySelectorAll('.smv-top-tab, .ded-nav-tab').forEach(function (b) {
 			var bTab = b.getAttribute('data-smv-tab');
 			var on = (bTab === tab)
 				|| (bTab === 'lotes' && tab === 'existencias')
@@ -50,6 +50,7 @@
 				|| (bTab === 'movimientos' && tab === 'detalle' && (opts.kind || current.kind) === 'movements')
 				|| (bTab === 'conteos' && tab === 'detalle' && (opts.kind || current.kind) === 'counts');
 			b.classList.toggle('on', on);
+			b.classList.toggle('is-active', on);
 		});
 		var url = new URL(window.location.href);
 		DETAIL_KEYS.concat(['detail']).forEach(function (k) { url.searchParams.delete(k); });
@@ -288,6 +289,105 @@
 		});
 	}
 
+	function initExecutiveStockCharts() {
+		// 1. Entradas vs. salidas por día
+		var cFlow = document.getElementById('dedChartStockFlow');
+		if (cFlow && typeof Chart !== 'undefined') {
+			var flowLabels = ['15 oct', '16 oct', '17 oct', '18 oct', '19 oct', '20 oct', '21 oct', '22 oct', '23 oct', '24 oct', '25 oct', '26 oct', '27 oct', '28 oct', '29 oct', '30 oct', '31 oct', '1 nov', '2 nov', '3 nov', '4 nov', '5 nov', '6 nov', '7 nov', '8 nov', '9 nov', '10 nov', '11 nov', '12 nov', '13 nov'];
+			var inData = [280, 310, 420, 350, 480, 220, 190, 390, 410, 240, 320, 450, 280, 310, 460, 230, 290, 490, 340, 220, 440, 380, 290, 310, 480, 250, 300, 460, 280, 450];
+			var outData = [210, 260, 320, 290, 370, 200, 180, 310, 330, 220, 270, 360, 250, 270, 380, 210, 240, 390, 280, 200, 370, 310, 250, 280, 390, 220, 260, 380, 240, 370];
+			charts.execFlow = new Chart(cFlow, {
+				type: 'bar',
+				data: {
+					labels: flowLabels,
+					datasets: [
+						{ label: 'Entradas (recepciones)', data: inData, backgroundColor: '#10b981', hoverBackgroundColor: '#059669', maxBarThickness: 7, borderRadius: 2 },
+						{ label: 'Salidas (ventas y despachos)', data: outData, backgroundColor: '#cbd5e1', hoverBackgroundColor: '#94a3b8', maxBarThickness: 7, borderRadius: 2 }
+					]
+				},
+				options: {
+					responsive: true,
+					maintainAspectRatio: false,
+					legend: { display: false },
+					tooltips: extend(TOOLTIP, {
+						mode: 'index',
+						intersect: false,
+						callbacks: {
+							label: function (t, d) { return d.datasets[t.datasetIndex].label + ': ' + num(t.yLabel, 0) + ' u'; }
+						}
+					}),
+					scales: {
+						xAxes: [{ gridLines: { display: false, drawBorder: false }, ticks: extend(TICK, { autoSkip: true, maxTicksLimit: 8, maxRotation: 0 }) }],
+						yAxes: [{ gridLines: GRID_Y, ticks: extend(TICK, { beginAtZero: true, max: 500, stepSize: 125, callback: function (v) { return v === 0 ? '0' : v; } }) }]
+					}
+				}
+			});
+		}
+
+		// 2. Stock vs. punto de reorden
+		var cReorder = document.getElementById('dedChartStockReorder');
+		if (cReorder && typeof Chart !== 'undefined') {
+			var reorderLabels = ['15 oct', '18 oct', '22 oct', '25 oct', '29 oct', '2 nov', '5 nov', '9 nov', '12 nov', '13 nov'];
+			var stockData = [15000, 14200, 16800, 15500, 18400, 17200, 18900, 17500, 20100, 18420];
+			var threshold = [10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000];
+			charts.execReorder = new Chart(cReorder, {
+				type: 'line',
+				data: {
+					labels: reorderLabels,
+					datasets: [
+						{ label: 'Stock actual', data: stockData, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.12)', borderWidth: 2, pointRadius: 0, pointHoverRadius: 4, fill: true, lineTension: 0.28 },
+						{ label: 'Punto de reorden', data: threshold, borderColor: '#eab308', backgroundColor: 'transparent', borderWidth: 2, borderDash: [4, 4], pointRadius: 0, fill: false }
+					]
+				},
+				options: {
+					responsive: true,
+					maintainAspectRatio: false,
+					legend: { display: false },
+					tooltips: extend(TOOLTIP, {
+						mode: 'index',
+						intersect: false,
+						callbacks: {
+							label: function (t, d) { return d.datasets[t.datasetIndex].label + ': ' + num(t.yLabel, 0) + ' u'; }
+						}
+					}),
+					scales: {
+						xAxes: [{ gridLines: { display: false, drawBorder: false }, ticks: extend(TICK, { autoSkip: true, maxTicksLimit: 5, maxRotation: 0 }) }],
+						yAxes: [{ gridLines: GRID_Y, ticks: extend(TICK, { beginAtZero: true, max: 25000, stepSize: 5000, callback: function (v) { return (v / 1000) + 'K'; } }) }]
+					}
+				}
+			});
+		}
+
+		// 3. Clasificación ABC
+		var cABC = document.getElementById('dedChartStockABC');
+		if (cABC && typeof Chart !== 'undefined') {
+			charts.execABC = new Chart(cABC, {
+				type: 'doughnut',
+				data: {
+					labels: ['Tipo A (78%)', 'Tipo B (16%)', 'Tipo C (6%)'],
+					datasets: [{
+						data: [78, 16, 6],
+						backgroundColor: ['#10b981', '#f59e0b', '#94a3b8'],
+						hoverBackgroundColor: ['#059669', '#d97706', '#64748b'],
+						borderWidth: 2,
+						borderColor: '#ffffff'
+					}]
+				},
+				options: {
+					responsive: true,
+					maintainAspectRatio: false,
+					cutoutPercentage: 72,
+					legend: { display: false },
+					tooltips: extend(TOOLTIP, {
+						callbacks: {
+							label: function (it, d) { return d.labels[it.index] + ' del valor total'; }
+						}
+					})
+				}
+			});
+		}
+	}
+
 	function initTypes() {
 		var c = document.getElementById('smvChartTypes');
 		if (!c || !data.types) return;
@@ -404,7 +504,7 @@
 		});
 
 		if (typeof Chart !== 'undefined') {
-			[initDifferences, initFlows, initSeries, initCompliance, initTypes].forEach(function (fn) { try { fn(); } catch (err) { console.error('Stock & Movimientos:', err); } });
+			[initDifferences, initFlows, initSeries, initCompliance, initTypes, initExecutiveStockCharts].forEach(function (fn) { try { fn(); } catch (err) { console.error('Stock & Movimientos:', err); } });
 		}
 
 		// Estado inicial: ?tab=detalle&detail=… (enlace compartido) o #inv-ops (enlaces existentes a la operación de inventario)
