@@ -30,64 +30,10 @@
 	--ret-shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.03);
 }
 
-.ret-container {
-	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-	color: var(--ret-text-main);
-	padding-bottom: 2.5rem;
-}
 
 /* --------------------------------------------------------------------------
    HEADER & TOP ACTIONS
    -------------------------------------------------------------------------- */
-.ret-header-row {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	flex-wrap: wrap;
-	gap: 1rem;
-	margin-bottom: 1.25rem;
-}
-
-.ret-header-title-box {
-	display: flex;
-	align-items: center;
-	gap: 0.85rem;
-}
-
-.ret-header-icon {
-	width: 44px;
-	height: 44px;
-	border-radius: var(--ret-radius-md);
-	background: linear-gradient(135deg, #10b981, #059669);
-	color: #ffffff;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	font-size: 1.25rem;
-	box-shadow: 0 4px 10px rgba(16, 185, 129, 0.25);
-	flex-shrink: 0;
-}
-
-.ret-header-title {
-	font-size: 1.45rem;
-	font-weight: 700;
-	color: var(--ret-text-main);
-	margin: 0;
-	line-height: 1.2;
-}
-
-.ret-header-desc {
-	font-size: 0.84rem;
-	color: var(--ret-text-muted);
-	margin: 0.15rem 0 0 0;
-}
-
-.ret-header-controls {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-	flex-wrap: wrap;
-}
 
 .ret-select {
 	background-color: #ffffff;
@@ -160,96 +106,17 @@
 /* --------------------------------------------------------------------------
    6 KPI CARDS
    -------------------------------------------------------------------------- */
-.ret-kpis-grid {
-	display: grid;
-	grid-template-columns: repeat(6, 1fr);
-	gap: 0.75rem;
-	margin-bottom: 1.25rem;
-}
-
-@media (max-width: 1200px) {
-	.ret-kpis-grid {
-		grid-template-columns: repeat(3, 1fr);
-	}
-}
-
-@media (max-width: 640px) {
-	.ret-kpis-grid {
-		grid-template-columns: repeat(2, 1fr);
-	}
-}
-
-.ret-kpi-card {
-	background-color: var(--ret-card-bg);
-	border: 1px solid var(--ret-border);
-	border-radius: var(--ret-radius-md);
-	padding: 0.9rem 1rem;
-	box-shadow: var(--ret-shadow-sm);
-	position: relative;
-	transition: transform 0.15s ease, box-shadow 0.15s ease;
-	display: flex;
-	flex-direction: column;
-	justify-content: space-between;
-}
-
-.ret-kpi-card:hover {
-	transform: translateY(-2px);
-	box-shadow: var(--ret-shadow-md);
-}
-
-.ret-kpi-header {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	font-size: 0.73rem;
-	font-weight: 600;
-	color: var(--ret-text-muted);
-	margin-bottom: 0.35rem;
-}
-
-.ret-kpi-info-icon {
-	color: #94a3b8;
-	font-size: 0.75rem;
-	cursor: pointer;
-}
-
-.ret-kpi-value {
-	font-size: 1.4rem;
-	font-weight: 700;
-	line-height: 1.1;
-	margin-bottom: 0.35rem;
-}
-
-.ret-kpi-value.text-dark { color: #0f172a; }
-.ret-kpi-value.text-red { color: #dc2626; }
-.ret-kpi-value.text-green { color: #059669; }
-.ret-kpi-value.text-cyan { color: #0284c7; }
-.ret-kpi-value.text-amber { color: #d97706; }
-.ret-kpi-value.text-purple { color: #0f172a; }
-
-.ret-kpi-sub {
-	font-size: 0.71rem;
-	color: var(--ret-text-muted);
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-}
 
 /* --------------------------------------------------------------------------
    CONTROL DE CALIDAD BANNER
    -------------------------------------------------------------------------- */
 .ret-banner-quality {
-	background: #ffffff;
-	border: 1px solid var(--ret-border);
 	border-left: 4px solid #d97706;
-	border-radius: var(--ret-radius-md);
-	padding: 0.85rem 1.15rem;
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
 	gap: 1rem;
 	margin-bottom: 1.25rem;
-	box-shadow: var(--ret-shadow-sm);
 }
 
 @media (max-width: 900px) {
@@ -326,28 +193,11 @@
 /* --------------------------------------------------------------------------
    SPLIT WORKSPACE: TABLE + DETAIL PANEL
    -------------------------------------------------------------------------- */
-.ret-workspace-split {
-	display: grid;
-	grid-template-columns: minmax(0, 2fr) minmax(350px, 1.05fr);
-	gap: 1.25rem;
-	margin-bottom: 1.5rem;
-	align-items: start;
-}
-
-@media (max-width: 1180px) {
-	.ret-workspace-split {
-		grid-template-columns: 1fr;
-	}
-}
 
 /* --------------------------------------------------------------------------
    TABLE CARD (LEFT)
    -------------------------------------------------------------------------- */
 .ret-table-card {
-	background-color: var(--ret-card-bg);
-	border: 1px solid var(--ret-border);
-	border-radius: var(--ret-radius-md);
-	box-shadow: var(--ret-shadow-sm);
 	overflow: hidden;
 }
 
@@ -402,22 +252,23 @@
 
 /* Tabs */
 .ret-tabs-row {
-	padding: 0.5rem 1rem;
+	padding: 8px 16px;
 	display: flex;
 	align-items: center;
-	gap: 0.5rem;
-	background: #fafafa;
+	gap: 4px;
+	background: transparent;
 	border-bottom: 1px solid var(--ret-border);
 }
 
 .ret-tab-pill {
-	background: transparent;
-	border: none;
-	border-radius: 20px;
-	padding: 0.3rem 0.75rem;
-	font-size: 0.78rem;
-	font-weight: 600;
-	color: var(--ret-text-muted);
+	background: #ffffff;
+	border: 1px solid #e2e8f0;
+	border-radius: 8px;
+	padding: 5px 12px;
+	font-size: 12px;
+	font-weight: 500;
+	white-space: nowrap;
+	color: #64748b;
 	cursor: pointer;
 	transition: all 0.15s ease;
 	display: inline-flex;
@@ -427,13 +278,14 @@
 
 .ret-tab-pill:hover {
 	color: var(--ret-text-main);
-	background: #f1f5f9;
+	border-color: #cbd5e1;
 }
 
 .ret-tab-pill.active {
-	background: var(--ret-primary-light);
-	color: var(--ret-primary);
-	font-weight: 700;
+	background: rgba(15, 23, 42, 0.06);
+	border-color: rgba(148, 163, 184, 0.24);
+	color: #0f172a;
+	font-weight: 600;
 }
 
 /* Table Style */
@@ -675,14 +527,6 @@
    DETAIL PANEL (RIGHT)
    -------------------------------------------------------------------------- */
 .ret-detail-panel {
-	background-color: #ffffff;
-	border: 1px solid var(--ret-border);
-	border-radius: var(--ret-radius-md);
-	box-shadow: var(--ret-shadow-sm);
-	padding: 1.15rem;
-	position: sticky;
-	top: 1rem;
-	z-index: 5;
 }
 
 .ret-detail-header {
@@ -1040,30 +884,8 @@
 /* --------------------------------------------------------------------------
    BOTTOM SECTION: 3 CARDS
    -------------------------------------------------------------------------- */
-.ret-bottom-grid {
-	display: grid;
-	grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1fr);
-	gap: 1.25rem;
-}
-
-@media (max-width: 1100px) {
-	.ret-bottom-grid {
-		grid-template-columns: 1fr 1fr;
-	}
-}
-
-@media (max-width: 768px) {
-	.ret-bottom-grid {
-		grid-template-columns: 1fr;
-	}
-}
 
 .ret-bottom-card {
-	background-color: var(--ret-card-bg);
-	border: 1px solid var(--ret-border);
-	border-radius: var(--ret-radius-md);
-	box-shadow: var(--ret-shadow-sm);
-	padding: 1.15rem;
 	display: flex;
 	flex-direction: column;
 	justify-content: space-between;
@@ -1263,12 +1085,7 @@
    6-Stage Top Reverse-Logistics Stepper, Scanner Bar & Evidence Gallery
    ========================================================================== */
 .ret-lifecycle-banner {
-	background: #ffffff;
-	border: 1px solid var(--ret-border);
-	border-radius: var(--ret-radius-md);
-	padding: 0.85rem 1.15rem;
 	margin-bottom: 1rem;
-	box-shadow: var(--ret-shadow-sm);
 	overflow-x: auto;
 }
 
@@ -1361,26 +1178,7 @@
 	line-height: 1.2;
 }
 
-/* Hover verde consistente DAILY en KPIs */
-.ret-kpi-card {
-	transition: transform 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
-}
-
-.ret-kpi-card:hover {
-	border-color: #10b981;
-	background-color: #f0fdf4;
-	transform: translateY(-1px);
-}
-
 @media (max-width: 576px) {
-	.ret-header-controls {
-		width: 100%;
-	}
-	.ret-btn-primary,
-	.ret-btn-secondary,
-	.ret-select {
-		min-height: 40px;
-	}
 	.ret-upc-bar {
 		flex-direction: column;
 		align-items: stretch;
@@ -1394,8 +1192,6 @@ html.daily-dark .ret-container {
 	color: #e2e8f0;
 }
 
-html.daily-dark .ret-header-title,
-html.daily-dark .ret-kpi-value,
 html.daily-dark .ret-table-title,
 html.daily-dark .ret-bottom-title,
 html.daily-dark .ret-detail-folio,
@@ -1407,9 +1203,6 @@ html.daily-dark .ret-econ-value {
 	color: #f8fafc !important;
 }
 
-html.daily-dark .ret-header-desc,
-html.daily-dark .ret-kpi-sub,
-html.daily-dark .ret-kpi-header,
 html.daily-dark .ret-bottom-sub,
 html.daily-dark .ret-mod-desc,
 html.daily-dark .ret-date-sub,
@@ -1418,23 +1211,12 @@ html.daily-dark .ret-econ-label {
 	color: #94a3b8 !important;
 }
 
-html.daily-dark .ret-kpi-card,
-html.daily-dark .ret-lifecycle-banner,
-html.daily-dark .ret-banner-quality,
-html.daily-dark .ret-table-card,
-html.daily-dark .ret-detail-panel,
-html.daily-dark .ret-bottom-card,
-html.daily-dark .ret-select,
+/* Tarjetas y paneles heredan el modo oscuro de Ventas (.ded-card / .ded-kpi-card en daily_dark.css) */
 html.daily-dark .ret-search-input,
 html.daily-dark .ret-evidence-thumb {
 	background-color: #111827 !important;
 	border-color: #1f2937 !important;
 	color: #e2e8f0 !important;
-}
-
-html.daily-dark .ret-kpi-card:hover {
-	background-color: #064e3b !important;
-	border-color: #10b981 !important;
 }
 
 html.daily-dark .ret-table th {
@@ -1467,13 +1249,257 @@ html.daily-dark .ret-destino-item {
 }
 
 html.daily-dark .ret-tab-pill {
-	background-color: #0f172a;
-	border-color: #1f2937;
+	background-color: transparent;
+	border-color: rgba(148, 163, 184, 0.24);
 	color: #cbd5e1;
 }
 
 html.daily-dark .ret-tab-pill.active {
-	background-color: #059669;
-	border-color: #059669;
-	color: #ffffff;
+	background-color: rgba(148, 163, 184, 0.12);
+	border-color: rgba(148, 163, 184, 0.24);
+	color: #f8fafc;
+}
+
+/* ==========================================================================
+   ALINEACIÓN CON EL TABLERO DE VENTAS (/sales)
+   Contenedor, encabezado, KPIs y filas usan ded-* de daily_sales_dashboard.css;
+   aquí solo se ajusta el contenido propio de Devoluciones a esas medidas.
+   ========================================================================== */
+
+/* Encabezado: subtítulo largo puede partir línea para no empujar los controles */
+.ret-header-row .ded-header-left {
+	flex-shrink: 1;
+	min-width: 0;
+}
+
+.ret-header-row .ded-subtitle {
+	white-space: normal;
+}
+
+.ret-header-controls form {
+	gap: 8px;
+}
+
+.ded-header-right .ret-select.ded-select-btn {
+	padding: 5px 26px 5px 10px;
+	font-size: 11.5px;
+	color: #334155;
+	border-color: var(--ded-border);
+	border-radius: var(--ded-radius-sm);
+	background-position: right 9px center;
+}
+
+.ded-header-right .ret-btn-primary,
+.ded-header-right .ret-btn-secondary.ded-select-btn {
+	height: 32px;
+	padding: 5px 12px;
+	font-size: 11.5px;
+	border-radius: var(--ded-radius-sm);
+}
+
+.ded-header-right .ret-btn-secondary.ded-select-btn {
+	color: #334155 !important;
+	border-color: var(--ded-border);
+}
+
+/* KPIs: iconos Font Awesome con el tamaño de los Lucide de Ventas */
+.ret-container .ded-kpi-top .ded-kpi-icon i {
+	font-size: 15px;
+	width: 17px;
+	text-align: center;
+}
+
+.ret-container .ded-kpi-top .ret-kpi-info-icon {
+	color: #94a3b8;
+	font-size: 12px;
+	cursor: help;
+}
+
+.ret-container .ded-kpi-card.is-highlight .ret-kpi-info-icon {
+	width: auto;
+	height: auto;
+	font-size: 12px;
+	cursor: help;
+}
+
+.ret-kpi-of {
+	font-size: 13px;
+	font-weight: 500;
+	color: var(--ded-text-muted);
+}
+
+.ret-container .ded-kpi-card.is-warning-card .ded-kpi-val {
+	color: #b45309;
+}
+
+/* Incidencia crítica: misma construcción que la tarjeta ámbar de Ventas, en rojo */
+.ded-kpi-card.is-critical-card {
+	background: linear-gradient(135deg, #fffafa 0%, #fef2f2 100%);
+	border-color: #fecaca;
+}
+
+.ded-kpi-card.is-critical-card .ded-kpi-icon,
+.ded-kpi-card.is-critical-card .ded-kpi-val {
+	color: #b91c1c;
+}
+
+.ded-kpi-card.is-critical-card:hover {
+	border-color: #fca5a5;
+	box-shadow: 0 4px 12px rgba(220, 38, 38, 0.1);
+}
+
+.ret-container .ded-kpi-card.is-warning-card .ded-kpi-icon {
+	color: #b45309;
+}
+
+html.daily-dark .ret-container .ded-kpi-card.is-warning-card .ded-kpi-val,
+html.daily-dark .ret-container .ded-kpi-card.is-warning-card .ded-kpi-icon {
+	color: #fbbf24 !important;
+}
+
+html.daily-dark .ret-container .ded-kpi-card.is-critical-card .ded-kpi-val,
+html.daily-dark .ret-container .ded-kpi-card.is-critical-card .ded-kpi-icon {
+	color: #f87171 !important;
+}
+
+/* Bandas de ciclo y calidad: mismo ritmo vertical que las filas de Ventas */
+.ret-lifecycle-banner,
+.ret-banner-quality {
+	margin-bottom: 14px;
+}
+
+.ret-banner-quality {
+	flex-direction: row;
+}
+
+/* Títulos de paneles con la escala de .ded-card-title */
+.ret-table-title,
+.ret-bottom-title,
+.ret-detail-folio {
+	font-size: 14.5px;
+	letter-spacing: -0.01em;
+}
+
+/* Fila de dos paneles: bandeja (ancha) + detalle con la misma altura */
+.ret-workspace-split > .ret-table-card {
+	padding: 0;
+	min-width: 0;
+}
+
+.ret-table-header {
+	padding: 14px 16px;
+}
+
+.ret-table-responsive {
+	flex: 1 1 auto;
+	min-height: 0;
+	overflow: auto;
+}
+
+.ret-table th {
+	position: sticky;
+	top: 0;
+	z-index: 1;
+}
+
+.ret-product-meta {
+	min-width: 190px;
+}
+
+@media (min-width: 1201px) {
+	/* La bandeja no fija la altura de la fila: la iguala al panel de detalle y desplaza por dentro */
+	.ret-workspace-split > .ret-table-card {
+		height: 0;
+		min-height: 100%;
+	}
+}
+
+@media (max-width: 1200px) {
+	.ret-table-responsive {
+		max-height: 620px;
+	}
+}
+
+/* Fila de tres paneles: mismo alto, contenido alineado arriba */
+.ret-bottom-grid > .ret-bottom-card {
+	justify-content: flex-start;
+	min-width: 0;
+}
+
+/* Móvil y tableta (puntos de quiebre de Ventas) */
+@media (max-width: 768px) {
+	.ret-header-controls {
+		flex-wrap: wrap;
+		justify-content: flex-start;
+	}
+
+	.ret-header-controls form {
+		width: 100%;
+	}
+
+	.ret-header-controls form .ret-select {
+		flex: 1 1 0;
+		min-width: 0;
+		max-width: none;
+	}
+
+	.ret-banner-quality {
+		flex-direction: column;
+		align-items: flex-start;
+	}
+
+	.ret-tabs-row {
+		overflow-x: auto;
+	}
+}
+
+/* Columna de folio sin cortes y destinos en 3 columnas dentro del panel ancho */
+.ret-folio-badge,
+.ret-date-sub {
+	white-space: nowrap;
+}
+
+.ret-bottom-grid .ret-destinos-grid {
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+/* daily_mobile.js marca las rejillas con dm-grid-fit (columnas de 140 px): se fijan las de Ventas */
+@media (max-width: 1200px) {
+	#page-content .ret-container .ret-workspace-split.ded-row-2,
+	#page-content .ret-container .ret-bottom-grid.ded-row-3 {
+		grid-template-columns: minmax(0, 1fr) !important;
+	}
+}
+
+@media (max-width: 768px) {
+	#page-content .ret-container .ret-kpis-grid.ded-kpis-grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+	}
+	#page-content .ret-container .ret-kpis-grid.ded-kpis-grid > *:first-child {
+		grid-column: span 2 !important;
+	}
+	#page-content .ret-container .ret-kpis-grid.ded-kpis-grid > * {
+		min-width: 0;
+	}
+}
+
+/* Etiquetas y cifras a la misma altura aunque el texto secundario parta línea */
+.ret-container .ret-kpis-grid .ded-kpi-card {
+	justify-content: flex-start;
+}
+
+.ret-container .ret-kpis-grid .ded-kpi-sub,
+.ret-container .ret-kpis-grid .ded-kpi-sub-highlight {
+	margin-top: auto;
+}
+
+@media (max-width: 768px) {
+	.ret-container .ret-kpis-grid .ded-kpi-sub {
+		white-space: normal;
+	}
+	/* Ciclo de 6 etapas en una sola línea, desplazable dentro de su tarjeta */
+	.ret-lifecycle-steps {
+		flex-wrap: nowrap;
+		min-width: max-content;
+	}
 }

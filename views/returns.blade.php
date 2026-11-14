@@ -3,7 +3,10 @@
 @section('title', 'Devoluciones Logísticas | DAILY')
 
 @section('content')
+<link href="{{ $U('/css/daily_sales_dashboard.css?v=', true) }}{{ daily_asset_version('/css/daily_sales_dashboard.css') }}" rel="stylesheet">
 <link href="{{ $U('/css/daily_returns.css?v=', true) }}{{ daily_asset_version('/css/daily_returns.css') }}" rel="stylesheet">
+<link href="{{ $U('/css/daily_sales_unslop.css?v=', true) }}{{ daily_asset_version('/css/daily_sales_unslop.css') }}" rel="stylesheet">
+<link href="{{ $U('/css/daily_a11y.css?v=', true) }}{{ daily_asset_version('/css/daily_a11y.css') }}" rel="stylesheet">
 
 @php
 	$money = fn($v) => '$' . number_format(floatval($v), 2);
@@ -12,32 +15,27 @@
 	$firstReturn = !empty($defaultRows) ? $defaultRows[0] : (!empty($returns) ? $returns[0] : null);
 @endphp
 
-<div class="ret-container" data-testid="returns-logistics-page">
+<div class="ret-container ded-wrapper" data-testid="returns-logistics-page">
 
 	<!-- ====================================================================
 	     1. ENCABEZADO LOGÍSTICO (SIN POS COMERCIAL / SIN CAJA)
 	     ==================================================================== -->
-	<div class="ret-header-row">
-		<div class="ret-header-title-box">
-			<div class="ret-header-icon">
-				<i class="fa-solid fa-boxes-packing"></i>
-			</div>
-			<div>
-				<h1 class="ret-header-title">Devoluciones Logísticas</h1>
-				<p class="ret-header-desc">Retorno físico, recepción UPC, inspección de estado, clasificación y conciliación de unidades.</p>
-			</div>
+	<header class="ret-header-row ded-header">
+		<div class="ret-header-title-box ded-header-left">
+			<h1 class="ret-header-title ded-title">Devoluciones Logísticas</h1>
+			<p class="ret-header-desc ded-subtitle">Retorno físico, recepción UPC, inspección de estado, clasificación y conciliación de unidades.</p>
 		</div>
 
-		<div class="ret-header-controls">
+		<div class="ret-header-controls ded-header-right">
 			<form method="get" class="d-inline-flex align-items-center gap-2 m-0" id="formReturnsFilter">
-				<select name="branch_id" class="ret-select" onchange="this.form.submit()" aria-label="Seleccionar sucursal">
+				<select name="branch_id" class="ret-select ded-select-btn" onchange="this.form.submit()" aria-label="Seleccionar sucursal">
 					<option value="">Todas las sucursales</option>
 					@foreach($branches as $b)
 						<option value="{{ $b->id }}" @if($selectedBranchId == $b->id) selected @endif>{{ $b->name }}</option>
 					@endforeach
 				</select>
 
-				<select name="type" class="ret-select" onchange="this.form.submit()" aria-label="Seleccionar tipo de retorno">
+				<select name="type" class="ret-select ded-select-btn" onchange="this.form.submit()" aria-label="Seleccionar tipo de retorno">
 					<option value="">Todos los tipos</option>
 					<option value="devolucion_cliente" @if($typeFilter === 'devolucion_cliente') selected @endif>Devolución Logística</option>
 					<option value="cambio" @if($typeFilter === 'cambio') selected @endif>Cambio de Producto</option>
@@ -55,7 +53,7 @@
 			</button>
 
 			<div class="dropdown d-inline-block">
-				<button type="button" class="ret-btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="btnExportMenu">
+				<button type="button" class="ret-btn-secondary ded-select-btn dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="btnExportMenu">
 					<span>Exportar</span>
 				</button>
 				<div class="dropdown-menu dropdown-menu-right shadow-sm border" aria-labelledby="btnExportMenu">
@@ -66,13 +64,13 @@
 				</div>
 			</div>
 		</div>
-	</div>
+	</header>
 
 	<!-- ====================================================================
 	     2. CICLO CANÓNICO DE 6 ETAPAS
 	     Solicitud -> Recepción -> Inspección -> Clasificación -> Disposición -> Conciliación
 	     ==================================================================== -->
-	<div class="ret-lifecycle-banner" data-testid="returns-lifecycle-stepper">
+	<div class="ret-lifecycle-banner ded-card" data-testid="returns-lifecycle-stepper">
 		<div class="ret-lifecycle-steps">
 			@foreach([
 				['solicitud', 1, 'Solicitud', 'RMA generado'],
@@ -86,7 +84,7 @@
 					<div class="ret-lc-num">{{ $st[1] }}</div>
 					<div class="d-flex flex-column" style="line-height: 1.15;">
 						<strong class="small">{{ $st[2] }}</strong>
-						<span class="text-muted" style="font-size: 0.68rem;">{{ $st[3] }}</span>
+						<span class="text-muted" style="font-size: 11px;">{{ $st[3] }}</span>
 					</div>
 				</div>
 				@if($i < 5)<div class="ret-lc-div"></div>@endif
@@ -97,66 +95,78 @@
 	<!-- ====================================================================
 	     3. INDICADORES DE LOGÍSTICA INVERSA (6 KPIs)
 	     ==================================================================== -->
-	<div class="ret-kpis-grid" data-testid="returns-kpis-grid">
-		<div class="ret-kpi-card" data-testid="kpi-retornos-pendientes">
-			<div class="ret-kpi-header">
-				<span>Retornos pendientes</span>
-				<i class="fa-solid fa-circle-info ret-kpi-info-icon" data-toggle="tooltip" title="Solicitudes RMA pendientes de recepción, inspección, clasificación o disposición."></i>
+	@php
+		$retReconcilePct = floatval($logisticsSummary['reconcile_pct']);
+		$retDamaged = floatval($logisticsSummary['damaged_units']);
+	@endphp
+	<section class="ret-kpis-grid ded-kpis-grid" data-testid="returns-kpis-grid" aria-label="Indicadores de logística inversa">
+		<article class="ret-kpi-card ded-kpi-card is-highlight" data-testid="kpi-retornos-pendientes">
+			<div class="ded-kpi-top-highlight">
+				<div class="ded-highlight-brand">
+					<i class="fa-solid fa-boxes-packing"></i>
+					<span>Retornos pendientes</span>
+				</div>
+				<span class="ded-highlight-spark-box"><i class="fa-solid fa-circle-info ret-kpi-info-icon" data-toggle="tooltip" title="Solicitudes RMA pendientes de recepción, inspección, clasificación o disposición."></i></span>
 			</div>
-			<div class="ret-kpi-value text-amber">{{ intval($logisticsSummary['pending_count']) }}</div>
-			<div class="ret-kpi-sub">{{ $totalCount }} casos totales</div>
-		</div>
+			<div class="ret-kpi-value ded-kpi-val">{{ intval($logisticsSummary['pending_count']) }}</div>
+			<div class="ret-kpi-sub ded-kpi-sub-highlight">{{ $totalCount }} casos totales</div>
+		</article>
 
-		<div class="ret-kpi-card" data-testid="kpi-unidades-recibidas">
-			<div class="ret-kpi-header">
-				<span>Unidades recibidas</span>
+		<article class="ret-kpi-card ded-kpi-card" data-testid="kpi-unidades-recibidas">
+			<div class="ded-kpi-top">
+				<span class="ded-kpi-icon"><i class="fa-solid fa-truck-ramp-box"></i></span>
 				<i class="fa-solid fa-circle-info ret-kpi-info-icon" data-toggle="tooltip" title="Cantidad física recibida y verificada con UPC frente a lo solicitado."></i>
 			</div>
-			<div class="ret-kpi-value text-dark">{{ $qtyFmt($logisticsSummary['received_units']) }} <small class="text-muted font-weight-normal">/ {{ $qtyFmt($logisticsSummary['requested_units']) }}</small></div>
-			<div class="ret-kpi-sub">Costo inventario: {{ $money($financialSummary['total_cost']) }}</div>
-		</div>
+			<div class="ded-kpi-label">Unidades recibidas</div>
+			<div class="ret-kpi-value ded-kpi-val">{{ $qtyFmt($logisticsSummary['received_units']) }} <small class="ret-kpi-of">/ {{ $qtyFmt($logisticsSummary['requested_units']) }}</small></div>
+			<div class="ret-kpi-sub ded-kpi-sub">Costo inventario: {{ $money($financialSummary['total_cost']) }}</div>
+		</article>
 
-		<div class="ret-kpi-card" data-testid="kpi-aptos-reventa">
-			<div class="ret-kpi-header">
-				<span>Aptos para reventa</span>
+		<article class="ret-kpi-card ded-kpi-card" data-testid="kpi-aptos-reventa">
+			<div class="ded-kpi-top">
+				<span class="ded-kpi-icon"><i class="fa-solid fa-rotate-left"></i></span>
 				<i class="fa-solid fa-circle-info ret-kpi-info-icon" data-toggle="tooltip" title="Unidades íntegras autorizadas por supervisor para reingreso a stock vendible."></i>
 			</div>
-			<div class="ret-kpi-value text-green">{{ $qtyFmt($logisticsSummary['resalable_units']) }} u.</div>
-			<div class="ret-kpi-sub">Recuperable: {{ $money($financialSummary['recoverable_value']) }}</div>
-		</div>
+			<div class="ded-kpi-label">Aptos para reventa</div>
+			<div class="ret-kpi-value ded-kpi-val">{{ $qtyFmt($logisticsSummary['resalable_units']) }} u.</div>
+			<div class="ret-kpi-sub ded-kpi-sub">Recuperable: {{ $money($financialSummary['recoverable_value']) }}</div>
+		</article>
 
-		<div class="ret-kpi-card" data-testid="kpi-mercancia-danada">
-			<div class="ret-kpi-header">
-				<span>Dañados / Baja física</span>
+		<article class="ret-kpi-card ded-kpi-card @if($retDamaged > 0) is-critical-card @endif" data-testid="kpi-mercancia-danada">
+			<div class="ded-kpi-top">
+				<span class="ded-kpi-icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
 				<i class="fa-solid fa-circle-info ret-kpi-info-icon" data-toggle="tooltip" title="Unidades dañadas, vencidas o en destrucción controlada (bloqueadas para reventa)."></i>
 			</div>
-			<div class="ret-kpi-value text-red">{{ $qtyFmt($logisticsSummary['damaged_units']) }} u.</div>
-			<div class="ret-kpi-sub">Pérdida evaluada: {{ $money($financialSummary['definitive_loss']) }}</div>
-		</div>
+			<div class="ded-kpi-label">Dañados / Baja física</div>
+			<div class="ret-kpi-value ded-kpi-val">{{ $qtyFmt($logisticsSummary['damaged_units']) }} u.</div>
+			<div class="ret-kpi-sub ded-kpi-sub">Pérdida evaluada: {{ $money($financialSummary['definitive_loss']) }}</div>
+		</article>
 
-		<div class="ret-kpi-card" data-testid="kpi-rtv-reparacion">
-			<div class="ret-kpi-header">
-				<span>RTV y Reparación</span>
+		<article class="ret-kpi-card ded-kpi-card" data-testid="kpi-rtv-reparacion">
+			<div class="ded-kpi-top">
+				<span class="ded-kpi-icon"><i class="fa-solid fa-screwdriver-wrench"></i></span>
 				<i class="fa-solid fa-circle-info ret-kpi-info-icon" data-toggle="tooltip" title="Unidades destinadas a devolución a proveedor (RTV) o taller de reacondicionamiento."></i>
 			</div>
-			<div class="ret-kpi-value text-cyan">{{ $qtyFmt($logisticsSummary['rtv_units'] + $logisticsSummary['repairable_units']) }} u.</div>
-			<div class="ret-kpi-sub">RTV {{ $qtyFmt($logisticsSummary['rtv_units']) }} · Rep. {{ $qtyFmt($logisticsSummary['repairable_units']) }}</div>
-		</div>
+			<div class="ded-kpi-label">RTV y Reparación</div>
+			<div class="ret-kpi-value ded-kpi-val">{{ $qtyFmt($logisticsSummary['rtv_units'] + $logisticsSummary['repairable_units']) }} u.</div>
+			<div class="ret-kpi-sub ded-kpi-sub">RTV {{ $qtyFmt($logisticsSummary['rtv_units']) }} · Rep. {{ $qtyFmt($logisticsSummary['repairable_units']) }}</div>
+		</article>
 
-		<div class="ret-kpi-card" data-testid="kpi-conciliacion-unidades">
-			<div class="ret-kpi-header">
-				<span>Conciliación unidades</span>
+		<article class="ret-kpi-card ded-kpi-card @if($retReconcilePct < 90) is-warning-card @endif" data-testid="kpi-conciliacion-unidades">
+			<div class="ded-kpi-top">
+				<span class="ded-kpi-icon"><i class="fa-solid fa-scale-balanced"></i></span>
 				<i class="fa-solid fa-circle-info ret-kpi-info-icon" data-toggle="tooltip" title="Porcentaje de unidades recibidas con destino final autorizado y conciliado."></i>
 			</div>
-			<div class="ret-kpi-value text-purple">{{ number_format(floatval($logisticsSummary['reconcile_pct']), 1) }}%</div>
-			<div class="ret-kpi-sub">{{ $qtyFmt($logisticsSummary['conciliated_units']) }} u. conciliadas</div>
-		</div>
-	</div>
+			<div class="ded-kpi-label">Conciliación unidades</div>
+			<div class="ret-kpi-value ded-kpi-val">{{ number_format($retReconcilePct, 1) }}%</div>
+			<div class="ret-kpi-sub ded-kpi-sub">{{ $qtyFmt($logisticsSummary['conciliated_units']) }} u. conciliadas</div>
+		</article>
+	</section>
 
 	<!-- ====================================================================
 	     4. BANNER DE CONTROL SANITARIO, REINGRESO Y CONCILIACIÓN
 	     ==================================================================== -->
-	<div class="ret-banner-quality">
+	<div class="ret-banner-quality ded-card">
 		<div class="ret-banner-left">
 			<div class="ret-banner-shield">
 				<i class="fa-solid fa-shield-halved"></i>
@@ -179,10 +189,10 @@
 	<!-- ====================================================================
 	     5. BANDEJA PRINCIPAL (TABLA) + PANEL DE DETALLE
 	     ==================================================================== -->
-	<div class="ret-workspace-split">
+	<div class="ret-workspace-split ded-row-2">
 
 		<!-- LISTADO DE CASOS (IZQUIERDA) -->
-		<div class="ret-table-card">
+		<div class="ret-table-card ded-card">
 			<div class="ret-table-header">
 				<h2 class="ret-table-title">
 					<i class="fa-solid fa-list-ul"></i>
@@ -358,7 +368,7 @@
 		</div>
 
 		<!-- PANEL DE DETALLE (DERECHA, STICKY) -->
-		<div class="ret-detail-panel" id="returnsDetailPanel">
+		<div class="ret-detail-panel ded-card" id="returnsDetailPanel">
 			@if($firstReturn)
 				@php
 					$fStage = $firstReturn['stage_meta'];
@@ -578,8 +588,8 @@
 	<!-- ====================================================================
 	     6. SECCIÓN INFERIOR: 3 TARJETAS (DESTINOS, CONTROL UNIDADES/COSTO, MÓDULOS LOGÍSTICOS)
 	     ==================================================================== -->
-	<div class="ret-bottom-grid">
-		<div class="ret-bottom-card">
+	<div class="ret-bottom-grid ded-row-3">
+		<div class="ret-bottom-card ded-card">
 			<div>
 				<div class="ret-bottom-header">
 					<h3 class="ret-bottom-title">
@@ -640,7 +650,7 @@
 		</div>
 
 		<!-- CONTROL DE UNIDADES Y COSTO LOGÍSTICO DEL CASO -->
-		<div class="ret-bottom-card">
+		<div class="ret-bottom-card ded-card">
 			<div>
 				<div class="ret-bottom-header">
 					<h3 class="ret-bottom-title">
@@ -685,7 +695,7 @@
 		</div>
 
 		<!-- MÓDULOS LOGÍSTICOS RELACIONADOS (SIN POS / SIN CAJA / SIN SEGURIDAD / SIN COMPRAS NUEVAS) -->
-		<div class="ret-bottom-card">
+		<div class="ret-bottom-card ded-card">
 			<div>
 				<div class="ret-bottom-header">
 					<h3 class="ret-bottom-title">
