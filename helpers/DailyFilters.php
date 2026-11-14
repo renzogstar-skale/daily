@@ -28,7 +28,9 @@ class DailyFilters
 		'/waste' => ['branch_id', 'start_date', 'end_date'],
 		'/hr' => ['branch_id', 'department', 'start_date', 'end_date'],
 		'/warehouse' => ['branch_id', 'department', 'start_date', 'end_date'],
-		'/stockoverview' => ['branch_id', 'department', 'group_id', 'subcategory', 'product', 'start_date', 'end_date']
+		'/stockoverview' => ['branch_id', 'department', 'group_id', 'subcategory', 'product', 'start_date', 'end_date'],
+		'/dispatches' => ['branch_id', 'department', 'start_date', 'end_date'],
+		'/dispatch' => ['branch_id', 'department', 'start_date', 'end_date']
 	];
 
 	const LABELS = ['company_id' => 'Empresa', 'branch_id' => 'Sucursal', 'department' => 'Departamento', 'group_id' => 'Categoría',

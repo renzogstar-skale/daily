@@ -49,12 +49,12 @@ class DairyNavigation
 			]],
 
 			// 3. DESPACHOS Y DEVOLUCIONES
-			['id' => 'despachos', 'label' => '3. DESPACHOS Y DEVOLUCIONES', 'icon' => 'fa-truck-ramp-box', 'items' => [
-				['id' => 'orders', 'label' => '1. Pedidos y Entregas', 'icon' => 'fa-boxes-packing', 'route' => '/orders', 'views' => ['orders'], 'desc' => 'Pedidos de clientes: reserva, picking, empaque, entrega y despacho'],
-				['id' => 'dispatch_picking', 'label' => '2. Picking y Packing', 'icon' => 'fa-boxes-packing', 'route' => '/dispatch#tab-picking', 'views' => ['orders'], 'desc' => 'Preparación por escáner láser, validación FEFO y empaque en bultos'],
-				['id' => 'dispatches', 'label' => '3. Gestión de Despachos', 'icon' => 'fa-truck-ramp-box', 'route' => '/dispatches', 'views' => ['dispatch', 'dispatches'], 'desc' => 'OMS/WMS: Pedidos, preparación, programación de rutas, salida, seguimiento y conciliación'],
-				['id' => 'returns', 'label' => '4. Devoluciones e Incidencias', 'icon' => 'fa-arrow-rotate-left', 'route' => '/returns', 'views' => ['returns'], 'desc' => 'Inspección, clasificación sanitaria en 7 destinos y control de mermas'],
-				['id' => 'recalls', 'label' => '5. Retiros de Producto', 'icon' => 'fa-rotate-left', 'route' => '/recalls', 'views' => ['recalls'], 'desc' => 'Gestión y confirmación de retiros masivos en red de tiendas'],
+			['id' => 'despachos', 'label' => '3. Despachos y devoluciones', 'icon' => 'fa-truck-ramp-box', 'items' => [
+				['id' => 'dispatches', 'label' => '1. Tablero de Despachos', 'icon' => 'fa-chart-pie', 'route' => '/dispatches', 'views' => ['dispatch', 'dispatches'], 'desc' => 'Tablero ejecutivo: entregas, pendientes, atrasos y devoluciones'],
+				['id' => 'orders', 'label' => '2. Pedidos y Entregas', 'icon' => 'fa-boxes-packing', 'route' => '/orders', 'views' => ['orders'], 'desc' => 'Pedidos de clientes: reserva, picking, empaque, entrega y despacho'],
+				['id' => 'returns', 'label' => '3. Devoluciones', 'icon' => 'fa-arrow-rotate-left', 'route' => '/returns', 'views' => ['returns'], 'desc' => 'Inspección, clasificación sanitaria en 7 destinos y control de mermas'],
+				['id' => 'dispatch_picking', 'label' => '4. Preparación y Picking', 'icon' => 'fa-boxes-stacked', 'route' => '/dispatches?tab=picking', 'views' => ['dispatch_picking'], 'hidden' => true, 'desc' => 'Preparación por escáner láser, validación FEFO y empaque en bultos'],
+				['id' => 'recalls', 'label' => '5. Retiros de Producto', 'icon' => 'fa-rotate-left', 'route' => '/recalls', 'views' => ['recalls'], 'hidden' => true, 'desc' => 'Gestión y confirmación de retiros masivos en red de tiendas'],
 			]],
 
 			// 4. MERMAS Y PREVENCIÓN (las pestañas internas de /waste y /loss-prevention siguen disponibles dentro de cada tablero)

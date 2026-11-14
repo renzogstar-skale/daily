@@ -416,6 +416,12 @@ class RetailPreventionController extends BaseController
 			LIMIT 200
 		")->fetchAll(\PDO::FETCH_ASSOC);
 
+		$sharedFilters = \Grocy\Helpers\DailyFilters::FromQuery($params, 30);
+		$filterOptions = \Grocy\Helpers\DailyFilters::Options($sharedFilters);
+		$dpTab = $params['tab'] ?? 'tablero';
+		$dispatchBoardSvc = new \Grocy\Services\DispatchDashboardService();
+		$dispatchBoard = $dispatchBoardSvc->GetDashboardData($sharedFilters);
+
 		return $this->RenderPage($response, 'dispatch', [
 			'orders' => $orders,
 			'selectedOrderId' => $selectedOrderId,
@@ -433,7 +439,11 @@ class RetailPreventionController extends BaseController
 			'statusFilter' => $statusFilter,
 			'kpis' => $kpis,
 			'vehicles' => $vehicles,
-			'users' => $users
+			'users' => $users,
+			'dispatchBoard' => $dispatchBoard,
+			'sharedFilters' => $sharedFilters,
+			'filterOptions' => $filterOptions,
+			'dpTab' => $dpTab
 		]);
 	}
 

@@ -1,8 +1,11 @@
 @extends('layout.default')
 
-@section('title', 'Gestión de Despachos | DAILY')
+@section('title', 'Despachos y Devoluciones | DAILY')
 
 @push('pageStyles')
+<link href="{{ $U('/css/daily_sales_dashboard.css?v=', true) }}{{ daily_asset_version('/css/daily_sales_dashboard.css') }}" rel="stylesheet">
+<link href="{{ $U('/css/daily_dispatches_dashboard.css?v=', true) }}{{ daily_asset_version('/css/daily_dispatches_dashboard.css') }}" rel="stylesheet">
+<link href="{{ $U('/css/daily_a11y.css?v=', true) }}{{ daily_asset_version('/css/daily_a11y.css') }}" rel="stylesheet">
 <link href="{{ $U('/css/daily_dispatch.css?v=', true) }}{{ daily_asset_version('/css/daily_dispatch.css') }}" rel="stylesheet">
 <style>
 	/* Ciclo Operativo Stepper */
@@ -171,14 +174,23 @@
 @endpush
 
 @section('content')
-<link href="{{ $U('/css/daily_dispatch.css?v=', true) }}{{ daily_asset_version('/css/daily_dispatch.css') }}" rel="stylesheet">
 @php
 	$money = fn($v) => $v === null ? 'Sin información' : '$' . number_format(floatval($v), 2);
 	$prepAcc = $kpis['picking_accuracy_pct'] ?? null;
 	$otifPct = $kpis['otif_pct'] ?? null;
 @endphp
 
-<div class="dp-page-container">
+<div class="ded-wrapper dp-main-wrapper" id="dispatchApp">
+	@include('components.dispatch.dispatches_header')
+
+	<!-- PESTAÑA PRINCIPAL: TABLERO DE DESPACHOS (RÉPLICA EXACTA) -->
+	<div id="dp-pane-tablero" class="dp-pane" style="@if(($dpTab ?? 'tablero') === 'tablero') display: block; @else display: none; @endif">
+		@include('components.dispatch.dispatches_dashboard')
+	</div>
+
+	<!-- PESTAÑAS OPERATIVAS (PEDIDOS, PICKING, RUTAS) -->
+	<div id="dp-pane-operational" class="dp-pane" style="@if(($dpTab ?? 'tablero') !== 'tablero') display: block; @else display: none; @endif">
+		<div class="dp-page-container">
 
 	<!-- ================= 1. ENCABEZADO HERO ================= -->
 	<div class="dp-hero-card">
@@ -2615,8 +2627,13 @@ document.addEventListener('DOMContentLoaded', function () {
 	});
 });
 </script>
+		</div>{{-- /.dp-page-container --}}
+	</div>{{-- /#dp-pane-operational --}}
+</div>{{-- /#dispatchApp --}}
 @endsection
 
 @push('pageScripts')
+<script src="{{ $U('/js/lucide.min.js') }}"></script>
+<script src="{{ $U('/js/daily_dispatches_dashboard.js?v=', true) }}{{ daily_asset_version('/js/daily_dispatches_dashboard.js') }}" defer></script>
 <script src="{{ $U('/viewjs/dispatch.js?v=', true) }}{{ daily_asset_version('/viewjs/dispatch.js') }}"></script>
 @endpush
