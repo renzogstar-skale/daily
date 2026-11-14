@@ -84,3 +84,10 @@ td .ded-kpi-badge-green,
 #dsm-evo-export-menu {
 	color: #ffffff !important;
 }
+
+/* Botón Exportar sobre franja verde: fondo oscurecido en vez de blanco translúcido */
+#dsm-evo-export-menu,
+.dsm-card-header-clean[style*="gradient"] .dropdown > .btn {
+	background: rgba(6, 78, 59, 0.45) !important;
+	border-color: rgba(255, 255, 255, 0.35) !important;
+}
