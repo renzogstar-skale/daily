@@ -31,7 +31,7 @@ class StockTransferController extends BaseController
 		};
 		$allTransfers = $visible($service->GetTransfers(null, null, 1000));
 		$filteredTransfers = $status ? $visible($service->GetTransfers(null, $status, 1000)) : $allTransfers;
-		$inTransit = array_values(array_filter($allTransfers, fn($t) => $t['status'] === 'in_transit'));
+		$inTransit = array_values(array_filter($allTransfers, fn($t) => in_array($t['status'], ['in_transit', 'partially_received'], true)));
 		$received = array_values(array_filter($allTransfers, fn($t) => $t['status'] === 'received'));
 
 		$transitCount = count($inTransit);

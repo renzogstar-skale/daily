@@ -378,7 +378,7 @@
 <!-- ============================================================== -->
 <div class="tab-pane fade @if($activeTab === 'resumen' || !$activeTab) show active @endif" id="tab-resumen" role="tabpanel">
 	@include('components.sales.executive_sales_dashboard')
-	@include('components.sales.sales_reports', ['section' => 'dashboard', 'emitData' => true])
+	{{-- @include('components.sales.sales_reports', ['section' => 'dashboard', 'emitData' => true]) --}}
 </div>
 
 <!-- ============================================================== -->

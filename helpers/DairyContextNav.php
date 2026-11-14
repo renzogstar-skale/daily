@@ -10,7 +10,8 @@ namespace Grocy\Helpers;
 class DairyContextNav
 {
 	// Terminales y formularios de captura: el pie con enlaces distrae de la operación
-	const SKIP_VIEWS = ['pos', 'scan', 'waste_report'];
+	// stockoverview dibuja su propio bloque «Módulos conectados» con el evento que pasa entre módulos
+	const SKIP_VIEWS = ['pos', 'scan', 'waste_report', 'stockoverview'];
 
 	// Id de módulo = ruta sin barras ni guiones (misma regla que SystemMapService::ParseNav)
 	public static function ModuleId(string $route): string

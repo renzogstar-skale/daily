@@ -24,9 +24,9 @@ async (page) => {
 	const noOverlay = async () => page.evaluate(() => !document.querySelector('.modal-backdrop') && !document.querySelector('.dsm-fdd-menu') && !document.body.classList.contains('modal-open'));
 
 	const run = async (label) => {
-		await page.goto('http://localhost:8080/stockoverview');
+		await page.goto('http://localhost:8080/stockoverview?tab=existencias');
 		await page.waitForLoadState('load'); await page.evaluate(() => sessionStorage.clear());
-		await page.waitForLoadState('load'); await page.waitForTimeout(300); await page.goto('http://localhost:8080/stockoverview');
+		await page.waitForLoadState('load'); await page.waitForTimeout(300); await page.goto('http://localhost:8080/stockoverview?tab=existencias');
 		await page.waitForSelector('#dsm-heatmap-grid .dsm-hm-cell');
 		await idle();
 
@@ -136,7 +136,7 @@ async (page) => {
 		ok(label + ' Escape cierra', await menu().count() === 0);
 
 		// Persistencia
-		await page.waitForLoadState('load'); await page.waitForTimeout(300); await page.goto('http://localhost:8080/stockoverview');
+		await page.waitForLoadState('load'); await page.waitForTimeout(300); await page.goto('http://localhost:8080/stockoverview?tab=existencias');
 		await page.waitForSelector('#dsm-heatmap-grid .dsm-hm-cell');
 		await idle();
 		ok(label + ' filtros conservados', (await text('#dsm-top10-limit-btn')).includes('Top 5') && (await text('#dsm-fefo-days-btn')).includes('24 horas'));

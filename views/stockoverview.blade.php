@@ -5,6 +5,8 @@
 @section('title', 'Stock & Movimientos')
 
 @push('pageStyles')
+<link href="{{ $U('/css/daily_sales_dashboard.css?v=', true) }}{{ daily_asset_version('/css/daily_sales_dashboard.css') }}" rel="stylesheet">
+<link href="{{ $U('/css/daily_stock_movements.css?v=', true) }}{{ daily_asset_version('/css/daily_stock_movements.css') }}" rel="stylesheet">
 <link href="{{ $U('/css/daily_stock.css?v=', true) }}{{ daily_asset_version('/css/daily_stock.css') }}" rel="stylesheet">
 <link href="{{ $U('/css/daily_inventory_ops.css?v=', true) }}{{ daily_asset_version('/css/daily_inventory_ops.css') }}" rel="stylesheet">
 @endpush
@@ -14,6 +16,8 @@
 	window.DAILY_STOCK_EXEC_INITIAL = {!! json_encode($stockExec ?? [], JSON_HEX_TAG | JSON_HEX_AMP) !!};
 </script>
 <script src="{{ $U('/viewjs/purchase.js?v=', true) }}{{ $version }}"></script>
+<script src="{{ $U('/js/lucide.min.js') }}"></script>
+<script src="{{ $U('/js/daily_stock_movements.js?v=', true) }}{{ daily_asset_version('/js/daily_stock_movements.js') }}" defer></script>
 <script src="{{ $U('/js/daily_inventory_ops.js?v=', true) }}{{ daily_asset_version('/js/daily_inventory_ops.js') }}" defer></script>
 @endpush
 
@@ -32,7 +36,55 @@ $meta = $se['meta'] ?? [];
 @endphp
 
 @section('content')
+{{-- Igual que Ventas: la franja transversal no se muestra en la pestaña principal del tablero --}}
+@if($smvTab !== 'resumen')
 @include('components.loss_strip')
+@endif
+<div class="ded-wrapper smv" id="stockMovementsBoard" data-tab="{{ $smvTab }}" data-detail="{{ $smvDetail }}">
+	@include('components.stock.movements_header')
+
+	<div class="smv-pane @if($smvTab === 'resumen') is-active @endif" id="smv-pane-resumen" data-pane="resumen">
+		@include('components.stock.movements_dashboard')
+	</div>
+
+	<div class="smv-pane @if($smvTab === 'detalle') is-active @endif" id="smv-pane-detalle" data-pane="detalle">
+		<section class="ded-card smv-detail" aria-live="polite" data-testid="smv-detail">
+			<header class="ded-card-header smv-detail-head">
+				<div class="smv-detail-titlebox">
+					<button type="button" class="smv-back" data-smv-tab="resumen" data-testid="smv-back"><i class="fa-solid fa-arrow-left"></i> Tablero</button>
+					<h2 class="ded-card-title" id="smvDetailTitle">Detalle</h2>
+					<span class="smv-card-hint" id="smvDetailMeta"></span>
+				</div>
+				<div class="smv-detail-tools">
+					<select class="smv-series-select" id="smvDetailSign" aria-label="Tipo de diferencia" hidden>
+						<option value="diff">Con diferencia</option>
+						<option value="short">Faltantes</option>
+						<option value="over">Sobrantes</option>
+						<option value="all">Todas las líneas</option>
+						<option value="discrepancy">Por conciliar</option>
+					</select>
+					<select class="smv-series-select" id="smvDetailType" aria-label="Tipo de movimiento" hidden>
+						<option value="">Todos los tipos</option>
+						<option value="receptions">Recepciones</option>
+						<option value="internal">Reposiciones internas</option>
+						<option value="transfers">Traslados</option>
+						<option value="all_exits">Salidas (POS, despacho, merma, traslado)</option>
+						<option value="exits">Salidas a cliente y merma</option>
+						<option value="returns">Devoluciones</option>
+						<option value="adjustments">Ajustes</option>
+					</select>
+					<a href="#" class="ded-link-action" id="smvDetailLink" hidden>Abrir módulo <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+				</div>
+			</header>
+			<p class="smv-detail-note" id="smvDetailNote" hidden></p>
+			<div class="table-responsive smv-detail-scroll">
+				<table class="table table-sm smv-detail-table" id="smvDetailTable" aria-describedby="smvDetailTitle"></table>
+			</div>
+		</section>
+	</div>
+
+	<!-- Existencias, lotes y vencimientos (tablero anterior: FEFO, producto 360°, decisiones) -->
+	<div class="smv-pane @if($smvTab === 'existencias') is-active @endif" id="smv-pane-existencias" data-pane="existencias">
 <div class="dsm-exec-container" id="dsm-exec-app">
 
 	<!-- ======================================================================
@@ -42,7 +94,7 @@ $meta = $se['meta'] ?? [];
 		<div class="dsm-title-block daily-head">
 			<div class="dairy-page-icon is-primary"><i class="fa-solid fa-cubes"></i></div>
 			<div class="dsm-title-row">
-				<h1 class="dsm-title">Stock &amp; Movimientos</h1>
+				<h2 class="dsm-title">Existencias y lotes</h2>
 				<span class="badge badge-light border text-muted font-weight-bold" style="font-size: 10.5px;" title="{{ $meta['demo_notice'] ?? '' }}">Rol: {{ ucfirst($meta['role'] ?? 'Manager') }}</span>
 			</div>
 			<p class="dsm-subtitle">
@@ -1220,6 +1272,10 @@ $meta = $se['meta'] ?? [];
 		</div>
 	</div>
 
+</div>
+	</div>
+
+	<div class="smv-pane @if($smvTab === 'operaciones') is-active @endif" id="smv-pane-operaciones" data-pane="operaciones">
 	<!-- ======================================================================
 	     5b. OPERACIÓN DE INVENTARIO Y ALMACENES (InventoryOperationsService)
 	     Recepción → ubicación → almacenamiento → reposición → salida → conciliación.
@@ -1269,41 +1325,7 @@ $meta = $se['meta'] ?? [];
 		</div>
 		<div class="iop-panel" id="iop-panel" role="tabpanel" aria-live="polite"></div>
 	</section>
-
-	<!-- ======================================================================
-	     6. INTEGRACIÓN ENTRE MÓDULOS (SECCIÓN 11 — 14 MÓDULOS CONECTADOS)
-	     ====================================================================== -->
-	<section class="dsm-integration-strip" aria-label="Integración transversal entre módulos">
-		<div class="d-flex align-items-center justify-content-between flex-wrap" style="gap: 8px;">
-			<div>
-				<strong class="text-dark" style="font-size: 13.5px;">
-					<i class="fa-solid fa-network-wired text-success mr-1"></i> Ecosistema Conectado Stock &amp; Movimientos (Fuente Única de Verdad)
-				</strong>
-				<span class="text-muted ml-2" style="font-size: 12px;">Sincronización bidireccional con los 14 módulos operativos, comerciales y financieros</span>
-			</div>
-			<button type="button" class="btn btn-sm btn-success font-weight-bold" style="border-radius: 8px; font-size: 12px;" onclick="dsmOpenWorkflowModal()">
-				<i class="fa-solid fa-play mr-1"></i> Ejecutar Flujo Integrado (10 Pasos)
-			</button>
-		</div>
-
-		<div class="dsm-modules-pills">
-			<a href="{{ $U('/scan') }}" class="dsm-mod-link"><i class="fa-solid fa-barcode text-success"></i> Operaciones con Escáner</a>
-			<a href="{{ $U('/locations/map') }}" class="dsm-mod-link"><i class="fa-solid fa-map-location-dot text-success"></i> Mapa de Ubicaciones</a>
-			<a href="{{ $U('/transfers') }}" class="dsm-mod-link"><i class="fa-solid fa-arrow-right-arrow-left text-warning"></i> Traslados</a>
-			<a href="{{ $U('/dispatch') }}" class="dsm-mod-link"><i class="fa-solid fa-truck-fast text-primary"></i> Despachos y Validaciones</a>
-			<a href="{{ $U('/returns') }}" class="dsm-mod-link"><i class="fa-solid fa-rotate-left text-info"></i> Cambios y Devoluciones</a>
-			<a href="{{ $U('/kardex') }}" class="dsm-mod-link"><i class="fa-solid fa-file-invoice-dollar text-success"></i> Kardex</a>
-			<a href="{{ $U('/traceability') }}" class="dsm-mod-link"><i class="fa-solid fa-route text-secondary"></i> Trazabilidad</a>
-			<a href="{{ $U('/reconciliation') }}" class="dsm-mod-link"><i class="fa-solid fa-shield-halved text-danger"></i> Control de Inventario</a>
-			<a href="{{ $U('/inventory') }}" class="dsm-mod-link"><i class="fa-solid fa-clipboard-check text-success"></i> Conteos Físicos</a>
-			<a href="{{ $U('/branches') }}" class="dsm-mod-link"><i class="fa-solid fa-store text-primary"></i> Sucursales</a>
-			<a href="{{ $U('/sales') }}" class="dsm-mod-link"><i class="fa-solid fa-cash-register text-success"></i> Ventas</a>
-			<a href="{{ $U('/waste') }}" class="dsm-mod-link"><i class="fa-solid fa-trash-can text-danger"></i> Control de Mermas</a>
-			<a href="{{ $U('/mrp') }}" class="dsm-mod-link"><i class="fa-solid fa-boxes-packing text-warning"></i> Planificación MRP</a>
-			<a href="{{ $U('/suppliers') }}" class="dsm-mod-link"><i class="fa-solid fa-handshake text-info"></i> Proveedores y Compras</a>
-		</div>
-	</section>
-
+	</div>
 </div>
 
 <!-- ==========================================================================

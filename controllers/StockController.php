@@ -178,7 +178,38 @@ class StockController extends BaseController
 		{
 		}
 
+		// Tablero «Stock & Movimientos»: filtros compartidos (periodo hasta la fecha de corte, sucursal, departamento)
+		$q = $request->getQueryParams();
+		$sharedFilters = \Grocy\Helpers\DailyFilters::FromQuery($q);
+		$requestedTab = $q['tab'] ?? '';
+		$tabMap = [
+			'tablero' => 'resumen',
+			'resumen' => 'resumen',
+			'movimientos' => 'detalle',
+			'detalle' => 'detalle',
+			'lotes' => 'existencias',
+			'existencias' => 'existencias',
+			'almacenes' => 'operaciones',
+			'operaciones' => 'operaciones',
+			'conteos' => 'detalle'
+		];
+		$smvTab = $tabMap[$requestedTab] ?? 'resumen';
+		$smvDetail = preg_match('/^[a-z_]+$/', $q['detail'] ?? '') ? $q['detail'] : '';
+		if ($requestedTab === 'movimientos' && empty($smvDetail))
+		{
+			$smvDetail = 'movements';
+		}
+		else if ($requestedTab === 'conteos' && empty($smvDetail))
+		{
+			$smvDetail = 'counts';
+		}
+
 		return $this->RenderPage($response, 'stockoverview', [
+			'sharedFilters' => $sharedFilters,
+			'filterOptions' => \Grocy\Helpers\DailyFilters::Options($sharedFilters),
+			'stockBoard' => \Grocy\Services\StockMovementsBoardService::GetInstance()->Dashboard($sharedFilters),
+			'smvTab' => $smvTab,
+			'smvDetail' => preg_match('/^[a-z_]+$/', $q['detail'] ?? '') ? $q['detail'] : '',
 			'locations' => $this->DB->locations()->where('active = 1')->orderBy('name', 'COLLATE NOCASE'),
 			'nextXDays' => $userSettings['stock_due_soon_days'],
 			'branches' => $branches,

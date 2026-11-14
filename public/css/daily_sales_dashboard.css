@@ -247,14 +247,18 @@
 }
 
 /* ==========================================================================
-   PRIMERA FILA — 7 INDICADORES HORIZONTALES
+   PRIMERA FILA — 6 INDICADORES CLAVE (VENTAS Y PRODUCTIVIDAD)
    ========================================================================== */
 .ded-kpis-grid {
 	display: grid;
-	grid-template-columns: 1.35fr 1.05fr 0.82fr 0.92fr 0.98fr 1.05fr 0.82fr 1.25fr;
+	grid-template-columns: 1.35fr 1.05fr 0.85fr 0.95fr 1fr 1.05fr;
 	gap: 10px;
 	margin-bottom: 14px;
 	align-items: stretch;
+}
+
+.ded-kpis-grid.has-8-cards {
+	grid-template-columns: 1.35fr 1.05fr 0.82fr 0.92fr 0.98fr 1.05fr 0.82fr 1.25fr;
 }
 
 .ded-kpis-grid-5 {
@@ -1265,9 +1269,12 @@
    ========================================================================== */
 @media (max-width: 1200px) {
 	.ded-kpis-grid {
+		grid-template-columns: repeat(3, 1fr);
+	}
+	.ded-kpis-grid.has-8-cards {
 		grid-template-columns: repeat(4, 1fr);
 	}
-	.ded-kpis-grid > *:first-child {
+	.ded-kpis-grid.has-8-cards > *:first-child {
 		grid-column: span 2;
 	}
 	.ded-row-2 {

@@ -1067,6 +1067,8 @@ $app->group('/api', function (RouteCollectorProxy $group)
 	$group->post('/reconciliation/dispatch', [ReconciliationApiController::class, 'RegisterMovement']);
 
 	// DAILY: Stock & Movimientos — Panel Ejecutivo de Inventario API
+	$group->get('/stockoverview/board/detail/{kind}', [\Grocy\Controllers\Api\StockMovementsBoardApiController::class, 'Detail']);
+	$group->get('/stockoverview/board/series', [\Grocy\Controllers\Api\StockMovementsBoardApiController::class, 'Series']);
 	$group->get('/stockoverview/executive', [\Grocy\Controllers\Api\StockExecutiveApiController::class, 'GetOverview']);
 	$group->get('/stockoverview/heatmap', [\Grocy\Controllers\Api\StockExecutiveApiController::class, 'GetHeatmap']);
 	$group->get('/stockoverview/top-products', [\Grocy\Controllers\Api\StockExecutiveApiController::class, 'GetTopProducts']);

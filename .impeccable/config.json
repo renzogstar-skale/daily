@@ -132,6 +132,15 @@
         ],
         "createdAt": "2026-11-12T19:32:20.078Z",
         "reason": "story del video unslop: el paso 0 reproduce los 9.8-11px del /sales original"
+      },
+      {
+        "rule": "tiny-text",
+        "value": "*",
+        "files": [
+          "views/components/stock/movements_header.blade.php"
+        ],
+        "createdAt": "2026-11-14T01:14:43.269Z",
+        "reason": "Réplica del Tablero de Ventas pedida por el usuario: mismas tallas (10-11px) que executive_sales_dashboard"
       }
     ]
   }

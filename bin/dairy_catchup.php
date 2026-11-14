@@ -32,6 +32,15 @@ if (isset($r['until']))
 	{
 		echo 'demo: ejemplos del día: ' . $e->getMessage() . "\n";
 	}
+	// Ejemplos para módulos que de otro modo quedan en 0 (retiros, escaneo, autorizaciones, facturas, puntos, tareas…)
+	try
+	{
+		require __DIR__ . '/dairy_demo_fill.php';
+	}
+	catch (\Throwable $e)
+	{
+		echo 'demo: relleno de ejemplos: ' . $e->getMessage() . "\n";
+	}
 	// Deja listo el tablero de entrada (Stock) para que el próximo inicio de sesión no lo recalcule
 	try
 	{

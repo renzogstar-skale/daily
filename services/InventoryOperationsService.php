@@ -177,6 +177,12 @@ class InventoryOperationsService extends BaseService
 		return array_values($pos);
 	}
 
+	/** Posición por sucursal y producto (mismo disponible que Inventario y Almacenes); $branchIds null = toda la red */
+	public function PositionMatrix(?array $branchIds): array
+	{
+		return $this->PositionRows($branchIds === null ? null : array_map('intval', $branchIds ?: [0]));
+	}
+
 	private function ProductInfo(array $ids): array
 	{
 		$ids = array_values(array_unique(array_map('intval', $ids)));

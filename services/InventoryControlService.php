@@ -361,6 +361,7 @@ class InventoryControlService extends BaseService
 					'product_name' => $rp['product_name'],
 					'sku' => 'SKU-' . str_pad(strval($rp['product_id']), 4, '0', STR_PAD_LEFT),
 					'system_stock' => $rp['system_stock'],
+					'stock_value' => $rp['stock_value'] ?? 0,
 					'sale_days_pct' => $rp['sell_frequency_pct'] . '%',
 					'sale_days_detail' => $rp['sale_days'] . ' de ' . $rp['observed_days'] . ' días',
 					'last_sale' => $rp['last_sale'],

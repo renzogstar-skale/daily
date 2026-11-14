@@ -206,6 +206,7 @@
 						<select id="trStatusSelect" class="custom-select custom-select-sm">
 							<option value="">Estado: Todos</option>
 							<option value="in_transit" @if($selectedStatus === 'in_transit') selected @endif>En tránsito</option>
+							<option value="partially_received" @if($selectedStatus === 'partially_received') selected @endif>Recepción parcial</option>
 							<option value="received" @if($selectedStatus === 'received') selected @endif>Recibido</option>
 							<option value="cancelled" @if($selectedStatus === 'cancelled') selected @endif>Anulado</option>
 						</select>
@@ -267,8 +268,8 @@
 							@forelse($transfers as $t)
 							@php
 								$isActiveRow = ($activeId === intval($t['id']));
-								$statusBadgeClass = $t['status'] === 'in_transit' ? 'badge-tr-transit' : ($t['status'] === 'received' ? 'badge-tr-received' : 'badge-tr-cancelled');
-								$statusText = $t['status'] === 'in_transit' ? 'En tránsito' : ($t['status'] === 'received' ? 'Recibido' : 'Anulado');
+								$statusBadgeClass = in_array($t['status'], ['in_transit', 'partially_received'], true) ? 'badge-tr-transit' : ($t['status'] === 'received' ? 'badge-tr-received' : 'badge-tr-cancelled');
+								$statusText = $t['status'] === 'in_transit' ? 'En tránsito' : ($t['status'] === 'partially_received' ? 'Recepción parcial' : ($t['status'] === 'received' ? 'Recibido' : 'Anulado'));
 							@endphp
 							<tr class="tr-row @if($isActiveRow) is-active @endif" 
 								id="trRow_{{ $t['id'] }}"
@@ -410,10 +411,10 @@
 				<!-- Header del Detalle -->
 				<div class="tr-detail-header">
 					<div class="tr-detail-title-group">
-						<span class="tr-status-dot @if($currentActive['status'] === 'in_transit') is-amber @else is-green @endif" id="panelStatusDot"></span>
+						<span class="tr-status-dot @if(in_array($currentActive['status'], ['in_transit', 'partially_received'], true)) is-amber @else is-green @endif" id="panelStatusDot"></span>
 						<span class="tr-detail-folio" id="panelFolio">{{ $currentActive['transfer_code'] }}</span>
-						<span class="badge-tr-status @if($currentActive['status'] === 'in_transit') badge-tr-transit @elseif($currentActive['status'] === 'received') badge-tr-received @else badge-tr-cancelled @endif" id="panelBadge">
-							{{ $currentActive['status'] === 'in_transit' ? 'En tránsito' : ($currentActive['status'] === 'received' ? 'Recibido' : 'Anulado') }}
+						<span class="badge-tr-status @if(in_array($currentActive['status'], ['in_transit', 'partially_received'], true)) badge-tr-transit @elseif($currentActive['status'] === 'received') badge-tr-received @else badge-tr-cancelled @endif" id="panelBadge">
+							{{ $currentActive['status'] === 'in_transit' ? 'En tránsito' : ($currentActive['status'] === 'partially_received' ? 'Recepción parcial' : ($currentActive['status'] === 'received' ? 'Recibido' : 'Anulado')) }}
 						</span>
 					</div>
 					<button type="button" class="tr-detail-close" onclick="window.closeDetailPanel()" title="Cerrar panel">&times;</button>
@@ -519,7 +520,7 @@
 
 				<!-- Botón Principal: Recibir en destino -->
 				<div id="panelActionsWrap">
-					@if($currentActive['status'] === 'in_transit')
+					@if(in_array($currentActive['status'], ['in_transit', 'partially_received'], true))
 					<button type="button" class="tr-btn-receive-main" onclick="window.openReceiveModal({{ $currentActive['id'] }})" id="btnPanelReceive">
 						<i class="fa-solid fa-check"></i> Recibir en destino
 					</button>
@@ -861,6 +862,11 @@
 						<strong>Control de diferencias:</strong> Cualquier faltante se dará de baja automáticamente desde tránsito como merma de traslado (causal M07) a costo del lote.
 					</div>
 
+					<div class="custom-control custom-checkbox mb-3">
+						<input type="checkbox" class="custom-control-input" id="tr-receive-partial">
+						<label class="custom-control-label small" for="tr-receive-partial"><strong>Recepción parcial:</strong> sumar al destino solo lo recibido y dejar el resto en tránsito (sin merma)</label>
+					</div>
+
 					<div class="form-group mb-0">
 						<label class="small font-weight-bold text-dark" for="tr-receive-notes">Observaciones de la Recepción</label>
 						<input type="text" id="tr-receive-notes" class="form-control form-control-sm" placeholder="Ej. Recepción completa sin diferencias en cámara de frío...">
@@ -974,7 +980,7 @@
 		$('#panelFolio').text(t.transfer_code);
 		
 		// Estado y badges
-		var isInTransit = (t.status === 'in_transit');
+		var isInTransit = (t.status === 'in_transit' || t.status === 'partially_received');
 		var isReceived = (t.status === 'received');
 
 		$('#panelStatusDot')
@@ -984,7 +990,7 @@
 		$('#panelBadge')
 			.removeClass('badge-tr-transit badge-tr-received badge-tr-cancelled')
 			.addClass(isInTransit ? 'badge-tr-transit' : (isReceived ? 'badge-tr-received' : 'badge-tr-cancelled'))
-			.text(isInTransit ? 'En tránsito' : (isReceived ? 'Recibido' : 'Anulado'));
+			.text(t.status === 'partially_received' ? 'Recepción parcial' : isInTransit ? 'En tránsito' : (isReceived ? 'Recibido' : 'Anulado'));
 
 		// Ruta
 		$('#panelFromBranch').text(t.from_branch_name);
@@ -1121,12 +1127,15 @@
 			$('#tr-receive-route').html('<strong>Ruta:</strong> ' + data.transfer.from_branch_name + ' · ' + data.transfer.from_location_name + ' <span class="mx-1">→</span> ' + data.transfer.to_branch_name + ' · ' + data.transfer.to_location_name);
 			$('#tr-receive-notes').val('');
 			
+			$('#tr-receive-partial').prop('checked', false);
 			$('#tr-receive-lines').html((data.products || []).map(function(p) {
+				// Pendiente = enviado − lo ya recibido en recepciones parciales anteriores
+				var pending = Math.max(0, parseFloat(p.sent_amount) - parseFloat(p.received_amount || 0));
 				return '<tr data-product-id="' + p.product_id + '">' +
 					'<td class="font-weight-600">' + trEsc(p.product_name) + '</td>' +
-					'<td class="text-right text-nowrap">' + parseFloat(p.sent_amount).toFixed(1) + ' ' + trEsc(p.qu_name) + '</td>' +
+					'<td class="text-right text-nowrap">' + parseFloat(p.sent_amount).toFixed(1) + ' ' + trEsc(p.qu_name) + (p.received_amount ? '<br><small class="text-muted">' + pending.toFixed(1) + ' en tránsito</small>' : '') + '</td>' +
 					'<td class="text-right">' +
-					'<input type="number" step="any" min="0" max="' + p.sent_amount + '" class="form-control form-control-sm text-right tr-received" value="' + p.sent_amount + '" required>' +
+					'<input type="number" step="any" min="0" max="' + pending + '" class="form-control form-control-sm text-right tr-received" value="' + pending + '" required>' +
 					'</td>' +
 					'</tr>';
 			}).join(''));
@@ -1149,7 +1158,8 @@
 		var items = $('#tr-receive-lines tr').map(function() {
 			return { product_id: $(this).data('product-id'), received_amount: $(this).find('.tr-received').val() };
 		}).get();
-		trPost('/transfers/' + trReceiveId + '/receive', { items: items, notes: $('#tr-receive-notes').val() }, 'Traslado recibido exitosamente en destino');
+		var partial = $('#tr-receive-partial').is(':checked');
+		trPost('/transfers/' + trReceiveId + '/receive', { items: items, notes: $('#tr-receive-notes').val(), partial: partial ? 1 : 0 }, partial ? 'Recepción parcial registrada: el saldo sigue en tránsito' : 'Traslado recibido exitosamente en destino');
 	});
 
 	// Anulación de traslado

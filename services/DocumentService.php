@@ -387,7 +387,7 @@ Decisión: " . $i['decision_reason'] : '')) ?: null
 	{
 		return [
 			'draft' => 'Borrador', 'approved' => 'Aprobado', 'sent' => 'Enviada', 'partially_received' => 'Recepción parcial',
-			'received' => 'Recibido', 'closed' => 'Cerrada con faltante', 'cancelled' => 'Anulado', 'in_transit' => 'En tránsito',
+			'received' => 'Recibido', 'closed' => 'Cerrada con faltante', 'cancelled' => 'Anulado', 'in_transit' => 'En tránsito', 'partially_received' => 'Recepción parcial',
 			'pending_approval' => 'Pendiente de aprobación', 'rejected' => 'Rechazado', 'pending' => 'Programado', 'completed' => 'Sin diferencia',
 			'discrepancy' => 'Con diferencia', 'adjusted' => 'Ajustado', 'in_quarantine' => 'Bloqueado', 'released' => 'Liberado',
 			'discarded_as_waste' => 'Dado de baja (merma)', 'returned_to_supplier' => 'Devuelto al proveedor',

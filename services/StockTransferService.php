@@ -261,7 +261,7 @@ class StockTransferService extends BaseService
 		$dbRaw = DatabaseService::GetInstance()->GetDbConnectionRaw();
 		$detail = $this->GetTransferDetail($transferId);
 		$t = $detail['transfer'];
-		if ($t['status'] !== 'in_transit')
+		if (!in_array($t['status'], ['in_transit', 'partially_received'], true))
 		{
 			throw new \Exception("El traslado {$t['transfer_code']} no está en tránsito");
 		}
@@ -269,6 +269,8 @@ class StockTransferService extends BaseService
 		{
 			throw new \Exception('Solo la sucursal de destino puede recibir el traslado');
 		}
+		// Recepción parcial: suma al destino lo recibido y deja el resto en tránsito (sin merma). La recepción final da de baja el faltante.
+		$partial = !empty($data['partial']);
 		$transitId = $this->GetTransitLocationId();
 
 		$received = [];
@@ -282,10 +284,15 @@ class StockTransferService extends BaseService
 			{
 				throw new \Exception("Indique la cantidad recibida de {$p['product_name']}");
 			}
-			if ($received[$p['product_id']] > $p['sent_amount'] + 0.00001)
+			$pendingAmount = $p['sent_amount'] - floatval($p['received_amount'] ?? 0);
+			if ($received[$p['product_id']] > $pendingAmount + 0.00001)
 			{
-				throw new \Exception("{$p['product_name']}: se recibe {$received[$p['product_id']]} y se enviaron {$p['sent_amount']}");
+				throw new \Exception("{$p['product_name']}: se recibe {$received[$p['product_id']]} y quedan {$pendingAmount} en tránsito");
 			}
+		}
+		if ($partial && array_sum($received) <= 0)
+		{
+			throw new \Exception('Indique al menos una cantidad recibida');
 		}
 
 		$reasonId = intval($dbRaw->query("SELECT id FROM waste_reasons WHERE code = 'M07' OR name LIKE '%Traslado%' ORDER BY (code = 'M07') DESC, id LIMIT 1")->fetchColumn());
@@ -299,6 +306,7 @@ class StockTransferService extends BaseService
 			$stockService = StockService::GetInstance();
 			$receiveTx = null;
 			$differenceCost = 0.0;
+			$stillOpen = false;
 			$stmtLot = $dbRaw->prepare('UPDATE stock_transfer_items SET received_amount = :rec, difference_amount = :diff, waste_record_id = :wid WHERE id = :id');
 
 			foreach ($detail['products'] as $p)
@@ -313,9 +321,11 @@ class StockTransferService extends BaseService
 
 				foreach ($lots as $lot)
 				{
-					$rec = min($toReceive, floatval($lot['sent_amount']));
+					$prevRec = floatval($lot['received_amount'] ?? 0);
+					$lotPending = max(0.0, floatval($lot['sent_amount']) - $prevRec);
+					$rec = min($toReceive, $lotPending);
 					$toReceive -= $rec;
-					$diff = round(floatval($lot['sent_amount']) - $rec, 6);
+					$diff = $partial ? 0.0 : round($lotPending - $rec, 6);
 					if ($rec > 0)
 					{
 						$stockService->TransferProduct($pid, $rec, $transitId, intval($t['to_location_id']), $lot['stock_id'], $receiveTx);
@@ -326,7 +336,7 @@ class StockTransferService extends BaseService
 						$diffQty += $diff;
 						$diffCost += $diff * floatval($lot['unit_price']);
 					}
-					$lotResults[] = [$lot['id'], $rec, $diff];
+					$lotResults[] = [$lot['id'], $prevRec + $rec, $diff, $prevRec + $rec + $diff < floatval($lot['sent_amount']) - 0.000001];
 				}
 
 				$wasteId = null;
@@ -364,17 +374,22 @@ class StockTransferService extends BaseService
 					$differenceCost += $diffCost;
 				}
 
-				foreach ($lotResults as [$lotId, $rec, $diff])
+				foreach ($lotResults as [$lotId, $rec, $diff, $open])
 				{
-					$stmtLot->execute([':rec' => $rec, ':diff' => $diff, ':wid' => $diff > 0 ? $wasteId : null, ':id' => $lotId]);
+					$stillOpen = $stillOpen || $open;
+					$stmtLot->execute([':rec' => $rec, ':diff' => $partial ? null : $diff, ':wid' => $diff > 0 ? $wasteId : null, ':id' => $lotId]);
 				}
 			}
 
+			// Cada recepción deja su transacción en el historial; receive_transaction_id conserva la última
+			$prevNotes = trim(strval($t['receive_notes'] ?? ''));
+			$newNote = trim($data['notes'] ?? '');
+			$notes = trim(($prevNotes !== '' ? $prevNotes . ' | ' : '') . ($partial ? 'Recepción parcial ' . date('Y-m-d H:i') . ($newNote !== '' ? ': ' . $newNote : '') : $newNote));
 			$dbRaw->prepare("
-				UPDATE stock_transfers SET status = 'received', received_by_user_id = :uid, received_at = datetime('now', 'localtime'),
-					receive_transaction_id = :tx, total_difference_cost = :cost, receive_notes = :notes
+				UPDATE stock_transfers SET status = :st, received_by_user_id = :uid, received_at = datetime('now', 'localtime'),
+					receive_transaction_id = :tx, total_difference_cost = total_difference_cost + :cost, receive_notes = :notes
 				WHERE id = :id
-			")->execute([':uid' => $userId, ':tx' => $receiveTx, ':cost' => round($differenceCost, 2), ':notes' => trim($data['notes'] ?? '') ?: null, ':id' => $transferId]);
+			")->execute([':st' => $stillOpen ? 'partially_received' : 'received', ':uid' => $userId, ':tx' => $receiveTx, ':cost' => round($differenceCost, 2), ':notes' => $notes ?: null, ':id' => $transferId]);
 
 			$dbRaw->commit();
 		}
@@ -387,7 +402,8 @@ class StockTransferService extends BaseService
 		return [
 			'id' => $transferId,
 			'difference_cost' => round($differenceCost, 2),
-			'message' => "Traslado {$t['transfer_code']} recibido" . ($differenceCost > 0 ? ': diferencia de $' . number_format($differenceCost, 2) . ' registrada como merma de traslado' : ' sin diferencias')
+			'status' => $stillOpen ? 'partially_received' : 'received',
+			'message' => $stillOpen ? "Traslado {$t['transfer_code']}: recepción parcial registrada; el saldo sigue en tránsito" : "Traslado {$t['transfer_code']} recibido" . ($differenceCost > 0 ? ': diferencia de $' . number_format($differenceCost, 2) . ' registrada como merma de traslado' : ' sin diferencias')
 		];
 	}
 

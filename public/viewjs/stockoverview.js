@@ -22,6 +22,8 @@
 	var activeRequest = null;
 	var requestSeq = 0;
 
+	// Participación: una cuota real menor a 0.05 % no se muestra como 0.0 %
+	function fmtShare(v, value) { v = Number(v) || 0; return (v < 0.05 && (v > 0 || Number(value) > 0) ? '<0.1' : v.toFixed(1)) + '%'; }
 	function fmtMoney(v, decimals) {
 		var d = typeof decimals === 'number' ? decimals : 0;
 		var n = Number(v || 0);
@@ -1116,7 +1118,7 @@
 						title: function (items) { return rows[items[0].index].name; },
 						label: function (item) {
 							var d = rows[item.index];
-							return ['Valor: ' + fmtMoney(d.value), 'Participación: ' + Number(d.share_pct).toFixed(1) + '%', 'Unidades: ' + fmtNum(d.units), 'Productos: ' + fmtNum(d.product_count)];
+							return ['Valor: ' + fmtMoney(d.value), 'Participación: ' + fmtShare(d.share_pct, d.value) + '', 'Unidades: ' + fmtNum(d.units), 'Productos: ' + fmtNum(d.product_count)];
 						}
 					}
 				},
@@ -1136,7 +1138,7 @@
 				'<span class="dsm-donut-legend-color" style="background-color:' + esc(d.color) + ';"></span>' +
 				'<span class="dsm-donut-legend-name">' + esc(d.name) + '</span>' +
 				'</div>' +
-				'<span class="dsm-donut-legend-pct">' + Number(d.share_pct).toFixed(1) + '%</span>' +
+				'<span class="dsm-donut-legend-pct">' + fmtShare(d.share_pct, d.value) + '</span>' +
 				'</div>';
 		}).join('');
 		$('#dsm-donut-legend').html(legendHtml);
@@ -1185,7 +1187,7 @@
 				'<td style="text-align: center; color: #64748b; font-weight: 600;">' + (idx + 1) + '</td>' +
 				'<td class="text-nowrap"><span class="dsm-dept-name-cell">' + faIcon(meta.icon, 'dsm-dept-emoji') + ' ' + esc(d.name) + '</span></td>' +
 				'<td class="text-right font-weight-bold">' + fmtMoney(d.value) + '</td>' +
-				'<td><div class="dsm-share-container"><div class="dsm-share-bar-bg"><div class="dsm-share-bar-fill" style="width:' + Math.min(100, d.share_pct) + '%;background-color:' + esc(d.color) + ';"></div></div><span class="dsm-share-pct-label">' + Number(d.share_pct).toFixed(1) + '%</span></div></td>' +
+				'<td><div class="dsm-share-container"><div class="dsm-share-bar-bg"><div class="dsm-share-bar-fill" style="width:' + Math.min(100, d.share_pct) + '%;background-color:' + esc(d.color) + ';"></div></div><span class="dsm-share-pct-label">' + fmtShare(d.share_pct, d.value) + '</span></div></td>' +
 				'<td class="text-right">' + fmtNum(d.units) + '</td>' +
 				'<td class="text-right ' + rotColor + '">' + fmtRotation(d.rotation) + '</td>' +
 				'<td class="text-right ' + covColor + '">' + fmtCoverage(d.coverage_days) + '</td>' +

@@ -1319,6 +1319,11 @@ class SalesController extends BaseController
 		$sharedFilters = \Grocy\Helpers\DailyFilters::FromQuery(array_merge($params, ['start_date' => $startDate, 'end_date' => $endDate, 'branch_id' => $branchId]));
 		$filterOptions = \Grocy\Helpers\DailyFilters::Options($sharedFilters);
 		$salesDash = null;
+		try
+		{
+			$salesDash = \Grocy\Services\SalesDashboardService::GetInstance()->Dashboard($sharedFilters);
+		}
+		catch (\Throwable $e) {}
 		$deptPerformance = null;
 		$deptExec = null;
 		$tyLy = null;

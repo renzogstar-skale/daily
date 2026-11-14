@@ -34,7 +34,7 @@ class DairyNavigation
 
 			// 2. INVENTARIO Y ALMACENES
 			['id' => 'inventario', 'label' => '2. INVENTARIO Y ALMACENES', 'icon' => 'fa-boxes-stacked', 'items' => [
-				['id' => 'stock', 'label' => '1. Stock y Movimientos', 'icon' => 'fa-cubes', 'route' => '/stockoverview', 'views' => ['stockoverview', 'stockentries', 'stockjournal', 'transfer', 'stockentryform', 'locationcontentsheet'], 'desc' => 'Existencias por almacén, lotes y bitácora de movimientos'],
+				['id' => 'stock', 'label' => '1. Stock & Movimientos', 'icon' => 'fa-cubes', 'route' => '/stockoverview', 'views' => ['stockoverview', 'stockentries', 'stockjournal', 'transfer', 'stockentryform', 'locationcontentsheet'], 'desc' => 'Existencias por almacén, lotes y bitácora de movimientos'],
 				['id' => 'stockouts', 'label' => '2. Productos Agotados', 'icon' => 'fa-box-open', 'route' => '/inventory/stockouts', 'views' => ['inventory_stockouts'], 'desc' => 'Búsqueda por SKU: agotado, stock registrado y disponible, último movimiento y reposición'],
 				['id' => 'inventory-control', 'label' => '3. Control de Inventario', 'icon' => 'fa-magnifying-glass-chart', 'route' => '/inventory-control', 'views' => ['inventory_control'], 'desc' => 'Centro analítico: stock fantasma, matriz ABC-XYZ y cobertura'],
 				['id' => 'kardex', 'label' => '4. Kardex Valorizado', 'icon' => 'fa-book-open', 'route' => '/kardex', 'views' => ['kardex'], 'desc' => 'Movimientos valorizados por producto, lote y sucursal'],
