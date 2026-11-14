@@ -105,7 +105,17 @@ class WasteController extends BaseController
 			$lpSummary = ['open_cases' => 0, 'open_value' => 0.0, 'pending_counts' => 0];
 		}
 
+		$sharedFilters = \Grocy\Helpers\DailyFilters::FromQuery($params);
+		$filterOptions = \Grocy\Helpers\DailyFilters::Options($sharedFilters);
+		$wasteTab = $params['tab'] ?? 'centro-control';
+		$wasteBoardSvc = new \Grocy\Services\WasteDashboardService();
+		$wasteBoard = $wasteBoardSvc->GetDashboardData($sharedFilters);
+
 		return $this->RenderPage($response, 'waste_overview', [
+			'wasteBoard' => $wasteBoard,
+			'sharedFilters' => $sharedFilters,
+			'filterOptions' => $filterOptions,
+			'wasteTab' => $wasteTab,
 			'lpSummary' => $lpSummary,
 			'plansKpis' => $plansMatrix['kpis'] ?? [],
 			'wasteExec' => $wasteExec,

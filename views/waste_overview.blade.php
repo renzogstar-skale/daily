@@ -5,6 +5,8 @@
 @section('title', 'Control y Prevención de Mermas')
 
 @push('pageStyles')
+<link href="{{ $U('/css/daily_sales_dashboard.css?v=', true) }}{{ daily_asset_version('/css/daily_sales_dashboard.css') }}" rel="stylesheet">
+<link href="{{ $U('/css/daily_waste_dashboard.css?v=', true) }}{{ daily_asset_version('/css/daily_waste_dashboard.css') }}" rel="stylesheet">
 <link href="{{ $U('/css/daily_waste_control.css?v=', true) }}{{ daily_asset_version('/css/daily_waste_control.css') }}" rel="stylesheet">
 <link href="{{ $U('/css/daily_waste_control_center.css?v=', true) }}{{ daily_asset_version('/css/daily_waste_control_center.css') }}" rel="stylesheet">
 <link href="{{ $U('/css/daily_waste_normalize.css?v=', true) }}{{ daily_asset_version('/css/daily_waste_normalize.css') }}" rel="stylesheet">
@@ -236,6 +238,16 @@
 @endpush
 
 @section('content')
+<div class="ded-wrapper waste-main-wrapper" id="wasteApp">
+	@include('components.waste.waste_header')
+
+	<!-- TABLERO PRINCIPAL: CENTRO DE CONTROL (RÉPLICA EXACTA DE LA FOTO) -->
+	<div id="waste-pane-control" class="waste-pane" style="@if(($wasteTab ?? 'centro-control') === 'centro-control') display:block; @else display:none; @endif">
+		@include('components.waste.waste_dashboard')
+	</div>
+
+	<!-- VISTAS OPERATIVAS (REGISTRO, PREVENCIÓN, INVESTIGACIONES, ACCIONES, ETC) -->
+	<div id="waste-pane-legacy" class="waste-pane" style="@if(($wasteTab ?? 'centro-control') !== 'centro-control') display:block; @else display:none; @endif">
 @include('components.loss_strip')
 @include('components.alert_strip', ['alertCategories' => ['waste']])
 <!-- ==========================================================================
@@ -2756,5 +2768,9 @@ $(document).ready(function() {
 	setTimeout(initExecutiveCharts, 120);
 });
 </script>
+<script src="{{ $U('/js/lucide.min.js') }}"></script>
+<script src="{{ $U('/js/daily_waste_dashboard.js?v=', true) }}{{ daily_asset_version('/js/daily_waste_dashboard.js') }}"></script>
 @endpush
+	</div>
+</div>
 @endsection

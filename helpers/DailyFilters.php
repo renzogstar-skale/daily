@@ -25,7 +25,7 @@ class DailyFilters
 		'/inventory/stockouts' => ['company_id', 'branch_id', 'department', 'group_id', 'subcategory', 'product'],
 		'/today' => ['branch_id', 'department', 'end_date'],
 		'/kpis' => ['branch_id', 'start_date', 'end_date'],
-		'/waste' => ['branch_id', 'start_date', 'end_date'],
+		'/waste' => ['branch_id', 'department', 'start_date', 'end_date'],
 		'/hr' => ['branch_id', 'department', 'start_date', 'end_date'],
 		'/warehouse' => ['branch_id', 'department', 'start_date', 'end_date'],
 		'/stockoverview' => ['branch_id', 'department', 'group_id', 'subcategory', 'product', 'start_date', 'end_date'],

@@ -57,23 +57,16 @@ class DairyNavigation
 				['id' => 'recalls', 'label' => '5. Retiros de Producto', 'icon' => 'fa-rotate-left', 'route' => '/recalls', 'views' => ['recalls'], 'hidden' => true, 'desc' => 'Gestión y confirmación de retiros masivos en red de tiendas'],
 			]],
 
-			// 4. MERMAS Y PREVENCIÓN (las pestañas internas de /waste y /loss-prevention siguen disponibles dentro de cada tablero)
-			['id' => 'mermas', 'label' => '4. MERMAS Y PREVENCIÓN', 'icon' => 'fa-trash-can', 'items' => [
-				['id' => 'waste', 'label' => '1. Cuadro de Control de Mermas', 'icon' => 'fa-trash-can', 'route' => '/waste', 'views' => ['waste_overview'], 'desc' => 'Resumen ejecutivo de pérdidas, causas y oportunidades'],
-				['id' => 'waste-report', 'label' => '2. Registro de Merma', 'icon' => 'fa-file-circle-plus', 'route' => '/waste/report', 'views' => ['waste_report'], 'desc' => 'Registro de merma con fotografía y evidencia'],
-				['id' => 'waste-approvals', 'label' => '3. Aprobaciones de Merma', 'icon' => 'fa-clipboard-check', 'route' => '/waste/approvals', 'views' => ['waste_approvals'], 'desc' => 'Flujo y cola de aprobación de mermas pendientes'],
-				['id' => 'waste-reasons', 'label' => '4. Matriz de Causales', 'icon' => 'fa-diagram-project', 'route' => '/waste/reasons', 'views' => ['waste_reasons'], 'desc' => 'Catálogo AKCAL de causas, protocolos y niveles de autorización'],
-				['id' => 'loss-control', 'label' => '5. Prevención de Pérdidas', 'icon' => 'fa-gauge-high', 'route' => '/loss-prevention', 'views' => ['loss_prevention'], 'desc' => 'Incidentes, activos, celulares, investigaciones y resolución'],
-				['id' => 'devices', 'label' => '6. Control de Celulares', 'icon' => 'fa-mobile-screen-button', 'route' => '/loss-prevention/devices', 'views' => ['devices', 'device_detail'], 'desc' => 'Trazabilidad individual por IMEI, custodia y estado'],
-				['id' => 'loss-kpi', 'label' => '7. Indicadores de Prevención', 'icon' => 'fa-chart-pie', 'route' => '/reports/loss-executive', 'views' => ['loss_executive_report'], 'desc' => 'Analítica ejecutiva de mermas y prevención'],
-				['id' => 'waste-investigations', 'label' => '5. Investigaciones y Casos de Merma', 'icon' => 'fa-magnifying-glass', 'route' => '/waste#tab-investigaciones', 'views' => [], 'hidden' => true, 'desc' => 'Expedientes de investigación por merma crítica'],
-				['id' => 'waste-recovery', 'label' => '6. Recuperación Financiera', 'icon' => 'fa-hand-holding-dollar', 'route' => '/waste#tab-recuperacion', 'views' => [], 'hidden' => true, 'desc' => 'Gestión de reclamos a proveedores y recuperaciones'],
-				['id' => 'loss-investigations', 'label' => '2. Investigaciones', 'icon' => 'fa-magnifying-glass', 'route' => '/loss-prevention#tab-expedientes', 'views' => ['loss_case', 'loss_counts'], 'hidden' => true, 'desc' => 'Expedientes activos, evidencias y trazabilidad'],
-				['id' => 'merchandise-assets', 'label' => '4. Control de Activos', 'icon' => 'fa-laptop-file', 'route' => '/loss-prevention#tab-activos', 'views' => [], 'hidden' => true, 'desc' => 'Control integral de activos, equipos y mercancía sensible'],
-				['id' => 'loss-access', 'label' => '5. Accesos y Autorizaciones', 'icon' => 'fa-key', 'route' => '/loss-prevention#tab-accesos', 'views' => [], 'hidden' => true, 'desc' => 'Custodia, roles autorizados y doble aprobación'],
-				['id' => 'loss-cctv', 'label' => '6. CCTV y Evidencias', 'icon' => 'fa-video', 'route' => '/loss-prevention#tab-cctv', 'views' => [], 'hidden' => true, 'desc' => 'Cámaras autorizadas, referencias de video y bitácora'],
-				['id' => 'loss-rounds', 'label' => '7. Rondas y Recorridos', 'icon' => 'fa-person-walking', 'route' => '/loss-prevention#tab-rondas', 'views' => [], 'hidden' => true, 'desc' => 'Check-ins en piso y rondas de seguridad'],
-				['id' => 'loss-plans', 'label' => '8. Planes Preventivos', 'icon' => 'fa-bullseye', 'route' => '/loss-prevention#tab-planes', 'views' => [], 'hidden' => true, 'desc' => 'Matriz de riesgos y planes de acción correctiva'],
+			// 4. MERMAS Y PREVENCIÓN
+			['id' => 'mermas', 'label' => '4. Mermas y Prevención', 'icon' => 'fa-trash-can', 'items' => [
+				['id' => 'waste', 'label' => 'Centro de Control', 'icon' => 'fa-chart-pie', 'route' => '/waste', 'views' => ['waste_overview'], 'desc' => 'Resumen ejecutivo de pérdidas, causales, investigaciones y recuperación'],
+				['id' => 'waste-report', 'label' => 'Registro de Mermas', 'icon' => 'fa-clipboard-check', 'route' => '/waste/report', 'views' => ['waste_report'], 'desc' => 'Registro de merma con fotografía y evidencia'],
+				['id' => 'waste-reasons', 'label' => 'Matriz de Causales', 'icon' => 'fa-diagram-project', 'route' => '/waste/reasons', 'views' => ['waste_reasons'], 'desc' => 'Catálogo de causales, protocolos y niveles de autorización'],
+				['id' => 'waste-prevencion', 'label' => 'Prevención Inteligente', 'icon' => 'fa-bolt', 'route' => '/waste?tab=prevencion', 'views' => [], 'desc' => 'Alertas de riesgo, patrones y recomendaciones preventivas'],
+				['id' => 'waste-approvals', 'label' => 'Aprobaciones', 'icon' => 'fa-stamp', 'route' => '/waste/approvals', 'views' => ['waste_approvals'], 'desc' => 'Flujo y cola de aprobación de mermas pendientes'],
+				['id' => 'waste-investigations', 'label' => 'Investigaciones', 'icon' => 'fa-folder-open', 'route' => '/waste?tab=investigaciones', 'views' => ['loss_case'], 'desc' => 'Expedientes activos, evidencias y trazabilidad'],
+				['id' => 'waste-plans', 'label' => 'Planes de Acción', 'icon' => 'fa-list-check', 'route' => '/waste?tab=acciones', 'views' => [], 'desc' => 'Matriz de riesgos y planes de acción correctiva con responsables'],
+				['id' => 'waste-recovery', 'label' => 'Recuperación Financiera', 'icon' => 'fa-hand-holding-dollar', 'route' => '/waste?tab=recuperacion', 'views' => [], 'desc' => 'Gestión de reclamos a proveedores y recuperación económica'],
 			]],
 
 			// 5. OPERACIONES Y PERSONAL
