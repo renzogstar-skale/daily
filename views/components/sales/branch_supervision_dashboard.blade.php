@@ -53,7 +53,7 @@
 					<i data-lucide="chevron-down" class="ded-chevron"></i>
 				</button>
 				<div class="ded-dropdown-menu dropdown-menu-right" aria-labelledby="btnBrDates" style="min-width: 230px;">
-					<div class="dropdown-header text-uppercase font-weight-bold" style="font-size: 10px; color: #64748b; padding: 6px 14px;">Período Comercial</div>
+					<div class="dropdown-header text-uppercase font-weight-bold" style="font-size: 11px; color: #64748b; padding: 6px 14px;">Período Comercial</div>
 					<a href="#" class="ded-dropdown-item @if($is30d) is-active @endif" data-select-range="30d">
 						<span>Últimos 30 días</span>
 						@if($is30d)<i data-lucide="check" style="width:13px;height:13px;"></i>@endif
@@ -89,7 +89,7 @@
 					<i data-lucide="chevron-down" class="ded-chevron"></i>
 				</button>
 				<div class="ded-dropdown-menu dropdown-menu-right" aria-labelledby="btnBrBranches" style="min-width: 220px;">
-					<div class="dropdown-header text-uppercase font-weight-bold" style="font-size: 10px; color: #64748b; padding: 6px 14px;">Centro Operativo</div>
+					<div class="dropdown-header text-uppercase font-weight-bold" style="font-size: 11px; color: #64748b; padding: 6px 14px;">Centro Operativo</div>
 					<a href="#" class="ded-dropdown-item @if(!$selectedBranchId) is-active @endif" data-select-branch="">
 						<span>Todas las sucursales (Consolidado)</span>
 						@if(!$selectedBranchId)<i data-lucide="check" style="width:13px;height:13px;"></i>@endif
@@ -111,7 +111,7 @@
 					<i data-lucide="chevron-down" class="ded-chevron"></i>
 				</button>
 				<div class="ded-dropdown-menu dropdown-menu-right" aria-labelledby="btnBrDepartments" style="min-width: 220px;">
-					<div class="dropdown-header text-uppercase font-weight-bold" style="font-size: 10px; color: #64748b; padding: 6px 14px;">Departamento Comercial</div>
+					<div class="dropdown-header text-uppercase font-weight-bold" style="font-size: 11px; color: #64748b; padding: 6px 14px;">Departamento Comercial</div>
 					<a href="#" class="ded-dropdown-item @if(!$sharedFilters['department']) is-active @endif" data-select-dept="">
 						<span>Todos los departamentos</span>
 						@if(!$sharedFilters['department'])<i data-lucide="check" style="width:13px;height:13px;"></i>@endif
@@ -142,7 +142,7 @@
 						<div class="font-weight-bold text-dark" style="font-size: 13px;">Renzo G.</div>
 						<small class="text-muted" style="font-size: 11px;">Manager / Director Comercial</small>
 					</div>
-					<div class="dropdown-header text-uppercase font-weight-bold" style="font-size: 10px; color: #64748b; padding: 4px 14px 2px;">Vistas de Ventas</div>
+					<div class="dropdown-header text-uppercase font-weight-bold" style="font-size: 11px; color: #64748b; padding: 4px 14px 2px;">Vistas de Ventas</div>
 					<a href="{{ $U('/sales') }}" class="ded-dropdown-item"><i data-lucide="layout-dashboard" style="width:13px;height:13px;margin-right:6px;"></i>Tablero de Ventas</a>
 					<a href="{{ $U('/sales?tab=departamentos') }}" class="ded-dropdown-item"><i data-lucide="layers" style="width:13px;height:13px;margin-right:6px;"></i>Ventas por departamento</a>
 					<a href="{{ $U('/sales?tab=productos') }}" class="ded-dropdown-item"><i data-lucide="package" style="width:13px;height:13px;margin-right:6px;"></i>Productos</a>

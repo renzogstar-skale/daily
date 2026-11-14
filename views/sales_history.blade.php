@@ -10,6 +10,7 @@
 <link href="{{ $U('/css/daily_sales_reports.css?v=', true) }}{{ daily_asset_version('/css/daily_sales_reports.css') }}" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link href="{{ $U('/css/daily_sales_unslop.css?v=', true) }}{{ daily_asset_version('/css/daily_sales_unslop.css') }}" rel="stylesheet">
+<link href="{{ $U('/css/daily_a11y.css?v=', true) }}{{ daily_asset_version('/css/daily_a11y.css') }}" rel="stylesheet">
 <style>
 /* Popover de información de KPI */
 .popover { max-width: 320px; font-size: 0.82rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }

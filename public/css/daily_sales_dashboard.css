@@ -10,11 +10,11 @@
 	--ded-border-subtle: rgba(226, 232, 240, 0.6);
 	--ded-text-main: #0f172a;
 	--ded-text-muted: #64748b;
-	--ded-text-light: #94a3b8;
+	--ded-text-light: #64748b;
 	--ded-primary: #10b981;
 	--ded-primary-dark: #059669;
 	--ded-primary-gradient: linear-gradient(135deg, #059669 0%, #10b981 100%);
-	--ded-danger: #ef4444;
+	--ded-danger: #dc2626;
 	--ded-danger-bg: #fef2f2;
 	--ded-danger-border: #fee2e2;
 	--ded-warning: #f59e0b;
@@ -129,7 +129,7 @@
 .ded-select-btn .ded-chevron {
 	width: 12px;
 	height: 12px;
-	color: #94a3b8;
+	color: #64748b;
 	margin-left: 2px;
 }
 
@@ -348,7 +348,7 @@
 	border-radius: 50%;
 	background: rgba(16, 185, 129, 0.1);
 	color: var(--ded-primary-dark);
-	font-size: 10.5px;
+	font-size: 11px;
 	font-weight: 800;
 	display: flex;
 	align-items: center;
@@ -383,7 +383,7 @@
 }
 
 .ded-cycle-dev {
-	font-size: 10.5px;
+	font-size: 11px;
 	color: var(--ded-text-muted);
 	line-height: 1.25;
 	display: -webkit-box;
@@ -397,7 +397,7 @@
 	display: flex;
 	align-items: center;
 	justify-content: flex-end;
-	font-size: 10.5px;
+	font-size: 11px;
 	color: var(--ded-text-light);
 	font-weight: 600;
 	gap: 3px;
@@ -459,9 +459,9 @@
 
 .ded-alert-badge-p1 {
 	background: #fee2e2;
-	color: #dc2626;
+	color: #b91c1c;
 	border: 1px solid #fecaca;
-	font-size: 10px;
+	font-size: 11px;
 	font-weight: 700;
 	padding: 2px 6px;
 	border-radius: 4px;
@@ -470,9 +470,9 @@
 
 .ded-alert-badge-p2 {
 	background: #fef3c7;
-	color: #d97706;
+	color: #b45309;
 	border: 1px solid #fde68a;
-	font-size: 10px;
+	font-size: 11px;
 	font-weight: 700;
 	padding: 2px 6px;
 	border-radius: 4px;
@@ -482,7 +482,7 @@
 .ded-alert-impact {
 	font-size: 12px;
 	font-weight: 800;
-	color: #dc2626;
+	color: #b91c1c;
 	white-space: nowrap;
 }
 
@@ -544,7 +544,7 @@
 }
 
 .ded-kpi-sub {
-	font-size: 10px;
+	font-size: 11px;
 	color: var(--ded-text-light);
 	font-weight: 400;
 	display: flex;
@@ -631,7 +631,7 @@
 
 .ded-kpi-card.is-highlight .ded-kpi-sub,
 .ded-kpi-card.is-highlight .ded-kpi-sub-highlight {
-	font-size: 9.8px;
+	font-size: 11px;
 	color: rgba(255, 255, 255, 0.95) !important;
 	font-weight: 400;
 	line-height: 1.2;
@@ -646,7 +646,7 @@
 
 .ded-kpi-card.is-highlight .ded-pill-red {
 	background: rgba(254, 226, 226, 0.95) !important;
-	color: #dc2626 !important;
+	color: #b91c1c !important;
 	font-weight: 700 !important;
 }
 
@@ -692,7 +692,7 @@
 
 .ded-progress-ring-text {
 	position: absolute;
-	font-size: 10px;
+	font-size: 11px;
 	font-weight: 700;
 	color: var(--ded-text-main);
 }
@@ -790,7 +790,7 @@
 .ded-expand-btn {
 	background: transparent;
 	border: none;
-	color: #94a3b8;
+	color: #64748b;
 	cursor: pointer;
 	padding: 2px;
 	display: inline-flex;
@@ -872,7 +872,7 @@
 }
 
 .ded-text-muted-italics {
-	color: #94a3b8;
+	color: #64748b;
 	font-size: 12px;
 	font-style: normal;
 }
@@ -897,7 +897,7 @@
 }
 
 .ded-table-top5 th {
-	font-size: 10.5px;
+	font-size: 11px;
 	font-weight: 600;
 	color: #64748b;
 	border-bottom: 1px solid #f1f5f9;
@@ -936,7 +936,7 @@
 	border-radius: 50%;
 	background-color: #ecfdf5;
 	color: var(--ded-primary-dark);
-	font-size: 10.5px;
+	font-size: 11px;
 	font-weight: 700;
 	display: flex;
 	align-items: center;
@@ -957,7 +957,7 @@
 	background: #ecfdf5;
 	color: var(--ded-primary-dark);
 	font-family: monospace;
-	font-size: 10px;
+	font-size: 11px;
 	font-weight: 600;
 	padding: 2px 5px;
 	border-radius: 4px;
@@ -1034,7 +1034,7 @@
 }
 
 .ded-donut-center-label {
-	font-size: 10px;
+	font-size: 11px;
 	color: var(--ded-text-muted);
 	font-weight: 500;
 }
@@ -1138,7 +1138,7 @@
 }
 
 .ded-alert-label {
-	font-size: 10.5px;
+	font-size: 11px;
 	color: var(--ded-text-muted);
 	font-weight: 500;
 }
@@ -1209,7 +1209,7 @@
 	border-radius: 50%;
 	background-color: var(--ded-primary);
 	color: #ffffff;
-	font-size: 10px;
+	font-size: 11px;
 	font-weight: 700;
 	display: flex;
 	align-items: center;
@@ -1322,7 +1322,7 @@
 }
 .ded-kpi-card.is-warning-card .ded-kpi-top .ded-kpi-icon {
 	background: #fef3c7;
-	color: #d97706;
+	color: #b45309;
 }
 .ded-kpi-card.is-warning-card:hover {
 	border-color: #fde047;
@@ -1383,14 +1383,14 @@
 	align-items: center;
 	justify-content: center;
 	background: #ecfdf5;
-	color: #059669;
+	color: #047857;
 	font-size: 12px;
 }
 .dp-dept-icon-box.is-frozen { background: #e0f2fe; color: #0284c7; }
-.dp-dept-icon-box.is-dairy { background: #ecfdf5; color: #059669; }
-.dp-dept-icon-box.is-pescaderia { background: #f0fdf4; color: #10b981; }
-.dp-dept-icon-box.is-carnes { background: #fee2e2; color: #dc2626; }
-.dp-dept-icon-box.is-bakery { background: #fef3c7; color: #d97706; }
+.dp-dept-icon-box.is-dairy { background: #ecfdf5; color: #047857; }
+.dp-dept-icon-box.is-pescaderia { background: #f0fdf4; color: #047857; }
+.dp-dept-icon-box.is-carnes { background: #fee2e2; color: #b91c1c; }
+.dp-dept-icon-box.is-bakery { background: #fef3c7; color: #b45309; }
 
 /* Status Pills */
 .dp-status-pill {
@@ -1410,7 +1410,7 @@
 }
 .dp-status-pill.is-bueno {
 	background: #ecfdf5;
-	color: #059669;
+	color: #047857;
 	border: 1px solid #a7f3d0;
 }
 .dp-status-pill.is-atencion {
@@ -1451,7 +1451,7 @@
 	overflow: visible;
 }
 .dp-dri-axis-label {
-	font-size: 10px;
+	font-size: 11px;
 	font-weight: 600;
 	fill: #94a3b8;
 	font-family: inherit;
@@ -1512,7 +1512,7 @@
 }
 .dp-dri-status-badge.is-bueno {
 	background: #ecfdf5;
-	color: #059669;
+	color: #047857;
 	border-color: #a7f3d0;
 }
 .dp-dri-status-badge.is-atencion {
@@ -1579,7 +1579,7 @@
 }
 .dp-dri-rank-num {
 	font-weight: 600;
-	color: #94a3b8;
+	color: #64748b;
 	font-size: 11px;
 	width: 12px;
 	flex-shrink: 0;
@@ -1641,10 +1641,10 @@
 	justify-content: center;
 	margin-bottom: 6px;
 }
-.dp-rep-icon.is-green { background: #ecfdf5; color: #10b981; }
-.dp-rep-icon.is-red { background: #fef2f2; color: #ef4444; }
+.dp-rep-icon.is-green { background: #ecfdf5; color: #047857; }
+.dp-rep-icon.is-red { background: #fef2f2; color: #b91c1c; }
 .dp-rep-label {
-	font-size: 10.5px;
+	font-size: 11px;
 	color: var(--ded-text-muted);
 	font-weight: 500;
 	margin-bottom: 2px;
@@ -1658,14 +1658,14 @@
 	margin-bottom: 4px;
 }
 .dp-rep-delta {
-	font-size: 10px;
+	font-size: 11px;
 	font-weight: 600;
 	display: inline-flex;
 	align-items: center;
 	gap: 2px;
 }
-.dp-rep-delta.is-good { color: #10b981; }
-.dp-rep-delta.is-bad { color: #ef4444; }
+.dp-rep-delta.is-good { color: #047857; }
+.dp-rep-delta.is-bad { color: #b91c1c; }
 
 /* ==========================================================================
    CUARTA FILA — MAPA DE CALOR Y OPORTUNIDADES
@@ -1687,7 +1687,7 @@
 	padding: 5px 6px;
 	color: var(--ded-text-muted);
 	font-weight: 600;
-	font-size: 10.5px;
+	font-size: 11px;
 	text-align: center;
 }
 .dp-heatmap-table th:first-child {
@@ -1749,7 +1749,7 @@
 	padding: 6px 8px;
 	color: var(--ded-text-muted);
 	font-weight: 600;
-	font-size: 10.5px;
+	font-size: 11px;
 	border-bottom: 1px solid var(--ded-border);
 	white-space: nowrap;
 }
@@ -1784,7 +1784,7 @@
 	display: inline-block;
 	padding: 2px 8px;
 	border-radius: 12px;
-	font-size: 10.5px;
+	font-size: 11px;
 	font-weight: 700;
 	text-align: center;
 }
@@ -1859,7 +1859,7 @@
 	background: #fef3c7;
 	color: #b45309;
 	border: 1px solid #fde68a;
-	font-size: 10.5px;
+	font-size: 11px;
 	font-weight: 700;
 	padding: 2px 8px;
 	border-radius: 9999px;
@@ -1900,7 +1900,7 @@
 }
 
 .prod-filter-label {
-	font-size: 9.5px;
+	font-size: 11px;
 	font-weight: 700;
 	text-transform: uppercase;
 	letter-spacing: 0.03em;
@@ -1939,8 +1939,8 @@
 .prod-search-icon {
 	position: absolute;
 	left: 7px;
-	font-size: 10px;
-	color: #94a3b8;
+	font-size: 11px;
+	color: #64748b;
 	pointer-events: none;
 }
 
@@ -1948,11 +1948,17 @@
 	padding-left: 22px !important;
 }
 
-/* Fila 1: 7 Tarjetas KPI */
+/* Fila 1: 8 Tarjetas KPI */
 .prod-kpi-grid {
 	display: grid;
-	grid-template-columns: repeat(7, 1fr);
+	grid-template-columns: repeat(8, 1fr);
 	gap: 8px;
+}
+
+@media (max-width: 1200px) {
+	.prod-kpi-grid {
+		grid-template-columns: repeat(4, 1fr);
+	}
 }
 
 .prod-kpi-card {
@@ -1983,7 +1989,7 @@
 }
 
 .prod-kpi-label {
-	font-size: 10.5px;
+	font-size: 11px;
 	font-weight: 600;
 	color: #64748b;
 	line-height: 1.2;
@@ -1991,7 +1997,7 @@
 
 .prod-kpi-icon-muted {
 	font-size: 12px;
-	color: #94a3b8;
+	color: #64748b;
 }
 
 .prod-kpi-val {
@@ -2004,7 +2010,7 @@
 }
 
 .prod-kpi-sub {
-	font-size: 10px;
+	font-size: 11px;
 	color: #64748b;
 	line-height: 1.2;
 }
@@ -2061,8 +2067,8 @@
 }
 
 .prod-card-footnote {
-	font-size: 10px;
-	color: #94a3b8;
+	font-size: 11px;
+	color: #64748b;
 	margin-top: 8px;
 	line-height: 1.3;
 	border-top: 1px dashed #f1f5f9;
@@ -2083,7 +2089,7 @@
 }
 
 .prod-table th {
-	font-size: 9.5px;
+	font-size: 11px;
 	font-weight: 700;
 	text-transform: uppercase;
 	letter-spacing: 0.03em;
@@ -2095,8 +2101,8 @@
 }
 
 .prod-sort-icon {
-	font-size: 8px;
-	color: #94a3b8;
+	font-size: 11px;
+	color: #64748b;
 	margin-left: 2px;
 }
 
@@ -2128,7 +2134,7 @@
 	align-items: center;
 	justify-content: center;
 	font-weight: 800;
-	font-size: 10.5px;
+	font-size: 11px;
 }
 
 .prod-avatar-icon-lg {
@@ -2147,7 +2153,7 @@
 	display: inline-block;
 	padding: 2px 6px;
 	border-radius: 10px;
-	font-size: 9.5px;
+	font-size: 11px;
 	font-weight: 700;
 	text-align: center;
 }
@@ -2173,7 +2179,7 @@
 .prod-btn-abrir {
 	padding: 1px 7px;
 	border-radius: 5px;
-	font-size: 10px;
+	font-size: 11px;
 	font-weight: 700;
 	color: #0284c7;
 	background: #f0f9ff;
@@ -2229,20 +2235,20 @@
 }
 
 .prod-detail-sku-upc {
-	font-size: 10.5px;
+	font-size: 11px;
 	font-weight: 600;
 	color: #475569;
 }
 
 .prod-detail-brand-dept {
-	font-size: 10px;
+	font-size: 11px;
 	color: #64748b;
 }
 
 .prod-detail-subtag {
-	font-size: 9.5px;
+	font-size: 11px;
 	font-weight: 600;
-	color: #94a3b8;
+	color: #64748b;
 }
 
 .prod-detail-metrics-grid {
@@ -2260,7 +2266,7 @@
 }
 
 .prod-metric-box-label {
-	font-size: 9px;
+	font-size: 11px;
 	color: #64748b;
 	font-weight: 600;
 	margin-bottom: 1px;
@@ -2274,7 +2280,7 @@
 }
 
 .prod-detail-note {
-	font-size: 9.5px;
+	font-size: 11px;
 	color: #475569;
 	background: #fafafa;
 	border: 1px solid #f1f5f9;
@@ -2289,7 +2295,7 @@
 }
 
 .prod-section-label {
-	font-size: 9.5px;
+	font-size: 11px;
 	font-weight: 700;
 	text-transform: uppercase;
 	letter-spacing: 0.03em;
@@ -2305,7 +2311,7 @@
 
 .prod-lifecycle-step {
 	text-align: center;
-	font-size: 9.5px;
+	font-size: 11px;
 	font-weight: 600;
 	padding: 3px 2px;
 	border-radius: 4px;
@@ -2325,13 +2331,13 @@
 
 .prod-branch-table {
 	width: 100%;
-	font-size: 10.5px;
+	font-size: 11px;
 	margin-bottom: 4px;
 }
 
 .prod-branch-table th {
 	padding: 2px 4px;
-	font-size: 9.5px;
+	font-size: 11px;
 	color: #64748b;
 	border-bottom: 1px solid #e2e8f0;
 	font-weight: 700;
@@ -2361,7 +2367,7 @@
 }
 
 .prod-abc-table th {
-	font-size: 10px;
+	font-size: 11px;
 	font-weight: 700;
 	color: #64748b;
 	padding: 2px;
@@ -2395,7 +2401,7 @@
 }
 
 .prod-matrix-code {
-	font-size: 9px;
+	font-size: 11px;
 	font-weight: 700;
 	opacity: 0.7;
 	text-transform: uppercase;
@@ -2405,7 +2411,7 @@
 .prod-bubble-legend {
 	display: flex;
 	gap: 14px;
-	font-size: 9.5px;
+	font-size: 11px;
 	font-weight: 600;
 	color: #64748b;
 	margin-top: 4px;
@@ -2443,7 +2449,7 @@
 }
 
 .prod-quad-label {
-	font-size: 10px;
+	font-size: 11px;
 	font-weight: 700;
 	margin-bottom: 2px;
 }
@@ -2456,7 +2462,7 @@
 }
 
 .prod-quad-sub {
-	font-size: 9.5px;
+	font-size: 11px;
 	color: #64748b;
 	line-height: 1.25;
 }
@@ -2509,7 +2515,7 @@
 }
 
 .prod-assort-label {
-	font-size: 10.5px;
+	font-size: 11px;
 	font-weight: 600;
 	color: #0f172a;
 	white-space: nowrap;
@@ -2528,7 +2534,7 @@
 }
 
 .prod-assort-count {
-	font-size: 10.5px;
+	font-size: 11px;
 	font-weight: 700;
 	color: #0f172a;
 	text-align: right;
@@ -2537,12 +2543,12 @@
 /* Tabla Compacta para Filas 5 y 6 */
 .prod-table-compact {
 	width: 100%;
-	font-size: 10.5px;
+	font-size: 11px;
 	border-collapse: collapse;
 }
 
 .prod-table-compact th {
-	font-size: 9.5px;
+	font-size: 11px;
 	font-weight: 700;
 	color: #64748b;
 	padding: 4px 6px;
@@ -2588,15 +2594,15 @@
 }
 
 .prod-sim-label {
-	font-size: 10.5px;
+	font-size: 11px;
 	font-weight: 700;
 	color: #0f172a;
 }
 
 .prod-sim-value {
-	font-size: 10.5px;
+	font-size: 11px;
 	font-weight: 700;
-	color: #16a34a;
+	color: #15803d;
 }
 
 .prod-slider {
@@ -2616,7 +2622,7 @@
 }
 
 .prod-sim-tile-label {
-	font-size: 9px;
+	font-size: 11px;
 	color: #64748b;
 	font-weight: 600;
 }
@@ -2633,7 +2639,7 @@
 	display: inline-block;
 	padding: 1px 7px;
 	border-radius: 10px;
-	font-size: 9.5px;
+	font-size: 11px;
 	font-weight: 700;
 }
 
@@ -2651,13 +2657,13 @@
 
 .badge-outline-amber {
 	border: 1px solid #d97706;
-	color: #d97706;
+	color: #b45309;
 	background: #fffbeb;
 }
 
 .badge-outline-green {
 	border: 1px solid #16a34a;
-	color: #16a34a;
+	color: #15803d;
 	background: #f0fdf4;
 }
 
@@ -2742,7 +2748,7 @@
 	background: #fef3c7;
 	color: #b45309;
 	border: 1px solid #fde68a;
-	font-size: 10.5px;
+	font-size: 11px;
 	font-weight: 700;
 	padding: 2px 8px;
 	border-radius: 9999px;
@@ -2762,7 +2768,7 @@
 }
 
 .branch-filter-label {
-	font-size: 10px;
+	font-size: 11px;
 	text-transform: uppercase;
 	font-weight: 700;
 	color: #64748b;
@@ -2848,9 +2854,9 @@
 }
 
 .icon-gray { background: #f1f5f9; color: #64748b; }
-.icon-green { background: #dcfce7; color: #16a34a; }
-.icon-amber { background: #fef3c7; color: #d97706; }
-.icon-red { background: #fee2e2; color: #dc2626; }
+.icon-green { background: #dcfce7; color: #15803d; }
+.icon-amber { background: #fef3c7; color: #b45309; }
+.icon-red { background: #fee2e2; color: #b91c1c; }
 .icon-blue { background: #e0f2fe; color: #0284c7; }
 .icon-teal { background: #ccfbf1; color: #0d9488; }
 .icon-white { background: rgba(255, 255, 255, 0.2); color: #ffffff; }
@@ -2864,7 +2870,7 @@
 }
 
 .branch-kpi-sub {
-	font-size: 10.5px;
+	font-size: 11px;
 	color: #64748b;
 	margin-top: 2px;
 	white-space: nowrap;
@@ -3101,7 +3107,7 @@
 
 /* Píldoras de Estado */
 .branch-status-pill {
-	font-size: 10.5px;
+	font-size: 11px;
 	font-weight: 700;
 	padding: 2px 7px;
 	border-radius: 6px;
@@ -3151,7 +3157,7 @@
 }
 
 .branch-nature-pill {
-	font-size: 10px;
+	font-size: 11px;
 	font-weight: 700;
 	padding: 2px 6px;
 	border-radius: 9999px;
@@ -3162,10 +3168,10 @@
 .badge-confirmada { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
 
 /* Tendencias */
-.trend-up { color: #16a34a; }
-.trend-up-red { color: #dc2626; }
-.trend-down { color: #dc2626; }
-.trend-neutral { color: #94a3b8; }
+.trend-up { color: #15803d; }
+.trend-up-red { color: #b91c1c; }
+.trend-down { color: #b91c1c; }
+.trend-neutral { color: #64748b; }
 
 /* Píldoras de filtro en Ranking BHI */
 .branch-ranking-pills {
@@ -3179,7 +3185,7 @@
 	border: 1px solid #e2e8f0;
 	border-radius: 6px;
 	padding: 3px 8px;
-	font-size: 10.5px;
+	font-size: 11px;
 	font-weight: 600;
 	color: #475569;
 	cursor: pointer;
@@ -3210,7 +3216,7 @@
 
 .branch-table thead th {
 	background: #f8fafc;
-	font-size: 10.5px;
+	font-size: 11px;
 	text-transform: uppercase;
 	font-weight: 700;
 	color: #64748b;
@@ -3247,7 +3253,7 @@
 
 .branch-matrix-table thead th {
 	background: #f8fafc;
-	font-size: 10px;
+	font-size: 11px;
 	text-transform: uppercase;
 	font-weight: 700;
 	color: #64748b;
@@ -3268,7 +3274,7 @@
 
 .matrix-cell-btn {
 	border: none;
-	font-size: 10.5px;
+	font-size: 11px;
 	font-weight: 600;
 	padding: 3px 8px;
 	border-radius: 5px;
@@ -3314,7 +3320,7 @@
 }
 
 .ficha-kpi-label {
-	font-size: 10px;
+	font-size: 11px;
 	text-transform: uppercase;
 	font-weight: 700;
 	color: #64748b;
@@ -3597,7 +3603,7 @@
 	background: #fef3c7;
 	color: #b45309;
 	border: 1px solid #fde68a;
-	font-size: 10.5px;
+	font-size: 11px;
 	font-weight: 700;
 	padding: 2px 8px;
 	border-radius: 9999px;
@@ -3629,7 +3635,7 @@
 	left: 12px;
 	top: 50%;
 	transform: translateY(-50%);
-	color: #16a34a;
+	color: #15803d;
 	font-size: 13px;
 }
 
@@ -3671,7 +3677,7 @@
 }
 
 .hist-filter-label {
-	font-size: 10px;
+	font-size: 11px;
 	text-transform: uppercase;
 	font-weight: 700;
 	color: #64748b;
@@ -3797,7 +3803,7 @@
 }
 
 .hist-kpi-sub {
-	font-size: 10.5px;
+	font-size: 11px;
 	color: #64748b;
 	margin-top: 2px;
 	white-space: nowrap;
@@ -3854,7 +3860,7 @@
 
 .hist-table thead th {
 	background: #f8fafc;
-	font-size: 10.5px;
+	font-size: 11px;
 	text-transform: uppercase;
 	font-weight: 700;
 	color: #64748b;
@@ -3899,7 +3905,7 @@
 
 /* Píldoras de Estado */
 .hist-status-pill {
-	font-size: 10.5px;
+	font-size: 11px;
 	font-weight: 700;
 	padding: 2px 7px;
 	border-radius: 6px;
@@ -3909,7 +3915,7 @@
 
 /* Ficha 360° Transacción */
 .ficha-section-title {
-	font-size: 10px;
+	font-size: 11px;
 	font-weight: 800;
 	text-transform: uppercase;
 	letter-spacing: 0.03em;
@@ -3939,7 +3945,7 @@
 
 .hist-items-table thead th {
 	background: #f8fafc;
-	font-size: 10px;
+	font-size: 11px;
 	padding: 4px 6px;
 }
 

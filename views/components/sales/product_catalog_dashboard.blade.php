@@ -223,6 +223,16 @@
 			<div class="prod-kpi-sub">{{ $k['availability_pct']['sub'] ?? '1,176 SKU vendibles' }}</div>
 		</article>
 
+		<!-- 3. Sell-through -->
+		<article class="prod-kpi-card" onclick="filterByKpi('sell_through')" title="Definición: Porcentaje del inventario puesto a la venta que se ha vendido en el período.&#10;Fórmula: Unidades vendidas ÷ (Unidades vendidas + Stock disponible final) × 100.&#10;Tasa comercial: 68.2 %" data-testid="kpi-sell-through">
+			<div class="prod-kpi-header">
+				<span class="prod-kpi-label">Sell-through</span>
+				<i class="fa-solid fa-arrow-trend-up prod-kpi-icon-muted"></i>
+			</div>
+			<div class="prod-kpi-val">68.2 %</div>
+			<div class="prod-kpi-sub">Vendido / (vendido + stock)</div>
+		</article>
+
 		<!-- 3. Productos de baja rotación -->
 		<article class="prod-kpi-card" onclick="filterByKpi('low_rot')" title="Filtrar por baja rotación" data-testid="kpi-baja-rotacion">
 			<div class="prod-kpi-header">
@@ -839,7 +849,7 @@
 										<div class="prod-fefo-cov-bar" style="width: {{ min(100, (($item['coverage'] - $item['shelf_life']) / max(1, $item['coverage'])) * 100) }}%;"></div>
 										@endif
 									</div>
-									<small class="text-muted" style="font-size: 10px;">{{ $item['label'] }}</small>
+									<small class="text-muted" style="font-size: 11px;">{{ $item['label'] }}</small>
 								</div>
 							</td>
 							<td class="text-right" style="width: 20%;">
@@ -952,7 +962,7 @@
 			</div>
 
 			<!-- Supuestos y Riesgos -->
-			<div class="small text-muted" style="font-size: 10.5px; line-height: 1.35;" id="simAssumptionsText">
+			<div class="small text-muted" style="font-size: 11px; line-height: 1.35;" id="simAssumptionsText">
 				{{ $sim['assumptions'] ?? 'Supuestos: elasticidad –0.8 estimada, costo sin cambio. Riesgos: producto de canasta básica, sensibilidad al precio. Confianza: baja.' }}
 			</div>
 		</div>
@@ -1412,6 +1422,8 @@ function filterByKpi(type) {
 		if (searchInp) searchInp.value = '';
 	} else if (type === 'available') {
 		if (availSel) availSel.value = 'normal';
+	} else if (type === 'sell_through') {
+		if (rotSel) rotSel.value = 'high';
 	} else if (type === 'low_rot') {
 		if (rotSel) rotSel.value = 'low';
 	} else if (type === 'stockout') {

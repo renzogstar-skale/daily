@@ -279,8 +279,8 @@
 				'</div>' +
 				'</div>' +
 				'<div class="dsm-kpi-action-bar is-red" data-action="below_min">' +
-				'<span class="dsm-act-title"><i class="fa-solid fa-bullseye mr-1" style="color:#ef4444;"></i>Acción sugerida: <b>' + esc(actTxt5) + '</b></span>' +
-				'<i class="fa-solid fa-arrow-right dsm-act-arrow" style="color:#ef4444;"></i>' +
+				'<span class="dsm-act-title"><i class="fa-solid fa-bullseye mr-1" style="color:#b91c1c;"></i>Acción sugerida: <b>' + esc(actTxt5) + '</b></span>' +
+				'<i class="fa-solid fa-arrow-right dsm-act-arrow" style="color:#b91c1c;"></i>' +
 				'</div>';
 		}
 
@@ -301,8 +301,8 @@
 				'</div>' +
 				'</div>' +
 				'<div class="dsm-kpi-action-bar is-amber" data-action="expiring">' +
-				'<span class="dsm-act-title"><i class="fa-solid fa-bullseye mr-1" style="color:#d97706;"></i>Acción sugerida: <b>' + esc(actTxt6) + '</b></span>' +
-				'<i class="fa-solid fa-arrow-right dsm-act-arrow" style="color:#d97706;"></i>' +
+				'<span class="dsm-act-title"><i class="fa-solid fa-bullseye mr-1" style="color:#b45309;"></i>Acción sugerida: <b>' + esc(actTxt6) + '</b></span>' +
+				'<i class="fa-solid fa-arrow-right dsm-act-arrow" style="color:#b45309;"></i>' +
 				'</div>';
 		}
 
@@ -326,8 +326,8 @@
 				'</div>' +
 				'</div>' +
 				'<div class="dsm-kpi-action-bar is-red" data-action="out_of_stock">' +
-				'<span class="dsm-act-title"><i class="fa-solid fa-bullseye mr-1" style="color:#ef4444;"></i>Acción sugerida: <b>' + esc(actTxt7) + '</b></span>' +
-				'<i class="fa-solid fa-arrow-right dsm-act-arrow" style="color:#ef4444;"></i>' +
+				'<span class="dsm-act-title"><i class="fa-solid fa-bullseye mr-1" style="color:#b91c1c;"></i>Acción sugerida: <b>' + esc(actTxt7) + '</b></span>' +
+				'<i class="fa-solid fa-arrow-right dsm-act-arrow" style="color:#b91c1c;"></i>' +
 				'</div>';
 		}
 
@@ -351,8 +351,8 @@
 				'</div>' +
 				'</div>' +
 				'<div class="dsm-kpi-action-bar is-green" data-action="risk_value">' +
-				'<span class="dsm-act-title"><i class="fa-solid fa-bullseye mr-1" style="color:#16a34a;"></i>Acción sugerida: <b>' + esc(actTxt8) + '</b></span>' +
-				'<i class="fa-solid fa-arrow-right dsm-act-arrow" style="color:#16a34a;"></i>' +
+				'<span class="dsm-act-title"><i class="fa-solid fa-bullseye mr-1" style="color:#15803d;"></i>Acción sugerida: <b>' + esc(actTxt8) + '</b></span>' +
+				'<i class="fa-solid fa-arrow-right dsm-act-arrow" style="color:#15803d;"></i>' +
 				'</div>';
 		}
 
@@ -624,12 +624,12 @@
 			type: isLine ? 'line' : 'bar',
 			label: def.name + ' (actual)',
 			data: d.cur,
-			backgroundColor: isLine ? 'transparent' : '#00a651',
+			backgroundColor: isLine ? 'transparent' : '#007a3d',
 			hoverBackgroundColor: isLine ? 'transparent' : '#008744',
-			borderColor: isLine ? '#00a651' : 'transparent',
+			borderColor: isLine ? '#007a3d' : 'transparent',
 			borderWidth: isLine ? 2.8 : 0,
 			pointBackgroundColor: '#ffffff',
-			pointBorderColor: '#00a651',
+			pointBorderColor: '#007a3d',
 			pointBorderWidth: 2.5,
 			pointRadius: isLine ? 4.5 : 0,
 			pointHoverRadius: isLine ? 6 : 0,
@@ -1357,9 +1357,9 @@
 				var toB = esc(o.to_branch || 'Miami Beach');
 				summaryBoxHtml = '<div class="dsm-opp-summary-box">' +
 					'<div class="dsm-opp-route-box">' +
-						'<div class="dsm-opp-route-node"><i class="fa-solid fa-store text-info mr-1"></i><div><span class="text-muted d-block" style="font-size:9.5px;">Sucursal origen</span><b>' + fromB + '</b></div></div>' +
+						'<div class="dsm-opp-route-node"><i class="fa-solid fa-store text-info mr-1"></i><div><span class="text-muted d-block" style="font-size:11px;">Sucursal origen</span><b>' + fromB + '</b></div></div>' +
 						'<i class="fa-solid fa-arrow-right text-muted" style="font-size:12px;"></i>' +
-						'<div class="dsm-opp-route-node"><i class="fa-solid fa-store text-info mr-1"></i><div><span class="text-muted d-block" style="font-size:9.5px;">Sucursal destino</span><b>' + toB + '</b></div></div>' +
+						'<div class="dsm-opp-route-node"><i class="fa-solid fa-store text-info mr-1"></i><div><span class="text-muted d-block" style="font-size:11px;">Sucursal destino</span><b>' + toB + '</b></div></div>' +
 					'</div>' +
 				'</div>';
 			} else {
@@ -1860,7 +1860,7 @@
 		var good = delta === null || (d.bad_low ? delta >= 0 : delta <= 0);
 		var deltaEl = $('#dsm-hm-stat-delta').text(delta === null ? '—' : (delta > 0 ? '+' : '') + fmtNum(delta, 1) + '%')[0];
 		deltaEl.style.setProperty('background', good ? '#dcfce7' : '#fee2e2', 'important');
-		deltaEl.style.setProperty('color', good ? '#00a651' : '#dc2626', 'important');
+		deltaEl.style.setProperty('color', good ? '#007a3d' : '#dc2626', 'important');
 		deltaEl.style.setProperty('border-color', good ? '#86efac' : '#fecaca', 'important');
 
 		if (!d.rows.length) {
@@ -1873,7 +1873,7 @@
 				return '<div class="dsm-hm-cell' + (c.val === null ? ' is-empty' : '') + '" style="background-color:' + esc(c.color) + ';" data-date="' + esc(c.date) + '" data-row="' + esc(row.key) + '" data-val="' + esc(c.val === null ? '' : c.val) + '" data-intensity="' + esc(c.intensity) + '" title="' + esc(label) + '"></div>';
 			}).join('') + '</div>';
 		}).join('');
-		var step = n <= 14 ? 2 : (n <= 30 ? 4 : 7);
+		var step = n <= 14 ? 3 : (n <= 30 ? 5 : 7);
 		html += '<div class="dsm-hm-hours"><span></span>' + d.dates.map(function (x, i) {
 			return '<span class="dsm-hm-hour">' + (i % step === 0 ? esc(x.label) : '') + '</span>';
 		}).join('') + '</div>';
@@ -2183,22 +2183,22 @@
 			var isUp = (trendDir === 'up');
 
 			var polylineSvg = isUp
-				? '<polyline points="1,11 7,7 13,8 21,1" fill="none" stroke="#00a651" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><polyline points="16,1 21,1 21,6" fill="none" stroke="#00a651" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'
+				? '<polyline points="1,11 7,7 13,8 21,1" fill="none" stroke="#007a3d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><polyline points="16,1 21,1 21,6" fill="none" stroke="#007a3d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'
 				: '<polyline points="1,1 7,5 13,4 21,11" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><polyline points="16,11 21,11 21,6" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
 
 			var badgeBg = isUp ? '#dcfce7' : '#fee2e2';
-			var badgeColor = isUp ? '#008744' : '#dc2626';
+			var badgeColor = isUp ? '#047857' : '#b91c1c';
 
 			tbody += '<tr class="' + hideClass + ' ' + isSel + '" data-branch-id="' + br.id + '" onclick="dsmSelectBranchRow(' + br.id + ')" title="Sucursal: ' + esc(br.name) + ' · Dif: ' + br.inventory_diff_pct + '% · Clic para filtrar" style="cursor: pointer;">' +
 				'<td><div class="d-flex align-items-center" style="gap: 6px;"><i class="fa-solid fa-shop text-success" style="font-size: 12px;"></i><span class="font-weight-bold text-dark text-truncate" style="max-width: 110px;">' + esc(br.name) + '</span></div></td>' +
 				'<td style="text-align:right; font-weight:800; color:#0f172a;" class="dsm-bcell-val">' + col2Text + '</td>' +
 				'<td style="text-align:right; font-weight:600; color:#475569;" class="dsm-bcell-units">' + fmtNum(br.units) + '</td>' +
-				'<td style="text-align:center; font-weight:800; color:#ef4444;">' + Number(br.rotation).toFixed(1) + '</td>' +
+				'<td style="text-align:center; font-weight:800; color:#b91c1c;">' + Number(br.rotation).toFixed(1) + '</td>' +
 				'<td style="text-align:right; color:#334155;">' + Number(br.coverage_days).toFixed(0) + ' días</td>' +
 				'<td style="text-align:right;">' +
 				'<div class="d-inline-flex align-items-center" style="gap: 4px;">' +
 				'<svg width="22" height="12" viewBox="0 0 22 12" style="overflow: visible;">' + polylineSvg + '</svg>' +
-				'<span class="badge font-weight-bold" style="background: ' + badgeBg + '; color: ' + badgeColor + '; font-size: 9.5px; padding: 2px 5px; border-radius: 4px;">' + (isUp ? '▲ ' : '▼ ') + esc(trendBadge) + '</span>' +
+				'<span class="badge font-weight-bold" style="background: ' + badgeBg + '; color: ' + badgeColor + '; font-size: 11px; padding: 2px 5px; border-radius: 4px;">' + (isUp ? '▲ ' : '▼ ') + esc(trendBadge) + '</span>' +
 				'</div>' +
 				'</td>' +
 				'</tr>';
@@ -2299,7 +2299,7 @@
 			'otros': 'fa-layer-group'
 		};
 		var colorsMap = {
-			'entradas': '#00a651',
+			'entradas': '#007a3d',
 			'salidas': '#ef4444',
 			'traslados': '#f59e0b',
 			'devoluciones': '#8b5cf6',
@@ -2319,7 +2319,7 @@
 				'<i class="fa-solid ' + bIcon + '" style="font-size: 12px;"></i>' +
 				'</div>' +
 				'</div>' +
-				'<span class="dsm-move-bar-label font-weight-bold" style="font-size: 10.5px; color: #475569; margin-top: 6px;">' + esc(bar.label) + '</span>' +
+				'<span class="dsm-move-bar-label font-weight-bold" style="font-size: 11px; color: #475569; margin-top: 6px;">' + esc(bar.label) + '</span>' +
 				'</div>';
 		});
 		$('#dsm-moves-bars-container').html(html);

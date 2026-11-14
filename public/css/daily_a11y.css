@@ -1,0 +1,86 @@
+/* ==========================================================================
+   DAILY — Piso de legibilidad para Ventas y Stock (13/11/2026)
+   Última capa: texto ≥ 11 px y contraste WCAG AA (4.5:1) donde las hojas
+   compartidas usan verdes, ámbar y grises demasiado claros.
+   ========================================================================== */
+
+/* Tamaño: Bootstrap .small (87.5 %) dentro de tablas de 12 px queda en 10.5 px */
+#page-content td.small,
+#page-content .small.text-muted {
+	font-size: 11px;
+}
+
+/* Tarjeta destacada y avatar: verde más profundo para texto blanco (≥ 5.4:1) */
+html body .ded-kpi-card.is-highlight:not(.srep .ded-kpi-card) {
+	background: linear-gradient(135deg, #065f46 0%, #047857 100%) !important;
+	box-shadow: 0 4px 14px rgba(4, 120, 87, 0.28) !important;
+}
+html body .ded-kpi-card.is-highlight:not(.srep .ded-kpi-card):hover {
+	box-shadow: 0 6px 18px rgba(4, 120, 87, 0.36) !important;
+}
+html body .ded-user-avatar {
+	background: #047857 !important;
+}
+
+/* Texto verde sobre fondos claros */
+.ded-kpi-card:not(.is-highlight) .ded-kpi-badge-green,
+td .ded-kpi-badge-green,
+.ded-rank-circle,
+.ded-sku-badge,
+.dsm-chip.is-ok,
+.iop-tab,
+.iop-step-pend.is-zero,
+.dcase-strip .badge-primary {
+	color: #047857 !important;
+}
+.stat-green { color: #15803d !important; }
+.stat-amber { color: #b45309 !important; }
+
+/* Pastillas de estado: tinta oscura del mismo tono sobre su fondo pastel */
+.dsm-days-pill.is-danger,
+.dsm-rc-badge.is-critical,
+.dsm-kpi-meta-badge.is-bad,
+.dsm-opp-pill.is-red,
+.dsm-dec-title,
+.iop-badge:not(.is-warn) {
+	color: #b91c1c !important;
+}
+.dsm-days-pill.is-warning,
+.dsm-rc-badge.is-attention,
+.iop-badge.is-warn,
+.iop-pill.is-below_min {
+	color: #92400e !important;
+}
+
+/* Grises sobre #f1f5f9 */
+.dsm-period-btn:not(.active),
+.dsm-move-share-label.text-secondary,
+#inv-ops th,
+#inv-ops .iop-muted,
+#inv-ops .iop-step-n,
+#inv-ops .iop-step-owner {
+	color: #475569 !important;
+}
+
+/* Cabeceras verdes de Existencias: título en blanco como el resto de la franja */
+.dsm-evo-header .dsm-evo-header-title {
+	color: #ffffff !important;
+}
+.dsm-card-header-clean[style*="gradient"] h2,
+.dsm-card-header-clean[style*="gradient"] .dsm-clean-title {
+	color: #ffffff !important;
+}
+
+/* Con 11 px los subtítulos de KPI ya no caben en una línea: pasan a dos en vez de invadir la tarjeta vecina */
+.ded-kpi-card .ded-kpi-sub {
+	white-space: normal;
+	min-width: 0;
+}
+
+/* Subtítulos sobre las franjas verdes de Existencias: blanco opaco (los translúcidos bajaban de 4.5:1) */
+.dsm-evo-header .dsm-evo-header-sub,
+.dsm-card-header-clean .dsm-clean-sub,
+.dsm-card-header-clean[style*="gradient"] span,
+#dsm-evo-export-menu {
+	color: #ffffff !important;
+}

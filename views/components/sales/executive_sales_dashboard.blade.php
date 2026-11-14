@@ -97,7 +97,7 @@
 					<i data-lucide="chevron-down" class="ded-chevron"></i>
 				</button>
 				<div class="ded-dropdown-menu dropdown-menu-right" aria-labelledby="btnDedDates" style="min-width: 230px;">
-					<div class="dropdown-header text-uppercase font-weight-bold" style="font-size: 10px; color: #64748b; padding: 6px 14px;">Período Comercial</div>
+					<div class="dropdown-header text-uppercase font-weight-bold" style="font-size: 11px; color: #64748b; padding: 6px 14px;">Período Comercial</div>
 					<a href="#" class="ded-dropdown-item is-active" data-select-range="30d">
 						<span>12 oct – 10 nov 2026</span>
 						<i data-lucide="check" style="width:13px;height:13px;"></i>
@@ -131,7 +131,7 @@
 					<i data-lucide="chevron-down" class="ded-chevron"></i>
 				</button>
 				<div class="ded-dropdown-menu dropdown-menu-right" aria-labelledby="btnDedBranches" style="min-width: 220px;">
-					<div class="dropdown-header text-uppercase font-weight-bold" style="font-size: 10px; color: #64748b; padding: 6px 14px;">Centro Operativo</div>
+					<div class="dropdown-header text-uppercase font-weight-bold" style="font-size: 11px; color: #64748b; padding: 6px 14px;">Centro Operativo</div>
 					<a href="#" class="ded-dropdown-item @if(!$selectedBranchId) is-active @endif" data-select-branch="">
 						<span>Todas las sucursales</span>
 						@if(!$selectedBranchId)<i data-lucide="check" style="width:13px;height:13px;"></i>@endif
@@ -153,7 +153,7 @@
 					<i data-lucide="chevron-down" class="ded-chevron"></i>
 				</button>
 				<div class="ded-dropdown-menu dropdown-menu-right" aria-labelledby="btnDedDepartments" style="min-width: 220px;">
-					<div class="dropdown-header text-uppercase font-weight-bold" style="font-size: 10px; color: #64748b; padding: 6px 14px;">Departamento Comercial</div>
+					<div class="dropdown-header text-uppercase font-weight-bold" style="font-size: 11px; color: #64748b; padding: 6px 14px;">Departamento Comercial</div>
 					<a href="#" class="ded-dropdown-item @if(empty($sharedFilters['department'])) is-active @endif" data-select-dept="">
 						<span>Todos los departamentos</span>
 						@if(empty($sharedFilters['department']))<i data-lucide="check" style="width:13px;height:13px;"></i>@endif
@@ -568,7 +568,7 @@
 					</div>
 				</div>
 				<div class="p-3 bg-light rounded small text-secondary">
-					<i data-lucide="info" style="width:14px;height:14px;margin-right:4px;color:#10b981;"></i>
+					<i data-lucide="info" style="width:14px;height:14px;margin-right:4px;color:#047857;"></i>
 					Para ver el análisis de rotación FEFO, stock actual por sucursal y margen comercial de este producto, consulta la pestaña <strong>Productos</strong>.
 				</div>
 			</div>

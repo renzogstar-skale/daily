@@ -101,23 +101,23 @@
 			<div class="ded-kpi-sub">Objetivo: 35-45 días</div>
 		</article>
 
-		<!-- 4. Sell-through -->
-		<article class="ded-kpi-card" title="Definición: Porcentaje del inventario recibido que se ha vendido en el período.&#10;Fórmula: Unidades vendidas ÷ (Unidades vendidas + Stock disponible final) × 100.&#10;Monto exacto: {{ number_format($sellThrough, 1) }} %&#10;Comparación: Tasa de absorción comercial&#10;Origen: Líneas de venta POS vs existencias&#10;Actualización: {{ date('d/m/Y H:i') }}">
+		<!-- 4. SKU con sobrestock -->
+		<article class="ded-kpi-card" title="Definición: Artículos con existencias superiores a su objetivo de cobertura planificado (> 90 días).&#10;Fórmula: Conteo de SKUs activos con disponible ÷ venta promedio diaria > 90 días.&#10;Monto exacto: 41 SKU&#10;Comparación: 3.4 % del surtido activo&#10;Acción: Evaluar promoción comercial, devolución o transferencia&#10;Origen: Inventario disponible vs. proyección comercial&#10;Actualización: {{ date('d/m/Y H:i') }}" data-smv-tab="movimientos" style="cursor: pointer;">
 			<div class="ded-kpi-top">
-				<span class="ded-kpi-icon"><i data-lucide="trending-up"></i></span>
+				<span class="ded-kpi-icon" style="background:#fffbeb; color:#d97706;"><i data-lucide="layers"></i></span>
 			</div>
-			<div class="ded-kpi-label">Sell-through</div>
-			<div class="ded-kpi-val">{{ number_format($sellThrough, 1) }} %</div>
-			<div class="ded-kpi-sub">Vendido / (vendido + stock)</div>
+			<div class="ded-kpi-label">SKU con sobrestock</div>
+			<div class="ded-kpi-val" style="color:#d97706;">41 SKU</div>
+			<div class="ded-kpi-sub">> 90 días de cobertura</div>
 		</article>
 
 		<!-- 5. Quiebres de stock -->
 		<article class="ded-kpi-card" title="Definición: Cantidad de artículos sin stock disponible en sala o bodega.&#10;Fórmula: Conteo de SKUs activos con disponible ≤ 0.&#10;Monto exacto: {{ $stockouts }} SKU&#10;Comparación: 1.9 % del surtido activo&#10;Origen: Catálogo de productos y existencias&#10;Actualización: {{ date('d/m/Y H:i') }}" data-smv-tab="conteos" style="cursor: pointer;">
 			<div class="ded-kpi-top">
-				<span class="ded-kpi-icon" style="background:#fee2e2; color:#ef4444;"><i data-lucide="alert-triangle"></i></span>
+				<span class="ded-kpi-icon" style="background:#fee2e2; color:#b91c1c;"><i data-lucide="alert-triangle"></i></span>
 			</div>
 			<div class="ded-kpi-label">Quiebres de stock</div>
-			<div class="ded-kpi-val" style="color:#ef4444;">{{ $stockouts }} SKU</div>
+			<div class="ded-kpi-val" style="color:#b91c1c;">{{ $stockouts }} SKU</div>
 			<div class="ded-kpi-sub">1.9 % del surtido activo</div>
 		</article>
 
@@ -131,14 +131,14 @@
 			<div class="ded-kpi-sub">Último conteo cíclico 10/11</div>
 		</article>
 
-		<!-- 7. Merma y vencidos -->
-		<article class="ded-kpi-card" title="Definición: Proporción del stock perdida por caducidad, rotura o descarte.&#10;Fórmula: Valor total de mermas ÷ Valor de compras y existencias × 100.&#10;Monto exacto: {{ number_format($wastePct, 1) }} % (${{ number_format($wasteAmount, 0) }})&#10;Comparación: Anterior: 1.1 %&#10;Origen: Registros de prevención de pérdidas y bajas&#10;Actualización: {{ date('d/m/Y H:i') }}">
+		<!-- 7. Traslados pendientes de recepción -->
+		<article class="ded-kpi-card" title="Definición: Despachos entre sucursales en tránsito pendientes de confirmación física y recepción en destino.&#10;Fórmula: Envíos despachados − Envíos confirmados en destino.&#10;Monto exacto: 3 traslados (1,340 unidades)&#10;Comparación: 2 envíos con más de 48 h en tránsito&#10;Origen: Módulo de Traslados entre Tiendas&#10;Actualización: {{ date('d/m/Y H:i') }}" onclick="window.location.href='{{ $U('/transfers') }}';" style="cursor: pointer;">
 			<div class="ded-kpi-top">
-				<span class="ded-kpi-icon"><i data-lucide="box"></i></span>
+				<span class="ded-kpi-icon" style="background:#eff6ff; color:#2563eb;"><i data-lucide="truck"></i></span>
 			</div>
-			<div class="ded-kpi-label">Merma y vencidos</div>
-			<div class="ded-kpi-val">{{ number_format($wastePct, 1) }} %</div>
-			<div class="ded-kpi-sub">${{ number_format($wasteAmount, 0) }} · Anterior: 1.1 %</div>
+			<div class="ded-kpi-label">Traslados pendientes</div>
+			<div class="ded-kpi-val">3 envíos</div>
+			<div class="ded-kpi-sub">1,340 u · pendientes recepción</div>
 		</article>
 
 		<!-- 8. Por vencer (30 días) -->
@@ -201,7 +201,7 @@
 						<tr>
 							<td class="font-weight-600 text-dark">{{ $cr['label'] }}</td>
 							<td class="ded-table-price font-weight-700">{{ $cr['cur'] }}</td>
-							<td class="ded-table-share text-muted">{{ $cr['prev'] }}</td>
+							<td class="ded-table-share">{{ $cr['prev'] }}</td>
 							<td class="text-right">
 								@if($cr['up'])
 									<span class="ded-kpi-badge-green font-weight-600">▲ {{ $cr['delta'] }}</span>
@@ -248,9 +248,9 @@
 						<td class="ded-table-price">{{ number_format($item['days'], 1) }}</td>
 						<td class="text-right">
 							@if($item['status'] === 'critico')
-								<span class="badge" style="background:#fee2e2; color:#dc2626; font-size:10.5px; padding:2px 8px; border-radius:12px; font-weight:600;">Crítico</span>
+								<span class="badge" style="background:#fee2e2; color:#b91c1c; font-size:11px; padding:2px 8px; border-radius:12px; font-weight:600;">Crítico</span>
 							@else
-								<span class="badge" style="background:#fef3c7; color:#d97706; font-size:10.5px; padding:2px 8px; border-radius:12px; font-weight:600;">Bajo</span>
+								<span class="badge" style="background:#fef3c7; color:#b45309; font-size:11px; padding:2px 8px; border-radius:12px; font-weight:600;">Bajo</span>
 							@endif
 						</td>
 					</tr>
@@ -395,14 +395,14 @@
 			<div class="d-flex flex-column gap-2" style="margin-top: 2px;">
 				<!-- Alerta 1 -->
 				<div class="p-2 rounded is-clickable" style="background:#fff5f5; border: 1px solid #fee2e2;" data-smv-tab="conteos">
-					<div class="font-weight-700" style="font-size: 12px; color: #dc2626;">Quiebre en 23 SKU · Crítica</div>
+					<div class="font-weight-700" style="font-size: 12px; color: #b91c1c;">Quiebre en 23 SKU · Crítica</div>
 					<div class="text-muted" style="font-size: 11px; margin-top: 2px; line-height: 1.3;">
 						Reponer hoy: 9 de ellos tienen orden de compra abierta.
 					</div>
 				</div>
 				<!-- Alerta 2 -->
 				<div class="p-2 rounded is-clickable" style="background:#fffbeb; border: 1px solid #fef3c7;" data-smv-tab="movimientos">
-					<div class="font-weight-700" style="font-size: 12px; color: #d97706;">Sobrestock en 41 SKU · Media</div>
+					<div class="font-weight-700" style="font-size: 12px; color: #b45309;">Sobrestock en 41 SKU · Media</div>
 					<div class="text-muted" style="font-size: 11px; margin-top: 2px; line-height: 1.3;">
 						Más de 90 días de cobertura. Evalúa promoción o transferencia.
 					</div>
@@ -434,7 +434,7 @@
 		<div class="row">
 			<!-- Columna 1: RECIBE INFORMACIÓN DE -->
 			<div class="col-12 col-md-6 mb-3 mb-md-0">
-				<div class="text-uppercase font-weight-bold text-muted mb-2" style="font-size: 10.5px; letter-spacing: 0.04em;">Recibe información de</div>
+				<div class="text-uppercase font-weight-bold text-muted mb-2" style="font-size: 11px; letter-spacing: 0.04em;">Recibe información de</div>
 				<div class="d-flex flex-column gap-2">
 					<!-- 1. Punto de Venta (POS) -->
 					<a href="{{ $U('/pos') }}" class="smv-mod-box">
@@ -474,7 +474,7 @@
 
 			<!-- Columna 2: ACTUALIZA / ALIMENTA A -->
 			<div class="col-12 col-md-6">
-				<div class="text-uppercase font-weight-bold text-muted mb-2" style="font-size: 10.5px; letter-spacing: 0.04em;">Actualiza / alimenta a</div>
+				<div class="text-uppercase font-weight-bold text-muted mb-2" style="font-size: 11px; letter-spacing: 0.04em;">Actualiza / alimenta a</div>
 				<div class="d-flex flex-column gap-2">
 					<!-- 1. Planificación MRP -->
 					<a href="{{ $U('/procurement') }}" class="smv-mod-box">

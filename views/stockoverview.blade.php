@@ -9,6 +9,8 @@
 <link href="{{ $U('/css/daily_stock_movements.css?v=', true) }}{{ daily_asset_version('/css/daily_stock_movements.css') }}" rel="stylesheet">
 <link href="{{ $U('/css/daily_stock.css?v=', true) }}{{ daily_asset_version('/css/daily_stock.css') }}" rel="stylesheet">
 <link href="{{ $U('/css/daily_inventory_ops.css?v=', true) }}{{ daily_asset_version('/css/daily_inventory_ops.css') }}" rel="stylesheet">
+<link href="{{ $U('/css/daily_sales_unslop.css?v=', true) }}{{ daily_asset_version('/css/daily_sales_unslop.css') }}" rel="stylesheet">
+<link href="{{ $U('/css/daily_a11y.css?v=', true) }}{{ daily_asset_version('/css/daily_a11y.css') }}" rel="stylesheet">
 @endpush
 
 @push('pageScripts')
@@ -95,7 +97,7 @@ $meta = $se['meta'] ?? [];
 			<div class="dairy-page-icon is-primary"><i class="fa-solid fa-cubes"></i></div>
 			<div class="dsm-title-row">
 				<h2 class="dsm-title">Existencias y lotes</h2>
-				<span class="badge badge-light border text-muted font-weight-bold" style="font-size: 10.5px;" title="{{ $meta['demo_notice'] ?? '' }}">Rol: {{ ucfirst($meta['role'] ?? 'Manager') }}</span>
+				<span class="badge badge-light border text-muted font-weight-bold" style="font-size: 11px;" title="{{ $meta['demo_notice'] ?? '' }}">Rol: {{ ucfirst($meta['role'] ?? 'Manager') }}</span>
 			</div>
 			<p class="dsm-subtitle">
 				<span>Resumen ejecutivo &middot; Disponibilidad, rotación, cobertura y trazabilidad del inventario</span>
@@ -602,7 +604,7 @@ $meta = $se['meta'] ?? [];
 								<th style="width: 32px; text-align: center;">#</th>
 								<th>Departamento</th>
 								<th class="text-right">Valor</th>
-								<th style="width: 130px;">Participación <i class="fa-solid fa-arrows-up-down text-muted" style="font-size: 10px;"></i></th>
+								<th style="width: 130px;">Participación <i class="fa-solid fa-arrows-up-down text-muted" style="font-size: 11px;"></i></th>
 								<th class="text-right">Unidades</th>
 								<th class="text-right">Rotación</th>
 								<th class="text-right">Cobertura</th>
@@ -658,7 +660,7 @@ $meta = $se['meta'] ?? [];
 	<div class="dsm-row-three">
 		<!-- SECCIÓN 4: MAPA DE CALOR DE EXISTENCIAS (UNIDADES) -->
 		<div class="dsm-card dsm-card-pro" id="dsm-section-heatmap" style="overflow: hidden; padding: 0;">
-			<div class="dsm-card-header-clean" style="background: linear-gradient(135deg, #008744 0%, #00a651 100%); color: #ffffff; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between;">
+			<div class="dsm-card-header-clean" style="background: linear-gradient(135deg, #008744 0%, #007a3d 100%); color: #ffffff; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between;">
 				<div class="d-flex align-items-center" style="gap: 10px;">
 					<div class="dsm-header-icon-clean" style="background: rgba(255,255,255,0.2); color: #ffffff; width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 15px;">
 						<i class="fa-solid fa-layer-group"></i>
@@ -712,27 +714,27 @@ $meta = $se['meta'] ?? [];
 			<!-- Resumen Inferior: Promedio, Variación, Días críticos -->
 			<div class="dsm-card-kpi-footer" style="background: #f8fafc; border-top: 1px solid #f1f5f9; padding: 12px 18px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; text-align: center;">
 				<div>
-					<div class="text-muted font-weight-bold" style="font-size: 10.5px; display: flex; align-items: center; justify-content: center; gap: 4px;">
+					<div class="text-muted font-weight-bold" style="font-size: 11px; display: flex; align-items: center; justify-content: center; gap: 4px;">
 						<i class="fa-solid fa-boxes-stacked text-success"></i> Promedio
 					</div>
 					<div class="font-weight-bold text-dark mt-1" id="dsm-hm-stat-avg" style="font-size: 13.5px;">—</div>
 				</div>
 				<div>
-					<div class="text-muted font-weight-bold" style="font-size: 10.5px; display: flex; align-items: center; justify-content: center; gap: 4px;">
+					<div class="text-muted font-weight-bold" style="font-size: 11px; display: flex; align-items: center; justify-content: center; gap: 4px;">
 						<i class="fa-solid fa-arrow-trend-up text-success"></i> Variación
 					</div>
 					<div class="mt-1">
-						<span class="badge badge-success font-weight-bold px-2 py-1" id="dsm-hm-stat-delta" style="font-size: 11px; background: #dcfce7; color: #00a651; border: 1px solid #86efac; border-radius: 6px;">
+						<span class="badge badge-success font-weight-bold px-2 py-1" id="dsm-hm-stat-delta" style="font-size: 11px; background: #dcfce7; color: #047857; border: 1px solid #86efac; border-radius: 6px;">
 							—
 						</span>
 					</div>
 				</div>
 				<div>
-					<div class="text-muted font-weight-bold" style="font-size: 10.5px; display: flex; align-items: center; justify-content: center; gap: 4px;">
+					<div class="text-muted font-weight-bold" style="font-size: 11px; display: flex; align-items: center; justify-content: center; gap: 4px;">
 						<i class="fa-solid fa-chart-simple text-danger"></i> Días críticos
 					</div>
 					<div class="mt-1">
-						<span class="badge badge-danger font-weight-bold px-2 py-1" id="dsm-hm-stat-critical" style="font-size: 12px; background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; border-radius: 6px;">
+						<span class="badge badge-danger font-weight-bold px-2 py-1" id="dsm-hm-stat-critical" style="font-size: 12px; background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; border-radius: 6px;">
 							—
 						</span>
 					</div>
@@ -744,7 +746,7 @@ $meta = $se['meta'] ?? [];
 		<div class="dsm-card dsm-card-pro" id="dsm-section-top10" style="overflow: hidden; padding: 0;">
 			<div class="dsm-card-header-clean" style="padding: 14px 18px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between;">
 				<div class="d-flex align-items-center" style="gap: 10px;">
-					<div class="dsm-header-icon-clean" style="background: #fef3c7; color: #d97706; border: 1px solid #fde68a; width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 15px;">
+					<div class="dsm-header-icon-clean" style="background: #fef3c7; color: #b45309; border: 1px solid #fde68a; width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 15px;">
 						<i class="fa-solid fa-trophy"></i>
 					</div>
 					<div>
@@ -780,11 +782,11 @@ $meta = $se['meta'] ?? [];
 				<div class="table-responsive" style="max-height: 360px; overflow-y: auto;">
 					<table class="dsm-exec-table" id="dsm-top10-table" style="width: 100%; border-collapse: separate; border-spacing: 0 4px; font-size: 12px;">
 						<thead>
-							<tr style="color: #64748b; font-size: 10.5px; text-transform: uppercase;">
+							<tr style="color: #64748b; font-size: 11px; text-transform: uppercase;">
 								<th style="width: 20px; padding: 6px 4px;">#</th>
 								<th style="padding: 6px 6px;">Producto</th>
 								<th style="padding: 6px 6px;">Depto.</th>
-								<th style="text-align: right; padding: 6px 6px;">Valor <i class="fa-solid fa-arrow-down" style="font-size: 9px;"></i></th>
+								<th style="text-align: right; padding: 6px 6px;">Valor <i class="fa-solid fa-arrow-down" style="font-size: 11px;"></i></th>
 								<th style="text-align: right; padding: 6px 6px;">Uds.</th>
 								<th style="text-align: right; padding: 6px 6px;">% valor</th>
 							</tr>
@@ -820,10 +822,10 @@ $meta = $se['meta'] ?? [];
 			<!-- Resumen Inferior: Total Top 10, Participación, Ver detalle -->
 			<div class="dsm-card-kpi-footer d-flex align-items-center justify-content-between" style="background: #f8fafc; border-top: 1px solid #f1f5f9; padding: 12px 18px; font-size: 12px;">
 				<div class="d-flex align-items-center font-weight-bold" style="color: #0f172a; gap: 6px;">
-					<i class="fa-solid fa-coins text-success"></i> <span id="dsm-top10-foot-label">Total Top 10</span>: <span id="dsm-top10-foot-total" class="font-weight-bold" style="color: #008744;">{{ $stockExec['top10_stats']['formatted_total_value'] ?? '$0' }}</span>
+					<i class="fa-solid fa-coins text-success"></i> <span id="dsm-top10-foot-label">Total Top 10</span>: <span id="dsm-top10-foot-total" class="font-weight-bold" style="color: #047857;">{{ $stockExec['top10_stats']['formatted_total_value'] ?? '$0' }}</span>
 				</div>
 				<div class="d-flex align-items-center font-weight-bold" style="color: #0f172a; gap: 6px;">
-					<i class="fa-regular fa-clock text-success"></i> Participación: <span id="dsm-top10-foot-share" class="font-weight-bold" style="color: #008744;">{{ $stockExec['top10_stats']['participation_pct'] ?? '0' }}%</span>
+					<i class="fa-regular fa-clock text-success"></i> Participación: <span id="dsm-top10-foot-share" class="font-weight-bold" style="color: #047857;">{{ $stockExec['top10_stats']['participation_pct'] ?? '0' }}%</span>
 				</div>
 				<a href="javascript:void(0)" onclick="dsmOpenTop10AllModal()" class="font-weight-bold text-success d-inline-flex align-items-center" style="gap: 4px; text-decoration: none;">
 					Ver detalle <i class="fa-solid fa-arrow-right" style="font-size: 11px;"></i>
@@ -835,7 +837,7 @@ $meta = $se['meta'] ?? [];
 		<div class="dsm-card dsm-card-pro" id="dsm-section-fefo" style="overflow: hidden; padding: 0;">
 			<div class="dsm-card-header-clean" style="padding: 14px 18px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between;">
 				<div class="d-flex align-items-center" style="gap: 10px;">
-					<div class="dsm-header-icon-clean" style="background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 15px;">
+					<div class="dsm-header-icon-clean" style="background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 15px;">
 						<i class="fa-solid fa-triangle-exclamation"></i>
 					</div>
 					<div>
@@ -868,10 +870,10 @@ $meta = $se['meta'] ?? [];
 				<div class="table-responsive" style="max-height: 360px; overflow-y: auto;">
 					<table class="dsm-exec-table" id="dsm-fefo-table" style="width: 100%; border-collapse: separate; border-spacing: 0 4px; font-size: 12px;">
 						<thead>
-							<tr style="color: #64748b; font-size: 10.5px; text-transform: uppercase;">
+							<tr style="color: #64748b; font-size: 11px; text-transform: uppercase;">
 								<th style="width: 20px; padding: 6px 4px;">#</th>
 								<th style="padding: 6px 6px;">Producto</th>
-								<th style="text-align: center; padding: 6px 6px;">Días <i class="fa-solid fa-sort" style="font-size: 9px;"></i></th>
+								<th style="text-align: center; padding: 6px 6px;">Días <i class="fa-solid fa-sort" style="font-size: 11px;"></i></th>
 								<th style="text-align: right; padding: 6px 6px;">Stock</th>
 								<th style="text-align: right; padding: 6px 6px;">Valor</th>
 							</tr>
@@ -901,10 +903,10 @@ $meta = $se['meta'] ?? [];
 			<!-- Resumen Inferior: Total en riesgo, Productos, Ver detalle -->
 			<div class="dsm-card-kpi-footer d-flex align-items-center justify-content-between" style="background: #f8fafc; border-top: 1px solid #f1f5f9; padding: 12px 18px; font-size: 12px;">
 				<div class="d-flex align-items-center font-weight-bold" style="color: #b91c1c; gap: 6px;">
-					<i class="fa-solid fa-box text-danger"></i> Total en riesgo: <span id="dsm-fefo-foot-risk" class="font-weight-bold" style="color: #dc2626;">{{ $stockExec['fefo_stats']['formatted_risk'] ?? '$0' }}</span>
+					<i class="fa-solid fa-box text-danger"></i> Total en riesgo: <span id="dsm-fefo-foot-risk" class="font-weight-bold" style="color: #b91c1c;">{{ $stockExec['fefo_stats']['formatted_risk'] ?? '$0' }}</span>
 				</div>
 				<div class="d-flex align-items-center font-weight-bold" style="color: #b91c1c; gap: 6px;">
-					<i class="fa-solid fa-box text-danger"></i> Productos: <span id="dsm-fefo-foot-count" class="font-weight-bold" style="color: #dc2626;">{{ $stockExec['fefo_stats']['products_count'] ?? count($expProds) }}</span>
+					<i class="fa-solid fa-box text-danger"></i> Productos: <span id="dsm-fefo-foot-count" class="font-weight-bold" style="color: #b91c1c;">{{ $stockExec['fefo_stats']['products_count'] ?? count($expProds) }}</span>
 				</div>
 				<a href="javascript:void(0)" onclick="dsmOpenFefoAllModal()" class="font-weight-bold text-success d-inline-flex align-items-center" style="gap: 4px; text-decoration: none;">
 					Ver detalle <i class="fa-solid fa-arrow-right" style="font-size: 11px;"></i>
@@ -919,7 +921,7 @@ $meta = $se['meta'] ?? [];
 	<div class="dsm-row-four">
 		<!-- SECCIÓN 7: TENDENCIA POR SUCURSAL -->
 		<div class="dsm-card dsm-card-pro" id="dsm-section-branches" style="overflow: hidden; padding: 0;">
-			<div class="dsm-card-header-clean" style="background: linear-gradient(135deg, #008744 0%, #00a651 100%); padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; color: #fff;">
+			<div class="dsm-card-header-clean" style="background: linear-gradient(135deg, #008744 0%, #007a3d 100%); padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; color: #fff;">
 				<div class="d-flex align-items-center" style="gap: 10px;">
 					<div style="background: rgba(255, 255, 255, 0.2); width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 15px; color: #fff;">
 						<i class="fa-solid fa-shop"></i>
@@ -931,7 +933,7 @@ $meta = $se['meta'] ?? [];
 				</div>
 				<div class="dropdown">
 					<button type="button" class="btn btn-sm text-white font-weight-bold d-flex align-items-center" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="background: rgba(255, 255, 255, 0.18); border: 1px solid rgba(255, 255, 255, 0.35); border-radius: 999px; font-size: 11.5px; padding: 4px 12px; gap: 5px;">
-						<i class="fa-solid fa-file-export mr-1" style="font-size: 10px;"></i> Exportar <i class="fa-solid fa-chevron-down ml-1" style="font-size: 9px;"></i>
+						<i class="fa-solid fa-file-export mr-1" style="font-size: 11px;"></i> Exportar <i class="fa-solid fa-chevron-down ml-1" style="font-size: 11px;"></i>
 					</button>
 					<div class="dropdown-menu dropdown-menu-right shadow-sm" style="font-size: 12px; border-radius: 8px;">
 						<a class="dropdown-item" href="javascript:void(0)" onclick="dsmExportTable('csv', 'dsm-branch-table')"><i class="fa-solid fa-file-csv text-success mr-2"></i>Exportar CSV</a>
@@ -943,7 +945,7 @@ $meta = $se['meta'] ?? [];
 
 			<!-- Píldoras de Modos de Vista / Filtro -->
 			<div class="d-flex align-items-center justify-content-between p-3 pb-2" style="gap: 6px;">
-				<button type="button" class="dsm-branch-pill active" data-bmode="value" style="background: #00a651; color: #ffffff; border: 1px solid #00a651; border-radius: 8px; font-weight: 700; font-size: 11px; padding: 5px 12px; display: inline-flex; align-items: center; gap: 5px;">
+				<button type="button" class="dsm-branch-pill active" data-bmode="value" style="background: #007a3d; color: #ffffff; border: 1px solid #007a3d; border-radius: 8px; font-weight: 700; font-size: 11px; padding: 5px 12px; display: inline-flex; align-items: center; gap: 5px;">
 					<i class="fa-solid fa-money-bill-wave"></i> Valor ($)
 				</button>
 				<button type="button" class="dsm-branch-pill" data-bmode="units" style="background: #ffffff; color: #1e293b; border: 1px solid #e2e8f0; border-radius: 8px; font-weight: 700; font-size: 11px; padding: 5px 12px; display: inline-flex; align-items: center; gap: 5px;">
@@ -961,24 +963,24 @@ $meta = $se['meta'] ?? [];
 			<div class="px-3 pb-2">
 				<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
 					<div style="background: #f0fdf4; border: 1px solid #dcfce7; border-radius: 12px; padding: 8px 6px; text-align: center;">
-						<div style="color: #008744; font-size: 14px; margin-bottom: 2px;"><i class="fa-solid fa-coins"></i></div>
+						<div style="color: #047857; font-size: 14px; margin-bottom: 2px;"><i class="fa-solid fa-coins"></i></div>
 						<div style="font-size: 15px; font-weight: 800; color: #0f172a; line-height: 1.1;" id="dsm-b-kpi-val">{{ $stockExec['branch_kpis']['formatted_total_value'] ?? '—' }}</div>
-						<div style="font-size: 10px; color: #64748b; font-weight: 600;">Valor total</div>
+						<div style="font-size: 11px; color: #64748b; font-weight: 600;">Valor total</div>
 					</div>
 					<div style="background: #f0fdf4; border: 1px solid #dcfce7; border-radius: 12px; padding: 8px 6px; text-align: center;">
-						<div style="color: #008744; font-size: 14px; margin-bottom: 2px;"><i class="fa-solid fa-box"></i></div>
+						<div style="color: #047857; font-size: 14px; margin-bottom: 2px;"><i class="fa-solid fa-box"></i></div>
 						<div style="font-size: 15px; font-weight: 800; color: #0f172a; line-height: 1.1;" id="dsm-b-kpi-units">{{ $stockExec['branch_kpis']['formatted_total_units'] ?? '—' }}</div>
-						<div style="font-size: 10px; color: #64748b; font-weight: 600;">Unidades</div>
+						<div style="font-size: 11px; color: #64748b; font-weight: 600;">Unidades</div>
 					</div>
 					<div style="background: #f0fdf4; border: 1px solid #dcfce7; border-radius: 12px; padding: 8px 6px; text-align: center;">
-						<div style="color: #008744; font-size: 14px; margin-bottom: 2px;"><i class="fa-solid fa-rotate"></i></div>
+						<div style="color: #047857; font-size: 14px; margin-bottom: 2px;"><i class="fa-solid fa-rotate"></i></div>
 						<div style="font-size: 15px; font-weight: 800; color: #0f172a; line-height: 1.1;" id="dsm-b-kpi-rot">{{ $stockExec['branch_kpis']['rotation'] ?? '—' }}</div>
-						<div style="font-size: 10px; color: #64748b; font-weight: 600;">Rotación</div>
+						<div style="font-size: 11px; color: #64748b; font-weight: 600;">Rotación</div>
 					</div>
 					<div style="background: #f0fdf4; border: 1px solid #dcfce7; border-radius: 12px; padding: 8px 6px; text-align: center;">
-						<div style="color: #008744; font-size: 14px; margin-bottom: 2px;"><i class="fa-regular fa-calendar-days"></i></div>
+						<div style="color: #047857; font-size: 14px; margin-bottom: 2px;"><i class="fa-regular fa-calendar-days"></i></div>
 						<div style="font-size: 15px; font-weight: 800; color: #0f172a; line-height: 1.1;" id="dsm-b-kpi-cov">{{ $stockExec['branch_kpis']['coverage'] ?? '—' }}</div>
-						<div style="font-size: 10px; color: #64748b; font-weight: 600;">Cobertura</div>
+						<div style="font-size: 11px; color: #64748b; font-weight: 600;">Cobertura</div>
 					</div>
 				</div>
 			</div>
@@ -987,7 +989,7 @@ $meta = $se['meta'] ?? [];
 			<div class="table-responsive px-3" style="max-height: 290px; overflow-y: auto;">
 				<table class="dsm-branch-table" id="dsm-branch-table" style="width: 100%; font-size: 12px;">
 					<thead>
-						<tr style="color: #64748b; font-size: 10.5px; text-transform: uppercase;">
+						<tr style="color: #64748b; font-size: 11px; text-transform: uppercase;">
 							<th onclick="dsmSortBranches('name')" style="padding: 6px 4px; cursor: pointer;">Sucursal</th>
 							<th style="text-align: right; padding: 6px 6px; cursor: pointer;" onclick="dsmSortBranches('inventory_value')" id="dsm-bcol-val">Valor inventario</th>
 							<th style="text-align: right; padding: 6px 6px; cursor: pointer;" onclick="dsmSortBranches('units')" id="dsm-bcol-units">Unidades</th>
@@ -1013,20 +1015,20 @@ $meta = $se['meta'] ?? [];
 								</td>
 								<td style="text-align: right; font-weight: 800; color: #0f172a;" class="dsm-bcell-val">${{ number_format($br['inventory_value'], 0) }}</td>
 								<td style="text-align: right; font-weight: 600; color: #475569;" class="dsm-bcell-units">{{ number_format($br['units'], 0) }}</td>
-								<td style="text-align: center; font-weight: 800; color: #ef4444;">{{ number_format($br['rotation'], 1) }}</td>
+								<td style="text-align: center; font-weight: 800; color: #b91c1c;">{{ number_format($br['rotation'], 1) }}</td>
 								<td style="text-align: right; color: #334155;">{{ number_format($br['coverage_days'], 0) }} días</td>
 								<td style="text-align: right;">
 									<div class="d-inline-flex align-items-center" style="gap: 4px;">
 										<svg width="22" height="12" viewBox="0 0 22 12" style="overflow: visible;">
 											@if($isUp)
-												<polyline points="1,11 7,7 13,8 21,1" fill="none" stroke="#00a651" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-												<polyline points="16,1 21,1 21,6" fill="none" stroke="#00a651" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+												<polyline points="1,11 7,7 13,8 21,1" fill="none" stroke="#007a3d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+												<polyline points="16,1 21,1 21,6" fill="none" stroke="#007a3d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 											@else
 												<polyline points="1,1 7,5 13,4 21,11" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 												<polyline points="16,11 21,11 21,6" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 											@endif
 										</svg>
-										<span class="badge font-weight-bold" style="background: {{ $isUp ? '#dcfce7' : '#fee2e2' }}; color: {{ $isUp ? '#008744' : '#dc2626' }}; font-size: 9.5px; padding: 2px 5px; border-radius: 4px;">
+										<span class="badge font-weight-bold" style="background: {{ $isUp ? '#dcfce7' : '#fee2e2' }}; color: {{ $isUp ? '#047857' : '#b91c1c' }}; font-size: 11px; padding: 2px 5px; border-radius: 4px;">
 											{{ $isUp ? '▲' : '▼' }} {{ $trendBadge }}
 										</span>
 									</div>
@@ -1039,7 +1041,7 @@ $meta = $se['meta'] ?? [];
 
 			<!-- Botón Inferior: Ver comparación entre sucursales -->
 			<div class="p-3 pt-2">
-				<a href="javascript:void(0)" onclick="dsmOpenBranchComparisonModal()" class="d-flex align-items-center justify-content-between p-2 px-3 font-weight-bold" style="background: #f0fdf4; border: 1px solid #dcfce7; border-radius: 10px; color: #008744; text-decoration: none; font-size: 12px; transition: background 0.15s ease;">
+				<a href="javascript:void(0)" onclick="dsmOpenBranchComparisonModal()" class="d-flex align-items-center justify-content-between p-2 px-3 font-weight-bold" style="background: #f0fdf4; border: 1px solid #dcfce7; border-radius: 10px; color: #047857; text-decoration: none; font-size: 12px; transition: background 0.15s ease;">
 					<span class="d-flex align-items-center" style="gap: 8px;">
 						<i class="fa-solid fa-chart-simple text-success"></i> Ver comparación entre sucursales
 					</span>
@@ -1052,7 +1054,7 @@ $meta = $se['meta'] ?? [];
 		<div class="dsm-card dsm-card-pro" id="dsm-section-movements" style="overflow: hidden; padding: 0;">
 			<div class="dsm-card-header-clean" style="padding: 14px 18px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between;">
 				<div class="d-flex align-items-center" style="gap: 10px;">
-					<div style="background: #fef3c7; color: #d97706; border: 1px solid #fde68a; width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 15px;">
+					<div style="background: #fef3c7; color: #b45309; border: 1px solid #fde68a; width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 15px;">
 						<i class="fa-solid fa-arrow-right-arrow-left"></i>
 					</div>
 					<div>
@@ -1061,8 +1063,8 @@ $meta = $se['meta'] ?? [];
 					</div>
 				</div>
 				<div class="d-flex align-items-center" style="gap: 6px;">
-					<span class="badge" style="background: #f0fdf4; border: 1px solid #86efac; color: #008744; border-radius: 999px; font-weight: 700; padding: 4px 10px; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;">
-						<i class="fa-regular fa-calendar-days"></i> Mes actual <i class="fa-solid fa-chevron-down" style="font-size: 9px;"></i>
+					<span class="badge" style="background: #f0fdf4; border: 1px solid #86efac; color: #047857; border-radius: 999px; font-weight: 700; padding: 4px 10px; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;">
+						<i class="fa-regular fa-calendar-days"></i> Mes actual <i class="fa-solid fa-chevron-down" style="font-size: 11px;"></i>
 					</span>
 				</div>
 			</div>
@@ -1078,7 +1080,7 @@ $meta = $se['meta'] ?? [];
 						@endforeach
 						<option value="detailed_7">Ver 7 categorías detalladas</option>
 					</select>
-					<i class="fa-solid fa-chevron-down text-muted ml-1" style="font-size: 10px;"></i>
+					<i class="fa-solid fa-chevron-down text-muted ml-1" style="font-size: 11px;"></i>
 				</div>
 			</div>
 
@@ -1086,7 +1088,7 @@ $meta = $se['meta'] ?? [];
 			<div class="px-3 pb-2">
 				<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: #fafafa; border: 1px solid #f1f5f9; border-radius: 12px; padding: 10px 14px;">
 					<div class="d-flex align-items-center" style="gap: 12px;">
-						<div style="background: #dcfce7; color: #008744; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;">
+						<div style="background: #dcfce7; color: #047857; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;">
 							<i class="fa-solid fa-arrow-right-arrow-left"></i>
 						</div>
 						<div>
@@ -1095,13 +1097,13 @@ $meta = $se['meta'] ?? [];
 						</div>
 					</div>
 					<div class="d-flex align-items-center" style="gap: 12px; border-left: 1px solid #e2e8f0; padding-left: 12px;">
-						<div style="background: #fef3c7; color: #d97706; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;">
+						<div style="background: #fef3c7; color: #b45309; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;">
 							<i class="fa-solid fa-tag"></i>
 						</div>
 						<div>
 							<div style="font-size: 20px; font-weight: 800; color: #0f172a; line-height: 1.1;" id="dsm-move-kpi-prods">{{ $movements['stats']['formatted_active_products'] ?? '—' }}</div>
 							<div style="font-size: 11px; color: #64748b; font-weight: 600;">Productos con movimiento</div>
-							<div style="font-size: 10px; color: #64748b;" id="dsm-move-kpi-prods-sub">de {{ $movements['stats']['formatted_catalog_products'] ?? '—' }} productos activos{{ isset($movements['stats']['active_pct']) ? ' (' . number_format($movements['stats']['active_pct'], 1) . '%)' : '' }}</div>
+							<div style="font-size: 11px; color: #64748b;" id="dsm-move-kpi-prods-sub">de {{ $movements['stats']['formatted_catalog_products'] ?? '—' }} productos activos{{ isset($movements['stats']['active_pct']) ? ' (' . number_format($movements['stats']['active_pct'], 1) . '%)' : '' }}</div>
 						</div>
 					</div>
 				</div>
@@ -1111,7 +1113,7 @@ $meta = $se['meta'] ?? [];
 			<div class="px-3 py-2">
 				<div class="dsm-moves-chart-wrapper" style="display: flex; height: 180px; align-items: stretch; gap: 8px;">
 					<!-- Eje Y -->
-					<div id="dsm-moves-yaxis" style="display: flex; flex-direction: column; justify-content: space-between; font-size: 10px; color: #94a3b8; font-weight: 600; text-align: right; width: 42px; padding-bottom: 22px;">
+					<div id="dsm-moves-yaxis" style="display: flex; flex-direction: column; justify-content: space-between; font-size: 11px; color: #64748b; font-weight: 600; text-align: right; width: 42px; padding-bottom: 22px;">
 						@php
 							// Escala del eje: múltiplo redondo sobre la barra más alta (antes fija en 12 000)
 							$barMax = max(1, max(array_column($movements['bars_photo'] ?? [], 'units') ?: [0]));
@@ -1135,7 +1137,7 @@ $meta = $se['meta'] ?? [];
 								'otros' => 'fa-layer-group'
 							];
 							$colorsMap = [
-								'entradas' => '#00a651',
+								'entradas' => '#007a3d',
 								'salidas' => '#ef4444',
 								'traslados' => '#f59e0b',
 								'devoluciones' => '#8b5cf6',
@@ -1155,7 +1157,7 @@ $meta = $se['meta'] ?? [];
 										<i class="fa-solid {{ $bIcon }}" style="font-size: 12px;"></i>
 									</div>
 								</div>
-								<span class="dsm-move-bar-label font-weight-bold" style="font-size: 10.5px; color: #475569; margin-top: 6px;">{{ $bar['label'] }}</span>
+								<span class="dsm-move-bar-label font-weight-bold" style="font-size: 11px; color: #475569; margin-top: 6px;">{{ $bar['label'] }}</span>
 							</div>
 						@endforeach
 					</div>
@@ -1166,31 +1168,31 @@ $meta = $se['meta'] ?? [];
 			<div class="px-3 pt-2 pb-2">
 				<div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;">
 					<div class="dsm-move-share-pill" style="background: #dcfce7; border: 1px solid #bbf7d0; border-radius: 8px; padding: 6px 4px; text-align: center;">
-						<div class="dsm-move-share-label text-success" style="font-size: 9.5px; font-weight: 700;">
+						<div class="dsm-move-share-label text-success" style="font-size: 11px; font-weight: 700;">
 							<i class="fa-solid fa-circle" style="font-size: 6px;"></i> Entradas
 						</div>
 						<div class="dsm-move-share-val font-weight-bold text-dark" style="font-size: 12px;" id="dsm-move-share-entradas">{{ $movements['stats']['shares']['entradas'] ?? '—' }}</div>
 					</div>
 					<div class="dsm-move-share-pill" style="background: #fee2e2; border: 1px solid #fecaca; border-radius: 8px; padding: 6px 4px; text-align: center;">
-						<div class="dsm-move-share-label text-danger" style="font-size: 9.5px; font-weight: 700;">
+						<div class="dsm-move-share-label text-danger" style="font-size: 11px; font-weight: 700;">
 							<i class="fa-solid fa-circle" style="font-size: 6px;"></i> Salidas
 						</div>
 						<div class="dsm-move-share-val font-weight-bold text-dark" style="font-size: 12px;" id="dsm-move-share-salidas">{{ $movements['stats']['shares']['salidas'] ?? '—' }}</div>
 					</div>
 					<div class="dsm-move-share-pill" style="background: #fef3c7; border: 1px solid #fde68a; border-radius: 8px; padding: 6px 4px; text-align: center;">
-						<div class="dsm-move-share-label text-warning" style="font-size: 9.5px; font-weight: 700;">
+						<div class="dsm-move-share-label text-warning" style="font-size: 11px; font-weight: 700;">
 							<i class="fa-solid fa-circle" style="font-size: 6px;"></i> Traslados
 						</div>
 						<div class="dsm-move-share-val font-weight-bold text-dark" style="font-size: 12px;" id="dsm-move-share-traslados">{{ $movements['stats']['shares']['traslados'] ?? '—' }}</div>
 					</div>
 					<div class="dsm-move-share-pill" style="background: #f3e8ff; border: 1px solid #e9d5ff; border-radius: 8px; padding: 6px 4px; text-align: center;">
-						<div class="dsm-move-share-label" style="color: #7e22ce; font-size: 9.5px; font-weight: 700;">
+						<div class="dsm-move-share-label" style="color: #7e22ce; font-size: 11px; font-weight: 700;">
 							<i class="fa-solid fa-circle" style="font-size: 6px;"></i> Dev. clientes
 						</div>
 						<div class="dsm-move-share-val font-weight-bold text-dark" style="font-size: 12px;" id="dsm-move-share-devoluciones">{{ $movements['stats']['shares']['devoluciones'] ?? '—' }}</div>
 					</div>
 					<div class="dsm-move-share-pill" style="background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px 4px; text-align: center;">
-						<div class="dsm-move-share-label text-secondary" style="font-size: 9.5px; font-weight: 700;">
+						<div class="dsm-move-share-label text-secondary" style="font-size: 11px; font-weight: 700;">
 							<i class="fa-solid fa-circle" style="font-size: 6px;"></i> Otros
 						</div>
 						<div class="dsm-move-share-val font-weight-bold text-dark" style="font-size: 12px;" id="dsm-move-share-otros">{{ $movements['stats']['shares']['otros'] ?? '—' }}</div>
@@ -1204,7 +1206,7 @@ $meta = $se['meta'] ?? [];
 					<i class="fa-solid fa-circle-info text-primary mr-1"></i> Sin doble conteo &middot; Otros = Despachos (210) + Ajustes (3) + Mermas (390)
 				</div>
 				<a href="javascript:void(0)" onclick="dsmOpenMovementsModal('todos')" class="font-weight-bold text-success d-inline-flex align-items-center" style="gap: 4px; text-decoration: none;">
-					Ver detalle <i class="fa-solid fa-arrow-right" style="font-size: 10px;"></i>
+					Ver detalle <i class="fa-solid fa-arrow-right" style="font-size: 11px;"></i>
 				</a>
 			</div>
 		</div>
@@ -1213,7 +1215,7 @@ $meta = $se['meta'] ?? [];
 		<div class="dsm-card dsm-card-pro" id="dsm-section-decisions" style="overflow: hidden; padding: 0;">
 			<div class="dsm-card-header-clean" style="padding: 14px 18px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between;">
 				<div class="d-flex align-items-center" style="gap: 10px;">
-					<div style="background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 15px;">
+					<div style="background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 15px;">
 						<i class="fa-solid fa-bullseye"></i>
 					</div>
 					<div>
@@ -1643,7 +1645,7 @@ $meta = $se['meta'] ?? [];
 <div class="modal fade" id="dsmAlertModal" tabindex="-1" role="dialog" aria-hidden="true">
 	<div class="modal-dialog modal-dialog-centered" role="document">
 		<div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
-			<div class="modal-header text-white" style="background: linear-gradient(135deg, #008744 0%, #00a651 100%);">
+			<div class="modal-header text-white" style="background: linear-gradient(135deg, #008744 0%, #007a3d 100%);">
 				<h5 class="modal-title font-weight-bold" id="dsmAlertModalTitle"><i class="fa-solid fa-bolt mr-2"></i>Acciones Operativas</h5>
 				<button type="button" class="close text-white" data-dismiss="modal" aria-label="Cerrar">&times;</button>
 			</div>
@@ -1740,11 +1742,11 @@ $meta = $se['meta'] ?? [];
 			</div>
 			<div class="modal-body" style="padding: 22px 24px;">
 				<div class="mb-3">
-					<label class="text-uppercase text-muted font-weight-bold" style="font-size: 10.5px; letter-spacing: 0.05em; margin-bottom: 4px; display: block;">Concepto & Propósito</label>
+					<label class="text-uppercase text-muted font-weight-bold" style="font-size: 11px; letter-spacing: 0.05em; margin-bottom: 4px; display: block;">Concepto & Propósito</label>
 					<p id="dsm-modal-kpi-desc" class="text-secondary" style="font-size: 13.5px; line-height: 1.5; margin: 0;"></p>
 				</div>
 				<div class="mb-3" style="background: #f1f5f9; border-radius: 12px; padding: 14px 16px;">
-					<label class="text-uppercase text-muted font-weight-bold" style="font-size: 10.5px; letter-spacing: 0.05em; display: flex; align-items: center; gap: 5px; margin-bottom: 6px;">
+					<label class="text-uppercase text-muted font-weight-bold" style="font-size: 11px; letter-spacing: 0.05em; display: flex; align-items: center; gap: 5px; margin-bottom: 6px;">
 						<i class="fa-solid fa-calculator text-primary"></i> Fórmula de cálculo en DAILY
 					</label>
 					<div id="dsm-modal-kpi-formula" class="font-weight-bold text-dark" style="font-size: 12.5px; font-family: monospace; line-height: 1.45;"></div>
@@ -1752,13 +1754,13 @@ $meta = $se['meta'] ?? [];
 				<div class="row" style="margin: 0 -6px;">
 					<div class="col-6" style="padding: 0 6px;">
 						<div style="background: #fafafa; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 14px;">
-							<span class="text-muted d-block font-weight-bold" style="font-size: 10.5px; text-transform: uppercase;">Meta / Tolerancia</span>
+							<span class="text-muted d-block font-weight-bold" style="font-size: 11px; text-transform: uppercase;">Meta / Tolerancia</span>
 							<b id="dsm-modal-kpi-target" class="text-dark" style="font-size: 12.5px;"></b>
 						</div>
 					</div>
 					<div class="col-6" style="padding: 0 6px;">
 						<div style="background: #fafafa; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 14px;">
-							<span class="text-muted d-block font-weight-bold" style="font-size: 10.5px; text-transform: uppercase;">Estado de Operación</span>
+							<span class="text-muted d-block font-weight-bold" style="font-size: 11px; text-transform: uppercase;">Estado de Operación</span>
 							<b id="dsm-modal-kpi-state" style="font-size: 12.5px;"></b>
 						</div>
 					</div>
@@ -1780,7 +1782,7 @@ $meta = $se['meta'] ?? [];
 <div class="modal fade" id="dsmHeatmapInfoModal" tabindex="-1" role="dialog" aria-hidden="true">
 	<div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 520px;">
 		<div class="modal-content" style="border-radius: 20px; border: none; box-shadow: 0 20px 45px rgba(0,0,0,0.18); overflow: hidden;">
-			<div class="modal-header" style="background: linear-gradient(135deg, #008744 0%, #00a651 100%); color: #ffffff; padding: 18px 24px;">
+			<div class="modal-header" style="background: linear-gradient(135deg, #008744 0%, #007a3d 100%); color: #ffffff; padding: 18px 24px;">
 				<div class="d-flex align-items-center" style="gap: 12px;">
 					<div style="background: rgba(255,255,255,0.2); width: 44px; height: 44px; font-size: 20px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
 						<i class="fa-solid fa-layer-group"></i>
@@ -1794,13 +1796,13 @@ $meta = $se['meta'] ?? [];
 			</div>
 			<div class="modal-body" style="padding: 22px 24px;">
 				<div class="mb-3">
-					<label class="text-uppercase text-muted font-weight-bold" style="font-size: 10.5px; letter-spacing: 0.05em; margin-bottom: 4px; display: block;">Propósito Operativo</label>
+					<label class="text-uppercase text-muted font-weight-bold" style="font-size: 11px; letter-spacing: 0.05em; margin-bottom: 4px; display: block;">Propósito Operativo</label>
 					<p class="text-secondary" style="font-size: 13.5px; line-height: 1.5; margin: 0;">
 						Cada fila es un departamento y cada columna un día del período. Las cifras salen del kardex y de las ventas registradas, sin estimaciones: los días anteriores al primer movimiento se muestran como «sin datos». Un día es crítico cuando su total cae en la franja roja de la métrica elegida.
 					</p>
 				</div>
 				<div class="p-3 mb-3 rounded" style="background: #f8fafc; border: 1px solid #e2e8f0;">
-					<label class="text-uppercase text-muted font-weight-bold mb-2 d-block" style="font-size: 10.5px;">Código de colores en DAILY</label>
+					<label class="text-uppercase text-muted font-weight-bold mb-2 d-block" style="font-size: 11px;">Código de colores en DAILY</label>
 					<div class="d-flex align-items-center mb-1" style="gap: 8px; font-size: 12px;"><span style="width: 14px; height: 14px; border-radius: 4px; background: #22c55e;"></span> <strong>Verde:</strong> Nivel adecuado de stock / demanda equilibrada.</div>
 					<div class="d-flex align-items-center mb-1" style="gap: 8px; font-size: 12px;"><span style="width: 14px; height: 14px; border-radius: 4px; background: #facc15;"></span> <strong>Amarillo:</strong> Advertencia / rotación acelerada que amerita revisión.</div>
 					<div class="d-flex align-items-center mb-1" style="gap: 8px; font-size: 12px;"><span style="width: 14px; height: 14px; border-radius: 4px; background: #fb923c;"></span> <strong>Naranja:</strong> Nivel crítico / riesgo inminente de quiebre en góndola.</div>
@@ -1822,7 +1824,7 @@ $meta = $se['meta'] ?? [];
 		<div class="modal-content" style="border-radius: 20px; border: none; box-shadow: 0 20px 45px rgba(0,0,0,0.18); overflow: hidden;">
 			<div class="modal-header" style="background: #fef3c7; border-bottom: 1px solid #fde68a; padding: 18px 24px;">
 				<div class="d-flex align-items-center" style="gap: 12px;">
-					<div style="background: #ffffff; color: #d97706; width: 44px; height: 44px; font-size: 20px; border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(217,119,6,0.15);">
+					<div style="background: #ffffff; color: #b45309; width: 44px; height: 44px; font-size: 20px; border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(217,119,6,0.15);">
 						<i class="fa-solid fa-trophy"></i>
 					</div>
 					<div>
@@ -1834,7 +1836,7 @@ $meta = $se['meta'] ?? [];
 			</div>
 			<div class="modal-body" style="padding: 22px 24px;">
 				<div class="mb-3">
-					<label class="text-uppercase text-muted font-weight-bold" style="font-size: 10.5px; letter-spacing: 0.05em; margin-bottom: 4px; display: block;">Concepto Financiero</label>
+					<label class="text-uppercase text-muted font-weight-bold" style="font-size: 11px; letter-spacing: 0.05em; margin-bottom: 4px; display: block;">Concepto Financiero</label>
 					<p class="text-secondary" style="font-size: 13.5px; line-height: 1.5; margin: 0;">
 						Representa los artículos que inmovilizan la mayor porción del capital de trabajo. La participación se calcula como: <code>(Valor del Producto / Valor Total del Inventario) &times; 100</code>. En retail, el top 10 suele concentrar entre el 60% y el 90% del valor total.
 					</p>
@@ -1855,7 +1857,7 @@ $meta = $se['meta'] ?? [];
 		<div class="modal-content" style="border-radius: 20px; border: none; box-shadow: 0 20px 45px rgba(0,0,0,0.18); overflow: hidden;">
 			<div class="modal-header" style="background: #fee2e2; border-bottom: 1px solid #fecaca; padding: 18px 24px;">
 				<div class="d-flex align-items-center" style="gap: 12px;">
-					<div style="background: #ffffff; color: #dc2626; width: 44px; height: 44px; font-size: 20px; border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(220,38,38,0.15);">
+					<div style="background: #ffffff; color: #b91c1c; width: 44px; height: 44px; font-size: 20px; border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(220,38,38,0.15);">
 						<i class="fa-solid fa-triangle-exclamation"></i>
 					</div>
 					<div>
@@ -1867,7 +1869,7 @@ $meta = $se['meta'] ?? [];
 			</div>
 			<div class="modal-body" style="padding: 22px 24px;">
 				<div class="mb-3">
-					<label class="text-uppercase text-muted font-weight-bold" style="font-size: 10.5px; letter-spacing: 0.05em; margin-bottom: 4px; display: block;">Bandas de Severidad FEFO</label>
+					<label class="text-uppercase text-muted font-weight-bold" style="font-size: 11px; letter-spacing: 0.05em; margin-bottom: 4px; display: block;">Bandas de Severidad FEFO</label>
 					<p class="text-secondary" style="font-size: 13.5px; line-height: 1.5; margin: 0;">
 						Clasifica lotes según los días restantes hasta su fecha de caducidad:
 					</p>
@@ -1893,7 +1895,7 @@ $meta = $se['meta'] ?? [];
 		<div class="modal-content border-0 shadow-lg" style="border-radius: 18px; overflow: hidden;">
 			<div class="modal-header" style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; padding: 16px 22px;">
 				<div class="d-flex align-items-center" style="gap: 10px;">
-					<div style="background: #fef3c7; color: #d97706; width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px;">
+					<div style="background: #fef3c7; color: #b45309; width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px;">
 						<i class="fa-solid fa-trophy"></i>
 					</div>
 					<div>
@@ -1982,7 +1984,7 @@ $meta = $se['meta'] ?? [];
 		<div class="modal-content border-0 shadow-lg" style="border-radius: 18px; overflow: hidden;">
 			<div class="modal-header" style="background: #f0fdf4; border-bottom: 1px solid #dcfce7; padding: 16px 22px;">
 				<div class="d-flex align-items-center" style="gap: 12px;">
-					<div style="background: #00a651; color: #ffffff; width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 17px;">
+					<div style="background: #007a3d; color: #ffffff; width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 17px;">
 						<i class="fa-solid fa-shop"></i>
 					</div>
 					<div>
@@ -2033,7 +2035,7 @@ $meta = $se['meta'] ?? [];
 									<td class="text-center"><span class="badge badge-light border">{{ $br['below_min'] }}</span></td>
 									<td class="text-center"><span class="badge badge-light border">{{ $br['expiring'] }}</span></td>
 									<td class="text-right">
-										<span class="badge font-weight-bold" style="background: {{ $isUp ? '#dcfce7' : '#fee2e2' }}; color: {{ $isUp ? '#008744' : '#dc2626' }}; font-size: 10px; padding: 3px 6px;">
+										<span class="badge font-weight-bold" style="background: {{ $isUp ? '#dcfce7' : '#fee2e2' }}; color: {{ $isUp ? '#047857' : '#b91c1c' }}; font-size: 11px; padding: 3px 6px;">
 											{{ $isUp ? '▲' : '▼' }} {{ $trendBadge }}
 										</span>
 									</td>
@@ -2064,7 +2066,7 @@ $meta = $se['meta'] ?? [];
 		<div class="modal-content border-0 shadow-lg" style="border-radius: 18px; overflow: hidden;">
 			<div class="modal-header" style="background: #fef3c7; border-bottom: 1px solid #fde68a; padding: 16px 20px;">
 				<div class="d-flex align-items-center" style="gap: 10px;">
-					<div style="background: #ffffff; color: #d97706; width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px;">
+					<div style="background: #ffffff; color: #b45309; width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px;">
 						<i class="fa-solid fa-tag"></i>
 					</div>
 					<div>

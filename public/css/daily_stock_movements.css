@@ -15,16 +15,11 @@
 /* ==========================================================================
    TARJETAS KPI — 8 EN LÍNEA HORIZONTAL (EXACTO A VENTAS)
    ========================================================================== */
-#stockMovementsBoard .ded-kpis-grid.has-8-cards {
-	display: grid;
-	grid-template-columns: 1.35fr 1.05fr 0.85fr 0.95fr 0.9fr 1.05fr 0.85fr 1.15fr;
-	gap: 10px;
-	margin-bottom: 14px;
-	align-items: stretch;
-}
-
+/* Rejilla, tarjeta destacada y filas 2/3 heredan tal cual las reglas de daily_sales_dashboard.css */
 #stockMovementsBoard .ded-kpi-card {
 	min-height: 98px;
+	/* En escritorio la fila de Ventas mide 135 px (anillo de horas en la tarjeta 8) */
+	@media (min-width: 1201px) { min-height: 135px; }
 	min-width: 0;
 	transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 	cursor: default;
@@ -43,50 +38,6 @@
 
 #stockMovementsBoard .ded-kpi-card:not(.is-highlight):hover {
 	border-color: #10b981 !important;
-}
-
-/* Tarjeta 1 Destacada (Verde degradado hero idéntica a Ventas netas) */
-#stockMovementsBoard .ded-kpi-card.is-highlight,
-body.crystal-ui #stockMovementsBoard .ded-kpi-card.is-highlight {
-	background: linear-gradient(135deg, #10b26c 0%, #0d9a5d 100%) !important;
-	color: #ffffff !important;
-	border: 1px solid rgba(255, 255, 255, 0.25) !important;
-	box-shadow: 0 4px 14px rgba(16, 178, 108, 0.32) !important;
-}
-
-#stockMovementsBoard .ded-kpi-card.is-highlight:hover,
-body.crystal-ui #stockMovementsBoard .ded-kpi-card.is-highlight:hover {
-	box-shadow: 0 6px 18px rgba(16, 178, 108, 0.42) !important;
-}
-
-#stockMovementsBoard .ded-kpi-card.is-highlight .ded-highlight-brand,
-#stockMovementsBoard .ded-kpi-card.is-highlight .ded-kpi-val,
-#stockMovementsBoard .ded-kpi-card.is-highlight .ded-kpi-sub-highlight {
-	color: #ffffff !important;
-}
-
-#stockMovementsBoard .ded-kpi-card.is-highlight .ded-highlight-spark-box {
-	background: rgba(255, 255, 255, 0.22) !important;
-	color: #ffffff !important;
-}
-
-/* ==========================================================================
-   PANELES Y CUADRÍCULAS (FILAS 2 Y 3)
-   ========================================================================== */
-#stockMovementsBoard .ded-row-2 {
-	display: grid;
-	grid-template-columns: 1.45fr 1fr;
-	gap: 12px;
-	margin-bottom: 14px;
-	align-items: stretch;
-}
-
-#stockMovementsBoard .ded-row-3 {
-	display: grid;
-	grid-template-columns: 1.35fr 1fr 1fr;
-	gap: 12px;
-	margin-bottom: 14px;
-	align-items: stretch;
 }
 
 /* ==========================================================================
@@ -121,7 +72,7 @@ body.crystal-ui #stockMovementsBoard .ded-kpi-card.is-highlight:hover {
 	height: 30px;
 	border-radius: 8px;
 	background: #ecfdf5 !important;
-	color: #10b981 !important;
+	color: #047857 !important;
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
@@ -131,7 +82,7 @@ body.crystal-ui #stockMovementsBoard .ded-kpi-card.is-highlight:hover {
 .smv-mod-icon svg {
 	width: 15px;
 	height: 15px;
-	color: #10b981 !important;
+	color: #047857 !important;
 }
 
 .smv-mod-title {
@@ -142,7 +93,7 @@ body.crystal-ui #stockMovementsBoard .ded-kpi-card.is-highlight:hover {
 }
 
 .smv-mod-desc {
-	font-size: 10.5px;
+	font-size: 11px;
 	color: #64748b !important;
 	line-height: 1.2;
 }
@@ -150,13 +101,13 @@ body.crystal-ui #stockMovementsBoard .ded-kpi-card.is-highlight:hover {
 .smv-mod-arrow {
 	width: 14px;
 	height: 14px;
-	color: #94a3b8 !important;
+	color: #64748b !important;
 	flex-shrink: 0;
 	transition: transform 0.15s ease, color 0.15s ease;
 }
 
 .smv-mod-box:hover .smv-mod-arrow {
-	color: #10b981 !important;
+	color: #047857 !important;
 	transform: translateX(2px);
 }
 
@@ -228,5 +179,5 @@ html[data-daily-mode="night"] #stockMovementsBoard .smv-mod-title {
 body.night-mode #stockMovementsBoard .smv-mod-desc,
 body.dark-mode #stockMovementsBoard .smv-mod-desc,
 html[data-daily-mode="night"] #stockMovementsBoard .smv-mod-desc {
-	color: #94a3b8 !important;
+	color: #64748b !important;
 }

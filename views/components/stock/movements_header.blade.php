@@ -34,7 +34,7 @@
 				<i data-lucide="chevron-down" class="ded-chevron"></i>
 			</button>
 			<div class="ded-dropdown-menu dropdown-menu-right" aria-labelledby="btnSmvDates" style="min-width: 230px;">
-				<div class="dropdown-header text-uppercase font-weight-bold" style="font-size: 10px; color: #64748b; padding: 6px 14px;">Período Comercial</div>
+				<div class="dropdown-header text-uppercase font-weight-bold" style="font-size: 11px; color: #64748b; padding: 6px 14px;">Período Comercial</div>
 				<a href="#" class="ded-dropdown-item is-active" data-select-range="30d">
 					<span>15 Oct – 13 Nov 2026</span>
 					<i data-lucide="check" style="width:13px;height:13px;"></i>
@@ -68,7 +68,7 @@
 				<i data-lucide="chevron-down" class="ded-chevron"></i>
 			</button>
 			<div class="ded-dropdown-menu dropdown-menu-right" aria-labelledby="btnSmvBranches" style="min-width: 220px;">
-				<div class="dropdown-header text-uppercase font-weight-bold" style="font-size: 10px; color: #64748b; padding: 6px 14px;">Centro Operativo</div>
+				<div class="dropdown-header text-uppercase font-weight-bold" style="font-size: 11px; color: #64748b; padding: 6px 14px;">Centro Operativo</div>
 				<a href="#" class="ded-dropdown-item @if(empty($sf['branch_id'])) is-active @endif" data-select-branch="">
 					<span>Todas las sucursales</span>
 					@if(empty($sf['branch_id']))<i data-lucide="check" style="width:13px;height:13px;"></i>@endif
@@ -90,7 +90,7 @@
 				<i data-lucide="chevron-down" class="ded-chevron"></i>
 			</button>
 			<div class="ded-dropdown-menu dropdown-menu-right" aria-labelledby="btnSmvDepartments" style="min-width: 220px;">
-				<div class="dropdown-header text-uppercase font-weight-bold" style="font-size: 10px; color: #64748b; padding: 6px 14px;">Departamento Comercial</div>
+				<div class="dropdown-header text-uppercase font-weight-bold" style="font-size: 11px; color: #64748b; padding: 6px 14px;">Departamento Comercial</div>
 				<a href="#" class="ded-dropdown-item @if(empty($sf['department'])) is-active @endif" data-select-dept="">
 					<span>Todos los departamentos</span>
 					@if(empty($sf['department']))<i data-lucide="check" style="width:13px;height:13px;"></i>@endif
@@ -108,12 +108,12 @@
 		<!-- Campana de alertas -->
 		<a href="{{ $U('/alerts') }}" class="ded-icon-btn position-relative" title="Centro de alertas de inventario">
 			<i data-lucide="bell"></i>
-			<span class="ded-notification-dot"></span>
+			<span class="ded-notif-dot"></span>
 		</a>
 
 		<!-- Avatar usuario -->
 		<div class="ded-dropdown-container position-relative">
-			<button type="button" class="ded-avatar-btn ded-dropdown-toggle" id="btnSmvAvatar" title="Perfil ({{ $smvUser }} · Gerente / Administrador)">
+			<button type="button" class="ded-user-avatar ded-dropdown-toggle" id="btnSmvAvatar" title="Perfil ({{ $smvUser }} · Gerente / Administrador)" aria-label="Perfil de usuario">
 				RG
 			</button>
 			<div class="ded-dropdown-menu dropdown-menu-right" aria-labelledby="btnSmvAvatar" style="min-width: 190px;">
