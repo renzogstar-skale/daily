@@ -1,5 +1,6 @@
 /* ==========================================================================
-   DAILY — TABLERO DE MERMAS Y PREVENCIÓN (SISTEMA DE DISEÑO /SALES)
+   DAILY — CENTRO DE CONTROL DE MERMAS Y PREVENCIÓN (/waste)
+   SISTEMA DE DISEÑO BASADO DIRECTAMENTE EN TABLERO DE VENTAS (/sales)
    ========================================================================== */
 
 :root {
@@ -11,6 +12,7 @@
 	--dp-bg: #f8fafc;
 	--dp-card-bg: #ffffff;
 	--dp-border: rgba(226, 232, 240, 0.85);
+	--dp-border-subtle: rgba(226, 232, 240, 0.6);
 	--dp-text-main: #0f172a;
 	--dp-text-muted: #64748b;
 }
@@ -22,6 +24,17 @@
 	display: none !important;
 }
 
+/* Envoltorio principal: igualar padding y fondo con /sales */
+#page-content .waste-main-wrapper,
+.waste-main-wrapper {
+	padding: 16px 20px 24px 20px !important;
+	background: transparent !important;
+	font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+	color: #0f172a;
+	min-width: 0;
+	box-sizing: border-box;
+}
+
 /* Números en fuente monoespaciada para legibilidad financiera/operativa */
 .dp-num-cell,
 .ded-kpi-val,
@@ -31,218 +44,506 @@
 	letter-spacing: -0.02em;
 }
 
-/* Tarjetas principales con borde de 16 px */
-#page-content .ded-card,
-#page-content .ded-kpi-card {
-	border-radius: 16px !important;
-	border: 1px solid var(--dp-border);
-	box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+/* ==========================================================================
+   ENCABEZADO Y PESTAÑAS (MISMAS MEDIDAS QUE /sales)
+   ========================================================================== */
+#page-content .waste-main-wrapper .ded-header {
+	display: flex !important;
+	align-items: center !important;
+	justify-content: space-between !important;
+	flex-wrap: nowrap !important;
+	gap: 12px !important;
+	margin-bottom: 14px !important;
+	min-height: 51px !important;
 }
 
-/* 8 Indicadores: En escritorio desde 1500 px, una sola fila con la primera tarjeta más ancha */
-@media (min-width: 1500px) {
-	.ded-kpis-grid.has-8-cards.dp-kpis-8 {
-		display: grid !important;
-		grid-template-columns: 1.25fr repeat(7, 1fr) !important;
-		gap: 10px !important;
-	}
-}
-
-/* Por debajo de 1500 px usa cuatro columnas */
-@media (max-width: 1499.98px) and (min-width: 768px) {
-	.ded-kpis-grid.has-8-cards.dp-kpis-8 {
-		display: grid !important;
-		grid-template-columns: repeat(4, 1fr) !important;
-		gap: 10px !important;
-	}
-}
-
-/* En móvil dos columnas sin desbordamiento */
-@media (max-width: 767.98px) {
-	.ded-kpis-grid.has-8-cards.dp-kpis-8 {
-		display: grid !important;
-		grid-template-columns: repeat(2, 1fr) !important;
-		gap: 8px !important;
-	}
-}
-
-/* Altura y padding homogéneo de las tarjetas KPI */
-.dp-kpis-8 .ded-kpi-card {
-	min-height: 105px !important;
-	display: flex;
-	flex-direction: column;
-	justify-content: space-between;
-	padding: 12px 14px !important;
-}
-
-.dp-kpis-8 .ded-kpi-card.is-highlight {
-	background: #10b26c !important;
-	color: #ffffff !important;
-	border-color: #10b26c !important;
-}
-
-.dp-kpis-8 .ded-highlight-brand {
-	display: flex;
-	align-items: center;
-	gap: 6px;
-	color: #ffffff;
-	font-size: 12px;
-	font-weight: 600;
-}
-.dp-kpis-8 .ded-highlight-brand svg {
-	width: 15px;
-	height: 15px;
-}
-
-.dp-kpis-8 .ded-kpi-card.is-highlight .ded-kpi-val {
-	color: #ffffff !important;
-	font-size: 28px !important;
+#page-content .waste-main-wrapper .ded-title {
+	font-size: 24px !important;
 	font-weight: 800 !important;
-	line-height: 1.1;
+	color: #0f172a !important;
+	letter-spacing: -0.025em !important;
+	line-height: 1.15 !important;
+	margin: 0 0 4px 0 !important;
 }
 
-.dp-kpis-8 .ded-kpi-sub-highlight {
-	color: rgba(255, 255, 255, 0.9);
-	font-size: 11px;
+#page-content .waste-main-wrapper .ded-subtitle {
+	font-size: 13px !important;
+	color: #64748b !important;
+	font-weight: 400 !important;
+	margin: 0 !important;
+	line-height: 1.35 !important;
+	white-space: nowrap !important;
 }
 
+#page-content .waste-main-wrapper .ded-select-btn {
+	background: #ffffff !important;
+	border: 1px solid rgba(226, 232, 240, 0.85) !important;
+	border-radius: 8px !important;
+	padding: 5px 10px !important;
+	font-size: 11.5px !important;
+	font-weight: 500 !important;
+	color: #334155 !important;
+	height: 32px !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	gap: 5px !important;
+}
+
+#page-content .waste-main-wrapper .ded-nav-tabs-bar {
+	display: flex !important;
+	align-items: center !important;
+	gap: 4px !important;
+	overflow-x: auto !important;
+	margin-bottom: 14px !important;
+	padding-bottom: 2px !important;
+	scrollbar-width: thin;
+}
+
+#page-content .waste-main-wrapper .ded-nav-tab {
+	display: inline-flex !important;
+	align-items: center !important;
+	gap: 6px !important;
+	padding: 5px 12px !important;
+	border-radius: 20px !important;
+	font-size: 12px !important;
+	font-weight: 500 !important;
+	color: #64748b !important;
+	background: #ffffff !important;
+	border: 1px solid #e2e8f0 !important;
+	white-space: nowrap !important;
+	text-decoration: none !important;
+}
+
+#page-content .waste-main-wrapper .ded-nav-tab.is-active,
+#page-content .waste-main-wrapper .ded-nav-tab.active {
+	background: #0f172a !important;
+	color: #ffffff !important;
+	border-color: #0f172a !important;
+	font-weight: 600 !important;
+}
+
+/* ==========================================================================
+   OCHO TARJETAS KPI (UNA SOLA FILA >= 1500px, MISMA ALTURA Y ALINEACIÓN)
+   ========================================================================== */
+@media (min-width: 1500px) {
+	#page-content .ded-kpis-grid.has-8-cards.dp-kpis-8,
+	.ded-kpis-grid.has-8-cards.dp-kpis-8 {
+		display: grid !important;
+		grid-template-columns: 1.3fr repeat(7, minmax(0, 1fr)) !important;
+		gap: 10px !important;
+		margin-bottom: 14px !important;
+		align-items: stretch !important;
+	}
+}
+
+@media (max-width: 1499.98px) and (min-width: 768px) {
+	#page-content .ded-kpis-grid.has-8-cards.dp-kpis-8,
+	.ded-kpis-grid.has-8-cards.dp-kpis-8 {
+		display: grid !important;
+		grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+		gap: 10px !important;
+		margin-bottom: 14px !important;
+		align-items: stretch !important;
+	}
+}
+
+@media (max-width: 767.98px) {
+	#page-content .ded-kpis-grid.has-8-cards.dp-kpis-8,
+	.ded-kpis-grid.has-8-cards.dp-kpis-8 {
+		display: grid !important;
+		grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+		gap: 8px !important;
+		margin-bottom: 14px !important;
+		align-items: stretch !important;
+	}
+}
+
+/* Tarjeta estándar de KPI */
+#page-content .dp-kpis-8 .ded-kpi-card,
+.dp-kpis-8 .ded-kpi-card {
+	background: #ffffff !important;
+	border: 1px solid rgba(226, 232, 240, 0.85) !important;
+	border-radius: 16px !important;
+	padding: 10px 12px !important;
+	display: flex !important;
+	flex-direction: column !important;
+	justify-content: space-between !important;
+	min-height: 114px !important;
+	height: 100% !important;
+	min-width: 0 !important;
+	box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+	box-sizing: border-box !important;
+	transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+#page-content .dp-kpis-8 .ded-kpi-card:hover,
+.dp-kpis-8 .ded-kpi-card:hover {
+	box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
+	border-color: #cbd5e1 !important;
+}
+
+/* Alineación vertical estricta de componentes internos */
 .dp-kpis-8 .ded-kpi-top {
-	display: flex;
-	align-items: center;
-	margin-bottom: 2px;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: space-between !important;
+	height: 22px !important;
+	margin-bottom: 2px !important;
 }
 
 .dp-kpis-8 .ded-kpi-icon {
-	width: 24px;
-	height: 24px;
-	border-radius: 6px;
-	background: #ecfdf5;
-	color: #059669;
-	display: flex;
-	align-items: center;
-	justify-content: center;
+	width: 22px !important;
+	height: 22px !important;
+	border-radius: 6px !important;
+	background: #ecfdf5 !important;
+	color: #059669 !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
 }
+
 .dp-kpis-8 .ded-kpi-icon svg {
-	width: 13px;
-	height: 13px;
+	width: 13px !important;
+	height: 13px !important;
 }
+
 .dp-kpis-8 .ded-kpi-icon.is-danger {
-	background: #fee2e2;
-	color: #ef4444;
+	background: #fee2e2 !important;
+	color: #ef4444 !important;
 }
 .dp-kpis-8 .ded-kpi-icon.is-warning {
-	background: #fef3c7;
-	color: #d97706;
+	background: #fef3c7 !important;
+	color: #d97706 !important;
 }
 .dp-kpis-8 .ded-kpi-icon.is-slate {
-	background: #f1f5f9;
-	color: #475569;
+	background: #f1f5f9 !important;
+	color: #475569 !important;
 }
 .dp-kpis-8 .ded-kpi-icon.is-success {
-	background: #ecfdf5;
-	color: #10b26c;
+	background: #ecfdf5 !important;
+	color: #10b26c !important;
 }
 
+/* Títulos con altura reservada uniforme (28px) para que las cifras inicien al mismo nivel */
 .dp-kpis-8 .ded-kpi-label {
-	font-size: 11.5px;
-	font-weight: 500;
-	color: #64748b;
-	line-height: 1.25;
+	font-size: 11px !important;
+	font-weight: 500 !important;
+	color: #64748b !important;
+	line-height: 1.2 !important;
+	height: 28px !important;
+	min-height: 28px !important;
+	display: flex !important;
+	align-items: flex-end !important;
+	margin-bottom: 2px !important;
+	white-space: normal !important;
+	word-break: normal !important;
 }
 
+/* Cifras alineadas horizontalmente */
 .dp-kpis-8 .ded-kpi-val {
-	font-size: 22px;
-	font-weight: 800;
-	color: #0f172a;
-	line-height: 1.1;
+	font-size: 21px !important;
+	font-weight: 800 !important;
+	color: #0f172a !important;
+	line-height: 1.15 !important;
+	margin-bottom: 2px !important;
+	letter-spacing: -0.02em !important;
 }
 
 .dp-kpis-8 .ded-kpi-sub {
-	font-size: 11px;
-	color: #94a3b8;
+	font-size: 11px !important;
+	color: #64748b !important;
+	line-height: 1.2 !important;
+	height: 16px !important;
+	display: flex !important;
+	align-items: center !important;
+	white-space: nowrap !important;
+	gap: 4px !important;
 }
 
-/* Primera fila de paneles: Proporción 1.7 a 1 */
-#page-content .dp-row-evolution,
-.dp-row-evolution {
-	display: grid;
-	grid-template-columns: 1.7fr 1fr;
-	gap: 14px;
-	align-items: stretch;
+/* Tarjeta 1: Hero Verde Merma confirmada a costo */
+#page-content .dp-kpis-8 .ded-kpi-card.is-highlight,
+.dp-kpis-8 .ded-kpi-card.is-highlight {
+	background: linear-gradient(135deg, #059669 0%, #10b26c 100%) !important;
+	color: #ffffff !important;
+	border: 1px solid rgba(255, 255, 255, 0.22) !important;
+	box-shadow: 0 4px 14px rgba(16, 185, 129, 0.28) !important;
 }
 
-/* Segunda fila de paneles: Proporción 1.7 a 1 a 1 */
-#page-content .dp-row-details,
-.dp-row-details {
-	display: grid;
-	grid-template-columns: 1.7fr 1fr 1fr;
-	gap: 14px;
-	align-items: stretch;
+.dp-kpis-8 .ded-kpi-card.is-highlight .ded-kpi-top-highlight {
+	display: flex !important;
+	align-items: center !important;
+	justify-content: space-between !important;
+	height: 22px !important;
+	margin-bottom: 2px !important;
 }
 
-@media (max-width: 1080px) {
+.dp-kpis-8 .ded-kpi-card.is-highlight .ded-highlight-brand {
+	display: inline-flex !important;
+	align-items: center !important;
+	gap: 6px !important;
+	font-size: 11.5px !important;
+	font-weight: 600 !important;
+	color: #ffffff !important;
+}
+
+.dp-kpis-8 .ded-kpi-card.is-highlight .ded-highlight-spark-box {
+	background: rgba(255, 255, 255, 0.2) !important;
+	border-radius: 6px !important;
+	padding: 2px 5px !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	color: #ffffff !important;
+}
+
+.dp-kpis-8 .ded-kpi-card.is-highlight .ded-highlight-spark-box svg,
+.dp-kpis-8 .ded-kpi-card.is-highlight .ded-highlight-brand svg {
+	width: 14px !important;
+	height: 14px !important;
+	color: #ffffff !important;
+}
+
+.dp-kpis-8 .ded-kpi-card.is-highlight .ded-kpi-val {
+	font-size: 25px !important;
+	color: #ffffff !important;
+	font-weight: 800 !important;
+	margin-top: 6px !important;
+}
+
+.dp-kpis-8 .ded-kpi-card.is-highlight .ded-kpi-sub-highlight {
+	font-size: 11px !important;
+	color: rgba(255, 255, 255, 0.95) !important;
+	height: 16px !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: space-between !important;
+}
+
+/* ==========================================================================
+   PRIMERA FILA DE PANELES: EVOLUCIÓN (1.7) + SUCURSALES (1.0)
+   ========================================================================== */
+@media (min-width: 1081px) {
+	#page-content .ded-row-2,
 	#page-content .dp-row-evolution,
-	.dp-row-evolution,
-	#page-content .dp-row-details,
-	.dp-row-details {
-		grid-template-columns: 1fr !important;
+	.dp-row-evolution {
+		display: grid !important;
+		grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr) !important;
+		gap: 14px !important;
+		margin-bottom: 14px !important;
+		align-items: stretch !important;
 	}
 }
 
-.dp-legend-line {
-	display: inline-block;
-	width: 14px;
-	height: 3px;
-	border-radius: 2px;
-	margin-right: 4px;
-	vertical-align: middle;
+@media (max-width: 1080px) {
+	#page-content .ded-row-2,
+	#page-content .dp-row-evolution,
+	.dp-row-evolution {
+		display: grid !important;
+		grid-template-columns: 1fr !important;
+		gap: 14px !important;
+		margin-bottom: 14px !important;
+	}
 }
 
-/* Encabezados y celdas de tabla */
+/* ==========================================================================
+   SEGUNDA FILA DE PANELES: CASOS (1.6) + PARETO (1.0) + TOP 5 (1.0)
+   ========================================================================== */
+@media (min-width: 1081px) {
+	#page-content .ded-row-3,
+	#page-content .dp-row-details,
+	.dp-row-details {
+		display: grid !important;
+		grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1fr) !important;
+		gap: 14px !important;
+		margin-bottom: 14px !important;
+		align-items: stretch !important;
+	}
+}
+
+@media (max-width: 1080px) {
+	#page-content .ded-row-3,
+	#page-content .dp-row-details,
+	.dp-row-details {
+		display: grid !important;
+		grid-template-columns: 1fr !important;
+		gap: 14px !important;
+		margin-bottom: 14px !important;
+	}
+}
+
+/* Tarjetas de paneles (.ded-card): radios de 16px, misma altura pareja */
+#page-content .ded-card,
+.ded-card {
+	background: #ffffff !important;
+	border: 1px solid rgba(226, 232, 240, 0.85) !important;
+	border-radius: 16px !important;
+	padding: 14px 16px !important;
+	box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+	display: flex !important;
+	flex-direction: column !important;
+	justify-content: space-between !important;
+	min-width: 0 !important;
+	box-sizing: border-box !important;
+	height: 100% !important;
+}
+
+#page-content .ded-card-header,
+.ded-card-header {
+	display: flex !important;
+	align-items: center !important;
+	justify-content: space-between !important;
+	margin-bottom: 10px !important;
+	gap: 10px !important;
+	min-height: 24px !important;
+}
+
+#page-content .ded-card-title,
+.ded-card-title {
+	font-size: 14.5px !important;
+	font-weight: 700 !important;
+	color: #0f172a !important;
+	margin: 0 !important;
+	letter-spacing: -0.01em !important;
+}
+
+#page-content .ded-card-tools,
+.ded-card-tools {
+	display: flex !important;
+	align-items: center !important;
+	gap: 10px !important;
+}
+
+.ded-legend-inline {
+	display: flex !important;
+	align-items: center !important;
+	gap: 10px !important;
+	font-size: 11px !important;
+	color: #475569 !important;
+}
+
+.ded-legend-item {
+	display: inline-flex !important;
+	align-items: center !important;
+	gap: 4px !important;
+}
+
+.ded-legend-rect {
+	width: 9px !important;
+	height: 9px !important;
+	border-radius: 2px !important;
+	display: inline-block !important;
+}
+
+.dp-legend-line {
+	display: inline-block !important;
+	width: 12px !important;
+	height: 3px !important;
+	border-radius: 2px !important;
+	vertical-align: middle !important;
+}
+
+.ded-expand-btn {
+	background: transparent !important;
+	border: none !important;
+	color: #64748b !important;
+	cursor: pointer !important;
+	padding: 2px !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	border-radius: 4px !important;
+	transition: color 0.15s ease, background-color 0.15s ease !important;
+}
+
+.ded-expand-btn:hover {
+	color: #0f172a !important;
+	background-color: #f1f5f9 !important;
+}
+
+.ded-expand-btn svg {
+	width: 14px !important;
+	height: 14px !important;
+}
+
+/* ==========================================================================
+   TABLAS ESTILO /sales (.ded-table-top5 COMPACTA Y ELEGANTE)
+   ========================================================================== */
 #page-content .ded-table,
-.ded-table {
-	white-space: nowrap;
+#page-content .ded-table-top5,
+.ded-table,
+.ded-table-top5 {
+	width: 100% !important;
+	border-collapse: collapse !important;
+	font-size: 11.5px !important;
+	margin-top: 2px !important;
+	white-space: nowrap !important;
 }
 
 #page-content .ded-table th,
-.ded-table th {
-	text-transform: none !important;
-	font-size: 12px !important;
+#page-content .ded-table-top5 th,
+.ded-table th,
+.ded-table-top5 th {
+	font-size: 11px !important;
 	font-weight: 600 !important;
 	color: #64748b !important;
-	padding: 8px 12px !important;
-	border-top: none;
-}
-#page-content .ded-table td,
-.ded-table td {
-	padding: 8px 12px !important;
-	font-size: 12.5px !important;
-	vertical-align: middle;
+	border-bottom: 1px solid #f1f5f9 !important;
+	border-top: none !important;
+	padding: 5px 6px !important;
+	text-align: left !important;
+	text-transform: none !important;
 }
 
-/* Fila Total en tablas */
+#page-content .ded-table th.text-right,
+#page-content .ded-table-top5 th.text-right,
+.ded-table th.text-right,
+.ded-table-top5 th.text-right {
+	text-align: right !important;
+}
+
+#page-content .ded-table td,
+#page-content .ded-table-top5 td,
+.ded-table td,
+.ded-table-top5 td {
+	padding: 6px 6px !important;
+	border-bottom: 1px solid #f8fafc !important;
+	border-top: none !important;
+	vertical-align: middle !important;
+	line-height: 1.25 !important;
+	font-size: 11.5px !important;
+}
+
+#page-content .ded-table tr:last-child td,
+#page-content .ded-table-top5 tr:last-child td {
+	border-bottom: none !important;
+}
+
+/* Fila Total en tabla de sucursales */
 .dp-branches-total-row {
-	background-color: #f8fafc;
-	border-top: 2px solid #e2e8f0;
+	background-color: #f8fafc !important;
+	border-top: 1.5px solid #e2e8f0 !important;
+}
+.dp-branches-total-row td {
+	font-weight: 700 !important;
+	color: #0f172a !important;
 }
 
 /* Badges de SKU */
 .dp-sku-pill {
-	background: #ecfdf5;
-	color: #059669;
-	font-weight: 700;
-	font-size: 11px;
-	padding: 3px 6px;
-	border-radius: 6px;
-	font-family: ui-monospace, monospace;
+	background: #ecfdf5 !important;
+	color: #059669 !important;
+	font-weight: 700 !important;
+	font-size: 10.5px !important;
+	padding: 2px 6px !important;
+	border-radius: 4px !important;
+	font-family: ui-monospace, monospace !important;
 }
 
 /* Badges de estado en casos de atención */
 .dp-pill-status {
-	font-size: 11px !important;
+	font-size: 10.5px !important;
 	font-weight: 700 !important;
-	padding: 2px 8px !important;
+	padding: 2px 7px !important;
 	border-radius: 12px !important;
+	display: inline-block !important;
 }
 .dp-pill-status.is-danger {
 	background-color: #fee2e2 !important;
@@ -257,80 +558,117 @@
 	color: #0284c7 !important;
 }
 
-/* Modulos conectados */
-.dp-mod-box {
-	display: flex;
-	align-items: center;
-	padding: 10px 14px;
+/* ==========================================================================
+   MÓDULOS CONECTADOS (RÉPLICA EXACTA DE LA FOTO Y SISTEMA /sales)
+   ========================================================================== */
+#page-content .dp-connected-modules-card,
+.dp-connected-modules-card {
 	background: #ffffff !important;
 	border: 1px solid rgba(226, 232, 240, 0.85) !important;
-	border-radius: 12px;
+	border-radius: 16px !important;
+	padding: 16px 20px !important;
+	box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+	margin-bottom: 24px !important;
+}
+
+.dp-mod-box {
+	display: flex !important;
+	align-items: center !important;
+	padding: 9px 12px !important;
+	background: #ffffff !important;
+	border: 1px solid rgba(226, 232, 240, 0.85) !important;
+	border-radius: 10px !important;
 	text-decoration: none !important;
 	color: #0f172a !important;
-	transition: all 0.15s ease;
-	gap: 12px;
+	transition: all 0.15s ease !important;
+	gap: 10px !important;
 }
+
 .dp-mod-box:hover {
 	border-color: #10b26c !important;
 	background: #f0fdf4 !important;
-	transform: translateX(2px);
+	transform: translateX(2px) !important;
+	text-decoration: none !important;
+	color: #0f172a !important;
 }
+
 .dp-mod-icon {
-	width: 34px;
-	height: 34px;
-	border-radius: 8px;
-	background: #ecfdf5;
-	color: #059669;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	font-size: 16px;
-	flex-shrink: 0;
+	width: 30px !important;
+	height: 30px !important;
+	border-radius: 8px !important;
+	background: #ecfdf5 !important;
+	color: #059669 !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	font-size: 14px !important;
+	flex-shrink: 0 !important;
 }
+
+.dp-mod-icon svg {
+	width: 15px !important;
+	height: 15px !important;
+}
+
 .dp-mod-info {
-	flex: 1;
+	flex: 1 !important;
+	min-width: 0 !important;
 }
+
 .dp-mod-name {
-	font-size: 13px;
-	font-weight: 700;
-	color: #0f172a;
-	line-height: 1.2;
+	font-size: 12.5px !important;
+	font-weight: 700 !important;
+	color: #0f172a !important;
+	line-height: 1.2 !important;
 }
+
 .dp-mod-desc {
-	font-size: 11px;
-	color: #64748b;
-	margin-top: 2px;
-	line-height: 1.25;
+	font-size: 11px !important;
+	color: #64748b !important;
+	margin-top: 1px !important;
+	line-height: 1.25 !important;
+	white-space: nowrap !important;
+	overflow: hidden !important;
+	text-overflow: ellipsis !important;
 }
+
 .dp-mod-arrow {
-	color: #94a3b8;
-	font-size: 14px;
+	color: #94a3b8 !important;
+	font-size: 13px !important;
+	display: flex !important;
+	align-items: center !important;
 }
+
+.dp-mod-arrow svg {
+	width: 14px !important;
+	height: 14px !important;
+}
+
 .dp-mod-box:hover .dp-mod-arrow {
-	color: #10b26c;
+	color: #10b26c !important;
 }
 
 /* SVG Chart Tooltip */
 .dp-chart-tooltip {
-	position: absolute;
-	background: rgba(15, 23, 42, 0.92);
-	color: #ffffff;
-	padding: 6px 10px;
-	border-radius: 6px;
-	font-size: 11px;
-	pointer-events: none;
-	z-index: 10;
-	box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+	position: absolute !important;
+	background: rgba(15, 23, 42, 0.92) !important;
+	color: #ffffff !important;
+	padding: 6px 10px !important;
+	border-radius: 6px !important;
+	font-size: 11px !important;
+	pointer-events: none !important;
+	z-index: 10 !important;
+	box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
 }
 
-/* Soporte para modo oscuro */
-html.daily-dark #page-content .ded-wrapper,
-body.night-mode #page-content .ded-wrapper,
+/* ==========================================================================
+   MODO OSCURO (COMPATIBILIDAD 100% CON DAILY DARK MODE)
+   ========================================================================== */
+html.daily-dark #page-content .waste-main-wrapper,
+body.night-mode #page-content .waste-main-wrapper,
 html.daily-dark,
 body.night-mode,
 html[data-daily-mode="night"] {
-	--ded-text-main: #f8fafc;
-	--ded-text-muted: #94a3b8;
 	--dp-text-main: #f8fafc;
 	--dp-text-muted: #94a3b8;
 	--dp-card-bg: #1e293b;
@@ -338,79 +676,73 @@ html[data-daily-mode="night"] {
 }
 
 html.daily-dark #page-content .ded-kpi-card:not(.is-highlight),
-body.night-mode #page-content .ded-kpi-card:not(.is-highlight),
-html.daily-dark .ded-kpi-card:not(.is-highlight),
-body.night-mode .ded-kpi-card:not(.is-highlight) {
+body.night-mode #page-content .ded-kpi-card:not(.is-highlight) {
 	background: #1e293b !important;
 	border-color: #334155 !important;
 }
 
 html.daily-dark #page-content .ded-kpi-card:not(.is-highlight) .ded-kpi-val,
-body.night-mode #page-content .ded-kpi-card:not(.is-highlight) .ded-kpi-val,
-html.daily-dark .dp-dashboard-content .ded-kpi-card:not(.is-highlight) .ded-kpi-val,
-body.night-mode .dp-dashboard-content .ded-kpi-card:not(.is-highlight) .ded-kpi-val,
-html.daily-dark .ded-kpi-card:not(.is-highlight) .ded-kpi-val,
-body.night-mode .ded-kpi-card:not(.is-highlight) .ded-kpi-val {
+body.night-mode #page-content .ded-kpi-card:not(.is-highlight) .ded-kpi-val {
 	color: #f8fafc !important;
 }
 
-html.daily-dark .ded-kpi-card:not(.is-highlight) .ded-kpi-label,
-body.night-mode .ded-kpi-card:not(.is-highlight) .ded-kpi-label {
+html.daily-dark #page-content .ded-kpi-card:not(.is-highlight) .ded-kpi-label,
+body.night-mode #page-content .ded-kpi-card:not(.is-highlight) .ded-kpi-label {
 	color: #94a3b8 !important;
 }
 
-html.daily-dark .ded-card,
-body.night-mode .ded-card {
+html.daily-dark #page-content .ded-card,
+body.night-mode #page-content .ded-card {
 	background: #1e293b !important;
 	border-color: #334155 !important;
 }
 
-html.daily-dark .ded-card-title,
-body.night-mode .ded-card-title {
+html.daily-dark #page-content .ded-card-title,
+body.night-mode #page-content .ded-card-title {
 	color: #f8fafc !important;
 }
 
-html.daily-dark .text-dark,
-body.night-mode .text-dark {
+html.daily-dark #page-content .text-dark,
+body.night-mode #page-content .text-dark {
 	color: #f8fafc !important;
 }
 
-html.daily-dark .ded-title,
-body.night-mode .ded-title {
+html.daily-dark #page-content .ded-title,
+body.night-mode #page-content .ded-title {
 	color: #f8fafc !important;
 }
 
-html.daily-dark .ded-subtitle,
-body.night-mode .ded-subtitle {
+html.daily-dark #page-content .ded-subtitle,
+body.night-mode #page-content .ded-subtitle {
 	color: #cbd5e1 !important;
 }
 
-html.daily-dark .ded-table td,
-body.night-mode .ded-table td {
+html.daily-dark #page-content .ded-table td,
+body.night-mode #page-content .ded-table td {
 	color: #f1f5f9 !important;
 	border-color: #334155 !important;
 }
 
-html.daily-dark .ded-table th,
-body.night-mode .ded-table th {
+html.daily-dark #page-content .ded-table th,
+body.night-mode #page-content .ded-table th {
 	color: #94a3b8 !important;
 	border-color: #334155 !important;
 }
 
-html.daily-dark .dp-branches-total-row,
-body.night-mode .dp-branches-total-row {
+html.daily-dark #page-content .dp-branches-total-row,
+body.night-mode #page-content .dp-branches-total-row {
 	background-color: #1e293b !important;
 	border-top-color: #334155 !important;
 }
 
-html.daily-dark .dp-mod-box,
-body.night-mode .dp-mod-box {
+html.daily-dark #page-content .dp-mod-box,
+body.night-mode #page-content .dp-mod-box {
 	background: #1e293b !important;
 	border-color: #334155 !important;
 	color: #f1f5f9 !important;
 }
 
-html.daily-dark .dp-mod-name,
-body.night-mode .dp-mod-name {
+html.daily-dark #page-content .dp-mod-name,
+body.night-mode #page-content .dp-mod-name {
 	color: #f8fafc !important;
 }

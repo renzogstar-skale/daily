@@ -153,7 +153,7 @@
 			</header>
 
 			<!-- Contenedor del Gráfico SVG Interactivo -->
-			<div class="dp-chart-wrap position-relative" style="height: 245px; width: 100%;">
+			<div class="dp-chart-wrap position-relative" style="height: 200px; width: 100%;">
 				<div id="wasteEvolutionSvgChart" style="width: 100%; height: 100%;"></div>
 				<div id="wasteChartTooltip" class="dp-chart-tooltip" style="display:none;"></div>
 			</div>
@@ -278,7 +278,7 @@
 				</div>
 			</header>
 
-			<div class="dp-pareto-wrap position-relative" style="height: 235px; width: 100%;">
+			<div class="dp-pareto-wrap position-relative" style="height: 200px; width: 100%;">
 				<div id="wasteParetoSvgChart" style="width: 100%; height: 100%;"></div>
 			</div>
 		</article>

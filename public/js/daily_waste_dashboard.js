@@ -41,7 +41,7 @@
 		const maxVal = 600; // Escala fija exacta a la captura ($0 a $600)
 		const avgVal = 416; // Promedio diario exacto ($12,480 / 30)
 		const width = 800;
-		const height = 230;
+		const height = 195;
 		const padding = { top: 15, right: 15, bottom: 35, left: 45 };
 		const plotW = width - padding.left - padding.right;
 		const plotH = height - padding.top - padding.bottom;
@@ -152,7 +152,7 @@
 		if (!container) return;
 
 		const width = 420;
-		const height = 220;
+		const height = 195;
 		const padding = { top: 20, right: 35, bottom: 35, left: 45 };
 		const plotW = width - padding.left - padding.right;
 		const plotH = height - padding.top - padding.bottom;
