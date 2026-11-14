@@ -322,13 +322,6 @@
 		<article class="ded-kpi-card" title="Definición: Horas reales efectivas trabajadas vs. total de horas planificadas según cuadrante.&#10;Fórmula: Horas reloj registradas ÷ Horas programadas por dirección.&#10;Monto exacto: {{ number_format($hoursVal, 0) }} h de {{ number_format($scheduledHoursVal, 0) }} h&#10;Cumplimiento: {{ $hoursPct }}%&#10;Origen: Reloj biométrico y control de asistencia&#10;Actualización: {{ date('d/m/Y H:i') }}">
 			<div class="ded-kpi-top">
 				<span class="ded-kpi-icon"><i data-lucide="clock"></i></span>
-				<div class="ded-progress-circle-wrap" title="Cumplimiento de horas: {{ $hoursPct }}%">
-					<svg class="ded-progress-circle" viewBox="0 0 36 36">
-						<path class="ded-circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-						<path class="ded-circle-fill" stroke-dasharray="{{ $hoursPct }}, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-					</svg>
-					<span class="ded-circle-text">{{ $hoursPct }}%</span>
-				</div>
 			</div>
 			<div class="ded-kpi-label">Horas trabajadas</div>
 			<div class="ded-kpi-val">{{ number_format($hoursVal, 0) }} h</div>
